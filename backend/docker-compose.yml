@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    container_name: secmind-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://secmind:secmind_secret@postgres:5432/secmind
+      - SECRET_KEY=secmind-super-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: secmind-postgres
+    environment:
+      POSTGRES_USER: secmind
+      POSTGRES_PASSWORD: secmind_secret
+      POSTGRES_DB: secmind
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: secmind-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
