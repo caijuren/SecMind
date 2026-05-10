@@ -73,7 +73,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
             className="h-20 w-20 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cyan-400/20 text-cyan-400 text-2xl font-medium">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 text-2xl font-medium ring-1 ring-cyan-100">
             {initials}
           </div>
         )}
@@ -107,7 +107,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
             size="sm"
             variant="outline"
             onClick={handleCancel}
-            className="border-white/10 text-white/50 hover:bg-white/[0.04] hover:text-white/70"
+            className="border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
           >
             {t("topbar.cancelAvatar")}
           </Button>
@@ -117,7 +117,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
           size="sm"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          className="gap-1.5 border-white/10 text-white/50 hover:bg-white/[0.04] hover:text-cyan-400 hover:border-cyan-500/30"
+          className="gap-1.5 border-slate-200 text-slate-500 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-200"
         >
           <Upload className="size-3.5" />
           {t("topbar.uploadAvatar")}
@@ -145,7 +145,7 @@ function NicknameTab({ t }: { t: (key: string) => string }) {
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           placeholder={t("topbar.nicknamePlaceholder")}
-          className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 placeholder:text-slate-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
+          className="h-9 border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       <div className="flex justify-end">
@@ -187,10 +187,10 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder={t("topbar.currentPasswordPlaceholder")}
-          className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 placeholder:text-slate-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
+          className="h-9 border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
         />
       </div>
-      <Separator className="bg-white/[0.06]" />
+      <Separator className="bg-slate-100" />
       <div className="space-y-2">
         <label className="text-xs text-slate-400">{t("topbar.newPassword")}</label>
         <Input
@@ -198,7 +198,7 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder={t("topbar.newPasswordPlaceholder")}
-          className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 placeholder:text-slate-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
+          className="h-9 border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       <div className="space-y-2">
@@ -208,7 +208,7 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder={t("topbar.confirmPasswordPlaceholder")}
-          className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 placeholder:text-slate-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
+          className="h-9 border-slate-200 bg-white text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       {error && (
@@ -233,9 +233,9 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-white/[0.08] bg-[#0a1628] text-slate-300 shadow-[0_0_40px_rgba(0,212,255,0.12)]">
+      <DialogContent className="sm:max-w-md border-slate-200 bg-white text-slate-700 shadow-xl shadow-slate-200/60">
         <DialogHeader>
-          <DialogTitle className="text-white">
+          <DialogTitle className="text-slate-900">
             {t("topbar.accountSettings")}
           </DialogTitle>
           <DialogDescription className="text-slate-500">
@@ -244,16 +244,16 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="avatar">
-          <TabsList className="bg-white/[0.04] border border-white/[0.06]">
-            <TabsTrigger value="avatar" className="data-active:bg-cyan-400/10 data-active:text-cyan-400">
+          <TabsList className="border border-slate-200 bg-slate-50">
+            <TabsTrigger value="avatar" className="data-active:bg-white data-active:text-cyan-700">
               <Camera className="size-3.5 mr-1" />
               {t("topbar.changeAvatar")}
             </TabsTrigger>
-            <TabsTrigger value="nickname" className="data-active:bg-cyan-400/10 data-active:text-cyan-400">
+            <TabsTrigger value="nickname" className="data-active:bg-white data-active:text-cyan-700">
               <User className="size-3.5 mr-1" />
               {t("topbar.changeNickname")}
             </TabsTrigger>
-            <TabsTrigger value="password" className="data-active:bg-cyan-400/10 data-active:text-cyan-400">
+            <TabsTrigger value="password" className="data-active:bg-white data-active:text-cyan-700">
               <Lock className="size-3.5 mr-1" />
               {t("topbar.changePassword")}
             </TabsTrigger>

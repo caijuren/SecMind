@@ -151,14 +151,14 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
       hypothesis.status === "已确认" && "border-red-500/15 shadow-[0_0_12px_rgba(239,68,68,0.08)]",
       hypothesis.status === "验证中" && "border-yellow-500/15",
       hypothesis.status === "已排除" && "border-green-500/10",
-      hypothesis.status !== "已确认" && hypothesis.status !== "验证中" && hypothesis.status !== "已排除" && "border-slate-200/[0.06]"
+      hypothesis.status !== "已确认" && hypothesis.status !== "验证中" && hypothesis.status !== "已排除" && "border-white/[0.06]"
     )}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-mono text-xs text-slate-400">{hypothesis.id}</span>
-              <span className="text-sm font-medium text-slate-800 truncate">{hypothesis.name}</span>
+              <span className="font-mono text-xs text-white/40">{hypothesis.id}</span>
+              <span className="text-sm font-medium text-white/90 truncate">{hypothesis.name}</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-[10px] text-cyan-400 bg-cyan-500/10 border-cyan-500/20 py-0 px-1.5">
@@ -177,7 +177,7 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
           </Badge>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center justify-between text-xs text-white/40">
           <div className="flex items-center gap-1.5">
             <Clock className="size-3" />
             <span>{hypothesis.createdAt}</span>
@@ -189,7 +189,7 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-300 shrink-0">置信度</span>
+          <span className="text-xs text-white/30 shrink-0">置信度</span>
           <div className="flex-1">
             <ConfidenceBar value={hypothesis.confidence} />
           </div>
@@ -227,27 +227,27 @@ function IOCBatchQuery() {
           <Brain className="h-4 w-4 text-amber-400" />
         </div>
         <div>
-          <h2 className="text-sm font-medium text-slate-800">IOC批量查询</h2>
-          <p className="text-xs text-slate-400">输入IP/域名/Hash/URL进行威胁情报关联查询</p>
+          <h2 className="text-sm font-medium text-white/90">IOC批量查询</h2>
+          <p className="text-xs text-white/40">输入IP/域名/Hash/URL进行威胁情报关联查询</p>
         </div>
       </div>
 
-      <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
+      <Card className="border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
         <CardContent className="p-4 space-y-3">
           <Textarea
             placeholder={"每行输入一个IOC指标，支持以下格式：\nIP: 185.220.101.34\n域名: evil-domain.xyz\nHash: a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5\nURL: https://cmd6.malware-c2.xyz/update"}
             value={iocInput}
             onChange={(e) => setIocInput(e.target.value)}
-            className="min-h-[120px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="min-h-[120px] border-white/10 bg-white/[0.04] text-white/80 placeholder:text-white/20 text-xs font-mono focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-white/30">
               {iocInput.trim() ? `已输入 ${iocInput.trim().split("\n").filter(Boolean).length} 条IOC` : "等待输入"}
             </span>
             <Button
               onClick={handleQuery}
               disabled={!iocInput.trim() || isQuerying}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs gap-1.5"
+              className="bg-cyan-600/80 hover:bg-cyan-700 text-white text-xs gap-1.5"
             >
               <Search className="size-3.5" />
               {isQuerying ? "查询中..." : "批量查询"}
@@ -259,11 +259,11 @@ function IOCBatchQuery() {
       {results.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">查询结果 ({results.length})</span>
+            <span className="text-xs text-white/50">查询结果 ({results.length})</span>
             <Button
               variant="outline"
               size="sm"
-              className="border-slate-200 bg-white/[0.04] text-slate-400 hover:text-cyan-600 hover:border-cyan-300 text-xs h-7"
+              className="border-white/10 bg-white/[0.04] text-white/50 hover:text-cyan-400 hover:border-cyan-500/25 text-xs h-7"
               onClick={() => setResults([])}
             >
               清除结果
@@ -274,12 +274,12 @@ function IOCBatchQuery() {
               const typeCfg = IOC_TYPE_CONFIG[result.type]
               const TypeIcon = typeCfg.icon
               return (
-                <Card key={result.id} className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl hover:bg-white/[0.04] transition-all">
+                <Card key={result.id} className="border-white/[0.06] bg-white/[0.02] backdrop-blur-xl hover:bg-white/[0.04] transition-all">
                   <CardContent className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <TypeIcon className={cn("size-3.5 shrink-0", typeCfg.color)} />
-                        <span className="text-xs font-mono text-slate-700 truncate">{result.value}</span>
+                        <span className="text-xs font-mono text-white/80 truncate">{result.value}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5", typeCfg.color, typeCfg.bg, typeCfg.border)}>
@@ -294,10 +294,10 @@ function IOCBatchQuery() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <Shield className="size-3 text-slate-300 shrink-0" />
-                      <span className="text-xs text-slate-400 truncate">{result.relatedIntel}</span>
+                      <Shield className="size-3 text-white/30 shrink-0" />
+                      <span className="text-xs text-white/50 truncate">{result.relatedIntel}</span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-300">
+                    <div className="flex items-center justify-between text-[10px] text-white/30">
                       <span>首次出现: {result.firstSeen}</span>
                       <span>末次出现: {result.lastSeen}</span>
                     </div>
@@ -357,19 +357,19 @@ export default function HuntingPage() {
               "cursor-pointer transition-all border backdrop-blur-xl",
               activeFilter === card.status
                 ? cn(card.border, card.bg, "shadow-[0_0_16px_rgba(6,182,212,0.1)]")
-                : "border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
+                : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
             )}
             onClick={() => setActiveFilter(card.status)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-slate-400")}>{card.label}</span>
+                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-white/40")}>{card.label}</span>
                 {card.status === "验证中" && <Clock className="size-4 text-yellow-400/40" />}
                 {card.status === "已确认" && <AlertTriangle className="size-4 text-red-400/40" />}
                 {card.status === "已排除" && <CheckCircle2 className="size-4 text-green-400/40" />}
                 {card.status === "全部" && <Crosshair className="size-4 text-cyan-400/40" />}
               </div>
-              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-slate-600")}>{card.count}</p>
+              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-white/70")}>{card.count}</p>
             </CardContent>
           </Card>
         ))}
@@ -377,17 +377,17 @@ export default function HuntingPage() {
 
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
           <Input
             placeholder="搜索假设名称、战术、技术ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 border-slate-200 bg-white/[0.04] pl-8 text-xs text-slate-700 placeholder:text-slate-300 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="h-8 border-white/10 bg-white/[0.04] pl-8 text-xs text-white/80 placeholder:text-white/25 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
           />
         </div>
         <Button
           onClick={() => setDialogOpen(true)}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5"
+          className="bg-cyan-600/80 hover:bg-cyan-700 text-white gap-1.5"
         >
           <Plus className="size-4" />
           新建假设
@@ -397,14 +397,14 @@ export default function HuntingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">狩猎假设列表 ({filteredHypotheses.length})</span>
+            <span className="text-xs text-white/50">狩猎假设列表 ({filteredHypotheses.length})</span>
           </div>
           <div className="space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             {filteredHypotheses.map((hypothesis) => (
               <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />
             ))}
             {filteredHypotheses.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+              <div className="flex flex-col items-center justify-center py-12 text-white/30">
                 <Search className="size-8 mb-2" />
                 <p className="text-sm">未找到匹配的狩猎假设</p>
               </div>
@@ -418,30 +418,30 @@ export default function HuntingPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white border-slate-200 text-slate-900">
+        <DialogContent className="sm:max-w-md bg-[#0a1628] border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">新建狩猎假设</DialogTitle>
-            <DialogDescription className="text-slate-400">创建基于ATT&CK框架的威胁狩猎假设</DialogDescription>
+            <DialogTitle className="text-white">新建狩猎假设</DialogTitle>
+            <DialogDescription className="text-white/40">创建基于ATT&CK框架的威胁狩猎假设</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">假设名称</label>
+              <label className="text-xs text-white/50">假设名称</label>
               <Input
                 placeholder="输入假设名称"
                 value={newHypothesis.name}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, name: e.target.value }))}
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="border-white/10 bg-white/[0.04] text-white/80 placeholder:text-white/25 text-xs focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">ATT&CK战术</label>
+              <label className="text-xs text-white/50">ATT&CK战术</label>
               <Select value={newHypothesis.tactic} onValueChange={(v) => v && setNewHypothesis((prev) => ({ ...prev, tactic: v }))}>
-                <SelectTrigger className="w-full border-slate-200 bg-white/[0.04] text-slate-600 text-xs">
+                <SelectTrigger className="w-full border-white/10 bg-white/[0.04] text-white/70 text-xs">
                   <SelectValue placeholder="选择ATT&CK战术" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
+                <SelectContent className="bg-[#0a1628] border-white/10">
                   {ATTCK_TACTICS.map((tactic) => (
-                    <SelectItem key={tactic} value={tactic} className="text-slate-600 text-xs focus:bg-cyan-500/10 focus:text-cyan-400">
+                    <SelectItem key={tactic} value={tactic} className="text-white/70 text-xs focus:bg-cyan-500/10 focus:text-cyan-400">
                       {tactic}
                     </SelectItem>
                   ))}
@@ -449,34 +449,34 @@ export default function HuntingPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">描述</label>
+              <label className="text-xs text-white/50">描述</label>
               <Textarea
                 placeholder="描述假设的攻击场景和狩猎目标"
                 value={newHypothesis.description}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, description: e.target.value }))}
-                className="min-h-[80px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[80px] border-white/10 bg-white/[0.04] text-white/80 placeholder:text-white/25 text-xs focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">关联IOC</label>
+              <label className="text-xs text-white/50">关联IOC</label>
               <Textarea
                 placeholder={"每行输入一个IOC指标\n如: 185.220.101.34\nevil-domain.xyz"}
                 value={newHypothesis.relatedIOC}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, relatedIOC: e.target.value }))}
-                className="min-h-[60px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[60px] border-white/10 bg-white/[0.04] text-white/80 placeholder:text-white/25 text-xs font-mono focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
               />
             </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
-              className="border-slate-200 bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 text-xs"
+              className="border-white/10 bg-white/[0.04] text-white/50 hover:text-white hover:bg-white/[0.08] text-xs"
               onClick={() => setDialogOpen(false)}
             >
               取消
             </Button>
             <Button
-              className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
+              className="bg-cyan-600/80 hover:bg-cyan-700 text-white text-xs"
               onClick={() => setDialogOpen(false)}
             >
               创建假设

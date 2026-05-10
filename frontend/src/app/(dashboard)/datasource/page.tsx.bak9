@@ -170,10 +170,10 @@ function ProtocolConfigFields({ protocol, form, handleChange }: {
 }) {
   if (!protocol) return null
 
-  const fc = "h-9 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200 rounded-lg w-full"
-  const sc = "h-9 bg-white border-slate-200 text-slate-900 text-sm rounded-lg w-full"
-  const scc = "bg-white border-cyan-200 text-slate-900"
-  const lc = "text-slate-400 text-xs font-medium"
+  const fc = "h-9 bg-white/[0.03] border-white/[0.08] text-white text-sm placeholder:text-white/20 focus:border-cyan-500/30 focus:ring-cyan-500/10 rounded-lg w-full"
+  const sc = "h-9 bg-white/[0.03] border-white/[0.08] text-white text-sm rounded-lg w-full"
+  const scc = "bg-[#0c1a3a] border-cyan-500/15 text-white"
+  const lc = "text-white/50 text-xs font-medium"
 
   switch (protocol) {
     case "Syslog":
@@ -442,22 +442,22 @@ function AddDataSourceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
     setTestResult("idle")
   }
 
-  const fc = "h-9 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200 rounded-lg w-full"
-  const sc = "h-9 bg-white border-slate-200 text-slate-900 text-sm rounded-lg w-full"
-  const scc = "bg-white border-cyan-200 text-slate-900"
-  const lc = "text-slate-400 text-xs font-medium"
+  const fc = "h-9 bg-white/[0.03] border-white/[0.08] text-white text-sm placeholder:text-white/20 focus:border-cyan-500/30 focus:ring-cyan-500/10 rounded-lg w-full"
+  const sc = "h-9 bg-white/[0.03] border-white/[0.08] text-white text-sm rounded-lg w-full"
+  const scc = "bg-[#0c1a3a] border-cyan-500/15 text-white"
+  const lc = "text-white/50 text-xs font-medium"
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setTestResult("idle"); onOpenChange(v) }}>
-      <DialogContent className="sm:max-w-2xl max-h-[88vh] overflow-y-auto bg-white border-slate-200 text-slate-900 shadow-lg rounded-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[88vh] overflow-y-auto bg-[#060e1f] border-white/[0.08] text-white shadow-[0_0_60px_rgba(0,212,255,0.08)] rounded-2xl">
         <DialogHeader className="pb-2">
-          <DialogTitle className="flex items-center gap-3 text-slate-900 text-base">
+          <DialogTitle className="flex items-center gap-3 text-white text-base">
             <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20">
               <Plus className="size-4 text-cyan-400" />
             </div>
             添加数据源
           </DialogTitle>
-          <DialogDescription className="text-slate-300 text-xs">配置安全设备日志/告警数据源接入</DialogDescription>
+          <DialogDescription className="text-white/30 text-xs">配置安全设备日志/告警数据源接入</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-1">
@@ -487,11 +487,11 @@ function AddDataSourceDialog({ open, onOpenChange }: { open: boolean; onOpenChan
                   <Select value={form.brand} onValueChange={(v) => handleChange("brand", v ?? "")}>
                     <SelectTrigger className={sc}><SelectValue placeholder="选择品牌" /></SelectTrigger>
                     <SelectContent className={scc}>
-                      <div className="px-2 py-1 text-[10px] text-slate-300 font-medium">国内品牌</div>
+                      <div className="px-2 py-1 text-[10px] text-white/30 font-medium">国内品牌</div>
                       {Object.entries(brandModels).filter(([, v]) => v.country === "CN").map(([b]) => (
                         <SelectItem key={b} value={b}>{b}</SelectItem>
                       ))}
-                      <div className="px-2 py-1 text-[10px] text-slate-300 font-medium mt-1">国际品牌</div>
+                      <div className="px-2 py-1 text-[10px] text-white/30 font-medium mt-1">国际品牌</div>
                       {Object.entries(brandModels).filter(([, v]) => v.country !== "CN").map(([b]) => (
                         <SelectItem key={b} value={b}>{b}</SelectItem>
                       ))}
@@ -616,9 +616,9 @@ function ProtocolConfigSummary({ ds }: { ds: DataSource }) {
   return (
     <div className="flex items-center gap-1.5 flex-wrap">
       {items.map((item) => (
-        <span key={item.label} className="inline-flex items-center gap-1 rounded-md bg-white/[0.03] px-1.5 py-0.5 text-[10px] border border-slate-200/[0.04]">
-          <span className="text-slate-300">{item.label}</span>
-          <span className="text-slate-400 font-mono">{item.value}</span>
+        <span key={item.label} className="inline-flex items-center gap-1 rounded-md bg-white/[0.03] px-1.5 py-0.5 text-[10px] border border-white/[0.04]">
+          <span className="text-white/25">{item.label}</span>
+          <span className="text-white/50 font-mono">{item.value}</span>
         </span>
       ))}
     </div>
@@ -658,7 +658,7 @@ export default function DataSourcePage() {
         icon={Database}
         title={t("nav.tabDataSource")}
         actions={
-          <Button className="gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white h-9 text-xs rounded-xl shadow-md" onClick={() => setAddDialogOpen(true)}>
+          <Button className="gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white h-9 text-xs rounded-xl shadow-[0_0_16px_rgba(0,212,255,0.15)]" onClick={() => setAddDialogOpen(true)}>
             <Plus className="h-3.5 w-3.5" /> 添加数据源
           </Button>
         }
@@ -671,7 +671,7 @@ export default function DataSourcePage() {
             "group rounded-xl border p-4 text-left transition-all duration-200",
             filterStatus === "online"
               ? "border-emerald-400/30 bg-emerald-400/[0.06] shadow-[0_0_20px_rgba(52,211,153,0.08)]"
-              : "border-slate-200/[0.06] bg-white/[0.02] hover:border-emerald-400/15 hover:bg-emerald-400/[0.03]"
+              : "border-white/[0.06] bg-white/[0.02] hover:border-emerald-400/15 hover:bg-emerald-400/[0.03]"
           )}
         >
           <div className="flex items-center justify-between">
@@ -680,7 +680,7 @@ export default function DataSourcePage() {
                 <Wifi className="size-4 text-emerald-400" />
               </div>
               <div>
-                <p className="text-[10px] text-slate-300 font-medium uppercase tracking-wider">在线设备</p>
+                <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">在线设备</p>
                 <p className="text-xl font-bold text-emerald-400 font-mono leading-tight">{onlineCount}</p>
               </div>
             </div>
@@ -692,7 +692,7 @@ export default function DataSourcePage() {
             "group rounded-xl border p-4 text-left transition-all duration-200",
             filterStatus === "offline"
               ? "border-red-400/30 bg-red-400/[0.06] shadow-[0_0_20px_rgba(248,113,113,0.08)]"
-              : "border-slate-200/[0.06] bg-white/[0.02] hover:border-red-400/15 hover:bg-red-400/[0.03]"
+              : "border-white/[0.06] bg-white/[0.02] hover:border-red-400/15 hover:bg-red-400/[0.03]"
           )}
         >
           <div className="flex items-center gap-3">
@@ -700,18 +700,18 @@ export default function DataSourcePage() {
               <WifiOff className="size-4 text-red-400" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 font-medium uppercase tracking-wider">离线设备</p>
+              <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">离线设备</p>
               <p className="text-xl font-bold text-red-400 font-mono leading-tight">{offlineCount}</p>
             </div>
           </div>
         </button>
-        <div className="rounded-xl border border-slate-200/[0.06] bg-white/[0.02] p-4">
+        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
           <div className="flex items-center gap-3">
             <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-500/15">
               <Database className="size-4 text-cyan-400" />
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 font-medium uppercase tracking-wider">日均日志量</p>
+              <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider">日均日志量</p>
               <p className="text-xl font-bold text-cyan-400 font-mono leading-tight">{(totalVolume / 1000).toFixed(0)}K</p>
             </div>
           </div>
@@ -720,31 +720,31 @@ export default function DataSourcePage() {
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-300" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-white/20" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索设备名称、品牌、IP..."
-            className="h-8 pl-8 pr-3 text-xs bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 rounded-lg"
+            className="h-8 pl-8 pr-3 text-xs bg-white/[0.02] border-white/[0.06] text-white placeholder:text-white/20 focus:border-cyan-500/30 rounded-lg"
           />
         </div>
         <Select value={filterType} onValueChange={(v) => setFilterType(v ?? "all")}>
-          <SelectTrigger className="h-8 w-36 text-xs bg-white border-slate-200 text-slate-500 rounded-lg">
-            <Filter className="size-3 mr-1 text-slate-300" />
+          <SelectTrigger className="h-8 w-36 text-xs bg-white/[0.02] border-white/[0.06] text-white/60 rounded-lg">
+            <Filter className="size-3 mr-1 text-white/20" />
             <SelectValue placeholder="设备类型" />
           </SelectTrigger>
-          <SelectContent className="bg-white border-cyan-200 text-slate-900">
+          <SelectContent className="bg-[#0c1a3a] border-cyan-500/15 text-white">
             <SelectItem value="all">全部类型</SelectItem>
             {deviceTypes.map((t) => (<SelectItem key={t} value={t}>{t}</SelectItem>))}
           </SelectContent>
         </Select>
         {(filterType !== "all" || filterStatus !== "all" || searchQuery) && (
-          <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-400 hover:text-slate-500 rounded-lg" onClick={() => { setFilterType("all"); setFilterStatus("all"); setSearchQuery("") }}>
+          <Button variant="ghost" size="sm" className="h-8 text-xs text-white/40 hover:text-white/60 rounded-lg" onClick={() => { setFilterType("all"); setFilterStatus("all"); setSearchQuery("") }}>
             清除筛选
           </Button>
         )}
         <div className="flex-1" />
-        <span className="text-[10px] text-slate-300">{filtered.length} 台设备</span>
+        <span className="text-[10px] text-white/20">{filtered.length} 台设备</span>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -758,7 +758,7 @@ export default function DataSourcePage() {
                 "group border bg-white/[0.015] backdrop-blur-sm transition-all duration-200 rounded-xl overflow-hidden",
                 ds.status === "offline"
                   ? "border-red-500/10 opacity-50 hover:opacity-70"
-                  : "border-slate-200/[0.05] hover:border-cyan-500/20 hover:shadow-[0_0_24px_rgba(34,211,238,0.06)]"
+                  : "border-white/[0.05] hover:border-cyan-500/20 hover:shadow-[0_0_24px_rgba(34,211,238,0.06)]"
               )}
             >
               <CardContent className="p-0">
@@ -768,7 +768,7 @@ export default function DataSourcePage() {
                       <div className="flex size-7 items-center justify-center rounded-lg shrink-0" style={{ backgroundColor: `${typeColor}12`, border: `1px solid ${typeColor}20` }}>
                         <Server className="size-3.5" style={{ color: typeColor }} />
                       </div>
-                      <span className="text-sm font-medium text-slate-900 truncate">{ds.name}</span>
+                      <span className="text-sm font-medium text-white truncate">{ds.name}</span>
                     </div>
                     <span className={cn(
                       "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-semibold shrink-0 ml-2",
@@ -788,28 +788,28 @@ export default function DataSourcePage() {
                     <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold" style={{ backgroundColor: `${bColor}10`, color: bColor, border: `1px solid ${bColor}18` }}>
                       {ds.brand}
                     </span>
-                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] text-slate-400 border border-slate-200/[0.06] bg-white/[0.02]">
+                    <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] text-white/40 border border-white/[0.06] bg-white/[0.02]">
                       {ds.model}
                     </span>
-                    <Badge variant="outline" className="text-[9px] text-slate-300 border-slate-200/[0.06] h-4 px-1.5">{ds.protocol}</Badge>
+                    <Badge variant="outline" className="text-[9px] text-white/25 border-white/[0.06] h-4 px-1.5">{ds.protocol}</Badge>
                   </div>
 
                   <ProtocolConfigSummary ds={ds} />
                 </div>
 
-                <div className="border-t border-slate-200/[0.04] bg-white/[0.01]">
+                <div className="border-t border-white/[0.04] bg-white/[0.01]">
                   <div className="grid grid-cols-3 divide-x divide-white/[0.04]">
                     <div className="px-3 py-2 text-center">
-                      <p className="text-[9px] text-slate-300 uppercase tracking-wider">地址</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">{ds.ip}:{ds.port}</p>
+                      <p className="text-[9px] text-white/20 uppercase tracking-wider">地址</p>
+                      <p className="text-[11px] text-white/50 font-mono mt-0.5">{ds.ip}:{ds.port}</p>
                     </div>
                     <div className="px-3 py-2 text-center">
-                      <p className="text-[9px] text-slate-300 uppercase tracking-wider">同步</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">{ds.lastSync}</p>
+                      <p className="text-[9px] text-white/20 uppercase tracking-wider">同步</p>
+                      <p className="text-[11px] text-white/50 mt-0.5">{ds.lastSync}</p>
                     </div>
                     <div className="px-3 py-2 text-center">
-                      <p className="text-[9px] text-slate-300 uppercase tracking-wider">日志/日</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">{ds.dailyVolume > 0 ? `${(ds.dailyVolume / 1000).toFixed(0)}K` : "-"}</p>
+                      <p className="text-[9px] text-white/20 uppercase tracking-wider">日志/日</p>
+                      <p className="text-[11px] text-white/50 font-mono mt-0.5">{ds.dailyVolume > 0 ? `${(ds.dailyVolume / 1000).toFixed(0)}K` : "-"}</p>
                     </div>
                   </div>
                 </div>

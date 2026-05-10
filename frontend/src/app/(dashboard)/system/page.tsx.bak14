@@ -107,8 +107,8 @@ function SettingRow({ label, desc, children }: { label: string; desc?: string; c
   return (
     <div className="flex items-center justify-between py-3">
       <div>
-        <p className="text-sm text-slate-700">{label}</p>
-        {desc && <p className="text-xs text-slate-300 mt-0.5">{desc}</p>}
+        <p className="text-sm text-white/80">{label}</p>
+        {desc && <p className="text-xs text-white/30 mt-0.5">{desc}</p>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -124,7 +124,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       onClick={() => onChange(!checked)}
       className={cn(
         "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-        checked ? "bg-cyan-600" : "bg-white"
+        checked ? "bg-cyan-600" : "bg-white/10"
       )}
     >
       <span
@@ -154,15 +154,15 @@ function EditPermissionsDialog({ open, onOpenChange, role }: { open: boolean; on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-white border-cyan-300 text-slate-900 shadow-lg">
+      <DialogContent className="sm:max-w-lg bg-[#0a1628] border-cyan-500/20 text-white shadow-[0_0_40px_rgba(0,212,255,0.12)]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-900">
+          <DialogTitle className="flex items-center gap-2 text-white">
             <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${role?.color}15`, border: `1px solid ${role?.color}30` }}>
               <ShieldCheck className="size-4" style={{ color: role?.color }} />
             </div>
             编辑权限 — {role?.name}
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-white/40">
             为「{role?.name}」角色分配功能权限
           </DialogDescription>
         </DialogHeader>
@@ -180,7 +180,7 @@ function EditPermissionsDialog({ open, onOpenChange, role }: { open: boolean; on
                     "rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
                     isSelected
                       ? "border-cyan-500/40 bg-cyan-500/15 text-cyan-300"
-                      : "border-slate-200 bg-white/[0.02] text-slate-400 hover:border-slate-200 hover:text-slate-500"
+                      : "border-white/10 bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/60"
                   )}
                 >
                   {isSelected && <CheckCircle2 className="size-3 mr-1 inline" />}
@@ -193,7 +193,7 @@ function EditPermissionsDialog({ open, onOpenChange, role }: { open: boolean; on
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
-              className="border-slate-200 text-slate-400 hover:bg-white/[0.04] hover:text-slate-600"
+              className="border-white/10 text-white/50 hover:bg-white/[0.04] hover:text-white/70"
               onClick={() => onOpenChange(false)}
             >
               取消
@@ -225,7 +225,7 @@ function PermissionsTab({ t }: { t: (key: string) => string }) {
       {roles.map((role) => (
         <Card
           key={role.name}
-          className="border-slate-200 bg-white/[0.04] backdrop-blur-xl hover:border-cyan-300 transition-colors"
+          className="border-white/10 bg-white/[0.04] backdrop-blur-xl hover:border-cyan-500/20 transition-colors"
         >
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
@@ -240,17 +240,17 @@ function PermissionsTab({ t }: { t: (key: string) => string }) {
                   <ShieldCheck className="h-4 w-4" style={{ color: role.color }} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">{t(role.nameKey)}</h3>
+                  <h3 className="text-sm font-semibold text-white">{t(role.nameKey)}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <Users className="h-3 w-3 text-slate-300" />
-                    <span className="text-xs text-slate-400">{role.count}人</span>
+                    <Users className="h-3 w-3 text-white/30" />
+                    <span className="text-xs text-white/40">{role.count}人</span>
                   </div>
                 </div>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1 border-slate-200 text-slate-400 hover:text-cyan-600 hover:border-cyan-300 hover:bg-cyan-500/[0.04]"
+                className="gap-1 border-white/10 text-white/40 hover:text-cyan-400 hover:border-cyan-500/30 hover:bg-cyan-500/[0.04]"
                 onClick={() => handleEdit(role)}
               >
                 <Pencil className="size-3" />
@@ -263,14 +263,14 @@ function PermissionsTab({ t }: { t: (key: string) => string }) {
                 <Badge
                   key={perm}
                   variant="outline"
-                  className="text-[10px] border-slate-200 text-slate-400"
+                  className="text-[10px] border-white/10 text-white/40"
                 >
                   {perm}
                 </Badge>
               ))}
             </div>
 
-            <div className="border-t border-slate-200 pt-3">
+            <div className="border-t border-white/5 pt-3">
               <div className="flex flex-wrap gap-2">
                 {role.users.map((user) => (
                   <span
@@ -278,17 +278,17 @@ function PermissionsTab({ t }: { t: (key: string) => string }) {
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs border",
                       user.status === "active"
-                        ? "text-slate-500 bg-white/[0.04] border-slate-200/[0.06]"
-                        : "text-slate-300 bg-white/[0.02] border-slate-200/[0.04] line-through"
+                        ? "text-white/60 bg-white/[0.04] border-white/[0.06]"
+                        : "text-white/30 bg-white/[0.02] border-white/[0.04] line-through"
                     )}
                   >
                     <div className={cn(
                       "h-4 w-4 rounded-full flex items-center justify-center",
-                      user.status === "active" ? "bg-cyan-500/20" : "bg-white"
+                      user.status === "active" ? "bg-cyan-500/20" : "bg-white/10"
                     )}>
                       <span className={cn(
                         "text-[8px] font-medium",
-                        user.status === "active" ? "text-cyan-600" : "text-slate-300"
+                        user.status === "active" ? "text-cyan-400" : "text-white/30"
                       )}>{user.name.charAt(0)}</span>
                     </div>
                     {user.name}
@@ -325,88 +325,88 @@ function SystemConfigTab({ t }: { t: (key: string) => string }) {
 
   return (
     <div className="space-y-6">
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Globe className="h-4 w-4 text-cyan-400" />
             {t("settings.generalSettings")}
           </h3>
           <SettingRow label={t("settings.systemName")} desc={t("settings.systemNameDesc")}>
             <Input
               value={general.systemName}
               onChange={(e) => setGeneral({ ...general, systemName: e.target.value })}
-              className="w-48 h-8 bg-white border-slate-200 text-slate-900 text-sm"
+              className="w-48 h-8 bg-white/5 border-cyan-500/15 text-white text-sm"
             />
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.sessionTimeout")} desc={t("settings.sessionTimeoutDesc")}>
             <div className="flex items-center gap-2">
               <Input
                 type="number"
                 value={general.sessionTimeout}
                 onChange={(e) => setGeneral({ ...general, sessionTimeout: Number(e.target.value) })}
-                className="w-24 h-8 bg-white border-slate-200 text-slate-900 text-sm"
+                className="w-24 h-8 bg-white/5 border-cyan-500/15 text-white text-sm"
               />
-              <span className="text-xs text-slate-400">min</span>
+              <span className="text-xs text-white/30">min</span>
             </div>
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.ipWhitelist")} desc={t("settings.ipWhitelistDesc")}>
             <Input
               value={general.ipWhitelist}
               onChange={(e) => setGeneral({ ...general, ipWhitelist: e.target.value })}
               placeholder={t("settings.ipWhitelistPlaceholder")}
-              className="w-48 h-8 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400"
+              className="w-48 h-8 bg-white/5 border-cyan-500/15 text-white text-sm placeholder:text-white/20"
             />
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label="日志保留天数" desc="系统日志保留时间（天）">
             <div className="flex items-center gap-2">
               <Input
                 type="number"
                 value={general.logRetention}
                 onChange={(e) => setGeneral({ ...general, logRetention: Number(e.target.value) })}
-                className="w-24 h-8 bg-white border-slate-200 text-slate-900 text-sm"
+                className="w-24 h-8 bg-white/5 border-cyan-500/15 text-white text-sm"
               />
-              <span className="text-xs text-slate-400">天</span>
+              <span className="text-xs text-white/30">天</span>
             </div>
           </SettingRow>
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-white">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Lock className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Lock className="h-4 w-4 text-cyan-400" />
             {t("settings.securitySettings")}
           </h3>
           <SettingRow label={t("settings.mfa")} desc={t("settings.mfaDesc")}>
             <Toggle checked={security.mfaEnabled} onChange={(v) => setSecurity({ ...security, mfaEnabled: v })} />
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.passwordMinLength")} desc={t("settings.passwordMinLengthDesc")}>
             <Input
               type="number"
               value={security.passwordMinLength}
               onChange={(e) => setSecurity({ ...security, passwordMinLength: Number(e.target.value) })}
-              className="w-24 h-8 bg-white border-slate-200 text-slate-900 text-sm"
+              className="w-24 h-8 bg-white/5 border-cyan-500/15 text-white text-sm"
             />
           </SettingRow>
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-white">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Brain className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-cyan-400" />
             {t("settings.aiEngineConfig")}
           </h3>
           <SettingRow label={t("settings.llmModel")} desc={t("settings.llmModelDesc")}>
             <Select value={ai.model} onValueChange={(v) => setAi({ ...ai, model: v ?? "" })}>
-              <SelectTrigger className="w-48 h-8 border-slate-200 bg-white text-slate-900 text-sm">
+              <SelectTrigger className="w-48 h-8 border-cyan-500/15 bg-white/5 text-white text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-slate-200 bg-white text-slate-900">
+              <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-white">
                 <SelectItem value="gpt-4o">GPT-4o</SelectItem>
                 <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
                 <SelectItem value="claude-3.5-sonnet">Claude 3.5 Sonnet</SelectItem>
@@ -415,7 +415,7 @@ function SystemConfigTab({ t }: { t: (key: string) => string }) {
               </SelectContent>
             </Select>
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.temperature")} desc={t("settings.temperatureDesc")}>
             <div className="flex items-center gap-2">
               <Input
@@ -425,18 +425,18 @@ function SystemConfigTab({ t }: { t: (key: string) => string }) {
                 max="1"
                 value={ai.temperature}
                 onChange={(e) => setAi({ ...ai, temperature: Number(e.target.value) })}
-                className="w-20 h-8 bg-white border-slate-200 text-slate-900 text-sm"
+                className="w-20 h-8 bg-white/5 border-cyan-500/15 text-white text-sm"
               />
-              <span className="text-xs text-slate-400">{t("settings.temperatureHint")}</span>
+              <span className="text-xs text-white/30">{t("settings.temperatureHint")}</span>
             </div>
           </SettingRow>
-          <Separator className="bg-slate-100" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.maxTokens")} desc={t("settings.maxTokensDesc")}>
             <Select value={String(ai.maxTokens)} onValueChange={(v) => setAi({ ...ai, maxTokens: Number(v ?? "4096") })}>
-              <SelectTrigger className="w-48 h-8 border-slate-200 bg-white text-slate-900 text-sm">
+              <SelectTrigger className="w-48 h-8 border-cyan-500/15 bg-white/5 text-white text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-slate-200 bg-white text-slate-900">
+              <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-white">
                 <SelectItem value="2048">2048</SelectItem>
                 <SelectItem value="4096">4096</SelectItem>
                 <SelectItem value="8192">8192</SelectItem>
@@ -444,7 +444,7 @@ function SystemConfigTab({ t }: { t: (key: string) => string }) {
               </SelectContent>
             </Select>
           </SettingRow>
-          <Separator className="bg-white" />
+          <Separator className="bg-white/5" />
           <SettingRow label={t("settings.ragKnowledge")} desc={t("settings.ragKnowledgeDesc")}>
             <Toggle checked={ai.ragEnabled} onChange={(v) => setAi({ ...ai, ragEnabled: v })} />
           </SettingRow>
@@ -477,55 +477,55 @@ function LicenseTab() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
             <KeyRound className="h-4 w-4 text-purple-400" />
             授权信息
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">授权类型</p>
-              <p className="text-sm text-slate-700 font-medium">{licenseInfo.type}</p>
+              <p className="text-xs text-white/30">授权类型</p>
+              <p className="text-sm text-white/80 font-medium">{licenseInfo.type}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">授权状态</p>
+              <p className="text-xs text-white/30">授权状态</p>
               <p className="text-sm text-green-400 font-medium flex items-center gap-1.5">
                 <CheckCircle2 className="size-3.5" />
                 {licenseInfo.status}
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">授权方</p>
-              <p className="text-sm text-slate-700">{licenseInfo.licensee}</p>
+              <p className="text-xs text-white/30">授权方</p>
+              <p className="text-sm text-white/80">{licenseInfo.licensee}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">授权密钥</p>
-              <p className="text-sm text-slate-500 font-mono">{licenseInfo.licenseKey}</p>
+              <p className="text-xs text-white/30">授权密钥</p>
+              <p className="text-sm text-white/60 font-mono">{licenseInfo.licenseKey}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">到期时间</p>
-              <p className="text-sm text-slate-700">{licenseInfo.expiresAt}</p>
+              <p className="text-xs text-white/30">到期时间</p>
+              <p className="text-sm text-white/80">{licenseInfo.expiresAt}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">技术支持到期</p>
-              <p className="text-sm text-slate-700">{licenseInfo.supportExpiry}</p>
+              <p className="text-xs text-white/30">技术支持到期</p>
+              <p className="text-sm text-white/80">{licenseInfo.supportExpiry}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Users className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Users className="h-4 w-4 text-cyan-400" />
             使用配额
           </h3>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-slate-400">用户数</span>
-                <span className="text-xs text-slate-500">{licenseInfo.currentUsers} / {licenseInfo.maxUsers}</span>
+                <span className="text-xs text-white/40">用户数</span>
+                <span className="text-xs text-white/60">{licenseInfo.currentUsers} / {licenseInfo.maxUsers}</span>
               </div>
               <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div className="h-full rounded-full bg-cyan-500/60" style={{ width: `${(licenseInfo.currentUsers / licenseInfo.maxUsers) * 100}%` }} />
@@ -533,8 +533,8 @@ function LicenseTab() {
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-slate-400">资产数</span>
-                <span className="text-xs text-slate-500">{licenseInfo.currentAssets} / {licenseInfo.maxAssets}</span>
+                <span className="text-xs text-white/40">资产数</span>
+                <span className="text-xs text-white/60">{licenseInfo.currentAssets} / {licenseInfo.maxAssets}</span>
               </div>
               <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
                 <div className="h-full rounded-full bg-purple-500/60" style={{ width: `${(licenseInfo.currentAssets / licenseInfo.maxAssets) * 100}%` }} />
@@ -544,15 +544,15 @@ function LicenseTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Brain className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-cyan-400" />
             已授权模块
           </h3>
           <div className="flex flex-wrap gap-2">
             {licenseInfo.modules.map((mod) => (
-              <Badge key={mod} variant="outline" className="text-xs border-cyan-300 bg-cyan-500/[0.06] text-cyan-300">
+              <Badge key={mod} variant="outline" className="text-xs border-cyan-500/20 bg-cyan-500/[0.06] text-cyan-300">
                 <CheckCircle2 className="size-3 mr-1" />
                 {mod}
               </Badge>
@@ -561,25 +561,25 @@ function LicenseTab() {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl">
         <CardContent className="p-6">
-          <h3 className="text-sm font-medium text-slate-700 mb-4 flex items-center gap-2">
-            <Settings className="h-4 w-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-white/80 mb-4 flex items-center gap-2">
+            <Settings className="h-4 w-4 text-cyan-400" />
             版本信息
           </h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">当前版本</p>
-              <p className="text-sm text-slate-700 font-mono">v{licenseInfo.version}</p>
+              <p className="text-xs text-white/30">当前版本</p>
+              <p className="text-sm text-white/80 font-mono">v{licenseInfo.version}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-slate-300">构建日期</p>
-              <p className="text-sm text-slate-700">{licenseInfo.buildDate}</p>
+              <p className="text-xs text-white/30">构建日期</p>
+              <p className="text-sm text-white/80">{licenseInfo.buildDate}</p>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
-            <span className="text-xs text-slate-300">检查更新</span>
-            <Button variant="outline" size="sm" className="border-cyan-300 text-cyan-600 hover:bg-cyan-500/10">
+          <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+            <span className="text-xs text-white/30">检查更新</span>
+            <Button variant="outline" size="sm" className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10">
               检查更新
             </Button>
           </div>
@@ -620,7 +620,7 @@ export default function SystemPage() {
                 <Icon className="size-5" style={{ color: cat.color }} />
               </div>
               <h3 className="text-sm font-medium" style={{ color: `${cat.color}cc` }}>{cat.label}</h3>
-              <p className="text-xs text-slate-300">{cat.desc}</p>
+              <p className="text-xs text-white/30">{cat.desc}</p>
             </div>
           )
         })}

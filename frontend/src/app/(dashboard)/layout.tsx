@@ -30,7 +30,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-[#020a1a]">
+    <div className="flex h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef8fb_48%,#f8fafc_100%)] text-slate-900">
       <Sidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed((prev) => !prev)}

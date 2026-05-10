@@ -141,9 +141,9 @@ function GenerateReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg border-slate-200 bg-white text-slate-700 shadow-lg">
+      <DialogContent className="sm:max-w-lg border-white/[0.08] bg-[#0a1628] text-slate-300 shadow-[0_0_40px_rgba(0,212,255,0.12)]">
         <DialogHeader>
-          <DialogTitle className="text-slate-900">生成报告</DialogTitle>
+          <DialogTitle className="text-white">生成报告</DialogTitle>
           <DialogDescription className="text-slate-500">
             选择报告类型、时间范围和包含模块，系统将自动生成安全运营报告
           </DialogDescription>
@@ -152,30 +152,30 @@ function GenerateReportDialog({
           <div className="space-y-2">
             <label className="text-xs font-medium text-slate-400">报告类型</label>
             <Select value={reportType} onValueChange={(v) => v && setReportType(v)}>
-                <SelectTrigger className="h-9 border-slate-200 bg-white text-sm text-slate-700 focus:ring-cyan-400/20">
+                <SelectTrigger className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 focus:ring-cyan-400/20">
                   <SelectValue placeholder="选择报告类型" />
                 </SelectTrigger>
-                <SelectContent className="border-slate-200 bg-white">
-                  <SelectItem value="daily" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">日报</SelectItem>
-                  <SelectItem value="weekly" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">周报</SelectItem>
-                  <SelectItem value="monthly" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">月报</SelectItem>
-                  <SelectItem value="special" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">专项报告</SelectItem>
+                <SelectContent className="border-white/[0.08] bg-[#0a1628]">
+                  <SelectItem value="daily" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">日报</SelectItem>
+                  <SelectItem value="weekly" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">周报</SelectItem>
+                  <SelectItem value="monthly" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">月报</SelectItem>
+                  <SelectItem value="special" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">专项报告</SelectItem>
                 </SelectContent>
               </Select>
           </div>
           <div className="space-y-2">
             <label className="text-xs font-medium text-slate-400">时间范围</label>
             <Select value={timeRange} onValueChange={(v) => v && setTimeRange(v)}>
-                <SelectTrigger className="h-9 border-slate-200 bg-white text-sm text-slate-700 focus:ring-cyan-400/20">
+                <SelectTrigger className="h-9 border-white/[0.08] bg-white/[0.04] text-sm text-slate-300 focus:ring-cyan-400/20">
                   <SelectValue placeholder="选择时间范围" />
                 </SelectTrigger>
-                <SelectContent className="border-slate-200 bg-white">
-                  <SelectItem value="today" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">今日</SelectItem>
-                  <SelectItem value="yesterday" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">昨日</SelectItem>
-                  <SelectItem value="this_week" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">本周</SelectItem>
-                  <SelectItem value="last_week" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">上周</SelectItem>
-                  <SelectItem value="this_month" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">本月</SelectItem>
-                  <SelectItem value="last_month" className="text-slate-600 focus:bg-cyan-50 focus:text-cyan-700">上月</SelectItem>
+                <SelectContent className="border-white/[0.08] bg-[#0a1628]">
+                  <SelectItem value="today" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">今日</SelectItem>
+                  <SelectItem value="yesterday" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">昨日</SelectItem>
+                  <SelectItem value="this_week" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">本周</SelectItem>
+                  <SelectItem value="last_week" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">上周</SelectItem>
+                  <SelectItem value="this_month" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">本月</SelectItem>
+                  <SelectItem value="last_month" className="text-slate-300 focus:bg-cyan-400/10 focus:text-cyan-400">上月</SelectItem>
                 </SelectContent>
               </Select>
           </div>
@@ -192,8 +192,8 @@ function GenerateReportDialog({
                     className={cn(
                       "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all",
                       isSelected
-                        ? "border-cyan-200 bg-cyan-50 text-cyan-700"
-                        : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
+                        ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                        : "border-white/[0.06] bg-white/[0.02] text-slate-500 hover:border-white/10 hover:text-slate-400"
                     )}
                   >
                     {isSelected ? (
@@ -211,7 +211,7 @@ function GenerateReportDialog({
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+              className="border-white/10 text-white/50 hover:bg-white/[0.04] hover:text-white/70"
             >
               取消
             </Button>
@@ -264,8 +264,8 @@ export default function ReportsPage() {
             <FileBarChart className="h-5 w-5 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">报告中心</h1>
-            <p className="text-sm text-slate-400 mt-0.5">安全运营报告自动生成与管理</p>
+            <h1 className="text-2xl font-bold text-white">报告中心</h1>
+            <p className="text-sm text-white/40 mt-0.5">安全运营报告自动生成与管理</p>
           </div>
         </div>
       </div>
@@ -299,10 +299,10 @@ export default function ReportsPage() {
                   <Icon className="h-5 w-5" style={{ color: card.color }} />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-500">{card.label}</p>
+                  <p className="text-sm text-white/60">{card.label}</p>
                   <p className="text-2xl font-bold" style={{ color: card.color }}>
                     {card.count}
-                    <span className="text-xs font-normal text-slate-300 ml-1">
+                    <span className="text-xs font-normal text-white/30 ml-1">
                       {card.key === "template" ? "个" : "份"}
                     </span>
                   </p>
@@ -320,7 +320,7 @@ export default function ReportsPage() {
             placeholder="搜索报告..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 border-slate-200 bg-white pl-9 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+            className="h-9 border-white/[0.08] bg-white/[0.04] pl-9 text-sm text-slate-300 placeholder:text-slate-600 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
           />
         </div>
         <Button
@@ -333,10 +333,10 @@ export default function ReportsPage() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-white/70 flex items-center gap-2">
           <FileText className="h-4 w-4 text-cyan-400" />
           报告列表
-          <span className="text-xs text-slate-300 font-normal">({filteredReports.length})</span>
+          <span className="text-xs text-white/30 font-normal">({filteredReports.length})</span>
         </h2>
         {filteredReports.map((report) => {
           const tCfg = typeConfig[report.type]
@@ -344,13 +344,13 @@ export default function ReportsPage() {
           return (
             <Card
               key={report.id}
-              className="border-slate-200 bg-white hover:border-cyan-200 transition-all"
+              className="border-white/[0.06] bg-white/[0.02] hover:border-cyan-500/15 transition-all"
             >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0 space-y-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono text-slate-300">{report.id}</span>
+                      <span className="text-xs font-mono text-white/30">{report.id}</span>
                       <Badge
                         variant="outline"
                         className="text-[10px] font-semibold rounded-md px-1.5 py-0"
@@ -377,9 +377,9 @@ export default function ReportsPage() {
                         {sCfg.label}
                       </Badge>
                     </div>
-                    <h3 className="text-sm font-semibold text-slate-800 truncate">{report.title}</h3>
+                    <h3 className="text-sm font-semibold text-white/90 truncate">{report.title}</h3>
                     <div className="flex items-center gap-4">
-                      <span className="flex items-center gap-1 text-xs text-slate-300">
+                      <span className="flex items-center gap-1 text-xs text-white/30">
                         <Clock className="h-3 w-3" />
                         {report.generatedAt}
                       </span>
@@ -387,7 +387,7 @@ export default function ReportsPage() {
                         {report.modules.map((mod) => (
                           <span
                             key={mod}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-400 border border-slate-200/[0.06]"
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-white/40 border border-white/[0.06]"
                           >
                             {mod}
                           </span>
@@ -399,7 +399,7 @@ export default function ReportsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="text-slate-300 hover:text-cyan-600 hover:bg-cyan-50"
+                      className="text-white/30 hover:text-cyan-400 hover:bg-cyan-400/10"
                       disabled={report.status === "generating"}
                     >
                       <Download className="h-3.5 w-3.5" />
@@ -407,7 +407,7 @@ export default function ReportsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="text-slate-300 hover:text-cyan-600 hover:bg-cyan-50"
+                      className="text-white/30 hover:text-cyan-400 hover:bg-cyan-400/10"
                       disabled={report.status === "generating"}
                     >
                       <Mail className="h-3.5 w-3.5" />
@@ -415,7 +415,7 @@ export default function ReportsPage() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      className="text-slate-300 hover:text-red-400 hover:bg-red-50"
+                      className="text-white/30 hover:text-red-400 hover:bg-red-400/10"
                       onClick={() => handleDelete(report.id)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -429,7 +429,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-slate-600 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-white/70 flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-purple-400" />
           报告模板
         </h2>
@@ -439,7 +439,7 @@ export default function ReportsPage() {
             return (
               <Card
                 key={tpl.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:border-cyan-500/15 transition-all cursor-pointer group"
+                className="border-white/[0.06] bg-white/[0.02] hover:border-cyan-500/15 transition-all cursor-pointer group"
               >
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-center gap-3">
@@ -453,16 +453,16 @@ export default function ReportsPage() {
                       <Icon className="h-4 w-4" style={{ color: tpl.color }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-semibold text-slate-800 group-hover:text-cyan-600 transition-colors">{tpl.name}</h3>
+                      <h3 className="text-sm font-semibold text-white/90 group-hover:text-cyan-400 transition-colors">{tpl.name}</h3>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{tpl.description}</p>
+                  <p className="text-xs text-white/40 leading-relaxed">{tpl.description}</p>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-slate-300">已使用 {tpl.usageCount} 次</span>
+                    <span className="text-[10px] text-white/25">已使用 {tpl.usageCount} 次</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-[10px] text-slate-300 hover:text-cyan-600 hover:bg-cyan-50 gap-1"
+                      className="h-6 text-[10px] text-white/30 hover:text-cyan-400 hover:bg-cyan-400/10 gap-1"
                     >
                       <Plus className="h-3 w-3" />
                       使用模板

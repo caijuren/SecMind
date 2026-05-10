@@ -164,7 +164,7 @@ export default function AuditPage() {
                       <Icon className="h-4.5 w-4.5" style={{ color: config.color }} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-600">{config.label}</p>
+                      <p className="text-sm font-medium text-white/70">{config.label}</p>
                       <p
                         className="text-xl font-bold font-mono"
                         style={{
@@ -173,7 +173,7 @@ export default function AuditPage() {
                         }}
                       >
                         {config.count.toLocaleString()}
-                        <span className="text-xs font-normal text-slate-300 ml-1">条</span>
+                        <span className="text-xs font-normal text-white/30 ml-1">条</span>
                       </p>
                     </div>
                   </div>
@@ -206,16 +206,16 @@ export default function AuditPage() {
               placeholder="搜索操作人、对象、详情、IP..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 bg-white/5 border-cyan-200 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
+              className="pl-8 h-8 bg-white/5 border-cyan-500/15 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
             />
           </div>
 
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
-            <SelectTrigger className="h-8 w-[130px] border-cyan-200 bg-white/5 text-foreground">
-              <Filter className="h-3.5 w-3.5 mr-1 text-slate-400" />
+            <SelectTrigger className="h-8 w-[130px] border-cyan-500/15 bg-white/5 text-foreground">
+              <Filter className="h-3.5 w-3.5 mr-1 text-white/40" />
               <SelectValue placeholder="操作类型" />
             </SelectTrigger>
-            <SelectContent className="border-cyan-200 bg-white text-foreground">
+            <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-foreground">
               <SelectItem value="all">全部类型</SelectItem>
               <SelectItem value="登录">登录</SelectItem>
               <SelectItem value="查询">查询</SelectItem>
@@ -229,15 +229,15 @@ export default function AuditPage() {
             placeholder="操作人"
             value={operatorFilter}
             onChange={(e) => setOperatorFilter(e.target.value)}
-            className="h-8 w-[120px] bg-white/5 border-cyan-200 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
+            className="h-8 w-[120px] bg-white/5 border-cyan-500/15 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
           />
 
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v ?? "7d")}>
-            <SelectTrigger className="h-8 w-[120px] border-cyan-200 bg-white/5 text-foreground">
-              <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
+            <SelectTrigger className="h-8 w-[120px] border-cyan-500/15 bg-white/5 text-foreground">
+              <Clock className="h-3.5 w-3.5 mr-1 text-white/40" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="border-cyan-200 bg-white text-foreground">
+            <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-foreground">
               <SelectItem value="today">今天</SelectItem>
               <SelectItem value="7d">近7天</SelectItem>
               <SelectItem value="30d">近30天</SelectItem>
@@ -259,13 +259,13 @@ export default function AuditPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-cyan-500/10 hover:bg-transparent">
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">时间</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作对象</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作详情</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">IP地址</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">结果</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">时间</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">操作对象</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">操作详情</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">IP地址</TableHead>
+                <TableHead className="text-white/40 text-xs font-semibold tracking-wider h-9">结果</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -275,9 +275,9 @@ export default function AuditPage() {
                 return (
                   <TableRow
                     key={log.id}
-                    className="border-b border-slate-100 hover:bg-cyan-50 transition-colors"
+                    className="border-b border-white/[0.04] hover:bg-cyan-500/[0.04] transition-colors"
                   >
-                    <TableCell className="text-xs font-mono text-slate-400 py-2.5">{log.time}</TableCell>
+                    <TableCell className="text-xs font-mono text-white/50 py-2.5">{log.time}</TableCell>
                     <TableCell className="py-2.5">
                       <div className="flex items-center gap-2">
                         <Avatar size="sm">
@@ -291,7 +291,7 @@ export default function AuditPage() {
                             {log.operatorAvatar}
                           </AvatarFallback>
                         </Avatar>
-                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-400" : "text-slate-700")}>
+                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-400" : "text-white/80")}>
                           {log.operator}
                         </span>
                       </div>
@@ -309,9 +309,9 @@ export default function AuditPage() {
                         {log.operationType}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-slate-600 font-medium py-2.5">{log.target}</TableCell>
-                    <TableCell className="text-xs text-slate-400 max-w-[280px] truncate py-2.5">{log.detail}</TableCell>
-                    <TableCell className="text-xs font-mono text-slate-400 py-2.5">{log.ip}</TableCell>
+                    <TableCell className="text-xs text-white/70 font-medium py-2.5">{log.target}</TableCell>
+                    <TableCell className="text-xs text-white/50 max-w-[280px] truncate py-2.5">{log.detail}</TableCell>
+                    <TableCell className="text-xs font-mono text-white/40 py-2.5">{log.ip}</TableCell>
                     <TableCell className="py-2.5">
                       {log.result === "成功" ? (
                         <Badge
@@ -346,7 +346,7 @@ export default function AuditPage() {
               })}
               {filteredLogs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-sm text-slate-300">
+                  <TableCell colSpan={7} className="h-32 text-center text-sm text-white/30">
                     暂无匹配的审计日志
                   </TableCell>
                 </TableRow>
@@ -357,7 +357,7 @@ export default function AuditPage() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-300">
+        <span className="text-xs text-white/30">
           共 {filteredLogs.length} 条记录
         </span>
         <div className="flex items-center gap-2">

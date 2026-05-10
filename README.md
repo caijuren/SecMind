@@ -3,7 +3,7 @@
 <div align="center">
 
 ![SecMind](https://img.shields.io/badge/SecMind-AI%20Security%20Platform-22d3ee?style=for-the-badge)
-![Version](https://img.shields.io/badge/version-0.8.0-22d3ee?style=for-the-badge)
+![Version](https://img.shields.io/badge/version-0.9.0-22d3ee?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-22d3ee?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.10+-22d3ee?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-16-22d3ee?style=for-the-badge)
@@ -163,7 +163,7 @@ docker-compose up -d
 
 查看完整的版本历史和更新日志：[CHANGELOG.md](CHANGELOG.md)
 
-### 最新版本 v0.8.0
+### 最新版本 v0.9.0
 
 - ✅ 完整的文档中心上线
 - ✅ AI 信号推理引擎

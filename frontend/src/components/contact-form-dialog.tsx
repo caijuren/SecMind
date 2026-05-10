@@ -61,20 +61,20 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={children} />
-      <DialogContent className="sm:max-w-lg bg-[#0a1628] border-cyan-500/20 text-white shadow-[0_0_40px_rgba(0,212,255,0.12)]">
+      <DialogContent className="sm:max-w-lg border-slate-200 bg-white text-slate-800 shadow-xl shadow-slate-200/60">
         {submitted ? (
           <div className="flex flex-col items-center justify-center py-10 gap-4">
             <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/30">
               <CheckCircle2 className="size-7 text-emerald-400" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-white">提交成功</h3>
-              <p className="text-sm text-white/50">
+              <h3 className="text-lg font-semibold text-slate-900">提交成功</h3>
+              <p className="text-sm text-slate-500">
                 我们的团队将在1个工作日内与您联系
               </p>
             </div>
             <Button
-              className="mt-2 bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500/25"
+              className="mt-2 border border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
               onClick={() => handleOpenChange(false)}
             >
               关闭
@@ -83,13 +83,13 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-white">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-500/15">
-                  <MessageSquare className="size-4 text-cyan-400" />
+              <DialogTitle className="flex items-center gap-2 text-slate-900">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-50">
+                  <MessageSquare className="size-4 text-cyan-700" />
                 </div>
                 联系我们
               </DialogTitle>
-              <DialogDescription className="text-white/40">
+              <DialogDescription className="text-slate-500">
                 填写以下信息，我们的团队将尽快与您取得联系
               </DialogDescription>
             </DialogHeader>
@@ -97,7 +97,7 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-white/60 text-xs">
+                  <Label className="text-slate-600 text-xs">
                     <User className="size-3 mr-1 inline" />
                     姓名 <span className="text-red-400">*</span>
                   </Label>
@@ -106,11 +106,11 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                     value={form.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="您的姓名"
-                    className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
+                    className="h-10 border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-cyan-400/60 focus:ring-cyan-400/20"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white/60 text-xs">
+                  <Label className="text-slate-600 text-xs">
                     <Building2 className="size-3 mr-1 inline" />
                     公司名称 <span className="text-red-400">*</span>
                   </Label>
@@ -119,14 +119,14 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                     value={form.company}
                     onChange={(e) => handleChange("company", e.target.value)}
                     placeholder="公司名称"
-                    className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
+                    className="h-10 border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-cyan-400/60 focus:ring-cyan-400/20"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label className="text-white/60 text-xs">
+                  <Label className="text-slate-600 text-xs">
                     <Mail className="size-3 mr-1 inline" />
                     工作邮箱 <span className="text-red-400">*</span>
                   </Label>
@@ -136,11 +136,11 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="you@company.com"
-                    className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
+                    className="h-10 border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-cyan-400/60 focus:ring-cyan-400/20"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-white/60 text-xs">
+                  <Label className="text-slate-600 text-xs">
                     <Phone className="size-3 mr-1 inline" />
                     手机号 <span className="text-red-400">*</span>
                   </Label>
@@ -150,13 +150,13 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 11))}
                     placeholder="13800138000"
-                    className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
+                    className="h-10 border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-cyan-400/60 focus:ring-cyan-400/20"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-white/60 text-xs">
+                <Label className="text-slate-600 text-xs">
                   <MessageSquare className="size-3 mr-1 inline" />
                   留言
                 </Label>
@@ -164,7 +164,7 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                   value={form.message}
                   onChange={(e) => handleChange("message", e.target.value)}
                   placeholder="请描述您的需求或想了解的内容..."
-                  className="min-h-[100px] bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20 resize-none"
+                  className="min-h-[100px] resize-none border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:border-cyan-400/60 focus:ring-cyan-400/20"
                 />
               </div>
 
@@ -176,7 +176,7 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                 提交
               </Button>
 
-              <p className="text-[10px] text-white/20 text-center">
+              <p className="text-[10px] text-slate-400 text-center">
                 提交即表示您同意我们的隐私政策，我们不会向第三方共享您的信息
               </p>
             </form>

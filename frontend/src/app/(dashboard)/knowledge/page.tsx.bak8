@@ -93,15 +93,15 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-white border-cyan-300 text-slate-900 shadow-lg">
+      <DialogContent className="sm:max-w-lg bg-[#0a1628] border-cyan-500/20 text-white shadow-[0_0_40px_rgba(0,212,255,0.12)]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-900">
+          <DialogTitle className="flex items-center gap-2 text-white">
             <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-500/15">
               <Upload className="size-4 text-cyan-400" />
             </div>
             导入知识
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-white/40">
             手动录入或粘贴知识内容到AI知识库
           </DialogDescription>
         </DialogHeader>
@@ -109,22 +109,22 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-slate-500 text-xs">知识标题 <span className="text-red-400">*</span></Label>
+              <Label className="text-white/60 text-xs">知识标题 <span className="text-red-400">*</span></Label>
               <Input
                 required
                 value={form.title}
                 onChange={(e) => handleChange("title", e.target.value)}
                 placeholder="如：XX漏洞分析报告"
-                className="h-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200"
+                className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-slate-500 text-xs">所属分类 <span className="text-red-400">*</span></Label>
+              <Label className="text-white/60 text-xs">所属分类 <span className="text-red-400">*</span></Label>
               <Select value={form.category} onValueChange={(v) => handleChange("category", v ?? "")}>
-                <SelectTrigger className="h-10 bg-white border-slate-200 text-slate-900 text-sm">
+                <SelectTrigger className="h-10 bg-white/[0.04] border-white/10 text-white text-sm">
                   <SelectValue placeholder="选择分类" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-cyan-200 text-slate-900">
+                <SelectContent className="bg-[#0c1a3a] border-cyan-500/15 text-white">
                   {knowledgeCategories.map((cat) => (
                     <SelectItem key={cat.nameKey} value={cat.nameKey}>{t0(cat.nameKey)}</SelectItem>
                   ))}
@@ -134,23 +134,23 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-slate-500 text-xs">标签</Label>
+            <Label className="text-white/60 text-xs">标签</Label>
             <Input
               value={form.tags}
               onChange={(e) => handleChange("tags", e.target.value)}
               placeholder="多个标签用逗号分隔，如：APT, 钓鱼, CVE"
-              className="h-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200"
+              className="h-10 bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-slate-500 text-xs">知识内容 <span className="text-red-400">*</span></Label>
+            <Label className="text-white/60 text-xs">知识内容 <span className="text-red-400">*</span></Label>
             <Textarea
               required
               value={form.content}
               onChange={(e) => handleChange("content", e.target.value)}
               placeholder="支持Markdown格式，粘贴知识正文内容..."
-              className="min-h-[160px] bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200 resize-none text-sm"
+              className="min-h-[160px] bg-white/[0.04] border-white/10 text-white placeholder:text-white/20 focus:border-cyan-500/40 focus:ring-cyan-500/20 resize-none text-sm"
             />
           </div>
 
@@ -226,10 +226,10 @@ export default function KnowledgePage() {
           title={t("nav.tabAiKnowledge")}
         />
 
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-6 space-y-4">
+        <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 space-y-4">
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">{selectedArticle.title}</h2>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <h2 className="text-lg font-bold text-white">{selectedArticle.title}</h2>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/40">
               {cat && (
                 <span
                   className="inline-flex items-center rounded px-2 py-0.5 font-medium"
@@ -253,7 +253,7 @@ export default function KnowledgePage() {
             </div>
             <div className="flex flex-wrap gap-1.5">
               {selectedArticle.tags.map((tag) => (
-                <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white/[0.04] px-2 py-0.5 text-[10px] text-slate-400">
+                <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/40">
                   <Tag className="size-2.5" />
                   {tag}
                 </span>
@@ -261,28 +261,28 @@ export default function KnowledgePage() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <p className="text-sm text-slate-400 italic mb-4">{selectedArticle.summary}</p>
-            <div className="prose prose prose-sm max-w-none text-slate-600 space-y-3">
+          <div className="border-t border-white/8 pt-4">
+            <p className="text-sm text-white/50 italic mb-4">{selectedArticle.summary}</p>
+            <div className="prose prose-invert prose-sm max-w-none text-white/70 space-y-3">
               {selectedArticle.content.split("\n\n").map((block, i) => {
                 if (block.startsWith("## ")) {
-                  return <h3 key={i} className="text-base font-semibold text-slate-800 mt-6 mb-2">{block.replace("## ", "")}</h3>
+                  return <h3 key={i} className="text-base font-semibold text-white/90 mt-6 mb-2">{block.replace("## ", "")}</h3>
                 }
                 if (block.startsWith("### ")) {
-                  return <h4 key={i} className="text-sm font-semibold text-slate-700 mt-4 mb-1">{block.replace("### ", "")}</h4>
+                  return <h4 key={i} className="text-sm font-semibold text-white/80 mt-4 mb-1">{block.replace("### ", "")}</h4>
                 }
                 if (block.startsWith("| ")) {
                   const rows = block.split("\n").filter((r) => r.startsWith("|") && !r.startsWith("|--"))
                   return (
                     <div key={i} className="overflow-x-auto my-3">
-                      <table className="w-full text-xs border border-slate-200">
+                      <table className="w-full text-xs border border-white/10">
                         <tbody>
                           {rows.map((row, ri) => {
                             const cells = row.split("|").filter(Boolean).map((c) => c.trim())
                             return (
                               <tr key={ri} className={ri === 0 ? "bg-white/[0.04]" : ""}>
                                 {cells.map((cell, ci) => (
-                                  <td key={ci} className="px-3 py-1.5 border border-slate-100 text-slate-500">{cell}</td>
+                                  <td key={ci} className="px-3 py-1.5 border border-white/5 text-white/60">{cell}</td>
                                 ))}
                               </tr>
                             )
@@ -297,9 +297,9 @@ export default function KnowledgePage() {
                   return (
                     <ul key={i} className="space-y-1 ml-4">
                       {items.map((item, j) => (
-                        <li key={j} className="text-sm text-slate-500 flex items-start gap-2">
+                        <li key={j} className="text-sm text-white/60 flex items-start gap-2">
                           <span className="mt-1.5 size-1 rounded-full bg-cyan-400/40 shrink-0" />
-                          <span dangerouslySetInnerHTML={{ __html: item.replace("- ", "").replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-700">$1</strong>') }} />
+                          <span dangerouslySetInnerHTML={{ __html: item.replace("- ", "").replace(/\*\*(.*?)\*\*/g, '<strong class="text-white/80">$1</strong>') }} />
                         </li>
                       ))}
                     </ul>
@@ -310,12 +310,12 @@ export default function KnowledgePage() {
                   return (
                     <ol key={i} className="space-y-1 ml-4 list-decimal list-outside">
                       {items.map((item, j) => (
-                        <li key={j} className="text-sm text-slate-500 pl-1" dangerouslySetInnerHTML={{ __html: item.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-700">$1</strong>') }} />
+                        <li key={j} className="text-sm text-white/60 pl-1" dangerouslySetInnerHTML={{ __html: item.replace(/^\d+\.\s*/, "").replace(/\*\*(.*?)\*\*/g, '<strong class="text-white/80">$1</strong>') }} />
                       ))}
                     </ol>
                   )
                 }
-                return <p key={i} className="text-sm text-slate-500 leading-relaxed" dangerouslySetInnerHTML={{ __html: block.replace(/\*\*(.*?)\*\*/g, '<strong class="text-slate-700">$1</strong>') }} />
+                return <p key={i} className="text-sm text-white/60 leading-relaxed" dangerouslySetInnerHTML={{ __html: block.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white/80">$1</strong>') }} />
               })}
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function KnowledgePage() {
         icon={BookOpen}
         title={t("nav.tabAiKnowledge")}
         actions={
-          <Button variant="outline" size="sm" className="gap-1.5 border-cyan-300 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200" onClick={() => setImportDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="gap-1.5 border-cyan-500/20 text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-3.5 w-3.5" />
             {t("settings.importKnowledge")}
           </Button>
@@ -338,12 +338,12 @@ export default function KnowledgePage() {
       />
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
         <Input
           placeholder={t("settings.searchKnowledge")}
           value={knowledgeSearch}
           onChange={(e) => setKnowledgeSearch(e.target.value)}
-          className="pl-10 h-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+          className="pl-10 h-10 bg-white/5 border-cyan-500/15 text-white placeholder:text-white/30 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
         />
       </div>
 
@@ -367,15 +367,15 @@ export default function KnowledgePage() {
                 <Icon className="size-5" style={{ color: cat.color }} />
               </div>
               <h3 className="text-sm font-medium" style={{ color: `${cat.color}cc` }}>{t(cat.nameKey)}</h3>
-              <p className="text-xs text-slate-300">{articles.filter((a) => a.categoryKey === cat.nameKey).length} {t("settings.articles")}</p>
+              <p className="text-xs text-white/30">{articles.filter((a) => a.categoryKey === cat.nameKey).length} {t("settings.articles")}</p>
             </div>
           )
         })}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-          <h2 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+      <div className="rounded-xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
+        <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
+          <h2 className="text-sm font-medium text-white/80 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
             {selectedCategory ? `${t0(selectedCategory)}知识` : "AI最近引用"}
           </h2>
@@ -383,13 +383,13 @@ export default function KnowledgePage() {
             {selectedCategory && (
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="text-[10px] text-slate-300 hover:text-slate-400 flex items-center gap-1 transition-colors"
+                className="text-[10px] text-white/30 hover:text-white/50 flex items-center gap-1 transition-colors"
               >
                 <X className="size-3" />
                 清除筛选
               </button>
             )}
-            <span className="text-xs text-slate-300">{filteredArticles.length} {t("settings.articles")}</span>
+            <span className="text-xs text-white/30">{filteredArticles.length} {t("settings.articles")}</span>
           </div>
         </div>
         <div className="divide-y divide-white/5">
@@ -403,11 +403,11 @@ export default function KnowledgePage() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-700 group-hover:text-cyan-300 transition-colors truncate">
+                    <span className="text-sm text-white/80 group-hover:text-cyan-300 transition-colors truncate">
                       {article.title}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-[10px] text-slate-300">
+                  <div className="mt-1 flex items-center gap-3 text-[10px] text-white/30">
                     {cat && (
                       <span
                         className="inline-flex items-center rounded px-1.5 py-0.5 font-medium"
@@ -427,24 +427,24 @@ export default function KnowledgePage() {
                       <Brain className="h-2.5 w-2.5" />
                       AI引用 {article.citedByAI}次
                     </span>
-                    <span className="hidden sm:inline text-slate-300 truncate max-w-[200px]">{article.summary}</span>
+                    <span className="hidden sm:inline text-white/20 truncate max-w-[200px]">{article.summary}</span>
                   </div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-cyan-600 transition-colors shrink-0" />
+                <ArrowRight className="h-3.5 w-3.5 text-white/10 group-hover:text-cyan-400 transition-colors shrink-0" />
               </div>
             )
           })}
           {filteredArticles.length === 0 && (
-            <div className="py-12 text-center text-sm text-slate-300">{t("settings.noMatchingArticles")}</div>
+            <div className="py-12 text-center text-sm text-white/30">{t("settings.noMatchingArticles")}</div>
           )}
         </div>
         {filteredArticles.length > 0 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200">
-            <span className="text-xs text-slate-300">共 {filteredArticles.length} 篇</span>
+          <div className="flex items-center justify-between px-5 py-3 border-t border-white/10">
+            <span className="text-xs text-white/30">共 {filteredArticles.length} 篇</span>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="text-slate-400">上一页</Button>
-              <span className="text-xs text-slate-400">{currentPage} / {totalPages}</span>
-              <Button variant="ghost" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="text-slate-400">下一页</Button>
+              <Button variant="ghost" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="text-white/40">上一页</Button>
+              <span className="text-xs text-white/50">{currentPage} / {totalPages}</span>
+              <Button variant="ghost" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="text-white/40">下一页</Button>
             </div>
           </div>
         )}

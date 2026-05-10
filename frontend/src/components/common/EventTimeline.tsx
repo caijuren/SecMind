@@ -72,12 +72,12 @@ export default function EventTimeline({
     <div className="w-full">
       {title && (
         <div className="flex items-center gap-2 mb-4 px-1">
-          <Clock className="size-4 text-cyan-400" />
-          <h3 className="text-sm font-medium text-white/80">{title}</h3>
+          <Clock className="size-4 text-cyan-600" />
+          <h3 className="text-sm font-medium text-slate-800">{title}</h3>
         </div>
       )}
       <div
-        className="overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+        className="overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent"
         style={{ maxHeight }}
       >
         <div className="relative pl-2">
@@ -107,9 +107,9 @@ export default function EventTimeline({
                         ? `2px solid ${dotColor}`
                         : "2px solid transparent",
                     background: isHighlighted
-                      ? `rgba(0,212,255,0.08)`
+                      ? `rgba(6,182,212,0.08)`
                       : isActive
-                        ? "rgba(255,255,255,0.03)"
+                        ? "rgba(248,250,252,0.9)"
                         : "transparent",
                     boxShadow: isHighlighted
                       ? `0 0 12px 2px ${dotColor}40, inset 0 0 8px ${dotColor}10`
@@ -118,7 +118,7 @@ export default function EventTimeline({
                   onMouseEnter={() => setActiveId(event.id)}
                   onMouseLeave={() => setActiveId(null)}
                 >
-                  <span className="shrink-0 w-[52px] text-right font-mono text-xs text-white/50 pt-0.5 select-none">
+                  <span className="shrink-0 w-[52px] text-right font-mono text-xs text-slate-400 pt-0.5 select-none">
                     {event.timestamp}
                   </span>
 
@@ -140,17 +140,17 @@ export default function EventTimeline({
                         className="size-3.5 shrink-0"
                         style={{ color: dotColor }}
                       />
-                      <span className="text-sm text-white/90 truncate">
+                      <span className="text-sm text-slate-800 truncate">
                         {event.title}
                       </span>
                     </div>
                     {event.description && (
-                      <p className="text-xs text-white/45 mt-0.5 line-clamp-2">
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
                         {event.description}
                       </p>
                     )}
                     {showSource && event.source && (
-                      <span className="text-[10px] text-white/30 mt-0.5 inline-block">
+                      <span className="text-[10px] text-slate-400 mt-0.5 inline-block">
                         {event.source}
                       </span>
                     )}

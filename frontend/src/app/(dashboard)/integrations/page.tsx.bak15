@@ -162,18 +162,18 @@ export default function IntegrationsPage() {
             <Plug className="h-5 w-5 text-cyan-400" />
           </div>
           <div>
-            <h1 className="text-base font-semibold text-slate-900">集成中心</h1>
-            <p className="text-xs text-slate-400">第三方系统集成与API管理</p>
+            <h1 className="text-base font-semibold text-white">集成中心</h1>
+            <p className="text-xs text-white/40">第三方系统集成与API管理</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-300" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-white/30" />
             <Input
               placeholder="搜索集成..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 w-48 border-slate-200 bg-white/[0.04] pl-8 text-xs text-slate-500 placeholder:text-slate-300"
+              className="h-7 w-48 border-white/10 bg-white/[0.04] pl-8 text-xs text-white/60 placeholder:text-white/25"
             />
           </div>
         </div>
@@ -187,8 +187,8 @@ export default function IntegrationsPage() {
             className={cn(
               "rounded-xl border p-4 transition-all duration-200 text-left",
               activeFilter === card.key
-                ? "border-slate-200 bg-white/[0.06]"
-                : "border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200"
+                ? "border-white/20 bg-white/[0.06]"
+                : "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10"
             )}
           >
             <div className="flex items-center justify-between">
@@ -200,8 +200,8 @@ export default function IntegrationsPage() {
                   <card.icon className="h-4.5 w-4.5" style={{ color: card.color }} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">{card.label}</p>
-                  <p className="text-xl font-bold text-slate-900">{card.count}</p>
+                  <p className="text-xs text-white/50">{card.label}</p>
+                  <p className="text-xl font-bold text-white">{card.count}</p>
                 </div>
               </div>
               {activeFilter === card.key && (
@@ -215,8 +215,8 @@ export default function IntegrationsPage() {
       {activeFilter === "integrated" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">已集成服务</h2>
-            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400">
+            <h2 className="text-sm font-medium text-white/70">已集成服务</h2>
+            <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">
               {filteredIntegrated.length} 项
             </Badge>
           </div>
@@ -224,7 +224,7 @@ export default function IntegrationsPage() {
             {filteredIntegrated.map((app) => (
               <Card
                 key={app.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
+                className="border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-200"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
@@ -236,8 +236,8 @@ export default function IntegrationsPage() {
                         <app.icon className="h-5 w-5" style={{ color: app.color }} />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{app.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{app.description}</p>
+                        <p className="text-sm font-medium text-white">{app.name}</p>
+                        <p className="text-xs text-white/40 mt-0.5">{app.description}</p>
                       </div>
                     </div>
                     <Badge
@@ -262,14 +262,14 @@ export default function IntegrationsPage() {
                   </div>
                   <Separator className="my-3 bg-white/[0.06]" />
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-300">
+                    <div className="flex items-center gap-1.5 text-xs text-white/30">
                       <Clock className="h-3 w-3" />
                       最后同步: {app.lastSync}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 text-[11px] text-slate-400 hover:text-cyan-600 gap-1"
+                      className="h-6 text-[11px] text-white/50 hover:text-cyan-400 gap-1"
                       onClick={() => {
                         setSelectedApp(app)
                         setConfigDialogOpen(true)
@@ -289,8 +289,8 @@ export default function IntegrationsPage() {
       {activeFilter === "marketplace" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">可用集成市场</h2>
-            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400">
+            <h2 className="text-sm font-medium text-white/70">可用集成市场</h2>
+            <Badge variant="outline" className="text-[10px] border-white/10 text-white/40">
               {filteredMarketplace.length} 项
             </Badge>
           </div>
@@ -298,7 +298,7 @@ export default function IntegrationsPage() {
             {filteredMarketplace.map((app) => (
               <Card
                 key={app.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
+                className="border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-200"
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
@@ -310,7 +310,7 @@ export default function IntegrationsPage() {
                         <app.icon className="h-4.5 w-4.5" style={{ color: app.categoryColor }} />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{app.name}</p>
+                        <p className="text-sm font-medium text-white">{app.name}</p>
                       </div>
                     </div>
                     <Badge
@@ -325,7 +325,7 @@ export default function IntegrationsPage() {
                       {app.category}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-400 mb-3">{app.description}</p>
+                  <p className="text-xs text-white/40 mb-3">{app.description}</p>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -348,7 +348,7 @@ export default function IntegrationsPage() {
       {activeFilter === "webhooks" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">Webhook 管理</h2>
+            <h2 className="text-sm font-medium text-white/70">Webhook 管理</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -362,7 +362,7 @@ export default function IntegrationsPage() {
             {webhooks.map((wh) => (
               <Card
                 key={wh.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
+                className="border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all duration-200"
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -373,10 +373,10 @@ export default function IntegrationsPage() {
                           wh.active ? "bg-purple-500/10" : "bg-white/[0.04]"
                         )}
                       >
-                        <Webhook className={cn("h-4 w-4", wh.active ? "text-purple-400" : "text-slate-300")} />
+                        <Webhook className={cn("h-4 w-4", wh.active ? "text-purple-400" : "text-white/30")} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs text-slate-500 font-mono truncate">{wh.url}</p>
+                        <p className="text-xs text-white/60 font-mono truncate">{wh.url}</p>
                         <div className="flex items-center gap-1.5 mt-1">
                           {wh.events.map((event) => (
                             <Badge
@@ -392,12 +392,12 @@ export default function IntegrationsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <span className="text-[10px] text-slate-300">创建于 {wh.createdAt}</span>
+                      <span className="text-[10px] text-white/25">创建于 {wh.createdAt}</span>
                       <button
                         onClick={() => toggleWebhook(wh.id)}
                         className={cn(
                           "relative h-5 w-9 rounded-full transition-colors duration-200",
-                          wh.active ? "bg-purple-500/60" : "bg-white"
+                          wh.active ? "bg-purple-500/60" : "bg-white/10"
                         )}
                       >
                         <span
@@ -410,7 +410,7 @@ export default function IntegrationsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 text-[11px] text-slate-400 hover:text-cyan-600 gap-1"
+                        className="h-6 text-[11px] text-white/50 hover:text-cyan-400 gap-1"
                       >
                         <Send className="h-3 w-3" />
                         测试
@@ -429,32 +429,32 @@ export default function IntegrationsPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Key className="h-4 w-4 text-cyan-400" />
-          <h2 className="text-sm font-medium text-slate-600">API 文档入口</h2>
+          <h2 className="text-sm font-medium text-white/70">API 文档入口</h2>
         </div>
-        <Card className="border-slate-200/[0.06] bg-white/[0.02]">
+        <Card className="border-white/[0.06] bg-white/[0.02]">
           <CardContent className="p-4">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <p className="text-[10px] text-slate-300 mb-1">API 基础 URL</p>
+                <p className="text-[10px] text-white/30 mb-1">API 基础 URL</p>
                 <div className="flex items-center gap-2">
                   <code className="text-xs text-cyan-400 font-mono bg-cyan-500/[0.06] px-2 py-1 rounded border border-cyan-500/10">
                     https://api.secmind.ai/v2
                   </code>
-                  <Button variant="ghost" size="icon-sm" className="text-slate-300 hover:text-cyan-600">
+                  <Button variant="ghost" size="icon-sm" className="text-white/30 hover:text-cyan-400">
                     <Copy className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
               <div>
-                <p className="text-[10px] text-slate-300 mb-1">API 密钥</p>
+                <p className="text-[10px] text-white/30 mb-1">API 密钥</p>
                 <div className="flex items-center gap-2">
-                  <code className="text-xs text-slate-400 font-mono bg-white/[0.04] px-2 py-1 rounded border border-slate-200/[0.06]">
+                  <code className="text-xs text-white/50 font-mono bg-white/[0.04] px-2 py-1 rounded border border-white/[0.06]">
                     {showApiKey ? "sk-sec-a8f3e2d1c9b7a6f5e4d3c2b1a0" : "sk-sec-••••••••••••••••••••••••"}
                   </code>
                   <Button
                     variant="ghost"
                     size="icon-sm"
-                    className="text-slate-300 hover:text-cyan-600"
+                    className="text-white/30 hover:text-cyan-400"
                     onClick={() => setShowApiKey(!showApiKey)}
                   >
                     {showApiKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -478,19 +478,19 @@ export default function IntegrationsPage() {
       </div>
 
       <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-        <DialogContent className="sm:max-w-md border-slate-200 bg-white">
+        <DialogContent className="sm:max-w-md border-white/10 bg-[#0a1628]">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
+            <DialogTitle className="text-white">
               {selectedApp?.name} 配置
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-white/40">
               管理 {selectedApp?.name} 集成配置与连接状态
             </DialogDescription>
           </DialogHeader>
           <Separator className="bg-white/[0.06]" />
           <div className="space-y-3">
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">连接状态</p>
+              <p className="text-[10px] text-white/30 mb-1">连接状态</p>
               <Badge
                 variant="outline"
                 className={cn(
@@ -508,13 +508,13 @@ export default function IntegrationsPage() {
               </Badge>
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">最后同步</p>
-              <p className="text-xs text-slate-500">{selectedApp?.lastSync}</p>
+              <p className="text-[10px] text-white/30 mb-1">最后同步</p>
+              <p className="text-xs text-white/60">{selectedApp?.lastSync}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">同步频率</p>
+              <p className="text-[10px] text-white/30 mb-1">同步频率</p>
               <Select>
-                <SelectTrigger size="sm" className="w-full border-slate-200 bg-white/[0.04] text-slate-400">
+                <SelectTrigger size="sm" className="w-full border-white/10 bg-white/[0.04] text-white/50">
                   <SelectValue placeholder="选择同步频率" />
                 </SelectTrigger>
                 <SelectContent>
@@ -531,7 +531,7 @@ export default function IntegrationsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-slate-400 hover:text-slate-900"
+              className="text-xs text-white/50 hover:text-white"
               onClick={() => setConfigDialogOpen(false)}
             >
               取消
@@ -548,33 +548,33 @@ export default function IntegrationsPage() {
       </Dialog>
 
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-md border-slate-200 bg-white">
+        <DialogContent className="sm:max-w-md border-white/10 bg-[#0a1628]">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
+            <DialogTitle className="text-white">
               添加 {selectedMarketApp?.name} 集成
             </DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogDescription className="text-white/40">
               配置 {selectedMarketApp?.name} 集成参数以启用服务
             </DialogDescription>
           </DialogHeader>
           <Separator className="bg-white/[0.06]" />
           <div className="space-y-3">
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">服务描述</p>
-              <p className="text-xs text-slate-500">{selectedMarketApp?.description}</p>
+              <p className="text-[10px] text-white/30 mb-1">服务描述</p>
+              <p className="text-xs text-white/60">{selectedMarketApp?.description}</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">API 端点</p>
+              <p className="text-[10px] text-white/30 mb-1">API 端点</p>
               <Input
                 placeholder="输入 API 端点 URL"
-                className="h-7 border-slate-200 bg-white/[0.04] text-xs text-slate-500 placeholder:text-slate-300"
+                className="h-7 border-white/10 bg-white/[0.04] text-xs text-white/60 placeholder:text-white/25"
               />
             </div>
             <div>
-              <p className="text-[10px] text-slate-300 mb-1">认证密钥</p>
+              <p className="text-[10px] text-white/30 mb-1">认证密钥</p>
               <Input
                 placeholder="输入 API Key 或 Token"
-                className="h-7 border-slate-200 bg-white/[0.04] text-xs text-slate-500 placeholder:text-slate-300"
+                className="h-7 border-white/10 bg-white/[0.04] text-xs text-white/60 placeholder:text-white/25"
               />
             </div>
           </div>
@@ -583,7 +583,7 @@ export default function IntegrationsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-slate-400 hover:text-slate-900"
+              className="text-xs text-white/50 hover:text-white"
               onClick={() => setAddDialogOpen(false)}
             >
               取消

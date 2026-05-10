@@ -118,7 +118,7 @@ function KPICard({
         <AnimatedNumber value={value} />
         {suffix && <span className="text-sm font-normal ml-0.5 opacity-50">{suffix}</span>}
       </div>
-      <div className="mt-1 text-[11px] text-slate-400">{label}</div>
+      <div className="mt-1 text-[11px] text-slate-900/35">{label}</div>
     </div>
   )
 }
@@ -159,8 +159,8 @@ function AlertTicker({ alerts }: { alerts: typeof mockAlerts }) {
           <span className="text-[9px] px-1 py-0.5 rounded shrink-0" style={{ color: riskColor[alert.riskLevel], backgroundColor: `${riskColor[alert.riskLevel]}12` }}>
             {riskLabel[alert.riskLevel]}
           </span>
-          <span className="text-[11px] text-slate-500 truncate flex-1">{alert.title}</span>
-          <span className="text-[9px] text-slate-400 shrink-0">{alert.source}</span>
+          <span className="text-[11px] text-slate-900/45 truncate flex-1">{alert.title}</span>
+          <span className="text-[9px] text-slate-300 shrink-0">{alert.source}</span>
         </div>
       ))}
     </div>
@@ -231,7 +231,7 @@ export default function ScreenPage() {
           show: true,
           position: "right",
           formatter: "{b}",
-          color: "rgba(0,0,0,0.4)",
+          color: "rgba(255,255,255,0.4)",
           fontSize: 10,
         },
       },
@@ -268,7 +268,7 @@ export default function ScreenPage() {
     yAxis: {
       type: "value" as const,
       axisLine: { show: false },
-      axisLabel: { color: "rgba(0,0,0,0.2)", fontSize: 9 },
+      axisLabel: { color: "rgba(255,255,255,0.2)", fontSize: 9 },
       splitLine: { lineStyle: { color: "rgba(0,0,0,0.04)" } },
     },
     tooltip: { backgroundColor: "rgba(248,250,252,0.9)", borderColor: "rgba(34,211,238,0.2)", textStyle: { color: "#fff", fontSize: 11 } },
@@ -300,7 +300,7 @@ export default function ScreenPage() {
         formatter: `{total|${stats.totalAlerts}}\n{label|告警总数}`,
         rich: {
           total: { fontSize: 20, fontWeight: "bold", color: "#fff", lineHeight: 28 },
-          label: { fontSize: 9, color: "rgba(0,0,0,0.3)", lineHeight: 16 },
+          label: { fontSize: 9, color: "rgba(255,255,255,0.3)", lineHeight: 16 },
         },
       },
       data: [
@@ -327,7 +327,7 @@ export default function ScreenPage() {
       data: stats.topAttackTypes.map((t) => t.type).reverse(),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: "rgba(0,0,0,0.45)", fontSize: 10 },
+      axisLabel: { color: "rgba(255,255,255,0.45)", fontSize: 10 },
     },
     series: [{
       type: "bar" as const,
@@ -521,12 +521,12 @@ export default function ScreenPage() {
       </div>
 
       <div className="flex items-center justify-between shrink-0 px-1 pt-0.5">
-        <div className="flex items-center gap-2.5 text-[9px] text-slate-300">
+        <div className="flex items-center gap-2.5 text-[9px] text-slate-900/12">
           <span>SecMind AI Security Platform v2.0</span>
           <span>|</span>
           <span>刷新间隔: 30s</span>
         </div>
-        <div className="flex items-center gap-2 text-[9px] text-slate-300">
+        <div className="flex items-center gap-2 text-[9px] text-slate-900/12">
           <span className="flex items-center gap-1">
             <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
             系统正常

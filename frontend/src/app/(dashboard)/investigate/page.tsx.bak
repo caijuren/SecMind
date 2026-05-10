@@ -68,6 +68,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
   SelectTrigger,
@@ -1209,73 +1210,11 @@ function RadioIcon() {
 }
 
 function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 80 ? "bg-red-500" : value >= 60 ? "bg-amber-500" : "bg-cyan-500"
-  const glowColor = value >= 80 ? "shadow-[0_0_8px_rgba(239,68,68,0.3)]" : value >= 60 ? "shadow-[0_0_8px_rgba(245,158,11,0.3)]" : "shadow-[0_0_8px_rgba(6,182,212,0.3)]"
+  const color = value >= 80 ? "bg-[#ff4d4f]" : value >= 60 ? "bg-amber-400" : "bg-cyan-400"
+  const glowColor = value >= 80 ? "shadow-[0_0_8px_rgba(255,77,79,0.4)]" : value >= 60 ? "shadow-[0_0_8px_rgba(250,173,20,0.4)]" : "shadow-[0_0_8px_rgba(34,211,238,0.4)]"
   return (
     <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
       <div className={cn("h-full rounded-full transition-all duration-700", color, glowColor)} style={{ width: `${value}%` }} />
-    </div>
-  )
-}
-
-function InvestigationDecisionBrief({ record }: { record: InvestigationRecord }) {
-  const supportEvidence = record.aiReasoningSteps.reduce((total, step) => total + step.evidence.length, 0)
-  const uncertainSignals = record.aiReasoningSteps.filter((step) => step.baselineDeviation || step.correlations?.some((c) => c.strength !== "confirmed")).length
-  const primaryEntities = [...record.involvedAccounts ?? [], ...record.involvedAssets ?? [], ...record.entities].slice(0, 4)
-  const recommendedAction =
-    record.status === "pending_review"
-      ? "人工复核AI结论后批准或修正处置方案"
-      : record.status === "disposing"
-        ? record.currentAction ?? "跟踪处置执行并观察攻击面是否收敛"
-        : record.status === "closed"
-          ? record.closeReason ?? "复盘闭环结果并回流学习"
-          : "继续收集证据链，确认主假设是否成立"
-
-  return (
-    <div className="workflow-panel p-5">
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-cyan-700" />
-            <span className="text-sm font-bold text-slate-900">AI研判摘要</span>
-            <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
-              {record.confidence}% 置信度
-            </Badge>
-          </div>
-          <p className="text-sm font-medium leading-6 text-slate-800">
-            {record.aiConclusion || record.description}
-          </p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">支撑证据</div>
-              <div className="mt-1 text-lg font-bold text-slate-900">{supportEvidence}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">不确定点</div>
-              <div className="mt-1 text-lg font-bold text-amber-600">{uncertainSignals}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">推理步骤</div>
-              <div className="mt-1 text-lg font-bold text-cyan-700">{record.aiReasoningSteps.length}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-slate-200 bg-white/85 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-semibold text-slate-900">建议决策</span>
-          </div>
-          <p className="text-sm leading-6 text-slate-700">{recommendedAction}</p>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {primaryEntities.map((entity) => (
-              <span key={entity} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-mono text-slate-600">
-                {entity}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -1409,11 +1348,11 @@ function PersonProfileCard({ profile }: { profile: PersonProfile }) {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-slate-100">
-          <span className="text-slate-400">工号 <span className="text-slate-500 font-mono ml-1">{profile.employeeId}</span></span>
-          <span className="text-slate-400">位置 <span className="text-slate-500 ml-1">{profile.location}</span></span>
-          <span className="text-slate-400">风险分 <span className={cn("font-mono ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
-          <span className="text-slate-400">在线设备 <span className="text-slate-500 font-mono ml-1">{profile.deviceCount}</span></span>
-          <span className="text-slate-400">上次登录 <span className="text-slate-600 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
+          <span className="text-slate-900/35">工号 <span className="text-slate-500 font-mono ml-1">{profile.employeeId}</span></span>
+          <span className="text-slate-900/35">位置 <span className="text-slate-500 ml-1">{profile.location}</span></span>
+          <span className="text-slate-900/35">风险分 <span className={cn("font-mono ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
+          <span className="text-slate-900/35">在线设备 <span className="text-slate-500 font-mono ml-1">{profile.deviceCount}</span></span>
+          <span className="text-slate-900/35">上次登录 <span className="text-slate-600 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
         </div>
         {profile.notes && (
           <p className="text-[9px] text-slate-600 italic pt-1 border-t border-slate-100">备注：{profile.notes}</p>
@@ -1984,64 +1923,45 @@ export default function InvestigatePage() {
   }, [activeTab, searchQuery])
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       <PageHeader title="智能研判中心" subtitle="AI驱动的安全事件调查与证据链分析平台" icon={Brain} />
 
-      <div className="mx-auto max-w-7xl pb-8 pt-4 space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm shadow-slate-200/60">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {TABS.map((tab) => {
-                const active = activeTab === tab.value
-                const TabIcon = tab.icon
-                return (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    onClick={() => setActiveTab(tab.value)}
-                    className={cn(
-                      "flex h-10 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-medium transition-all",
-                      active
-                        ? "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                    )}
-                  >
-                    {TabIcon && <TabIcon className="h-3.5 w-3.5 shrink-0" />}
-                    <span className="truncate">{tab.label}</span>
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 font-mono text-[10px] leading-none",
-                        active ? "bg-white text-cyan-700" : "bg-slate-100 text-slate-500"
-                      )}
-                    >
-                      {tabCounts[tab.value] || 0}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 pb-8 space-y-4">
+        <div className="flex items-center justify-between gap-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex items-center justify-between">
+              <TabsList className="bg-white border border-slate-200">
+                {TABS.map(tab => (
+                  <TabsTrigger key={tab.value} value={tab.value} className="data-[state=active]:bg-cyan-50 data-[state=active]:text-cyan-700 text-slate-600 text-xs gap-1.5">
+                    {tab.icon && <tab.icon className="h-3.5 w-3.5" />}
+                    {tab.label}
+                    <span className="ml-0.5 text-[10px] font-mono bg-slate-100 px-1.5 py-0.5 rounded-full">{tabCounts[tab.value] || 0}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <div className="relative xl:w-[320px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                placeholder="搜索事件标题、编号、资产、描述..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 border-slate-200 bg-slate-50 pl-9 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
-              />
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex h-10 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5">
-                <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-700">{positiveCount}</span>
-              </div>
-              <div className="flex h-10 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5">
-                <ThumbsDown className="h-3.5 w-3.5 text-red-600" />
-                <span className="text-xs font-medium text-red-700">{negativeCount}</span>
+              <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-200">
+                  <ThumbsUp className="h-3 w-3 text-emerald-600" />
+                  <span className="text-xs font-medium text-emerald-600">{positiveCount}</span>
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-red-500/10 border border-red-200">
+                  <ThumbsDown className="h-3 w-3 text-red-600" />
+                  <span className="text-xs font-medium text-red-600">{negativeCount}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </Tabs>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600" />
+          <Input
+            placeholder="搜索事件标题、编号、资产、描述..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-600 focus:border-cyan-500/50"
+          />
         </div>
 
         {selectedRecord ? (
@@ -2059,7 +1979,7 @@ export default function InvestigatePage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
                       <StatusBadge status={selectedRecord.status} />
-                      <span className="text-sm font-mono text-slate-400">{selectedRecord.id}</span>
+                      <span className="text-sm font-mono text-slate-900/35">{selectedRecord.id}</span>
                       <TriggerBadge type={selectedRecord.triggerType} />
                     </div>
                     <h2 className="text-xl font-bold text-slate-900">{selectedRecord.title}</h2>
@@ -2097,8 +2017,6 @@ export default function InvestigatePage() {
               </div>
 
               <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto custom-scrollbar">
-                <InvestigationDecisionBrief record={selectedRecord} />
-
                 <div className="flex items-center gap-2 mb-2">
                   <GitBranch className="h-4 w-4 text-cyan-600" />
                   <span className="text-sm font-bold text-cyan-600">完整证据链 · {selectedRecord.aiReasoningSteps.length} 个推理步骤</span>

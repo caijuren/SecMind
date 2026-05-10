@@ -145,8 +145,8 @@ function DepartmentTree({
               className={cn(
                 "flex items-center gap-1.5 py-1.5 px-2 rounded-lg cursor-pointer text-sm transition-all",
                 isSelected
-                  ? "bg-cyan-500/15 text-cyan-300 border border-cyan-300"
-                  : "text-slate-500 hover:bg-white/[0.04] hover:text-slate-700 border border-transparent"
+                  ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/20"
+                  : "text-white/60 hover:bg-white/[0.04] hover:text-white/80 border border-transparent"
               )}
               style={{ paddingLeft: `${depth * 16 + 8}px` }}
               onClick={() => onSelect(node.name)}
@@ -154,16 +154,16 @@ function DepartmentTree({
               {hasChildren ? (
                 <button
                   type="button"
-                  className="flex items-center justify-center size-4 rounded hover:bg-white"
+                  className="flex items-center justify-center size-4 rounded hover:bg-white/10"
                   onClick={(e) => {
                     e.stopPropagation()
                     setExpanded(!expanded)
                   }}
                 >
                   {expanded ? (
-                    <ChevronDown className="size-3.5 text-slate-400" />
+                    <ChevronDown className="size-3.5 text-white/40" />
                   ) : (
-                    <ChevronRight className="size-3.5 text-slate-400" />
+                    <ChevronRight className="size-3.5 text-white/40" />
                   )}
                 </button>
               ) : (
@@ -204,57 +204,57 @@ function AddUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white border-cyan-300 text-slate-900 shadow-lg">
+      <DialogContent className="sm:max-w-md bg-[#0a1628] border-cyan-500/20 text-white shadow-[0_0_40px_rgba(0,212,255,0.12)]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-900">
+          <DialogTitle className="flex items-center gap-2 text-white">
             <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-500/15 border border-cyan-500/30">
               <Plus className="size-4 text-cyan-400" />
             </div>
             添加用户
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-white/40">
             填写以下信息创建新用户账号
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
           <div className="space-y-2">
-            <Label className="text-slate-500 text-xs">姓名</Label>
+            <Label className="text-white/60 text-xs">姓名</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="请输入姓名"
-              className="h-8 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400"
+              className="h-8 bg-white/5 border-cyan-500/15 text-white text-sm placeholder:text-white/20"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-500 text-xs">邮箱</Label>
+            <Label className="text-white/60 text-xs">邮箱</Label>
             <Input
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               placeholder="请输入邮箱"
-              className="h-8 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400"
+              className="h-8 bg-white/5 border-cyan-500/15 text-white text-sm placeholder:text-white/20"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-500 text-xs">手机号</Label>
+            <Label className="text-white/60 text-xs">手机号</Label>
             <Input
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               placeholder="请输入手机号"
-              className="h-8 bg-white border-slate-200 text-slate-900 text-sm placeholder:text-slate-400"
+              className="h-8 bg-white/5 border-cyan-500/15 text-white text-sm placeholder:text-white/20"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-500 text-xs">角色</Label>
+            <Label className="text-white/60 text-xs">角色</Label>
             <Select
               value={form.role}
               onValueChange={(v) => setForm({ ...form, role: (v ?? "分析师") as UserRole })}
             >
-              <SelectTrigger className="w-full h-8 border-slate-200 bg-white text-slate-900 text-sm">
+              <SelectTrigger className="w-full h-8 border-cyan-500/15 bg-white/5 text-white text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-slate-200 bg-white text-slate-900">
+              <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-white">
                 <SelectItem value="管理员">管理员</SelectItem>
                 <SelectItem value="分析师">分析师</SelectItem>
                 <SelectItem value="观察者">观察者</SelectItem>
@@ -262,15 +262,15 @@ function AddUserDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-500 text-xs">部门</Label>
+            <Label className="text-white/60 text-xs">部门</Label>
             <Select
               value={form.department}
               onValueChange={(v) => setForm({ ...form, department: v ?? "SOC组" })}
             >
-              <SelectTrigger className="w-full h-8 border-slate-200 bg-white text-slate-900 text-sm">
+              <SelectTrigger className="w-full h-8 border-cyan-500/15 bg-white/5 text-white text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="border-slate-200 bg-white text-slate-900">
+              <SelectContent className="border-cyan-500/15 bg-[#0c1a3a] text-white">
                 {allDepartments.map((d) => (
                   <SelectItem key={d} value={d}>{d}</SelectItem>
                 ))}
@@ -281,7 +281,7 @@ function AddUserDialog({
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
-              className="border-slate-200 text-slate-400 hover:bg-white/[0.04] hover:text-slate-600"
+              className="border-white/10 text-white/50 hover:bg-white/[0.04] hover:text-white/70"
               onClick={() => onOpenChange(false)}
             >
               取消
@@ -337,7 +337,7 @@ export default function UsersPage() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <div
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-300"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/20"
           style={{
             background: "linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05))",
             boxShadow: "0 0 16px rgba(34,211,238,0.15)",
@@ -346,8 +346,8 @@ export default function UsersPage() {
           <Users className="h-5 w-5 text-cyan-400" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-slate-900 tracking-tight">用户管理</h1>
-          <p className="text-xs text-slate-400">组织架构与用户权限管理</p>
+          <h1 className="text-lg font-bold text-white tracking-tight">用户管理</h1>
+          <p className="text-xs text-white/40">组织架构与用户权限管理</p>
         </div>
       </div>
 
@@ -377,7 +377,7 @@ export default function UsersPage() {
                   <Icon className="size-4.5" style={{ color: card.color }} />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400">{card.label}</p>
+                  <p className="text-xs text-white/40">{card.label}</p>
                   <p className="text-xl font-bold" style={{ color: card.color }}>{count}</p>
                 </div>
               </div>
@@ -388,12 +388,12 @@ export default function UsersPage() {
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-300" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/30" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="搜索用户姓名、邮箱或部门..."
-            className="h-9 border-slate-200/[0.08] bg-white/[0.04] pl-9 text-sm text-slate-300 placeholder:text-slate-300 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="h-9 border-white/[0.08] bg-white/[0.04] pl-9 text-sm text-slate-300 placeholder:text-white/20 focus-visible:border-cyan-400/40 focus-visible:ring-cyan-400/20"
           />
         </div>
         <Button
@@ -405,19 +405,19 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <Card className="border-slate-200 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
+      <Card className="border-white/10 bg-white/[0.04] backdrop-blur-xl overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200/[0.06]">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">用户</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">邮箱</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">角色</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">部门</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">状态</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-slate-300">最后登录</th>
-                  <th className="text-right py-3 px-4 text-xs font-medium text-slate-300">操作</th>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">用户</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">邮箱</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">角色</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">部门</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">状态</th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-white/30">最后登录</th>
+                  <th className="text-right py-3 px-4 text-xs font-medium text-white/30">操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -426,7 +426,7 @@ export default function UsersPage() {
                   return (
                     <tr
                       key={user.id}
-                      className="border-b border-slate-200/[0.04] hover:bg-white/[0.02] transition-colors"
+                      className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors"
                     >
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
@@ -440,10 +440,10 @@ export default function UsersPage() {
                           >
                             {user.name.charAt(0)}
                           </div>
-                          <span className="text-slate-700 font-medium">{user.name}</span>
+                          <span className="text-white/80 font-medium">{user.name}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-slate-400">{user.email}</td>
+                      <td className="py-3 px-4 text-white/40">{user.email}</td>
                       <td className="py-3 px-4">
                         <Badge
                           variant="outline"
@@ -457,7 +457,7 @@ export default function UsersPage() {
                           {user.role}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-slate-400">{user.department}</td>
+                      <td className="py-3 px-4 text-white/50">{user.department}</td>
                       <td className="py-3 px-4">
                         <Badge
                           variant="outline"
@@ -471,27 +471,27 @@ export default function UsersPage() {
                           {user.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-slate-300 text-xs">{user.lastLogin}</td>
+                      <td className="py-3 px-4 text-white/30 text-xs">{user.lastLogin}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            className="text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/10"
+                            className="text-white/30 hover:text-cyan-400 hover:bg-cyan-500/10"
                           >
                             <Pencil className="size-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            className="text-slate-300 hover:text-amber-400 hover:bg-amber-500/10"
+                            className="text-white/30 hover:text-amber-400 hover:bg-amber-500/10"
                           >
                             <Ban className="size-3.5" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon-xs"
-                            className="text-slate-300 hover:text-red-400 hover:bg-red-500/10"
+                            className="text-white/30 hover:text-red-400 hover:bg-red-500/10"
                           >
                             <Trash2 className="size-3.5" />
                           </Button>
@@ -504,7 +504,7 @@ export default function UsersPage() {
             </table>
           </div>
           {filteredUsers.length === 0 && (
-            <div className="py-12 text-center text-sm text-slate-300">未找到匹配的用户</div>
+            <div className="py-12 text-center text-sm text-white/30">未找到匹配的用户</div>
           )}
         </CardContent>
       </Card>
@@ -514,14 +514,14 @@ export default function UsersPage() {
       <div>
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="size-4 text-cyan-400" />
-          <h2 className="text-sm font-semibold text-slate-700">组织架构</h2>
+          <h2 className="text-sm font-semibold text-white/80">组织架构</h2>
         </div>
 
         <div className="grid grid-cols-12 gap-4">
-          <Card className="col-span-4 border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+          <Card className="col-span-4 border-white/10 bg-white/[0.04] backdrop-blur-xl">
             <CardContent className="p-3">
               <div className="mb-2 px-2 py-1.5">
-                <span className="text-xs font-medium text-slate-400">部门列表</span>
+                <span className="text-xs font-medium text-white/40">部门列表</span>
               </div>
               <DepartmentTree
                 nodes={departments}
@@ -531,18 +531,18 @@ export default function UsersPage() {
             </CardContent>
           </Card>
 
-          <Card className="col-span-8 border-slate-200 bg-white/[0.04] backdrop-blur-xl">
+          <Card className="col-span-8 border-white/10 bg-white/[0.04] backdrop-blur-xl">
             <CardContent className="p-4">
               {selectedDept ? (
                 <>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <div className="flex size-7 items-center justify-center rounded-lg bg-cyan-500/15 border border-cyan-300">
+                      <div className="flex size-7 items-center justify-center rounded-lg bg-cyan-500/15 border border-cyan-500/20">
                         <Building2 className="size-3.5 text-cyan-400" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-medium text-slate-700">{selectedDept}</h3>
-                        <p className="text-xs text-slate-300">{deptMembers.length} 名成员</p>
+                        <h3 className="text-sm font-medium text-white/80">{selectedDept}</h3>
+                        <p className="text-xs text-white/30">{deptMembers.length} 名成员</p>
                       </div>
                     </div>
                   </div>
@@ -553,7 +553,7 @@ export default function UsersPage() {
                         return (
                           <div
                             key={member.id}
-                            className="flex items-center justify-between rounded-lg border border-slate-200/[0.06] bg-white/[0.02] p-3 hover:bg-white/[0.04] transition-colors"
+                            className="flex items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 hover:bg-white/[0.04] transition-colors"
                           >
                             <div className="flex items-center gap-3">
                               <div
@@ -567,13 +567,13 @@ export default function UsersPage() {
                                 {member.name.charAt(0)}
                               </div>
                               <div>
-                                <p className="text-sm text-slate-700 font-medium">{member.name}</p>
+                                <p className="text-sm text-white/80 font-medium">{member.name}</p>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="flex items-center gap-1 text-xs text-slate-300">
+                                  <span className="flex items-center gap-1 text-xs text-white/30">
                                     <Mail className="size-3" />
                                     {member.email}
                                   </span>
-                                  <span className="flex items-center gap-1 text-xs text-slate-300">
+                                  <span className="flex items-center gap-1 text-xs text-white/30">
                                     <Phone className="size-3" />
                                     {member.phone}
                                   </span>
@@ -609,11 +609,11 @@ export default function UsersPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="py-12 text-center text-sm text-slate-300">该部门暂无成员</div>
+                    <div className="py-12 text-center text-sm text-white/30">该部门暂无成员</div>
                   )}
                 </>
               ) : (
-                <div className="py-12 text-center text-sm text-slate-300">请从左侧选择部门查看成员</div>
+                <div className="py-12 text-center text-sm text-white/30">请从左侧选择部门查看成员</div>
               )}
             </CardContent>
           </Card>
