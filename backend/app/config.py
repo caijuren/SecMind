@@ -1,4 +1,6 @@
 from pydantic_settings import BaseSettings
+import os
+import secrets
 
 
 class Settings(BaseSettings):
@@ -8,7 +10,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "postgres"
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "secmind"
-    SECRET_KEY: str = "secmind-super-secret-key-change-in-production"
+    SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 

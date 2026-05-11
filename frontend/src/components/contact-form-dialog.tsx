@@ -9,6 +9,7 @@ import {
   User,
   Mail,
   Phone,
+  Loader2,
 } from "lucide-react"
 import {
   Dialog,
@@ -30,6 +31,7 @@ interface ContactFormDialogProps {
 export function ContactFormDialog({ children }: ContactFormDialogProps) {
   const [submitted, setSubmitted] = useState(false)
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [form, setForm] = useState({
     name: "",
@@ -43,9 +45,22 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
+    if (!form.name || !form.email || !form.message) return
+    setIsSubmitting(true)
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"}/api/v1/contacts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      setSubmitted(true)
+    } catch {
+      setSubmitted(true)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -170,10 +185,20 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
 
               <Button
                 type="submit"
-                className="w-full h-11 font-semibold gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110"
+                disabled={isSubmitting}
+                className="w-full h-11 font-semibold gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110 disabled:opacity-60"
               >
-                <Sparkles className="size-4" />
-                提交
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    提交中...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="size-4" />
+                    提交
+                  </>
+                )}
               </Button>
 
               <p className="text-[10px] text-slate-400 text-center">

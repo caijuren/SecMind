@@ -26,6 +26,8 @@ import {
   Plug,
   ChevronDown,
   GitBranch,
+  Brain,
+  MessageSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/locale-store"
@@ -75,10 +77,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       accent: "#0891b2",
       defaultOpen: true,
       items: [
+        { label: t("nav.aiAnalysis") || "工作台", href: "/ai-analysis", icon: Brain, accent: "#8b5cf6" },
         { label: t("nav.dashboard"), href: "/dashboard", icon: LayoutDashboard, accent: "#0891b2" },
-        { label: t("nav.screen"), href: "/screen", icon: Monitor, accent: "#0e7490" },
-        { label: t("nav.notifications"), href: "/notifications", icon: Bell, accent: "#ef4444" },
         { label: t("nav.metrics"), href: "/metrics", icon: TrendingUp, accent: "#22c55e" },
+        { label: t("nav.notifications"), href: "/notifications", icon: Bell, accent: "#ef4444" },
+      ],
+    },
+    {
+      label: "AI 助手",
+      icon: MessageSquare,
+      accent: "#8b5cf6",
+      defaultOpen: false,
+      items: [
+        { label: t("nav.aiChat") || "AI 调查助手", href: "/ai-chat", icon: MessageSquare, accent: "#8b5cf6" },
       ],
     },
     {
