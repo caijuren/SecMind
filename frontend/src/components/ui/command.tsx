@@ -79,6 +79,8 @@ function CommandInput({
             "w-full text-sm outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
+          spellCheck={false}
+          autoComplete="off"
           {...props}
         />
         <InputGroupAddon>
@@ -97,7 +99,7 @@ function CommandList({
     <CommandPrimitive.List
       data-slot="command-list"
       className={cn(
-        "no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none",
+        "no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto focus-visible:ring-2 focus-visible:ring-ring/50",
         className
       )}
       {...props}

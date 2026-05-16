@@ -1,19 +1,21 @@
+import Link from "next/link"
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-2xl border-b border-slate-200">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 to-teal-500">
-              <span className="text-sm font-bold text-white">S</span>
+              <span className="text-sm font-bold text-white" aria-label="SecMind">S</span>
             </div>
             <span className="text-lg font-bold text-slate-900">SecMind</span>
-          </a>
+          </Link>
           <div className="flex items-center gap-6 text-sm text-slate-600">
-            <a href="/" className="hover:text-cyan-700 transition-colors">首页</a>
-            <a href="/solutions" className="hover:text-cyan-700 transition-colors">解决方案</a>
-            <a href="/pricing" className="hover:text-cyan-700 transition-colors">定价</a>
-            <a href="/login" className="hover:text-cyan-700 transition-colors">登录</a>
+            <Link href="/" className="hover:text-cyan-700 transition-colors">首页</Link>
+            <Link href="/solutions" className="hover:text-cyan-700 transition-colors">解决方案</Link>
+            <Link href="/pricing" className="hover:text-cyan-700 transition-colors">定价</Link>
+            <Link href="/login" className="hover:text-cyan-700 transition-colors">登录</Link>
           </div>
         </div>
       </nav>

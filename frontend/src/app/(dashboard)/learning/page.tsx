@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   Brain,
   Sparkles,
@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useLocaleStore } from "@/store/locale-store"
 import { PageHeader } from "@/components/layout/page-header"
+import { pageCardClass, softCardClass } from "@/lib/admin-ui"
 import ReactEChartsCore from "echarts-for-react/lib/core"
 import * as echarts from "echarts/core"
 import { LineChart as ELineChart, BarChart as EBarChart } from "echarts/charts"
@@ -988,7 +989,7 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
       <ArrowRight className="h-3 w-3 text-slate-300" />
       <span
         className="font-mono text-xs font-bold"
-        style={{ color, textShadow: `0 0 6px ${color}40` }}
+        style={{ color }}
       >
         {after}%
       </span>
@@ -1010,13 +1011,12 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
 function MiniBar({ value, max = 100, color = "#22d3ee" }: { value: number; max?: number; color?: string }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
-    <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
       <div
-        className="h-full rounded-full transition-all"
+        className="h-full rounded-full transition-colors"
         style={{
           width: `${pct}%`,
           backgroundColor: color,
-          boxShadow: `0 0 6px ${color}40`,
         }}
       />
     </div>
@@ -1029,79 +1029,75 @@ function KnowledgeFeedbackTab() {
   return (
     <div className="space-y-6">
       <div
-        className="rounded-xl border border-cyan-500/15 bg-white/[0.04] backdrop-blur-xl p-6"
-        style={{ boxShadow: "0 0 16px rgba(34,211,238,0.06)" }}
+        className={`${pageCardClass} p-6`}
       >
         <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="h-4 w-4 text-cyan-400" />
+          <Sparkles className="h-4 w-4 text-cyan-600" />
           <h3 className="text-sm font-semibold text-slate-700">{t("learning.feedbackFlow")}</h3>
         </div>
         <div className="flex items-center justify-center gap-4 py-6">
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-6 py-4"
-            style={{ boxShadow: "0 0 12px rgba(250,173,20,0.08)" }}
+            className="flex flex-col items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4"
           >
-            <Shield className="h-6 w-6 text-amber-400" />
-            <span className="text-xs font-medium text-amber-300">{t("learning.humanConfirmAttack")}</span>
+            <Shield className="h-6 w-6 text-amber-600" />
+            <span className="text-xs font-medium text-amber-700">{t("learning.humanConfirmAttack")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-gradient-to-r from-amber-500/40 to-cyan-500/40" />
-            <ArrowRight className="h-4 w-4 text-cyan-400/60" />
-            <div className="h-px w-8 bg-gradient-to-r from-cyan-500/40 to-emerald-500/40" />
+            <div className="h-px w-8 bg-slate-200" />
+            <ArrowRight className="h-4 w-4 text-cyan-500" />
+            <div className="h-px w-8 bg-slate-200" />
           </div>
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/[0.06] px-6 py-4"
-            style={{ boxShadow: "0 0 12px rgba(34,211,238,0.08)" }}
+            className="flex flex-col items-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-6 py-4"
           >
-            <Brain className="h-6 w-6 text-cyan-400" />
-            <span className="text-xs font-medium text-cyan-300">{t("learning.aiUpdateWeight")}</span>
+            <Brain className="h-6 w-6 text-cyan-600" />
+            <span className="text-xs font-medium text-cyan-700">{t("learning.aiUpdateWeight")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-gradient-to-r from-cyan-500/40 to-emerald-500/40" />
-            <ArrowRight className="h-4 w-4 text-emerald-400/60" />
-            <div className="h-px w-8 bg-gradient-to-r from-emerald-500/40 to-emerald-500/40" />
+            <div className="h-px w-8 bg-slate-200" />
+            <ArrowRight className="h-4 w-4 text-emerald-500" />
+            <div className="h-px w-8 bg-slate-200" />
           </div>
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] px-6 py-4"
-            style={{ boxShadow: "0 0 12px rgba(52,211,153,0.08)" }}
+            className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4"
           >
-            <TrendingUp className="h-6 w-6 text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-300">{t("learning.futureMoreAccurate")}</span>
+            <TrendingUp className="h-6 w-6 text-emerald-600" />
+            <span className="text-xs font-medium text-emerald-700">{t("learning.futureMoreAccurate")}</span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className={`${softCardClass} p-5`}>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
-              <Activity className="h-5 w-5 text-cyan-400" />
+              <Activity className="h-5 w-5 text-cyan-600" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.feedbackTotal")}</p>
-              <p className="text-2xl font-bold text-slate-900">1,847</p>
+              <p className="text-2xl font-bold tabular-nums text-slate-900">1,847</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className={`${softCardClass} p-5`}>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
               <TrendingUp className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.accuracyImprovement")}</p>
-              <p className="text-2xl font-bold text-emerald-400">+19%</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-600">+19%</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className={`${softCardClass} p-5`}>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
               <Shield className="h-5 w-5 text-amber-400" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.falsePositiveReduction")}</p>
-              <p className="text-2xl font-bold text-amber-400">-68%</p>
+              <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
             </div>
           </div>
         </div>
@@ -1109,17 +1105,17 @@ function KnowledgeFeedbackTab() {
 
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-          <Clock className="h-4 w-4 text-cyan-400" />
+          <Clock className="h-4 w-4 text-cyan-600" />
           {t("learning.recentFeedback")}
         </h3>
         {mockFeedbackItems.map((item) => (
           <div
             key={item.id}
-            className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-4 hover:border-cyan-300 transition-colors"
+            className={`${softCardClass} p-4 hover:border-cyan-200 transition-colors`}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-bold text-cyan-400">{item.caseId}</span>
+                <span className="font-mono text-xs font-bold text-cyan-700">{item.caseId}</span>
                 <span
                   className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
                   style={{
@@ -1131,12 +1127,12 @@ function KnowledgeFeedbackTab() {
                   {t(item.attackType)}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-300 font-mono">{item.timestamp}</span>
+              <span className="text-[10px] text-slate-500 font-mono">{item.timestamp}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-amber-400" />
-                <span className="text-[11px] text-amber-300">{t(item.humanAction)}</span>
+                <CheckCircle2 className="h-3.5 w-3.5 text-amber-600" />
+                <span className="text-[11px] text-amber-700">{t(item.humanAction)}</span>
               </div>
               <div className="flex-1" />
               <ConfidenceDelta before={item.beforeConfidence} after={item.afterConfidence} />
@@ -1167,10 +1163,10 @@ function FeedbackLearningTab() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div
-          className={`rounded-xl border backdrop-blur-xl p-5 cursor-pointer transition-all ${
+          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "all"
-              ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-[0_0_16px_rgba(34,211,238,0.1)]"
-              : "border-slate-200 bg-white/[0.04] hover:border-cyan-300"
+              ? "border-cyan-200 bg-cyan-50 shadow-sm"
+              : "border-slate-200 bg-white hover:border-cyan-200"
           }`}
           onClick={() => setFilter("all")}
         >
@@ -1180,15 +1176,15 @@ function FeedbackLearningTab() {
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("common.all")}</p>
-              <p className="text-2xl font-bold text-cyan-400">{totalFeedbackCount}</p>
+              <p className="text-2xl font-bold tabular-nums text-cyan-700">{totalFeedbackCount}</p>
             </div>
           </div>
         </div>
         <div
-          className={`rounded-xl border backdrop-blur-xl p-5 cursor-pointer transition-all ${
+          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "confirmed"
-              ? "border-emerald-500/30 bg-emerald-500/[0.08] shadow-[0_0_16px_rgba(34,197,94,0.1)]"
-              : "border-slate-200 bg-white/[0.04] hover:border-emerald-300"
+              ? "border-emerald-200 bg-emerald-50 shadow-sm"
+              : "border-slate-200 bg-white hover:border-emerald-200"
           }`}
           onClick={() => setFilter(filter === "confirmed" ? "all" : "confirmed")}
         >
@@ -1198,15 +1194,15 @@ function FeedbackLearningTab() {
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.thumbsUpCases")}</p>
-              <p className="text-2xl font-bold text-emerald-400">{totalThumbsUp}</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-600">{totalThumbsUp}</p>
             </div>
           </div>
         </div>
         <div
-          className={`rounded-xl border backdrop-blur-xl p-5 cursor-pointer transition-all ${
+          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "disputed"
-              ? "border-red-500/30 bg-red-500/[0.08] shadow-[0_0_16px_rgba(255,77,79,0.1)]"
-              : "border-slate-200 bg-white/[0.04] hover:border-red-300"
+              ? "border-red-200 bg-red-50 shadow-sm"
+              : "border-slate-200 bg-white hover:border-red-200"
           }`}
           onClick={() => setFilter(filter === "disputed" ? "all" : "disputed")}
         >
@@ -1216,7 +1212,7 @@ function FeedbackLearningTab() {
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.thumbsDownCases")}</p>
-              <p className="text-2xl font-bold text-red-400">{totalThumbsDown}</p>
+              <p className="text-2xl font-bold tabular-nums text-red-600">{totalThumbsDown}</p>
             </div>
           </div>
         </div>
@@ -1230,11 +1226,11 @@ function FeedbackLearningTab() {
           return (
             <div
               key={item.id}
-              className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5 hover:border-cyan-300 transition-colors"
+              className={`${softCardClass} p-5 hover:border-cyan-200 transition-colors`}
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="font-mono text-xs font-bold text-cyan-400">{item.caseId}</span>
+                  <span className="font-mono text-xs font-bold text-cyan-700">{item.caseId}</span>
                   <span
                     className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
                     style={{
@@ -1257,11 +1253,11 @@ function FeedbackLearningTab() {
                     {isConfirmed ? t("learning.thumbsUp") : t("learning.thumbsDown")}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-300 font-mono">{item.timestamp}</span>
+                <span className="text-[10px] text-slate-500 font-mono">{item.timestamp}</span>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-slate-100 bg-white/[0.02] p-3">
+                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <Brain className="h-3 w-3 text-cyan-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
@@ -1274,7 +1270,7 @@ function FeedbackLearningTab() {
                     <span className="text-[10px] font-mono text-slate-400 mt-1 inline-block">{item.originalConfidence}%</span>
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-white/[0.02] p-3">
+                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <MessageSquare className="h-3 w-3 text-amber-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/70">
@@ -1283,7 +1279,7 @@ function FeedbackLearningTab() {
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">{item.comment}</p>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-white/[0.02] p-3">
+                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <Sparkles className="h-3 w-3 text-emerald-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
@@ -1318,7 +1314,7 @@ function ReasoningCorrectionTab() {
           return (
             <div
               key={correction.id}
-              className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5 hover:border-cyan-300 transition-colors"
+              className="rounded-xl border border-slate-200 bg-white p-5 hover:border-cyan-300 transition-colors"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
@@ -1338,7 +1334,7 @@ function ReasoningCorrectionTab() {
                     <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
                     <span
                       className="font-mono text-sm font-bold"
-                      style={{ color: weightColor, textShadow: `0 0 6px ${weightColor}40` }}
+                      style={{ color: weightColor }}
                     >
                       {correction.afterWeight.toFixed(2)}
                     </span>
@@ -1362,7 +1358,7 @@ function ReasoningCorrectionTab() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-100 bg-white/[0.02] p-3">
+              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Target className="h-3 w-3 text-cyan-400" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
@@ -1395,47 +1391,47 @@ function AiGrowthTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
-              <Target className="h-5 w-5 text-cyan-400" />
+              <Target className="h-5 w-5 text-cyan-600" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.currentAccuracy")}</p>
-              <p className="text-2xl font-bold text-cyan-400">91.3%</p>
+              <p className="text-2xl font-bold tabular-nums text-cyan-600">91.3%</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
-              <Activity className="h-5 w-5 text-emerald-400" />
+              <Activity className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.monthlyLearningCount")}</p>
-              <p className="text-2xl font-bold text-emerald-400">347</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-600">347</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
-              <TrendingUp className="h-5 w-5 text-amber-400" />
+              <TrendingUp className="h-5 w-5 text-amber-600" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.falsePositiveDecline")}</p>
-              <p className="text-2xl font-bold text-amber-400">-68%</p>
+              <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/15">
-              <Shield className="h-5 w-5 text-purple-400" />
+              <Shield className="h-5 w-5 text-purple-600" />
             </div>
             <div>
               <p className="text-xs text-slate-400">{t("learning.coveredAttackTypes")}</p>
-              <p className="text-2xl font-bold text-purple-400">24</p>
+              <p className="text-2xl font-bold tabular-nums text-purple-600">24</p>
             </div>
           </div>
         </div>
@@ -1443,8 +1439,7 @@ function AiGrowthTab() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div
-          className="rounded-xl border border-cyan-500/15 bg-white/[0.04] backdrop-blur-xl p-5"
-          style={{ boxShadow: "0 0 16px rgba(34,211,238,0.06)" }}
+          className="rounded-xl border border-slate-200 bg-white p-5"
         >
           <div className="flex items-center gap-2 mb-4">
             <LineChart className="h-4 w-4 text-cyan-400" />
@@ -1457,27 +1452,27 @@ function AiGrowthTab() {
               xAxis: {
                 type: "category",
                 data: ACCURACY_DATA.map((d) => d.month.slice(5)),
-                axisLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } },
-                axisLabel: { color: "rgba(255,255,255,0.3)", fontSize: 10, fontFamily: "monospace" },
+                axisLine: { lineStyle: { color: "#e2e8f0" } },
+                axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "monospace" },
                 axisTick: { show: false },
               },
               yAxis: {
                 type: "value",
                 min: 60,
                 max: 100,
-                splitLine: { lineStyle: { color: "rgba(255,255,255,0.04)" } },
-                axisLabel: { color: "rgba(255,255,255,0.3)", fontSize: 10, formatter: "{value}%" },
+                splitLine: { lineStyle: { color: "#f1f5f9" } },
+                axisLabel: { color: "#94a3b8", fontSize: 10, formatter: "{value}%" },
                 axisLine: { show: false },
                 axisTick: { show: false },
               },
               tooltip: {
                 trigger: "axis",
-                backgroundColor: "rgba(10,22,40,0.95)",
-                borderColor: "rgba(34,211,238,0.2)",
-                textStyle: { color: "#fff", fontSize: 12 },
+                backgroundColor: "#ffffff",
+                borderColor: "#e2e8f0",
+                textStyle: { color: "#1e293b", fontSize: 12 },
                 formatter: (params: any) => {
                   const p = params[0]
-                  return `${p.name}<br/><span style="color:#22d3ee;font-weight:bold">${p.value}%</span>`
+                  return `${p.name}<br/><span style="color:#0891b2;font-weight:bold">${p.value}%</span>`
                 },
               },
               series: [
@@ -1487,20 +1482,20 @@ function AiGrowthTab() {
                   smooth: true,
                   symbol: "circle",
                   symbolSize: 6,
-                  lineStyle: { color: "#22d3ee", width: 2.5, shadowColor: "rgba(34,211,238,0.4)", shadowBlur: 8 },
-                  itemStyle: { color: "#22d3ee", borderColor: "#0a1628", borderWidth: 2 },
+                  lineStyle: { color: "#0891b2", width: 2.5 },
+                  itemStyle: { color: "#0891b2", borderColor: "#ffffff", borderWidth: 2 },
                   areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                      { offset: 0, color: "rgba(34,211,238,0.25)" },
-                      { offset: 1, color: "rgba(34,211,238,0.02)" },
+                      { offset: 0, color: "rgba(8,145,178,0.15)" },
+                      { offset: 1, color: "rgba(8,145,178,0.02)" },
                     ]),
                   },
                   markPoint: {
                     data: [{ type: "max", name: "Max" }],
                     symbol: "pin",
                     symbolSize: 36,
-                    itemStyle: { color: "#22d3ee" },
-                    label: { color: "#0a1628", fontSize: 10, fontWeight: "bold", formatter: "{c}%" },
+                    itemStyle: { color: "#0891b2" },
+                    label: { color: "#ffffff", fontSize: 10, fontWeight: "bold", formatter: "{c}%" },
                   },
                 },
               ],
@@ -1511,8 +1506,7 @@ function AiGrowthTab() {
         </div>
 
         <div
-          className="rounded-xl border border-emerald-500/15 bg-white/[0.04] backdrop-blur-xl p-5"
-          style={{ boxShadow: "0 0 16px rgba(52,211,153,0.06)" }}
+          className="rounded-xl border border-slate-200 bg-white p-5"
         >
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-emerald-400" />
@@ -1525,27 +1519,27 @@ function AiGrowthTab() {
               xAxis: {
                 type: "category",
                 data: FALSE_POSITIVE_DATA.map((d) => d.month.slice(5)),
-                axisLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } },
-                axisLabel: { color: "rgba(255,255,255,0.3)", fontSize: 10, fontFamily: "monospace" },
+                axisLine: { lineStyle: { color: "#e2e8f0" } },
+                axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "monospace" },
                 axisTick: { show: false },
               },
               yAxis: {
                 type: "value",
                 min: 0,
                 max: 35,
-                splitLine: { lineStyle: { color: "rgba(255,255,255,0.04)" } },
-                axisLabel: { color: "rgba(255,255,255,0.3)", fontSize: 10, formatter: "{value}%" },
+                splitLine: { lineStyle: { color: "#f1f5f9" } },
+                axisLabel: { color: "#94a3b8", fontSize: 10, formatter: "{value}%" },
                 axisLine: { show: false },
                 axisTick: { show: false },
               },
               tooltip: {
                 trigger: "axis",
-                backgroundColor: "rgba(10,22,40,0.95)",
-                borderColor: "rgba(52,211,153,0.2)",
-                textStyle: { color: "#fff", fontSize: 12 },
+                backgroundColor: "#ffffff",
+                borderColor: "#e2e8f0",
+                textStyle: { color: "#1e293b", fontSize: 12 },
                 formatter: (params: any) => {
                   const p = params[0]
-                  return `${p.name}<br/><span style="color:#34d399;font-weight:bold">${p.value}%</span>`
+                  return `${p.name}<br/><span style="color:#059669;font-weight:bold">${p.value}%</span>`
                 },
               },
               series: [
@@ -1555,8 +1549,8 @@ function AiGrowthTab() {
                     value: d.value,
                     itemStyle: {
                       color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: i === FALSE_POSITIVE_DATA.length - 1 ? "rgba(52,211,153,0.9)" : "rgba(52,211,153,0.5)" },
-                        { offset: 1, color: i === FALSE_POSITIVE_DATA.length - 1 ? "rgba(52,211,153,0.3)" : "rgba(52,211,153,0.1)" },
+                        { offset: 0, color: i === FALSE_POSITIVE_DATA.length - 1 ? "#059669" : "#34d399" },
+                        { offset: 1, color: i === FALSE_POSITIVE_DATA.length - 1 ? "#05966980" : "#34d39950" },
                       ]),
                       borderRadius: [3, 3, 0, 0],
                     },
@@ -1565,7 +1559,7 @@ function AiGrowthTab() {
                   label: {
                     show: true,
                     position: "top",
-                    color: "rgba(52,211,153,0.7)",
+                    color: "#059669",
                     fontSize: 10,
                     fontFamily: "monospace",
                     formatter: "{c}%",
@@ -1577,8 +1571,8 @@ function AiGrowthTab() {
                   smooth: true,
                   symbol: "circle",
                   symbolSize: 5,
-                  lineStyle: { color: "#34d399", width: 2, type: "dashed" },
-                  itemStyle: { color: "#34d399", borderColor: "#0a1628", borderWidth: 2 },
+                  lineStyle: { color: "#059669", width: 2, type: "dashed" },
+                  itemStyle: { color: "#059669", borderColor: "#ffffff", borderWidth: 2 },
                 },
               ],
             }}
@@ -1589,8 +1583,7 @@ function AiGrowthTab() {
       </div>
 
       <div
-        className="rounded-xl border border-cyan-500/15 bg-white/[0.04] backdrop-blur-xl p-6"
-        style={{ boxShadow: "0 0 16px rgba(34,211,238,0.06)" }}
+        className="rounded-xl border border-slate-200 bg-white p-6"
       >
         <div className="flex items-center gap-2 mb-5">
           <Radar className="h-4 w-4 text-cyan-400" />
@@ -1609,7 +1602,6 @@ function AiGrowthTab() {
                   className="font-mono text-xs font-bold w-10 text-right"
                   style={{
                     color,
-                    textShadow: dim.value >= 90 ? `0 0 6px ${color}50` : undefined,
                   }}
                 >
                   {dim.value}%
@@ -1626,24 +1618,19 @@ function AiGrowthTab() {
           {t("learning.learningMilestones")}
         </h3>
         <div className="relative">
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-gradient-to-b from-amber-500/30 via-cyan-500/20 to-transparent" />
+          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-200" />
           <div className="space-y-4">
             {mockMilestones.map((milestone) => {
               const Icon = milestone.icon
               return (
                 <div key={milestone.id} className="relative flex items-start gap-4 pl-10">
                   <div
-                    className="absolute left-0 top-1 flex h-[30px] w-[30px] items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor: "#faad1420",
-                      border: "1.5px solid #faad14",
-                      boxShadow: "0 0 8px #faad1440",
-                    }}
+                    className="absolute left-0 top-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-amber-100 border border-amber-300"
                   >
                     <Icon className="h-3.5 w-3.5 text-amber-400" />
                   </div>
                   <div
-                    className="flex-1 rounded-xl border border-slate-200 bg-white/[0.04] backdrop-blur-xl p-4"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white p-4"
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-semibold text-slate-900">{t(milestone.title)}</span>
@@ -1663,7 +1650,6 @@ function AiGrowthTab() {
 
 export default function LearningPage() {
   const { t } = useLocaleStore()
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState<LearningTab>("knowledge_feedback")
 
   return (
@@ -1672,13 +1658,13 @@ export default function LearningPage() {
         icon={Brain}
         title={t("learning.title")}
         actions={
-          <Button
-            className="gap-1.5 bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500/25"
-            onClick={() => router.push("/signals?from=learning")}
+          <Link
+            className="inline-flex items-center gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700 h-9 px-4 py-2 rounded-md text-sm font-medium"
+            href="/signals?from=learning"
           >
             <Radio className="h-4 w-4" />
             查看新信号
-          </Button>
+          </Link>
         }
       />
 

@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Topbar } from "@/components/layout/topbar"
-import { OnboardingGuide } from "@/components/onboarding-guide"
+import { DynamicOnboardingGuide } from "@/components/dynamic-imports"
+import { TrialBanner } from "@/components/billing/TrialBanner"
 import { useAuthStore } from "@/store/auth-store"
+import { setApiToken } from "@/lib/api"
 
 export default function DashboardLayout({
   children,
@@ -15,13 +17,22 @@ export default function DashboardLayout({
   const user = useAuthStore((s) => s.user)
   const clearNewUserFlag = useAuthStore((s) => s.clearNewUserFlag)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const token = useAuthStore((s) => s.token)
 
   useEffect(() => {
     const onboarded = localStorage.getItem('secmind-onboarded')
     if (!onboarded && user?.isNewUser) {
-      setShowOnboarding(true)
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => setShowOnboarding(true))
+      } else {
+        Promise.resolve().then(() => setShowOnboarding(true))
+      }
     }
   }, [user?.isNewUser])
+
+  useEffect(() => {
+    setApiToken(token)
+  }, [token])
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false)
@@ -37,10 +48,11 @@ export default function DashboardLayout({
       />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
+        <TrialBanner />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
       {showOnboarding && (
-        <OnboardingGuide onComplete={handleOnboardingComplete} />
+        <DynamicOnboardingGuide onComplete={handleOnboardingComplete} />
       )}
     </div>
   )

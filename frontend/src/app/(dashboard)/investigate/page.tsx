@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useMemo } from "react"
 import {
   Brain,
   Search,
@@ -11,9 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
   Clock,
-  AlertTriangle,
   Sparkles,
-  Crosshair,
   Target,
   Server,
   User,
@@ -23,44 +20,25 @@ import {
   ArrowUpRight,
   ThumbsUp,
   ThumbsDown,
-  MessageSquare,
   Eye,
   Link2,
-  Flame,
-  Fingerprint,
   GitBranch,
-  Network,
-  Timer,
   Activity,
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Globe,
-  Lock,
-  Unlock,
-  Flag,
-  CircleDot,
   MoveRight,
-  TriangleAlert,
   CircleCheck,
   CircleSlash,
   Edit3,
-  Hexagon,
-  Play,
-  Pause,
   FileText,
   ClipboardList,
   Wrench,
-  Send,
   Plus,
   UserCircle,
-  MapPin,
   BarChart3,
   ShieldCheck,
   FileSearch,
   FileCheck,
   Inbox,
-  Layers,
   ArrowRightLeft,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -68,13 +46,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -85,6 +56,7 @@ import {
 import { cn } from "@/lib/utils"
 import { RISK_CONFIG, type RiskLevel } from "@/lib/risk-config"
 import { PageHeader } from "@/components/layout/page-header"
+import { inputClass, pageCardClass } from "@/lib/admin-ui"
 
 type InvestigationStatus = "investigating" | "pending_review" | "disposing" | "closed"
 type InvestigationTab = InvestigationStatus | "all"
@@ -1208,12 +1180,42 @@ function RadioIcon() {
   return <span className="inline-block size-3 rounded-sm border border-current opacity-40" />
 }
 
+function StatPill({
+  label,
+  value,
+  tone = "default",
+  hint,
+}: {
+  label: string
+  value: string | number
+  tone?: "default" | "cyan" | "amber" | "emerald" | "red"
+  hint?: string
+}) {
+  const toneClass =
+    tone === "cyan"
+      ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+      : tone === "amber"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : tone === "emerald"
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : tone === "red"
+            ? "border-red-200 bg-red-50 text-red-700"
+            : "border-slate-200 bg-white text-slate-700"
+
+  return (
+    <div className={cn("rounded-2xl border px-3 py-2.5", toneClass)}>
+      <div className="text-[11px]">{label}</div>
+      <div className="mt-1 text-lg font-semibold">{value}</div>
+      {hint && <div className="mt-1 text-[10px] opacity-75">{hint}</div>}
+    </div>
+  )
+}
+
 function ConfidenceBar({ value }: { value: number }) {
   const color = value >= 80 ? "bg-red-500" : value >= 60 ? "bg-amber-500" : "bg-cyan-500"
-  const glowColor = value >= 80 ? "shadow-[0_0_8px_rgba(239,68,68,0.3)]" : value >= 60 ? "shadow-[0_0_8px_rgba(245,158,11,0.3)]" : "shadow-[0_0_8px_rgba(6,182,212,0.3)]"
   return (
     <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-      <div className={cn("h-full rounded-full transition-all duration-700", color, glowColor)} style={{ width: `${value}%` }} />
+      <div className={cn("h-full rounded-full transition-[width] duration-700", color)} style={{ width: `${value}%` }} />
     </div>
   )
 }
@@ -1232,8 +1234,8 @@ function InvestigationDecisionBrief({ record }: { record: InvestigationRecord })
           : "继续收集证据链，确认主假设是否成立"
 
   return (
-    <div className="workflow-panel p-5">
-      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+    <div className={cn(pageCardClass, "p-5 shadow-none")}>
+      <div className="grid gap-5 xl:grid-cols-[1.7fr_1fr]">
         <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-cyan-700" />
@@ -1246,22 +1248,13 @@ function InvestigationDecisionBrief({ record }: { record: InvestigationRecord })
             {record.aiConclusion || record.description}
           </p>
           <div className="grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">支撑证据</div>
-              <div className="mt-1 text-lg font-bold text-slate-900">{supportEvidence}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">不确定点</div>
-              <div className="mt-1 text-lg font-bold text-amber-600">{uncertainSignals}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white/80 p-3">
-              <div className="text-[11px] text-slate-500">推理步骤</div>
-              <div className="mt-1 text-lg font-bold text-cyan-700">{record.aiReasoningSteps.length}</div>
-            </div>
+            <StatPill label="支撑证据" value={supportEvidence} tone="cyan" />
+            <StatPill label="不确定点" value={uncertainSignals} tone="amber" />
+            <StatPill label="推理步骤" value={record.aiReasoningSteps.length} />
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white/85 p-4">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <div className="mb-3 flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-emerald-600" />
             <span className="text-sm font-semibold text-slate-900">建议决策</span>
@@ -1324,7 +1317,7 @@ function PersonMiniTag({ profile }: { profile: PersonProfile }) {
   )
 }
 
-function ReasoningStepItem({ step, index, compact }: { step: AIReasoningStep; index?: number; compact?: boolean }) {
+function ReasoningStepItem({ step, compact }: { step: AIReasoningStep; compact?: boolean }) {
   const cfg = STEP_TYPE_CONFIG[step.type]
   const Icon = cfg.icon
   if (compact) {
@@ -1411,8 +1404,8 @@ function PersonProfileCard({ profile }: { profile: PersonProfile }) {
         <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-slate-100">
           <span className="text-slate-400">工号 <span className="text-slate-500 font-mono ml-1">{profile.employeeId}</span></span>
           <span className="text-slate-400">位置 <span className="text-slate-500 ml-1">{profile.location}</span></span>
-          <span className="text-slate-400">风险分 <span className={cn("font-mono ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
-          <span className="text-slate-400">在线设备 <span className="text-slate-500 font-mono ml-1">{profile.deviceCount}</span></span>
+          <span className="text-slate-400">风险分 <span className={cn("font-mono tabular-nums ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
+          <span className="text-slate-400">在线设备 <span className="text-slate-500 font-mono tabular-nums ml-1">{profile.deviceCount}</span></span>
           <span className="text-slate-400">上次登录 <span className="text-slate-600 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
         </div>
         {profile.notes && (
@@ -1491,21 +1484,21 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
   const cfg = STEP_TYPE_CONFIG[step.type]
   const Icon = cfg.icon
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-200" style={{ background: `linear-gradient(90deg, ${cfg.color}08, transparent)` }}>
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/40">
+      <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3" style={{ background: `linear-gradient(90deg, ${cfg.color}08, rgba(248,250,252,0.85))` }}>
         <div className="flex h-6 w-6 items-center justify-center rounded-full border" style={{ borderColor: `${cfg.color}40`, backgroundColor: `${cfg.color}15` }}>
           <Icon className={cn("h-3.5 w-3.5", cfg.color)} />
         </div>
         <span className="text-xs font-semibold text-slate-800">步骤{index + 1}：{cfg.label}</span>
         <span className="font-mono text-[10px] text-slate-600 ml-auto">{step.time}</span>
         {step.confidenceContribution > 0 && (
-          <span className={cn("inline-flex items-center text-[10px] font-mono font-semibold", step.confidenceContribution >= 30 ? "text-red-600" : step.confidenceContribution >= 20 ? "text-amber-600" : "text-cyan-600")}>
+          <span className={cn("inline-flex items-center text-[10px] font-mono tabular-nums font-semibold", step.confidenceContribution >= 30 ? "text-red-600" : step.confidenceContribution >= 20 ? "text-amber-600" : "text-cyan-600")}>
             +{step.confidenceContribution}%
           </span>
         )}
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="space-y-3 p-4">
         <p className="text-sm text-slate-700 leading-relaxed font-medium">{step.detail}</p>
 
         {step.reasoning && (
@@ -1557,13 +1550,11 @@ function FeedbackDialog({
   onOpenChange,
   rating,
   onSubmit,
-  recordId,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   rating: "thumbs_up" | "thumbs_down"
   onSubmit?: (data: { feedbackType: string; comment: string }) => void
-  recordId?: string
 }) {
   const [feedbackType, setFeedbackType] = useState("")
   const [comment, setComment] = useState("")
@@ -1583,7 +1574,7 @@ function FeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white border-cyan-500/20 text-slate-900 shadow-[0_0_40px_rgba(0,212,255,0.12)]">
+      <DialogContent className="sm:max-w-md bg-white border-cyan-500/20 text-slate-900 shadow-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-slate-900">
             <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: isPositive ? "#22c55e15" : "#ff4d4f15" }}>
@@ -1605,7 +1596,7 @@ function FeedbackDialog({
                 const isSelected = feedbackType === opt.value
                 return (
                   <button key={opt.value} onClick={() => setFeedbackType(opt.value)}
-                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-all"
+                    className="flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors"
                     style={{ borderColor: isSelected ? `${color}60` : "rgba(0,0,0,0.08)", backgroundColor: isSelected ? `${color}12` : "rgba(0,0,0,0.02)" }}
                   >
                     <div className="flex size-4 items-center justify-center rounded-full border" style={{ borderColor: isSelected ? color : "rgba(0,0,0,0.15)", backgroundColor: isSelected ? color : "transparent" }}>
@@ -1625,7 +1616,7 @@ function FeedbackDialog({
           </div>
 
           <Button onClick={handleSubmit} disabled={!feedbackType}
-            className="w-full h-9 font-semibold gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-white shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-9 font-semibold gap-2 bg-cyan-600 hover:bg-cyan-700 text-white shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPositive ? <ThumbsUp className="size-3.5" /> : <ThumbsDown className="size-3.5" />}
             提交反馈
@@ -1641,10 +1632,9 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
   const srcRiskCfg = RISK_CONFIG[record.sourceEvent.riskLevel]
   return (
     <Card onClick={() => onSelect(record)} className={cn(
-      "overflow-hidden transition-all cursor-pointer group",
-      "bg-slate-50 backdrop-blur-sm border-cyan-500/30 hover:border-cyan-500/50 hover:shadow-[0_0_16px_rgba(34,211,238,0.1)]"
+      "group cursor-pointer overflow-hidden border-slate-200 bg-white transition-[shadow,transform] hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md hover:shadow-slate-200/70"
     )}>
-      <CardContent className="p-4 space-y-3">
+      <CardContent className="flex min-h-[328px] flex-col p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-mono text-sm font-bold text-cyan-600">{record.id}</span>
@@ -1657,7 +1647,7 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
         <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
         <AssetTag name={record.asset} type="asset" />
 
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 space-y-2">
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[9px] text-slate-600 flex items-center gap-1"><RadioIcon />来源事件</span>
             <span className="text-[9px] font-mono text-cyan-600/60">{record.sourceEvent.eventId}</span>
@@ -1673,9 +1663,9 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
           <p className="text-[9px] text-slate-600 font-mono leading-relaxed line-clamp-1">{record.sourceEvent.rawInput}</p>
         </div>
 
-        <div className="space-y-2">
+        <div className="mt-3 space-y-2">
           <div className="relative pl-7">
-            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-gradient-to-b from-cyan-500/30 to-transparent" />
+            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-gradient-to-b from-cyan-300 to-transparent" />
             <div className="space-y-2">
               {record.aiReasoningSteps.map((step, idx) => (
                 <div key={idx} className="relative flex items-start gap-2">
@@ -1691,7 +1681,7 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+        <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-3">
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-600">置信度</span>
             <span className={cn("text-xs font-semibold", record.confidence >= 80 ? "text-[#ff4d4f]" : record.confidence >= 60 ? "text-amber-600" : "text-cyan-600")}>{record.confidence}%</span>
@@ -1704,8 +1694,8 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
-          <Button size="xs" className="bg-emerald-600/80 text-white hover:bg-emerald-500 gap-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 pt-3">
+          <Button size="xs" className="bg-emerald-600 text-white hover:bg-emerald-700 gap-1" onClick={(e) => e.stopPropagation()}>
             <CircleCheck className="size-3" />确认威胁
           </Button>
           <Button size="xs" variant="outline" className="border-slate-200 text-slate-600 hover:text-slate-500 hover:border-slate-300 gap-1" onClick={(e) => e.stopPropagation()}>
@@ -1731,8 +1721,8 @@ function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; 
 function PendingReviewCard({ record }: { record: InvestigationRecord }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent hover:border-amber-500/40 transition-all duration-300 cursor-pointer">
-      <div className="p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
+    <Card className="cursor-pointer border-amber-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60">
+      <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <StatusBadge status={record.status} />
@@ -1746,7 +1736,7 @@ function PendingReviewCard({ record }: { record: InvestigationRecord }) {
         <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
         <AssetTag name={record.asset} type="asset" />
 
-        <div className="rounded-lg border border-amber-500/10 bg-amber-500/[0.03] p-2.5">
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Brain className="h-3.5 w-3.5 text-amber-600" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/70">AI结论</span>
@@ -1754,7 +1744,7 @@ function PendingReviewCard({ record }: { record: InvestigationRecord }) {
           <p className="text-xs text-slate-700 leading-relaxed">{record.aiConclusion}</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="mt-3 flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-slate-600">置信度</span>
             <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
@@ -1762,7 +1752,7 @@ function PendingReviewCard({ record }: { record: InvestigationRecord }) {
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div className="flex items-center gap-1.5 mb-1.5">
             <Zap className="h-3 w-3 text-purple-600" />
             <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600/70">处置建议</span>
@@ -1770,14 +1760,14 @@ function PendingReviewCard({ record }: { record: InvestigationRecord }) {
           <p className="text-xs text-slate-500 leading-relaxed">{record.disposalSuggestion}</p>
         </div>
 
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-          <button className="flex-1 flex items-center justify-center gap-1 rounded-md bg-emerald-500/20 text-emerald-600 px-2 py-1.5 text-xs font-medium hover:bg-emerald-500/30 transition-colors">
+        <div className="mt-auto grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
+          <button className="flex items-center justify-center gap-1 rounded-xl bg-emerald-50 text-emerald-700 px-2 py-2 text-xs font-medium hover:bg-emerald-100 transition-colors">
             <CircleCheck className="h-3 w-3" /> 同意
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1 rounded-md bg-blue-500/20 text-blue-600 px-2 py-1.5 text-xs font-medium hover:bg-blue-500/30 transition-colors">
+          <button className="flex items-center justify-center gap-1 rounded-xl bg-cyan-50 text-cyan-700 px-2 py-2 text-xs font-medium hover:bg-cyan-100 transition-colors">
             <Edit3 className="h-3 w-3" /> 修改
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1 rounded-md bg-red-500/20 text-red-600 px-2 py-1.5 text-xs font-medium hover:bg-red-500/30 transition-colors">
+          <button className="flex items-center justify-center gap-1 rounded-xl bg-red-50 text-red-700 px-2 py-2 text-xs font-medium hover:bg-red-100 transition-colors">
             <XCircle className="h-3 w-3" /> 驳回
           </button>
         </div>
@@ -1797,8 +1787,8 @@ function PendingReviewCard({ record }: { record: InvestigationRecord }) {
 function DisposingCard({ record }: { record: InvestigationRecord }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent hover:border-orange-500/40 transition-all duration-300">
-      <div className="p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
+    <Card className="border-orange-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60">
+      <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <StatusBadge status={record.status} />
@@ -1812,31 +1802,31 @@ function DisposingCard({ record }: { record: InvestigationRecord }) {
         <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
         <AssetTag name={record.asset} type="asset" />
 
-        <div className="space-y-1.5">
+        <div className="mt-3 space-y-1.5">
           {record.aiReasoningSteps.slice(0, 2).map((step, idx) => (
-            <ReasoningStepItem key={idx} step={step} index={idx} compact />
+            <ReasoningStepItem key={idx} step={step} compact />
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-[10px]">
-          <div className="rounded bg-slate-50 p-1.5">
+        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
             <span className="text-slate-600">处置人</span>
             <p className="text-slate-600 font-medium truncate">{record.handler || "—"}</p>
           </div>
-          <div className="rounded bg-slate-50 p-1.5">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
             <span className="text-slate-600">截止时间</span>
             <p className="text-amber-600/80 font-medium">{record.deadline || "—"}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="mt-3 flex items-center gap-2 text-[10px]">
           <span className="text-slate-600">置信度</span>
           <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
           <div className="w-16"><ConfidenceBar value={record.confidence} /></div>
         </div>
 
-        <div className="px-3 pb-3">
-          <div className="rounded-lg border border-slate-100 bg-slate-50 p-2">
+        <div className="mt-auto px-3 pb-3 pt-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-center gap-1.5 mb-1">
               <ClipboardList className="h-3 w-3 text-orange-600" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600/70">当前处置动作</span>
@@ -1864,11 +1854,11 @@ function ClosedCard({ record }: { record: InvestigationRecord }) {
   return (
     <>
       <Card className={cn(
-        "border-slate-200 bg-slate-50 hover:border-slate-300 transition-all duration-300 cursor-pointer",
+        "cursor-pointer border-slate-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/60",
         record.feedback?.rating === "thumbs_up" && "border-emerald-500/20",
         record.feedback?.rating === "thumbs_down" && "border-red-500/20"
       )}>
-        <div className="p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
+        <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <StatusBadge status={record.status} />
@@ -1881,28 +1871,28 @@ function ClosedCard({ record }: { record: InvestigationRecord }) {
           <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
           <AssetTag name={record.asset} type="asset" />
 
-          <div className="space-y-1.5">
+          <div className="mt-3 space-y-1.5">
             {record.aiReasoningSteps.slice(0, 2).map((step, idx) => (
-              <ReasoningStepItem key={idx} step={step} index={idx} compact />
+              <ReasoningStepItem key={idx} step={step} compact />
             ))}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-[10px]">
-            <div className="rounded bg-slate-50 p-1.5">
+          <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
               <span className="text-slate-600">闭环时间</span>
               <p className="text-emerald-600/80 font-medium">{record.closedAt || "—"}</p>
             </div>
-            <div className="rounded bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
               <span className="text-slate-600">处置人</span>
               <p className="text-slate-600 font-medium truncate">{record.handler || "—"}</p>
             </div>
-            <div className="rounded bg-slate-50 p-1.5">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
               <span className="text-slate-600">耗时</span>
               <p className="text-slate-600 font-medium">{record.duration || "—"}</p>
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-1">
+          <div className="mt-auto flex items-center justify-between pt-3">
             <div className="flex items-center gap-2 text-[10px]">
               <span className="text-slate-600">置信度</span>
               <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
@@ -1911,13 +1901,13 @@ function ClosedCard({ record }: { record: InvestigationRecord }) {
             <div className="flex items-center gap-1">
               <button
                 onClick={(e) => { e.stopPropagation(); setFeedbackRating("thumbs_up"); setShowFeedback(true) }}
-                className={cn("p-1 rounded hover:bg-white/10 transition-colors", record.feedback?.rating === "thumbs_up" && "text-emerald-600")}
+                className={cn("rounded p-1 transition-colors hover:bg-slate-100", record.feedback?.rating === "thumbs_up" && "text-emerald-600")}
               >
                 <ThumbsUp className="h-3.5 w-3.5" />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setFeedbackRating("thumbs_down"); setShowFeedback(true) }}
-                className={cn("p-1 rounded hover:bg-white/10 transition-colors", record.feedback?.rating === "thumbs_down" && "text-red-600")}
+                className={cn("rounded p-1 transition-colors hover:bg-slate-100", record.feedback?.rating === "thumbs_down" && "text-red-600")}
               >
                 <ThumbsDown className="h-3.5 w-3.5" />
               </button>
@@ -1947,7 +1937,6 @@ function ClosedCard({ record }: { record: InvestigationRecord }) {
         open={showFeedback}
         onOpenChange={setShowFeedback}
         rating={feedbackRating as "thumbs_up" | "thumbs_down"}
-        recordId={record.id}
       />
     </>
   )
@@ -1955,10 +1944,11 @@ function ClosedCard({ record }: { record: InvestigationRecord }) {
 
 export default function InvestigatePage() {
   const [selectedRecord, setSelectedRecord] = useState<InvestigationRecord | null>(null)
+  const [selectedStepIndex, setSelectedStepIndex] = useState(0)
   const [activeTab, setActiveTab] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
-  const [feedbackRating, setFeedbackRating] = useState<"thumbs_up" | "thumbs_down" | null>(null)
+  const feedbackRating: "thumbs_up" | "thumbs_down" | null = null
 
   const tabCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -1983,166 +1973,318 @@ export default function InvestigatePage() {
     })
   }, [activeTab, searchQuery])
 
+  const totalCount = mockRecords.length
+  const investigatingCount = mockRecords.filter((record) => record.status === "investigating").length
+  const reviewCount = mockRecords.filter((record) => record.status === "pending_review").length
+  const disposingCount = mockRecords.filter((record) => record.status === "disposing").length
+  const closedCount = mockRecords.filter((record) => record.status === "closed").length
+  const avgConfidence = Math.round(mockRecords.reduce((sum, record) => sum + record.confidence, 0) / mockRecords.length)
+  const visibleSelectedRecord = selectedRecord ? filteredRecords.find((record) => record.id === selectedRecord.id) ?? null : null
+  const previewRecord = filteredRecords[0] ?? null
+  const activeRecord = visibleSelectedRecord ?? null
+  const safeSelectedStepIndex = activeRecord ? Math.min(selectedStepIndex, activeRecord.aiReasoningSteps.length - 1) : 0
+
   return (
     <div className="min-h-screen">
-      <PageHeader title="智能研判中心" subtitle="AI驱动的安全事件调查与证据链分析平台" icon={Brain} />
+      <PageHeader
+        title="智能研判中心"
+        subtitle="AI驱动的安全事件调查与证据链分析平台"
+        icon={Brain}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+              <ArrowUpRight className="mr-1 h-4 w-4" />
+              导出简报
+            </Button>
+            <Button className="bg-cyan-600 text-white hover:bg-cyan-700">
+              <Plus className="mr-1 h-4 w-4" />
+              新建研判
+            </Button>
+          </div>
+        }
+      />
 
-      <div className="mx-auto max-w-7xl pb-8 pt-4 space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm shadow-slate-200/60">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {TABS.map((tab) => {
-                const active = activeTab === tab.value
-                const TabIcon = tab.icon
-                return (
-                  <button
-                    key={tab.value}
-                    type="button"
-                    onClick={() => setActiveTab(tab.value)}
-                    className={cn(
-                      "flex h-10 min-w-0 items-center justify-center gap-2 rounded-lg border px-3 text-xs font-medium transition-all",
-                      active
-                        ? "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-sm"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
-                    )}
-                  >
-                    {TabIcon && <TabIcon className="h-3.5 w-3.5 shrink-0" />}
-                    <span className="truncate">{tab.label}</span>
-                    <span
+      <div className="mx-auto max-w-[1560px] pb-8 pt-4 space-y-5">
+        <div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
+          <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f4fbfd_48%,#ffffff_100%)] p-6 shadow-sm shadow-slate-200/70">
+            <div className="flex flex-col gap-5">
+              <div className="space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  AI研判工作台
+                </div>
+                <div>
+                  <h1 className="text-3xl font-semibold tracking-tight text-slate-950">让证据链自己说服你</h1>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                    把原始事件、人员画像、基线偏差、跨系统关联和处置建议压进同一个研判工作流里，先看清，再行动。
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-4 xl:max-w-4xl">
+                  <StatPill label="全部案件" value={totalCount} hint={`${investigatingCount} 研判中 / ${reviewCount} 待复核 / ${disposingCount} 处置中 / ${closedCount} 已闭环`} />
+                  <StatPill label="研判中" value={investigatingCount} tone="cyan" />
+                  <StatPill label="待复核" value={reviewCount} tone="amber" />
+                  <StatPill label="平均置信度" value={`${avgConfidence}%`} tone="emerald" hint={`已闭环 ${closedCount} 条`} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={cn(pageCardClass, "p-5")}>
+            <div className="mb-4 flex items-center gap-2">
+              <Activity className="h-4 w-4 text-cyan-700" />
+              <span className="text-sm font-semibold text-slate-900">筛选与状态</span>
+            </div>
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  placeholder="搜索事件标题、编号、资产、描述..."
+                  aria-label="搜索事件"
+                  name="search"
+                  autoComplete="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={`h-11 pl-9 text-sm ${inputClass}`}
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <div className="text-[11px] text-slate-500">正向反馈</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-emerald-700">
+                    <ThumbsUp className="h-4 w-4 shrink-0" />
+                    <span className="text-lg font-semibold tabular-nums">{positiveCount}</span>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <div className="text-[11px] text-slate-500">负向反馈</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-red-700">
+                    <ThumbsDown className="h-4 w-4 shrink-0" />
+                    <span className="text-lg font-semibold tabular-nums">{negativeCount}</span>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+                  <div className="text-[11px] text-slate-500">处置中</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-amber-700">
+                    <Wrench className="h-4 w-4 shrink-0" />
+                    <span className="text-lg font-semibold tabular-nums">{disposingCount}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {TABS.map((tab) => {
+                  const active = activeTab === tab.value
+                  const TabIcon = tab.icon
+                  return (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setActiveTab(tab.value)}
                       className={cn(
-                        "flex h-5 min-w-6 shrink-0 items-center justify-center rounded-full px-1.5 font-mono text-[10px] leading-none",
-                        active ? "bg-white text-cyan-700" : "bg-slate-100 text-slate-500"
+                        "flex min-h-16 flex-col items-start justify-between rounded-2xl border px-3 py-3 text-left transition-colors",
+                        active ? "border-cyan-200 bg-cyan-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                       )}
                     >
-                      {tabCounts[tab.value] || 0}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="relative xl:w-[320px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                placeholder="搜索事件标题、编号、资产、描述..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 border-slate-200 bg-slate-50 pl-9 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
-              />
-            </div>
-
-            <div className="flex shrink-0 items-center gap-2">
-              <div className="flex h-10 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5">
-                <ThumbsUp className="h-3.5 w-3.5 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-700">{positiveCount}</span>
-              </div>
-              <div className="flex h-10 items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5">
-                <ThumbsDown className="h-3.5 w-3.5 text-red-600" />
-                <span className="text-xs font-medium text-red-700">{negativeCount}</span>
+                      <div className="flex w-full items-center justify-between">
+                        {TabIcon && <TabIcon className={cn("h-4 w-4 shrink-0", active ? "text-cyan-700" : "text-slate-500")} />}
+                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono", active ? "bg-white text-cyan-700" : "bg-slate-100 text-slate-500")}>
+                          {tabCounts[tab.value] || 0}
+                        </span>
+                      </div>
+                      <span className={cn("text-xs font-medium", active ? "text-cyan-700" : "text-slate-600")}>{tab.label}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        {selectedRecord ? (
+        {activeRecord ? (
           <div className="space-y-3">
             <button
-              onClick={() => setSelectedRecord(null)}
-              className="flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-600 transition-colors"
+              onClick={() => {
+                setSelectedRecord(null)
+                setSelectedStepIndex(0)
+              }}
+              className="flex items-center gap-1.5 text-xs text-slate-600 transition-colors hover:text-slate-900"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> 返回列表
+              <ArrowLeft className="h-3.5 w-3.5" /> 返回案件列表
             </button>
 
-            <Card className="border-cyan-200 bg-gradient-to-br from-cyan-500/5 to-transparent overflow-hidden">
-              <div className="p-5 border-b border-slate-200">
-                <div className="flex items-start justify-between">
+            <Card className="overflow-hidden border-slate-200 bg-white shadow-sm shadow-slate-200/60">
+              <div className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfc_100%)] p-6">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                      <StatusBadge status={selectedRecord.status} />
-                      <span className="text-sm font-mono text-slate-400">{selectedRecord.id}</span>
-                      <TriggerBadge type={selectedRecord.triggerType} />
+                      <StatusBadge status={activeRecord.status} />
+                      <span className="text-sm font-mono text-slate-400">{activeRecord.id}</span>
+                      <TriggerBadge type={activeRecord.triggerType} />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900">{selectedRecord.title}</h2>
-                    <p className="text-sm text-slate-900/55 max-w-2xl">{selectedRecord.description}</p>
-                    <AssetTag name={selectedRecord.asset} type="asset" />
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-950">{activeRecord.title}</h2>
+                    <p className="max-w-3xl text-sm leading-6 text-slate-600">{activeRecord.description}</p>
+                    <div className="flex flex-wrap gap-2">
+                      <AssetTag name={activeRecord.asset} type="asset" />
+                      {activeRecord.involvedAccounts?.slice(0, 2).map((account) => (
+                        <AssetTag key={account} name={account} type="account" />
+                      ))}
+                    </div>
                   </div>
-                  <div className="text-right space-y-2">
-                    <div className="space-y-1">
-                      <div className="text-[10px] text-slate-600">AI 置信度</div>
-                      <div className="flex items-center gap-2 justify-end">
-                        <span className={cn("text-lg font-black tabular-nums", selectedRecord.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>
-                          {selectedRecord.confidence}%
-                        </span>
-                        <div className="w-24"><ConfidenceBar value={selectedRecord.confidence} /></div>
-                      </div>
-                    </div>
-                    {(selectedRecord.status === "closed") && (
-                      <div className="flex items-center gap-1.5 justify-end pt-1">
-                        <button
-                          onClick={() => { setFeedbackRating("thumbs_up"); setShowFeedbackDialog(true) }}
-                          className={cn("p-1.5 rounded-lg hover:bg-white/10 transition-colors", selectedRecord.feedback?.rating === "thumbs_up" && "text-emerald-600")}
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => { setFeedbackRating("thumbs_down"); setShowFeedbackDialog(true) }}
-                          className={cn("p-1.5 rounded-lg hover:bg-white/10 transition-colors", selectedRecord.feedback?.rating === "thumbs_down" && "text-red-600")}
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
+                  <div className="grid gap-3 sm:grid-cols-3 xl:w-[440px]">
+                    <StatPill label="AI置信度" value={`${activeRecord.confidence}%`} tone={activeRecord.confidence >= 80 ? "red" : "amber"} />
+                    <StatPill label="证据条数" value={activeRecord.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)} tone="cyan" />
+                    <StatPill label="推理步骤" value={activeRecord.aiReasoningSteps.length} />
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 space-y-4 max-h-[65vh] overflow-y-auto custom-scrollbar">
-                <InvestigationDecisionBrief record={selectedRecord} />
+              <div className="grid gap-5 p-5 xl:grid-cols-[420px_1fr]">
+                <div className="space-y-4">
+                  <InvestigationDecisionBrief record={activeRecord} />
 
-                <div className="flex items-center gap-2 mb-2">
-                  <GitBranch className="h-4 w-4 text-cyan-600" />
-                  <span className="text-sm font-bold text-cyan-600">完整证据链 · {selectedRecord.aiReasoningSteps.length} 个推理步骤</span>
+                  {activeRecord.status === "closed" && activeRecord.conclusion && (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                      <div className="mb-2 flex items-center gap-2">
+                        <FileCheck className="h-4 w-4 text-emerald-700" />
+                        <span className="text-sm font-semibold text-emerald-700">闭环结论</span>
+                      </div>
+                      <p className="text-sm leading-6 text-slate-700">{activeRecord.conclusion}</p>
+                    </div>
+                  )}
+
+                  {activeRecord.disposalSuggestion && activeRecord.status === "pending_review" && (
+                    <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-cyan-700" />
+                        <span className="text-sm font-semibold text-cyan-700">AI 处置建议</span>
+                      </div>
+                      <p className="text-sm leading-6 text-slate-700">{activeRecord.disposalSuggestion}</p>
+                    </div>
+                  )}
                 </div>
-                {selectedRecord.aiReasoningSteps.map((step, idx) => (
-                  <RichReasoningStepCard key={idx} step={step} index={idx} />
-                ))}
 
-                {selectedRecord.status === "closed" && selectedRecord.conclusion && (
-                  <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-500/5 p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileCheck className="h-5 w-5 text-emerald-600" />
-                      <span className="text-base font-bold text-emerald-600">闭环结论</span>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GitBranch className="h-4 w-4 text-cyan-700" />
+                      <span className="text-sm font-semibold text-slate-900">完整证据链</span>
                     </div>
-                    <p className="text-sm text-slate-900/75 leading-relaxed">{selectedRecord.conclusion}</p>
+                    <span className="text-xs text-slate-500">{activeRecord.aiReasoningSteps.length} 个推理步骤，当前聚焦第 {safeSelectedStepIndex + 1} 步</span>
                   </div>
-                )}
-
-                {selectedRecord.disposalSuggestion && selectedRecord.status === "pending_review" && (
-                  <div className="mt-4 rounded-xl border border-purple-500/15 bg-purple-500/5 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Zap className="h-4 w-4 text-purple-600" />
-                      <span className="text-sm font-bold text-purple-600">AI 处置建议</span>
+                  <div className="flex flex-wrap gap-2">
+                    {activeRecord.aiReasoningSteps.map((step, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedStepIndex(idx)}
+                        className={cn(
+                          "rounded-xl border px-3 py-2 text-left transition-colors",
+                          selectedStepIndex === idx
+                            ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                        )}
+                      >
+                        <div className="text-[10px] font-mono">步骤 {idx + 1}</div>
+                        <div className="mt-1 text-xs font-medium">{step.step}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid gap-3 xl:grid-cols-[1fr_240px]">
+                    <RichReasoningStepCard
+                      step={activeRecord.aiReasoningSteps[safeSelectedStepIndex]}
+                      index={safeSelectedStepIndex}
+                    />
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-3 flex items-center gap-2">
+                        <FileSearch className="h-4 w-4 text-cyan-700" />
+                        <span className="text-sm font-semibold text-slate-900">阅读提示</span>
+                      </div>
+                      <div className="space-y-3 text-xs leading-6 text-slate-600">
+                        <p>先看“推理逻辑”，确认 AI 为什么会走到这一步。</p>
+                        <p>再看“证据链”，核对输入是否足够支撑当前判断。</p>
+                        <p>如果当前步骤不成立，再切回上一步或下一步，不必一次读完整条链。</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">{selectedRecord.disposalSuggestion}</p>
                   </div>
-                )}
+                </div>
               </div>
             </Card>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredRecords.length > 0 ? filteredRecords.map(record => {
-              switch (record.status) {
-                case "investigating": return <InvestigatingCard key={record.id} record={record} onSelect={() => setSelectedRecord(record)} />
-                case "pending_review": return <PendingReviewCard key={record.id} record={record} />
-                case "disposing": return <DisposingCard key={record.id} record={record} />
-                case "closed": return <ClosedCard key={record.id} record={record} />
-                default: return null
-              }
-            }) : (
-              <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-600">
-                <Inbox className="h-12 w-12 mb-3 opacity-40" />
-                <p className="text-sm">暂无匹配的事件记录</p>
+          <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900">案件池</h3>
+                  <p className="text-xs text-slate-500">按状态查看 AI 研判进度，选中后进入完整证据链工作台。</p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-600">{filteredRecords.length} 条</span>
+              </div>
+              <div className="space-y-3">
+                {filteredRecords.length > 0 ? filteredRecords.map(record => {
+                  switch (record.status) {
+                    case "investigating": return <InvestigatingCard key={record.id} record={record} onSelect={() => { setSelectedRecord(record); setSelectedStepIndex(0) }} />
+                    case "pending_review": return <PendingReviewCard key={record.id} record={record} />
+                    case "disposing": return <DisposingCard key={record.id} record={record} />
+                    case "closed": return <ClosedCard key={record.id} record={record} />
+                    default: return null
+                  }
+                }) : (
+                  <div className={cn(pageCardClass, "flex min-h-[320px] flex-col items-center justify-center py-20 text-slate-600")}>
+                    <Inbox className="mb-3 h-12 w-12 opacity-40" />
+                    <p className="text-sm">暂无匹配的事件记录</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {previewRecord ? (
+              <Card className="overflow-hidden border-slate-200 bg-white shadow-sm shadow-slate-200/60">
+                <div className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfc_100%)] p-5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={previewRecord.status} />
+                        <span className="text-sm font-mono text-slate-400">{previewRecord.id}</span>
+                        <TriggerBadge type={previewRecord.triggerType} />
+                      </div>
+                      <h3 className="text-xl font-semibold tracking-tight text-slate-950">{previewRecord.title}</h3>
+                      <p className="max-w-3xl text-sm leading-6 text-slate-600">{previewRecord.description}</p>
+                    </div>
+                    <Button className="shrink-0 bg-cyan-600 text-white hover:bg-cyan-700" onClick={() => setSelectedRecord(previewRecord)}>
+                      进入完整研判
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 p-5 xl:grid-cols-[340px_1fr]">
+                  <div className="space-y-4">
+                    <InvestigationDecisionBrief record={previewRecord} />
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <GitBranch className="h-4 w-4 text-cyan-700" />
+                        <span className="text-sm font-semibold text-slate-900">证据链预览</span>
+                      </div>
+                      <span className="text-xs text-slate-500">先预览，再进入完整工作台</span>
+                    </div>
+                    <div className="space-y-3">
+                      {previewRecord.aiReasoningSteps.slice(0, 2).map((step, idx) => (
+                        <RichReasoningStepCard key={idx} step={step} index={idx} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ) : (
+              <div className={cn(pageCardClass, "flex min-h-[720px] flex-col items-center justify-center p-10 text-center")}>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                  <Brain className="h-8 w-8" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-900">没有可预览的案件</h3>
+                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
+                  调整左侧筛选条件后，这里会自动显示第一条案件的研判预览。
+                </p>
               </div>
             )}
           </div>
@@ -2161,7 +2303,6 @@ export default function InvestigatePage() {
         open={showFeedbackDialog}
         onOpenChange={setShowFeedbackDialog}
         rating={feedbackRating}
-        recordId={selectedRecord?.id}
       />
       )}
     </div>

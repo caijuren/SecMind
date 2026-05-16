@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { ArrowLeft, Home, SearchX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -32,13 +33,14 @@ export default function NotFound() {
           <ArrowLeft className="size-4" />
           返回上一页
         </Button>
-        <Button
-          className="gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] font-semibold shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110"
-          onClick={() => router.push("/investigate")}
-        >
-          <Home className="size-4" />
-          返回首页
-        </Button>
+        <Link href="/">
+          <Button
+            className="gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] font-semibold shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110"
+          >
+            <Home className="size-4" />
+            返回首页
+          </Button>
+        </Link>
       </div>
     </div>
   )

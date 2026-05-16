@@ -619,7 +619,7 @@ export default function DocsGuidePage() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`relative px-4 py-2 text-sm transition-all duration-200 rounded-lg ${
+                className={`relative px-4 py-2 text-sm transition-colors duration-200 rounded-lg ${
                   pathname === item.href ? "text-cyan-300 bg-white/[0.04]" : "text-slate-400 hover:text-cyan-300 hover:bg-white/[0.04]"
                 }`}
               >
@@ -633,14 +633,14 @@ export default function DocsGuidePage() {
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="default" className="bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] font-semibold shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110 transition-all text-sm h-9 px-5">
+              <Button size="default" className="bg-gradient-to-r from-cyan-500 to-teal-500 text-[#020a1a] font-semibold shadow-[0_0_20px_rgba(0,212,255,0.3)] hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] hover:brightness-110 transition-colors text-sm h-9 px-5">
                 免费体验
                 <ArrowRight className="size-3.5 ml-1" />
               </Button>
             </Link>
           </div>
 
-          <button className="md:hidden text-slate-400 hover:text-cyan-400 transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="md:hidden text-slate-400 hover:text-cyan-400 transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="打开导航菜单" aria-expanded={mobileMenuOpen}>
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
         </div>
@@ -673,7 +673,7 @@ export default function DocsGuidePage() {
           </div>
 
           <div className="flex gap-6 min-h-[calc(100vh-220px)]">
-            <nav className="w-56 shrink-0 rounded-xl border border-cyan-500/10 bg-[#0a1628]/60 backdrop-blur-xl overflow-y-auto sticky top-24 self-start scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
+            <nav aria-label="文档导航" className="w-56 shrink-0 rounded-xl border border-cyan-500/10 bg-[#0a1628]/60 backdrop-blur-xl overflow-y-auto sticky top-24 self-start scrollbar-thin scrollbar-thumb-white/5 scrollbar-track-transparent">
               <div className="p-3 space-y-1">
                 {docGroups.map((group) => {
                   const isExpanded = expandedGroups[group.label] !== false
@@ -683,9 +683,10 @@ export default function DocsGuidePage() {
                     <div key={group.label}>
                       <button
                         onClick={() => toggleGroup(group.label)}
-                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                        className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                           isGroupActive ? "text-white/80" : "text-white/40 hover:text-white/60"
                         }`}
+                        aria-expanded={isExpanded}
                       >
                         <GroupIcon className="h-3.5 w-3.5 shrink-0" style={{ color: isGroupActive ? group.accent : undefined }} />
                         <span className="truncate flex-1 text-left">{group.label}</span>
@@ -700,7 +701,7 @@ export default function DocsGuidePage() {
                               <button
                                 key={section.id}
                                 onClick={() => setActiveSection(section.id)}
-                                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-all ${
+                                className={`flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors ${
                                   isActive
                                     ? "text-white bg-cyan-500/10 border border-cyan-500/20"
                                     : "text-white/40 hover:text-white/60 hover:bg-white/[0.03] border border-transparent"
@@ -738,9 +739,8 @@ export default function DocsGuidePage() {
             </Link>
             <p className="text-xs text-gray-600">© 2026 SecMind. All rights reserved.</p>
             <div className="flex items-center gap-6">
-              {["隐私政策", "服务条款"].map((item) => (
-                <a key={item} href="#" className="text-xs text-gray-600 hover:text-cyan-400 transition-colors">{item}</a>
-              ))}
+              <Link href="/privacy" className="text-xs text-gray-600 hover:text-cyan-400 transition-colors">隐私政策</Link>
+              <Link href="/terms" className="text-xs text-gray-600 hover:text-cyan-400 transition-colors">服务条款</Link>
             </div>
           </div>
         </div>

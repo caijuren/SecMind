@@ -45,19 +45,28 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  const [submitError, setSubmitError] = useState("")
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.name || !form.email || !form.message) return
     setIsSubmitting(true)
+    setSubmitError("")
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000"}/api/v1/contacts`, {
+      const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || (
+        process.env.NODE_ENV === "production"
+          ? "https://api.secmind.com"
+          : "http://127.0.0.1:8000"
+      )
+      const res = await fetch(`${baseURL}/api/v1/contacts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       })
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       setSubmitted(true)
     } catch {
-      setSubmitted(true)
+      setSubmitError("提交失败，请稍后重试")
     } finally {
       setIsSubmitting(false)
     }
@@ -118,6 +127,8 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                   </Label>
                   <Input
                     required
+                    name="name"
+                    autoComplete="name"
                     value={form.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="您的姓名"
@@ -131,6 +142,8 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                   </Label>
                   <Input
                     required
+                    name="company"
+                    autoComplete="organization"
                     value={form.company}
                     onChange={(e) => handleChange("company", e.target.value)}
                     placeholder="公司名称"
@@ -148,6 +161,9 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                   <Input
                     required
                     type="email"
+                    name="email"
+                    autoComplete="email"
+                    spellCheck={false}
                     value={form.email}
                     onChange={(e) => handleChange("email", e.target.value)}
                     placeholder="you@company.com"
@@ -162,6 +178,8 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                   <Input
                     required
                     type="tel"
+                    name="phone"
+                    autoComplete="tel"
                     value={form.phone}
                     onChange={(e) => handleChange("phone", e.target.value.replace(/\D/g, "").slice(0, 11))}
                     placeholder="13800138000"
@@ -183,6 +201,10 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                 />
               </div>
 
+              {submitError && (
+                <p className="text-center text-sm text-red-500" role="alert">{submitError}</p>
+              )}
+
               <Button
                 type="submit"
                 disabled={isSubmitting}
@@ -191,7 +213,7 @@ export function ContactFormDialog({ children }: ContactFormDialogProps) {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    提交中...
+                    提交中…
                   </>
                 ) : (
                   <>

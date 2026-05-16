@@ -5,6 +5,7 @@ from datetime import datetime
 
 class UserBase(BaseModel):
     name: str
+    phone: Optional[str] = None
     department: Optional[str] = None
     position: Optional[str] = None
     level: Optional[str] = None
@@ -16,6 +17,9 @@ class UserBase(BaseModel):
     is_resigned: Optional[bool] = False
     email: Optional[str] = None
     role: Optional[str] = "user"
+    status: Optional[str] = "active"
+    avatar_url: Optional[str] = None
+    last_login: Optional[datetime] = None
 
 
 class UserCreate(UserBase):
@@ -24,6 +28,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
+    phone: Optional[str] = None
     department: Optional[str] = None
     position: Optional[str] = None
     level: Optional[str] = None
@@ -35,6 +40,9 @@ class UserUpdate(BaseModel):
     is_resigned: Optional[bool] = None
     email: Optional[str] = None
     role: Optional[str] = None
+    status: Optional[str] = None
+    avatar_url: Optional[str] = None
+    last_login: Optional[datetime] = None
 
 
 class UserRead(UserBase):
@@ -52,7 +60,37 @@ class LoginRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    refresh_token: Optional[str] = None
+
+
+class RegisterResponse(Token):
+    id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
+    role: str = "user"
 
 
 class TokenData(BaseModel):
     user_id: Optional[int] = None
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class EmailRequest(BaseModel):
+    email: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class PhoneRequest(BaseModel):
+    phone: str
+
+
+class PhoneLoginRequest(BaseModel):
+    phone: str
+    sms_code: str

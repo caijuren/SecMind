@@ -305,7 +305,7 @@ function getAIResponse(userQuery: string): ChatMessage[] {
         role: "assistant",
         type: "tool_call",
         timestamp: now,
-        content: "正在查询该账号的登录异常信息...",
+        content: "正在查询该账号的登录异常信息…",
         toolCall: {
           name: "query_auth_logs",
           input: { target: "zhangsan@secmind.com", timeframe: "7d" },
@@ -341,7 +341,7 @@ function getAIResponse(userQuery: string): ChatMessage[] {
         role: "assistant",
         type: "tool_call",
         timestamp: now,
-        content: "正在查询威胁情报...",
+        content: "正在查询威胁情报…",
         toolCall: {
           name: "threat_intel_lookup",
           input: { ioc: "103.45.67.89", sources: ["virustotal","alienvault","internal"] },
@@ -372,7 +372,7 @@ function getAIResponse(userQuery: string): ChatMessage[] {
         role: "assistant",
         type: "tool_call",
         timestamp: now,
-        content: "正在聚合今日安全数据...",
+        content: "正在聚合今日安全数据…",
         toolCall: {
           name: "aggregate_security_posture",
           input: { date: new Date().toISOString().split("T")[0], scope: "all" },
@@ -425,7 +425,7 @@ function getAIResponse(userQuery: string): ChatMessage[] {
         role: "assistant",
         type: "tool_call",
         timestamp: now,
-        content: "查询文件服务器访问日志...",
+        content: "查询文件服务器访问日志…",
         toolCall: {
           name: "query_file_access",
           input: { target: "WIN-02", timeframe: "7d", scope: "sensitive" },
@@ -458,7 +458,7 @@ function getAIResponse(userQuery: string): ChatMessage[] {
         role: "assistant",
         type: "tool_call",
         timestamp: now,
-        content: "扫描内网横向移动行为...",
+        content: "扫描内网横向移动行为…",
         toolCall: {
           name: "lateral_movement_scan",
           input: { scope: "internal_network", timeframe: "24h" },
@@ -716,7 +716,9 @@ export default function AIChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="描述你的问题或调查需求... (Enter 发送，Shift+Enter 换行)"
+                placeholder="描述你的问题或调查需求… (Enter 发送，Shift+Enter 换行)"
+                name="chat-message"
+                autoComplete="off"
                 rows={1}
                 className="flex-1 resize-none rounded-lg border-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0 max-h-32 min-h-[40px] py-2 px-2"
                 style={{ fieldSizing: "content" }}

@@ -89,7 +89,11 @@ export default function EventTimeline({
             }}
           />
           <div className="space-y-0">
-            {events.map((event) => {
+            {events.length === 0 ? (
+              <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+                暂无事件记录
+              </div>
+            ) : events.map((event) => {
               const dotColor = getDotColor(event)
               const hasGlow = getDotGlow(event)
               const Icon = typeIconMap[event.type]
@@ -99,7 +103,7 @@ export default function EventTimeline({
               return (
                 <div
                   key={event.id}
-                  className="relative flex items-start gap-3 py-2.5 px-2 rounded-md transition-all duration-300 cursor-pointer group"
+                  className="relative flex items-start gap-3 py-2.5 px-2 rounded-md transition-colors duration-300 cursor-pointer group"
                   style={{
                     borderLeft: isHighlighted
                       ? `3px solid ${dotColor}`
@@ -139,6 +143,7 @@ export default function EventTimeline({
                       <Icon
                         className="size-3.5 shrink-0"
                         style={{ color: dotColor }}
+                        aria-hidden="true"
                       />
                       <span className="text-sm text-slate-800 truncate">
                         {event.title}

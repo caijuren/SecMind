@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  version-check:
+    name: 版本一致性检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 验证 VERSION 与 package.json 一致
+        run: |
+          FILE_VERSION=$(cat VERSION)
+          FRONTEND_VERSION=$(node -p "require('./frontend/package.json').version")
+          echo "VERSION 文件: $FILE_VERSION"
+          echo "前端 package.json: $FRONTEND_VERSION"
+          if [ "$FRONTEND_VERSION" != "$FILE_VERSION" ]; then
+            echo "⚠️ 前端版本 ($FRONTEND_VERSION) 与 VERSION ($FILE_VERSION) 不一致"
+            echo "请运行: npm version $FILE_VERSION --no-git-tag-version --allow-same-version"
+          else
+            echo "✅ 版本一致"
+          fi
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx next lint
+      - run: npx next build
+
+  frontend-security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: Run npm audit
+        run: npm audit --audit-level=high || true
+      - name: Check for known vulnerabilities
+        run: npx better-npm-audit audit --level=high || true
+
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests/ -v --tb=short
+        env:
+          DATABASE_URL: sqlite:///./test_ci.db
+
+  backend-security:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pip install bandit
+      - name: Run bandit security scan
+        run: bandit -r app/ -f json -o bandit-report.json || true
+      - name: Display bandit results
+        run: bandit -r app/ -ll || true

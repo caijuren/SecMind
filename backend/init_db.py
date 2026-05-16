@@ -4,8 +4,10 @@ from app.models.alert import Alert
 from app.models.device import Device
 from app.models.itsm import ITSMTicket
 from app.models.ai_analysis import AIAnalysis
+from app.models.system_setting import SystemSetting
+from app.models.integration import IntegrationApp, Webhook
 
-models = [User, Alert, Device, ITSMTicket, AIAnalysis]
+models = [User, Alert, Device, ITSMTicket, AIAnalysis, SystemSetting, IntegrationApp, Webhook]
 
 def init_db():
     Base.metadata.create_all(bind=engine)

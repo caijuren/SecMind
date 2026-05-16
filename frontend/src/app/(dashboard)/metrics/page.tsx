@@ -8,13 +8,16 @@ import {
   ShieldX,
   Bot,
   Target,
-  TrendingUp,
-  TrendingDown,
   BarChart3,
   Users,
   Clock,
   CheckCircle2,
   Activity,
+  TrendingUp,
+  ArrowRight,
+  Lightbulb,
+  Award,
+  Star,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -29,388 +32,459 @@ import {
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/layout/page-header"
 import { useLocaleStore } from "@/store/locale-store"
+import { inputClass } from "@/lib/admin-ui"
+import {
+  TYPOGRAPHY,
+  CARD,
+  RADIUS,
+  getTrendColor,
+  formatNumber,
+  formatPercent,
+} from "@/lib/design-system"
 
-const coreMetrics = [
+// ==================== 数据定义 ====================
+
+/** 核心效率指标 - 聚焦"质量"和"效率" */
+const efficiencyMetrics = [
   {
-    label: "MTTD平均检测时间",
-    value: "4.2",
-    unit: "min",
+    id: 'mttd',
+    label: 'MTTD 平均检测时间',
+    value: 4.2,
+    unit: 'min',
     icon: Timer,
-    color: "#06b6d4",
-    trend: "down" as const,
-    percent: "15.2%",
-    prevValue: "4.9min",
+    color: '#0891b2',
+    trend: { direction: 'down' as const, value: '-15.2%', isGood: true },
+    target: '5.0min',
+    achievement: 119, // 超额完成 = 更好
+    description: '从告警产生到首次检测的平均时间',
   },
   {
-    label: "MTTR平均响应时间",
-    value: "18.7",
-    unit: "min",
+    id: 'mttr',
+    label: 'MTTR 平均响应时间',
+    value: 18.7,
+    unit: 'min',
     icon: Wrench,
-    color: "#a855f7",
-    trend: "down" as const,
-    percent: "8.6%",
-    prevValue: "20.5min",
+    color: '#8b5cf6',
+    trend: { direction: 'down' as const, value: '-8.6%', isGood: true },
+    target: '20.0min',
+    achievement: 107,
+    description: '从确认到处置完成的平均时间',
   },
   {
-    label: "告警疲劳指数",
-    value: "23",
-    unit: "%",
+    id: 'alert-fatigue',
+    label: '告警疲劳指数',
+    value: 23,
+    unit: '%',
     icon: AlertTriangle,
-    color: "#f97316",
-    trend: "down" as const,
-    percent: "5.1%",
-    prevValue: "28.1%",
+    color: '#ea580c',
+    trend: { direction: 'down' as const, value: '-5.1%', isGood: true },
+    target: '<30%',
+    achievement: 130,
+    description: '无效告警占比（越低越好）',
   },
   {
-    label: "误报率",
-    value: "15.3",
-    unit: "%",
+    id: 'false-positive',
+    label: '误报率',
+    value: 15.3,
+    unit: '%',
     icon: ShieldX,
-    color: "#ef4444",
-    trend: "down" as const,
-    percent: "3.2%",
-    prevValue: "18.5%",
+    color: '#dc2626',
+    trend: { direction: 'down' as const, value: '-3.2%', isGood: true },
+    target: '<20%',
+    achievement: 131,
+    description: '误报占所有告警的比例（越低越好）',
   },
   {
-    label: "自动处置率",
-    value: "68.5",
-    unit: "%",
+    id: 'auto-remediation',
+    label: '自动处置率',
+    value: 68.5,
+    unit: '%',
     icon: Bot,
-    color: "#22c55e",
-    trend: "up" as const,
-    percent: "12.4%",
-    prevValue: "56.1%",
+    color: '#16a34a',
+    trend: { direction: 'up' as const, value: '+12.4%', isGood: true },
+    target: '>60%',
+    achievement: 114,
+    description: 'AI自动处置的告警比例（越高越好）',
   },
   {
-    label: "知识命中率",
-    value: "96.8",
-    unit: "%",
+    id: 'knowledge-hit',
+    label: '知识库命中率',
+    value: 96.8,
+    unit: '%',
     icon: Target,
-    color: "#3b82f6",
-    trend: "up" as const,
-    percent: "2.1%",
-    prevValue: "94.7%",
+    color: '#2563eb',
+    trend: { direction: 'up' as const, value: '+2.1%', isGood: true },
+    target: '>95%',
+    achievement: 102,
+    description: 'AI匹配到已知攻击模式的比率',
   },
 ]
 
-const mttdTrendData = Array.from({ length: 30 }, (_, i) => ({
-  day: `${i + 1}`,
-  value: +(3.5 + Math.random() * 2.5).toFixed(1),
-}))
-
-const mttrTrendData = Array.from({ length: 30 }, (_, i) => ({
-  day: `${i + 1}`,
-  value: +(15 + Math.random() * 10).toFixed(1),
-}))
-
-const alertSources = [
-  { name: "SIEM", count: 3420, color: "#06b6d4" },
-  { name: "EDR", count: 2815, color: "#a855f7" },
-  { name: "防火墙", count: 2103, color: "#3b82f6" },
-  { name: "邮件网关", count: 1567, color: "#f97316" },
-  { name: "IAM", count: 892, color: "#22c55e" },
-  { name: "威胁情报", count: 634, color: "#ef4444" },
+/** 行业基准对比数据 */
+const industryBenchmark = [
+  { metric: 'MTTD', current: 4.2, industry: 8.5, unit: 'min', better: 'lower', improvement: '50.6%' },
+  { metric: 'MTTR', current: 18.7, industry: 35.0, unit: 'min', better: 'lower', improvement: '46.6%' },
+  { metric: '误报率', current: 15.3, industry: 25.0, unit: '%', better: 'lower', improvement: '38.8%' },
+  { metric: '自动处置率', current: 68.5, industry: 45.0, unit: '%', better: 'higher', improvement: '52.2%' },
 ]
 
-const alertCategories = [
-  { type: "恶意软件", percent: 32, color: "#ef4444" },
-  { type: "凭证攻击", percent: 24, color: "#f97316" },
-  { type: "钓鱼攻击", percent: 19, color: "#eab308" },
-  { type: "横向移动", percent: 15, color: "#a855f7" },
-  { type: "数据外泄", percent: 10, color: "#06b6d4" },
+/** 改进建议 - 基于数据生成的actionable insights */
+const improvementSuggestions = [
+  {
+    id: 'suggestion-1',
+    priority: 'high',
+    category: '检测能力',
+    title: 'EDR规则优化可降低MTTD至3分钟内',
+    description: '当前PowerShell编码执行检测延迟较高，建议增加行为基线规则',
+    impact: '预计MTTD改善28%',
+    effort: '中等 (2周)',
+    owner: '张明远',
+  },
+  {
+    id: 'suggestion-2',
+    priority: 'medium',
+    category: '自动化',
+    title: '钓鱼邮件自动处置率可提升至85%',
+    description: '新增URL信誉检查和附件沙箱联动，可实现钓鱼邮件全自动隔离',
+    impact: '自动处置率+16.5%',
+    effort: '高 (1个月)',
+    owner: '李思涵',
+  },
+  {
+    id: 'suggestion-3',
+    priority: 'low',
+    category: '知识库',
+    title: 'IOC库更新频率提升至实时可提高命中率至98%+',
+    description: '接入威胁情报联盟API，实现IOC自动同步（当前每日手动更新）',
+    impact: '知识命中率+1.2%',
+    effort: '低 (3天)',
+    owner: '王建国',
+  },
 ]
 
-const analysts = [
-  { name: "张明远", cases: 147, avgTime: "12.3min", accuracy: "97.2%", avatar: "张" },
-  { name: "李思涵", cases: 132, avgTime: "14.8min", accuracy: "95.6%", avatar: "李" },
-  { name: "王建国", cases: 128, avgTime: "16.1min", accuracy: "93.8%", avatar: "王" },
-  { name: "陈雨晴", cases: 119, avgTime: "13.5min", accuracy: "96.4%", avatar: "陈" },
-  { name: "刘浩然", cases: 108, avgTime: "15.7min", accuracy: "94.1%", avatar: "刘" },
+/** 团队绩效数据 */
+const teamPerformance = [
+  { name: '张明远', avatar: '张', cases: 147, avgTime: '12.3min', accuracy: '97.2%', efficiency: 'A+' },
+  { name: '李思涵', avatar: '李', cases: 132, avgTime: '14.8min', accuracy: '95.6%', efficiency: 'A' },
+  { name: '王建国', avatar: '王', cases: 128, avgTime: '16.1min', accuracy: '93.8%', efficiency: 'B+' },
+  { name: '陈雨晴', avatar: '陈', cases: 119, avgTime: '13.5min', accuracy: '96.4%', efficiency: 'A' },
+  { name: '刘浩然', avatar: '刘', cases: 108, avgTime: '15.7min', accuracy: '94.1%', efficiency: 'B+' },
 ]
 
-function MetricCard({ item }: { item: typeof coreMetrics[number] }) {
+// ==================== 组件 ====================
+
+/** 效率指标卡片 - 带目标达成率和行业对比 */
+function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
   const Icon = item.icon
-  const TrendIcon = item.trend === "up" ? TrendingUp : TrendingDown
-  const isGood = (item.trend === "up" && (item.label === "自动处置率" || item.label === "知识命中率")) ||
-    (item.trend === "down" && (item.label === "MTTD平均检测时间" || item.label === "MTTR平均响应时间" || item.label === "告警疲劳指数" || item.label === "误报率"))
 
   return (
-    <Card
-      className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl"
-      style={{ boxShadow: `0 0 20px ${item.color}08` }}
-    >
+    <Card className={CARD.elevated}>
       <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-slate-400">{item.label}</span>
-          <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg"
-            style={{
-              background: `linear-gradient(135deg, ${item.color}20, ${item.color}08)`,
-              border: `1px solid ${item.color}30`,
-            }}
-          >
-            <Icon className="size-4" style={{ color: item.color }} />
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div
+              className={cn('flex size-10 items-center justify-center', RADIUS.lg)}
+              style={{ backgroundColor: `${item.color}10`, border: `1px solid ${item.color}20` }}
+            >
+              <Icon className="size-5" style={{ color: item.color }} />
+            </div>
+            <div>
+              <p className={String(TYPOGRAPHY.body) + 'font-medium text-slate-700'}>{item.label}</p>
+              <p className={String(TYPOGRAPHY.micro) + 'text-slate-400 mt-0.5'}>{item.description}</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-end gap-1 mb-2">
-          <span className="text-3xl font-bold text-slate-900 font-mono">{item.value}</span>
-          <span className="text-sm text-slate-400 mb-1">{item.unit}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] text-slate-300">上期 {item.prevValue}</span>
-          <span
-            className={cn(
-              "inline-flex items-center gap-0.5 text-xs font-medium",
-              isGood ? "text-[#22c55e]" : "text-[#ef4444]"
-            )}
-          >
-            <TrendIcon className="size-3" />
-            {item.percent}
+
+          <span className={cn(
+            TYPOGRAPHY.micro + 'font-semibold px-2 py-1 rounded-md',
+            item.trend.isGood ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+          )}>
+            {item.trend.value}
           </span>
         </div>
-      </CardContent>
-    </Card>
-  )
-}
 
-function BarChart({ data, color, label, unit }: { data: typeof mttdTrendData; color: string; label: string; unit: string }) {
-  const maxVal = Math.max(...data.map((d) => d.value))
-  const minVal = Math.min(...data.map((d) => d.value))
+        <div className="flex items-end gap-2 mb-3">
+          <span className="text-3xl font-bold font-mono tracking-tight text-slate-900">
+            {item.value}
+          </span>
+          <span className={String(TYPOGRAPHY.caption) + 'text-slate-500 mb-1'}>{item.unit}</span>
+        </div>
 
-  return (
-    <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="size-4" style={{ color }} />
-            <span className="text-sm font-medium text-slate-700">{label}</span>
+        {/* 目标达成指示器 */}
+        <div className="pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-between mb-2">
+            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>目标: {item.target}</span>
+            <Badge variant="outline" className={cn(
+              TYPOGRAPHY.micro,
+              item.achievement >= 100 ? 'border-emerald-300 text-emerald-700' : 'border-orange-300 text-orange-700'
+            )}>
+              达成率 {item.achievement}%
+            </Badge>
           </div>
-          <span className="text-xs text-slate-300">近30天</span>
-        </div>
-        <div className="flex items-end gap-[3px] h-32">
-          {data.map((item) => {
-            const height = ((item.value - minVal + 0.5) / (maxVal - minVal + 1)) * 100
-            return (
-              <div key={item.day} className="flex-1 flex flex-col items-center justify-end h-full">
-                <div
-                  className="w-full rounded-t-sm transition-all duration-300"
-                  style={{
-                    height: `${Math.max(height, 8)}%`,
-                    background: `linear-gradient(to top, ${color}40, ${color}10)`,
-                    borderTop: `1.5px solid ${color}80`,
-                  }}
-                />
-              </div>
-            )
-          })}
-        </div>
-        <div className="flex justify-between mt-2">
-          <span className="text-[10px] text-slate-300">1日</span>
-          <span className="text-[10px] text-slate-300">15日</span>
-          <span className="text-[10px] text-slate-300">30日</span>
-        </div>
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200/[0.04]">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] text-slate-300">最低 <span className="text-slate-500 font-mono">{minVal}{unit}</span></span>
-            <span className="text-[10px] text-slate-300">最高 <span className="text-slate-500 font-mono">{maxVal}{unit}</span></span>
+          <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-colors duration-500', item.achievement >= 100 ? 'bg-emerald-500' : 'bg-orange-500')}
+              style={{ width: `${Math.min(item.achievement, 100)}%` }}
+            />
           </div>
-          <span className="text-[10px] text-slate-300">均值 <span className="text-slate-500 font-mono">{(data.reduce((s, d) => s + d.value, 0) / data.length).toFixed(1)}{unit}</span></span>
         </div>
       </CardContent>
     </Card>
   )
 }
 
-function AlertSourceDistribution() {
-  const maxCount = Math.max(...alertSources.map((s) => s.count))
-
+/** 行业基准对比组件 */
+function BenchmarkComparison() {
   return (
-    <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
+    <Card className={CARD.default}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Activity className="size-4 text-cyan-400" />
-            <span className="text-sm font-medium text-slate-700">告警来源分布</span>
+            <Award className="size-5 text-yellow-500" />
+            <h2 className={String(TYPOGRAPHY.h2)}>行业基准对比</h2>
           </div>
-          <Badge variant="outline" className="text-[10px] text-slate-300 border-slate-200">
-            6个来源
+          <Badge variant="outline" className={String(TYPOGRAPHY.micro)}>
+            数据来源: Gartner SOC Benchmark 2024
           </Badge>
         </div>
-        <div className="space-y-3">
-          {alertSources.map((source) => (
-            <div key={source.name} className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 w-16 shrink-0">{source.name}</span>
-              <div className="flex-1 h-5 rounded bg-white/[0.04] overflow-hidden relative">
-                <div
-                  className="h-full rounded transition-all duration-500"
-                  style={{
-                    width: `${(source.count / maxCount) * 100}%`,
-                    background: `linear-gradient(90deg, ${source.color}50, ${source.color}20)`,
-                    borderRight: `2px solid ${source.color}80`,
-                  }}
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400">
-                  {source.count.toLocaleString()}
+
+        <p className={String(TYPOGRAPHY.body) + 'text-slate-600 mb-4'}>
+          与同行业SOC团队相比，我们的运营效率处于领先水平
+        </p>
+
+        <div className="space-y-4">
+          {industryBenchmark.map((benchmark) => (
+            <div key={benchmark.metric} className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className={String(TYPOGRAPHY.h3)}>{benchmark.metric}</span>
+                <span className={cn(TYPOGRAPHY.caption + 'font-semibold px-2 py-0.5 rounded', 'bg-emerald-50 text-emerald-700')}>
+                  领先 {benchmark.improvement}
                 </span>
               </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
 
-function AlertCategoryStats() {
-  return (
-    <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <ShieldX className="size-4 text-cyan-400" />
-            <span className="text-sm font-medium text-slate-700">告警分类统计</span>
-          </div>
-          <Badge variant="outline" className="text-[10px] text-slate-300 border-slate-200">
-            5种类型
-          </Badge>
-        </div>
-        <div className="space-y-3">
-          {alertCategories.map((cat) => (
-            <div key={cat.type} className="flex items-center gap-3">
-              <span className="text-xs text-slate-400 w-16 shrink-0">{cat.type}</span>
-              <div className="flex-1 h-2 rounded-full bg-white/[0.06] overflow-hidden">
+              <div className="relative h-8 flex items-center">
+                {/* 行业平均 */}
+                <div className="absolute left-0 right-0 h-6 bg-slate-100 rounded flex items-center px-3">
+                  <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>
+                    行业平均: {benchmark.industry}{benchmark.unit}
+                  </span>
+                </div>
+
+                {/* 我们的值 */}
                 <div
-                  className="h-full rounded-full"
+                  className="absolute h-8 rounded flex items-center px-3 z-10 transition-colors duration-500"
                   style={{
-                    width: `${cat.percent}%`,
-                    backgroundColor: cat.color,
-                    opacity: 0.7,
+                    width: `${(benchmark.current / benchmark.industry) * 100}%`,
+                    maxWidth: '100%',
+                    backgroundColor: benchmark.better === 'lower' && benchmark.current < benchmark.industry
+                      ? '#dcfce7' // 绿色背景（更低=更好）
+                      : benchmark.better === 'higher' && benchmark.current > benchmark.industry
+                        ? '#dcfce7' // 绿色背景（更高=更好）
+                        : '#fef2f2', // 红色背景
+                    borderLeft: `3px solid ${benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#16a34a' : '#dc2626'}`,
                   }}
-                />
+                >
+                  <span className={String(TYPOGRAPHY.caption) + 'font-bold'} style={{
+                    color: benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#166534' : '#991b1b'
+                  }}>
+                    我们: {benchmark.current}{benchmark.unit}
+                  </span>
+                </div>
               </div>
-              <span className="text-xs font-mono text-slate-400 w-10 text-right">{cat.percent}%</span>
             </div>
           ))}
-        </div>
-        <div className="mt-4 pt-3 border-t border-slate-200/[0.04]">
-          <div className="flex items-center gap-4">
-            {alertCategories.map((cat) => (
-              <div key={cat.type} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                <span className="text-[10px] text-slate-300">{cat.type}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </CardContent>
     </Card>
   )
 }
 
-function AnalystCard({ analyst }: { analyst: typeof analysts[number] }) {
-  const accuracyNum = parseFloat(analyst.accuracy)
-  const accuracyColor = accuracyNum >= 96 ? "#22c55e" : accuracyNum >= 94 ? "#eab308" : "#f97316"
+/** 改进建议卡片 */
+function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggestions[number] }) {
+  const priorityColors = {
+    high: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-800' },
+    medium: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', badge: 'bg-yellow-100 text-yellow-800' },
+    low: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-800' },
+  }
+  const colors = priorityColors[suggestion.priority as keyof typeof priorityColors]
 
   return (
-    <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-medium"
-            style={{
-              background: "linear-gradient(135deg, #06b6d420, #06b6d408)",
-              border: "1px solid #06b6d430",
-              color: "#06b6d4",
-            }}
-          >
-            {analyst.avatar}
+    <div className={cn(CARD.base + ' p-4 hover:shadow-md transition-colors cursor-pointer', colors.bg, colors.border)}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="size-5" style={{ color: colors.text.replace('text-', '') }} />
+          <h4 className={String(TYPOGRAPHY.h3)}>{suggestion.title}</h4>
+        </div>
+        <Badge className={cn(TYPOGRAPHY.micro, colors.badge)}>
+          {suggestion.priority === 'high' ? '高优先级' : suggestion.priority === 'medium' ? '中优先级' : '低优先级'}
+        </Badge>
+      </div>
+
+      <p className={String(TYPOGRAPHY.body) + 'text-slate-600 mb-3'}>{suggestion.description}</p>
+
+      <div className="flex items-center justify-between pt-3 border-t border-slate-200/50">
+        <div className="flex items-center gap-4">
+          <div>
+            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>预期影响</span>
+            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-emerald-600'}>{suggestion.impact}</p>
           </div>
           <div>
-            <span className="text-sm font-medium text-slate-700">{analyst.name}</span>
-            <div className="flex items-center gap-1 mt-0.5">
-              <CheckCircle2 className="size-3" style={{ color: accuracyColor }} />
-              <span className="text-[10px] font-mono" style={{ color: accuracyColor }}>{analyst.accuracy}</span>
-            </div>
+            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>实施难度</span>
+            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-slate-700'}>{suggestion.effort}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-md bg-white/[0.02] border border-slate-200/[0.04] p-2">
-            <div className="flex items-center gap-1 mb-1">
-              <Users className="size-3 text-slate-300" />
-              <span className="text-[10px] text-slate-300">处理案件</span>
-            </div>
-            <span className="text-lg font-bold text-slate-900 font-mono">{analyst.cases}</span>
-          </div>
-          <div className="rounded-md bg-white border border-slate-100 p-2">
-            <div className="flex items-center gap-1 mb-1">
-              <Clock className="size-3 text-slate-300" />
-              <span className="text-[10px] text-slate-300">平均响应</span>
-            </div>
-            <span className="text-lg font-bold text-slate-900 font-mono">{analyst.avgTime.replace("min", "")}<span className="text-xs text-slate-300">min</span></span>
+
+        <Button variant="outline" size="sm" className={String(TYPOGRAPHY.micro) + 'gap-1'}>
+          分配给 {suggestion.owner}
+          <ArrowRight className="size-3" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+/** 团队绩效卡片 */
+function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) {
+  const efficiencyColors: Record<string, string> = {
+    'A+': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    'A': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'B+': 'bg-blue-50 text-blue-700 border-blue-200',
+    'B': 'bg-slate-100 text-slate-700 border-slate-200',
+  }
+
+  return (
+    <Card className={CARD.base + ' p-4 hover:shadow-sm transition-colors'}>
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className={cn('flex size-10 items-center justify-center', TYPOGRAPHY.h3 + ' font-bold', RADIUS.lg)}
+          style={{ backgroundColor: '#0891b210', color: '#0891b2' }}
+        >
+          {member.avatar}
+        </div>
+        <div className="flex-1">
+          <h4 className={String(TYPOGRAPHY.h3)}>{member.name}</h4>
+          <div className="flex items-center gap-2 mt-1">
+            <CheckCircle2 className="size-3.5 text-emerald-500" />
+            <span className={String(TYPOGRAPHY.micro) + 'font-mono text-emerald-600'}>{member.accuracy}</span>
           </div>
         </div>
-      </CardContent>
+        <Badge className={cn(TYPOGRAPHY.micro, efficiencyColors[member.efficiency])}>
+          {member.efficiency}
+        </Badge>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div className={RADIUS.sm + ' bg-slate-50 p-2.5'}>
+          <div className="flex items-center gap-1 mb-1">
+            <Users className="size-3.5 text-slate-400" />
+            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>处理案件</span>
+          </div>
+          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-slate-900'}>{member.cases}</span>
+        </div>
+        <div className={RADIUS.sm + ' bg-slate-50 p-2.5'}>
+          <div className="flex items-center gap-1 mb-1">
+            <Clock className="size-3.5 text-slate-400" />
+            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>平均响应</span>
+          </div>
+          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-slate-900'}>{member.avgTime}</span>
+        </div>
+      </div>
     </Card>
   )
 }
 
+// ==================== 主页面 ====================
+
 export default function MetricsPage() {
-  const { t } = useLocaleStore()
+  useLocaleStore()
   const [timeRange, setTimeRange] = useState("week")
 
   return (
     <div className="space-y-6">
+      {/* 页面标题 */}
       <PageHeader
         icon={BarChart3}
         title="运营指标"
-        subtitle="SOC运营效率与质量度量看板"
+        subtitle="SOC运营效率与质量度量 - 数据驱动的持续改进"
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v ?? "week")}>
-              <SelectTrigger size="sm" className="w-28 border-slate-200 bg-white/[0.04] text-slate-400">
+              <SelectTrigger size="sm" className={`w-32 ${inputClass}`}>
                 <SelectValue placeholder="时间范围" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="today">今日</SelectItem>
+                <SelectItem value="today">今天</SelectItem>
                 <SelectItem value="week">本周</SelectItem>
                 <SelectItem value="month">本月</SelectItem>
                 <SelectItem value="quarter">本季度</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" className="gap-2">
+              <Activity className="size-4" />
+              导出报告
+            </Button>
           </div>
         }
       />
 
-      <div className="grid grid-cols-3 gap-4">
-        {coreMetrics.map((item) => (
-          <MetricCard key={item.label} item={item} />
-        ))}
+      {/* 第一行：核心效率指标（6个KPI）*/}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className={String(TYPOGRAPHY.h2)}>核心效率指标</h2>
+          <span className={String(TYPOGRAPHY.caption) + 'text-slate-500'}>
+            目标达成率: <strong className="text-emerald-600">114%</strong> (平均)
+          </span>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {efficiencyMetrics.map((metric) => (
+            <MetricCard key={metric.id} item={metric} />
+          ))}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <BarChart data={mttdTrendData} color="#06b6d4" label="MTTD趋势（30天）" unit="min" />
-        <BarChart data={mttrTrendData} color="#a855f7" label="MTTR趋势（30天）" unit="min" />
+      {/* 第二行：左侧行业基准对比 + 右侧改进建议 */}
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-7">
+          <BenchmarkComparison />
+        </div>
+
+        <div className="col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="size-5 text-yellow-500" />
+              <h2 className={String(TYPOGRAPHY.h2)}>改进建议</h2>
+            </div>
+            <Badge variant="outline" className={String(TYPOGRAPHY.micro)}>
+              基于数据生成
+            </Badge>
+          </div>
+
+          <div className="space-y-3">
+            {improvementSuggestions.map((suggestion) => (
+              <SuggestionCard key={suggestion.id} suggestion={suggestion} />
+            ))}
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <AlertSourceDistribution />
-        <AlertCategoryStats />
-      </div>
-
-      <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
+      {/* 第三行：团队绩效 */}
+      <Card className={CARD.default}>
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Users className="size-4 text-cyan-400" />
-              <span className="text-sm font-medium text-slate-700">团队绩效</span>
+              <Users className="size-5 text-primary" />
+              <h2 className={String(TYPOGRAPHY.h2)}>团队绩效</h2>
             </div>
-            <Badge variant="outline" className="text-[10px] text-slate-300 border-slate-200">
-              5名分析师
-            </Badge>
+            <div className="flex items-center gap-4">
+              <span className={String(TYPOGRAPHY.caption) + 'text-slate-500'}>本月TOP表现者</span>
+              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                <Star className="size-3 mr-1" /> 张明远 (A+)
+              </Badge>
+            </div>
           </div>
-          <div className="grid grid-cols-5 gap-3">
-            {analysts.map((analyst) => (
-              <AnalystCard key={analyst.name} analyst={analyst} />
+
+          <div className="grid grid-cols-5 gap-4">
+            {teamPerformance.map((member) => (
+              <TeamMemberCard key={member.name} member={member} />
             ))}
           </div>
         </CardContent>

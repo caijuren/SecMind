@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# backup files
+*.bak
+*.bak*
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -39,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backup files
+*.bak*
+*.bak

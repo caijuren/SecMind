@@ -1,600 +1,319 @@
 "use client"
 
-import { useState } from "react"
-import {
-  Plug,
-  Store,
-  Webhook,
-  Link2,
-  Unlink,
-  Settings2,
-  Plus,
-  Search,
-  ExternalLink,
-  Copy,
-  Eye,
-  EyeOff,
-  Zap,
-  Shield,
-  MessageSquare,
-  Bug,
-  Database,
-  Globe,
-  Lock,
-  Radio,
-  FileSearch,
-  Target,
-  Brain,
-  Network,
-  AlertTriangle,
-  Send,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Key,
-  BookOpen,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useEffect, useMemo, useState } from "react"
+import { CheckCircle2, Link2, Plug, Plus, Search, Send, Settings2, Webhook, XCircle } from "lucide-react"
+
+import { PageHeader } from "@/components/layout/page-header"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { useLocaleStore } from "@/store/locale-store"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { api } from "@/lib/api"
+import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
 
-type FilterTab = "integrated" | "marketplace" | "webhooks"
-
-interface IntegratedApp {
-  id: string
+interface IntegrationApp {
+  id: number
+  slug: string
   name: string
-  icon: typeof Plug
   description: string
-  status: "connected" | "disconnected"
-  lastSync: string
-  color: string
-}
-
-interface MarketplaceApp {
-  id: string
-  name: string
-  icon: typeof Plug
-  description: string
-  category: string
-  categoryColor: string
+  category?: string | null
+  status: string
+  color?: string | null
+  last_sync?: string | null
+  api_url?: string | null
+  api_key?: string | null
+  sync_frequency: string
+  source: "integrated" | "marketplace"
 }
 
 interface WebhookItem {
-  id: string
+  id: number
+  name: string
   url: string
   events: string[]
-  createdAt: string
   active: boolean
+  created_at: string
 }
 
-const integratedApps: IntegratedApp[] = [
-  { id: "jira", name: "Jira", icon: Bug, description: "工单与项目管理集成，自动创建安全工单", status: "connected", lastSync: "2026-05-10 14:22", color: "#2684ff" },
-  { id: "servicenow", name: "ServiceNow", icon: Settings2, description: "IT服务管理平台，同步事件与变更", status: "connected", lastSync: "2026-05-10 13:45", color: "#81b5a1" },
-  { id: "feishu", name: "飞书", icon: MessageSquare, description: "即时通讯与协作，告警推送与通知", status: "connected", lastSync: "2026-05-10 14:30", color: "#3370ff" },
-  { id: "wecom", name: "企业微信", icon: Radio, description: "企业通讯平台，安全事件实时推送", status: "disconnected", lastSync: "2026-05-09 18:00", color: "#07c160" },
-  { id: "dingtalk", name: "钉钉", icon: Zap, description: "智能办公平台，告警与审批通知", status: "connected", lastSync: "2026-05-10 14:15", color: "#0089ff" },
-  { id: "splunk", name: "Splunk", icon: Database, description: "SIEM日志分析平台，日志关联查询", status: "connected", lastSync: "2026-05-10 12:30", color: "#65a637" },
-  { id: "elasticsearch", name: "Elasticsearch", icon: Search, description: "搜索引擎与日志分析，数据聚合查询", status: "disconnected", lastSync: "2026-05-08 09:00", color: "#f9b110" },
-  { id: "virustotal", name: "VirusTotal", icon: Shield, description: "恶意软件与URL检测，威胁情报查询", status: "connected", lastSync: "2026-05-10 14:28", color: "#397ce9" },
-]
-
-const marketplaceApps: MarketplaceApp[] = [
-  { id: "slack", name: "Slack", icon: MessageSquare, description: "团队协作与即时通讯，安全告警频道推送", category: "协作", categoryColor: "#06b6d4" },
-  { id: "teams", name: "Microsoft Teams", icon: Globe, description: "企业协作平台，安全事件通知与响应", category: "协作", categoryColor: "#06b6d4" },
-  { id: "pagerduty", name: "PagerDuty", icon: AlertTriangle, description: "事件响应与告警升级，自动分派值班", category: "响应", categoryColor: "#f59e0b" },
-  { id: "fortinet", name: "Fortinet", icon: Shield, description: "防火墙与安全网关，策略联动管理", category: "防火墙", categoryColor: "#ef4444" },
-  { id: "paloalto", name: "Palo Alto", icon: Lock, description: "下一代防火墙，威胁防护策略同步", category: "防火墙", categoryColor: "#ef4444" },
-  { id: "crowdstrike", name: "CrowdStrike", icon: Target, description: "终端检测与响应，EDR数据联动", category: "EDR", categoryColor: "#a855f7" },
-  { id: "sentinelone", name: "SentinelOne", icon: Brain, description: "AI驱动的终端安全，自动化威胁响应", category: "EDR", categoryColor: "#a855f7" },
-  { id: "abuseipdb", name: "AbuseIPDB", icon: Globe, description: "IP滥用信誉查询，恶意IP情报丰富", category: "情报", categoryColor: "#22c55e" },
-  { id: "shodan", name: "Shodan", icon: Network, description: "互联网设备搜索引擎，暴露面发现", category: "情报", categoryColor: "#22c55e" },
-  { id: "mitre", name: "MITRE ATT&CK", icon: FileSearch, description: "攻击框架映射，战术与技术标注", category: "框架", categoryColor: "#3b82f6" },
-  { id: "misp", name: "MISP", icon: Network, description: "威胁情报共享平台，IOC自动关联", category: "情报", categoryColor: "#22c55e" },
-  { id: "thehive", name: "TheHive", icon: Bug, description: "安全事件响应平台，协同调查管理", category: "响应", categoryColor: "#f59e0b" },
-]
-
-const webhookItems: WebhookItem[] = [
-  { id: "wh-001", url: "https://api.example.com/webhook/alerts", events: ["告警创建", "告警升级"], createdAt: "2026-03-15", active: true },
-  { id: "wh-002", url: "https://soc.internal.com/hooks/cases", events: ["案件状态变更"], createdAt: "2026-04-02", active: true },
-  { id: "wh-003", url: "https://notify.company.com/sec-events", events: ["高危告警", "漏洞发现"], createdAt: "2026-04-18", active: false },
-  { id: "wh-004", url: "https://automation.local/hooks/response", events: ["自动响应执行"], createdAt: "2026-05-01", active: true },
-  { id: "wh-005", url: "https://dashboard.corp.com/hooks/metrics", events: ["日报生成", "周报生成"], createdAt: "2026-05-08", active: true },
-]
-
-const filterCards: { key: FilterTab; label: string; count: number; color: string; icon: typeof Plug }[] = [
-  { key: "integrated", label: "已集成", count: 8, color: "#06b6d4", icon: Link2 },
-  { key: "marketplace", label: "可用集成", count: 24, color: "#22c55e", icon: Store },
-  { key: "webhooks", label: "Webhook", count: 5, color: "#a855f7", icon: Webhook },
-]
-
 export default function IntegrationsPage() {
-  const { t } = useLocaleStore()
-  const [activeFilter, setActiveFilter] = useState<FilterTab>("integrated")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [webhooks, setWebhooks] = useState<WebhookItem[]>(webhookItems)
-  const [configDialogOpen, setConfigDialogOpen] = useState(false)
-  const [selectedApp, setSelectedApp] = useState<IntegratedApp | null>(null)
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [selectedMarketApp, setSelectedMarketApp] = useState<MarketplaceApp | null>(null)
-  const [showApiKey, setShowApiKey] = useState(false)
+  const [apps, setApps] = useState<IntegrationApp[]>([])
+  const [webhooks, setWebhooks] = useState<WebhookItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState("")
+  const [tab, setTab] = useState<"integrated" | "marketplace" | "webhooks">("integrated")
+  const [selectedApp, setSelectedApp] = useState<IntegrationApp | null>(null)
+  const [selectedMarketApp, setSelectedMarketApp] = useState<IntegrationApp | null>(null)
+  const [webhookDialogOpen, setWebhookDialogOpen] = useState(false)
+  const [newWebhook, setNewWebhook] = useState({ name: "", url: "", events: "告警创建,告警升级" })
 
-  const toggleWebhook = (id: string) => {
-    setWebhooks((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, active: !w.active } : w))
-    )
+  async function loadData() {
+    setLoading(true)
+    try {
+      const [appsResponse, webhookResponse] = await Promise.all([
+        api.get("/integrations/apps"),
+        api.get("/integrations/webhooks"),
+      ])
+      setApps(appsResponse.data.items)
+      setWebhooks(webhookResponse.data.items)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const filteredIntegrated = integratedApps.filter((app) => {
-    if (!searchQuery) return true
-    const q = searchQuery.toLowerCase()
-    return app.name.toLowerCase().includes(q) || app.description.toLowerCase().includes(q)
-  })
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      void loadData()
+    })
+  }, [])
 
-  const filteredMarketplace = marketplaceApps.filter((app) => {
-    if (!searchQuery) return true
-    const q = searchQuery.toLowerCase()
-    return app.name.toLowerCase().includes(q) || app.description.toLowerCase().includes(q) || app.category.toLowerCase().includes(q)
-  })
+  async function saveAppConfig(app: IntegrationApp) {
+    await api.put(`/integrations/apps/${app.id}`, {
+      api_url: app.api_url,
+      api_key: app.api_key,
+      sync_frequency: app.sync_frequency,
+      status: app.status,
+    })
+    setSelectedApp(null)
+    await loadData()
+  }
+
+  async function addMarketplaceApp() {
+    if (!selectedMarketApp) return
+    await api.put(`/integrations/apps/${selectedMarketApp.id}`, {
+      status: "connected",
+      api_url: selectedMarketApp.api_url,
+      api_key: selectedMarketApp.api_key,
+      sync_frequency: selectedMarketApp.sync_frequency,
+    })
+    setSelectedMarketApp(null)
+    await loadData()
+  }
+
+  async function toggleWebhook(webhook: WebhookItem) {
+    await api.put(`/integrations/webhooks/${webhook.id}`, { active: !webhook.active })
+    await loadData()
+  }
+
+  async function createWebhook() {
+    await api.post("/integrations/webhooks", {
+      name: newWebhook.name,
+      url: newWebhook.url,
+      events: newWebhook.events.split(",").map((item) => item.trim()).filter(Boolean),
+      active: true,
+      created_at: new Date().toISOString().slice(0, 10),
+    })
+    setWebhookDialogOpen(false)
+    setNewWebhook({ name: "", url: "", events: "告警创建,告警升级" })
+    await loadData()
+  }
+
+  const filteredApps = useMemo(() => {
+    return apps.filter((app) => {
+      if (tab === "integrated" && app.source !== "integrated") return false
+      if (tab === "marketplace" && app.source !== "marketplace") return false
+      if (!query) return true
+      const q = query.toLowerCase()
+      return [app.name, app.description, app.category ?? ""].some((value) => value.toLowerCase().includes(q))
+    })
+  }, [apps, query, tab])
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/20" style={{ background: "rgba(6,182,212,0.08)" }}>
-            <Plug className="h-5 w-5 text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-base font-semibold text-slate-900">集成中心</h1>
-            <p className="text-xs text-slate-400">第三方系统集成与API管理</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-slate-300" />
-            <Input
-              placeholder="搜索集成..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-7 w-48 border-slate-200 bg-white/[0.04] pl-8 text-xs text-slate-500 placeholder:text-slate-300"
-            />
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        icon={Plug}
+        title="集成中心"
+        subtitle={<span>集成配置、状态切换和 Webhook 开关现在都写入数据库。</span>}
+      />
 
-      <div className="grid grid-cols-3 gap-4">
-        {filterCards.map((card) => (
-          <button
-            key={card.key}
-            onClick={() => setActiveFilter(card.key)}
-            className={cn(
-              "rounded-xl border p-4 transition-all duration-200 text-left",
-              activeFilter === card.key
-                ? "border-slate-200 bg-white/[0.06]"
-                : "border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200"
-            )}
-          >
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          { key: "integrated" as const, label: "已集成", count: apps.filter((item) => item.source === "integrated").length, icon: Link2 },
+          { key: "marketplace" as const, label: "集成市场", count: apps.filter((item) => item.source === "marketplace").length, icon: Plus },
+          { key: "webhooks" as const, label: "Webhook", count: webhooks.length, icon: Webhook },
+        ].map((item) => (
+          <button key={item.key} onClick={() => setTab(item.key)} role="tab" aria-selected={tab === item.key} className={`${softCardClass} p-4 text-left ${tab === item.key ? "ring-2 ring-cyan-200" : ""}`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-lg"
-                  style={{ background: `${card.color}15` }}
-                >
-                  <card.icon className="h-4.5 w-4.5" style={{ color: card.color }} />
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400">{card.label}</p>
-                  <p className="text-xl font-bold text-slate-900">{card.count}</p>
-                </div>
+              <div>
+                <p className="text-xs text-slate-500">{item.label}</p>
+                <p className="mt-1 text-2xl font-semibold text-slate-900">{item.count}</p>
               </div>
-              {activeFilter === card.key && (
-                <div className="h-1.5 w-1.5 rounded-full" style={{ background: card.color }} />
-              )}
+              <span className="rounded-lg bg-cyan-50 p-2 text-cyan-700"><item.icon className="size-4" /></span>
             </div>
           </button>
         ))}
       </div>
 
-      {activeFilter === "integrated" && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">已集成服务</h2>
-            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400">
-              {filteredIntegrated.length} 项
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {filteredIntegrated.map((app) => (
-              <Card
-                key={app.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-10 w-10 items-center justify-center rounded-lg"
-                        style={{ background: `${app.color}15` }}
-                      >
-                        <app.icon className="h-5 w-5" style={{ color: app.color }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{app.name}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{app.description}</p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] gap-1",
-                        app.status === "connected"
-                          ? "border-emerald-500/30 text-emerald-400"
-                          : "border-red-500/30 text-red-400"
-                      )}
-                      style={{
-                        background: app.status === "connected" ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                      }}
-                    >
-                      {app.status === "connected" ? (
-                        <CheckCircle2 className="h-3 w-3" />
-                      ) : (
-                        <XCircle className="h-3 w-3" />
-                      )}
-                      {app.status === "connected" ? "已连接" : "断开"}
-                    </Badge>
-                  </div>
-                  <Separator className="my-3 bg-white/[0.06]" />
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-xs text-slate-300">
-                      <Clock className="h-3 w-3" />
-                      最后同步: {app.lastSync}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 text-[11px] text-slate-400 hover:text-cyan-600 gap-1"
-                      onClick={() => {
-                        setSelectedApp(app)
-                        setConfigDialogOpen(true)
-                      }}
-                    >
-                      <Settings2 className="h-3 w-3" />
-                      配置
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      <div className={`${softCardClass} flex flex-col gap-3 p-4 md:flex-row md:items-center`}>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索集成名称、说明、分类..." className={`pl-9 ${inputClass}`} aria-label="搜索集成" name="search" type="search" autoComplete="off" />
         </div>
-      )}
-
-      {activeFilter === "marketplace" && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">可用集成市场</h2>
-            <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400">
-              {filteredMarketplace.length} 项
-            </Badge>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            {filteredMarketplace.map((app) => (
-              <Card
-                key={app.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className="flex h-9 w-9 items-center justify-center rounded-lg"
-                        style={{ background: `${app.categoryColor}12` }}
-                      >
-                        <app.icon className="h-4.5 w-4.5" style={{ color: app.categoryColor }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{app.name}</p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px]"
-                      style={{
-                        background: `${app.categoryColor}10`,
-                        color: app.categoryColor,
-                        borderColor: `${app.categoryColor}30`,
-                      }}
-                    >
-                      {app.category}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-3">{app.description}</p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 text-[11px] text-cyan-400 hover:text-cyan-300 gap-1 w-full border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
-                    onClick={() => {
-                      setSelectedMarketApp(app)
-                      setAddDialogOpen(true)
-                    }}
-                  >
-                    <Plus className="h-3 w-3" />
-                    添加集成
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeFilter === "webhooks" && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-slate-600">Webhook 管理</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[11px] text-cyan-400 hover:text-cyan-300 gap-1 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
-            >
-              <Plus className="h-3 w-3" />
-              新建 Webhook
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {webhooks.map((wh) => (
-              <Card
-                key={wh.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-slate-200 transition-all duration-200"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-lg shrink-0",
-                          wh.active ? "bg-purple-500/10" : "bg-white/[0.04]"
-                        )}
-                      >
-                        <Webhook className={cn("h-4 w-4", wh.active ? "text-purple-400" : "text-slate-300")} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs text-slate-500 font-mono truncate">{wh.url}</p>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          {wh.events.map((event) => (
-                            <Badge
-                              key={event}
-                              variant="outline"
-                              className="text-[10px] border-purple-500/25 text-purple-300"
-                              style={{ background: "rgba(168,85,247,0.08)" }}
-                            >
-                              {event}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0 ml-4">
-                      <span className="text-[10px] text-slate-300">创建于 {wh.createdAt}</span>
-                      <button
-                        onClick={() => toggleWebhook(wh.id)}
-                        className={cn(
-                          "relative h-5 w-9 rounded-full transition-colors duration-200",
-                          wh.active ? "bg-purple-500/60" : "bg-white"
-                        )}
-                      >
-                        <span
-                          className={cn(
-                            "absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform duration-200",
-                            wh.active ? "translate-x-4" : "translate-x-0.5"
-                          )}
-                        />
-                      </button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 text-[11px] text-slate-400 hover:text-cyan-600 gap-1"
-                      >
-                        <Send className="h-3 w-3" />
-                        测试
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <Separator className="bg-white/[0.06]" />
-
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Key className="h-4 w-4 text-cyan-400" />
-          <h2 className="text-sm font-medium text-slate-600">API 文档入口</h2>
-        </div>
-        <Card className="border-slate-200/[0.06] bg-white/[0.02]">
-          <CardContent className="p-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-[10px] text-slate-300 mb-1">API 基础 URL</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs text-cyan-400 font-mono bg-cyan-500/[0.06] px-2 py-1 rounded border border-cyan-500/10">
-                    https://api.secmind.ai/v2
-                  </code>
-                  <Button variant="ghost" size="icon-sm" className="text-slate-300 hover:text-cyan-600">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-300 mb-1">API 密钥</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs text-slate-400 font-mono bg-white/[0.04] px-2 py-1 rounded border border-slate-200/[0.06]">
-                    {showApiKey ? "sk-sec-a8f3e2d1c9b7a6f5e4d3c2b1a0" : "sk-sec-••••••••••••••••••••••••"}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-slate-300 hover:text-cyan-600"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                  >
-                    {showApiKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs text-cyan-400 hover:text-cyan-300 gap-1.5 border border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                  查看 API 文档
-                  <ExternalLink className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {tab === "webhooks" && (
+          <Button onClick={() => setWebhookDialogOpen(true)} className="bg-cyan-600 text-white hover:bg-cyan-700">
+            <Plus className="mr-1 size-4" />
+            新建 Webhook
+          </Button>
+        )}
       </div>
 
-      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
-        <DialogContent className="sm:max-w-md border-slate-200 bg-white">
+      {tab !== "webhooks" && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredApps.map((app) => (
+            <Card key={app.id} className={pageCardClass}>
+              <CardContent className="space-y-4 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{app.name}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{app.description}</p>
+                  </div>
+                  <Badge variant="outline" className={app.status === "connected" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}>
+                    {app.status === "connected" ? <CheckCircle2 className="mr-1 size-3.5" /> : <XCircle className="mr-1 size-3.5" />}
+                    {app.status === "connected" ? "已连接" : "未连接"}
+                  </Badge>
+                </div>
+                <div className="text-xs text-slate-500">最后同步：{app.last_sync || "-"}</div>
+                <div className="flex gap-2">
+                  {app.source === "integrated" ? (
+                    <Button variant="outline" size="sm" onClick={() => setSelectedApp(app)}>
+                      <Settings2 className="mr-1 size-3.5" />
+                      配置
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="bg-cyan-600 text-white hover:bg-cyan-700" onClick={() => setSelectedMarketApp(app)}>
+                      <Plus className="mr-1 size-3.5" />
+                      接入
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {!loading && filteredApps.length === 0 && <div className="text-slate-500">没有匹配的集成</div>}
+        </div>
+      )}
+
+      {tab === "webhooks" && (
+        <div className="space-y-3">
+          {webhooks.map((webhook) => (
+            <Card key={webhook.id} className={pageCardClass}>
+              <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-semibold text-slate-900">{webhook.name}</h3>
+                    <Badge variant="outline" className={webhook.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}>
+                      {webhook.active ? "启用中" : "已关闭"}
+                    </Badge>
+                  </div>
+                  <p className="font-mono text-sm text-slate-500">{webhook.url}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {webhook.events.map((event) => (
+                      <Badge key={event} variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">{event}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => toggleWebhook(webhook)}>
+                    {webhook.active ? "停用" : "启用"}
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Send className="mr-1 size-3.5" />
+                    测试
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
+        <DialogContent className="border-slate-200 bg-white text-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
-              {selectedApp?.name} 配置
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              管理 {selectedApp?.name} 集成配置与连接状态
-            </DialogDescription>
+            <DialogTitle>配置 {selectedApp?.name}</DialogTitle>
+            <DialogDescription className="text-slate-500">修改后会直接更新数据库中的集成配置。</DialogDescription>
           </DialogHeader>
-          <Separator className="bg-white/[0.06]" />
-          <div className="space-y-3">
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">连接状态</p>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "text-[10px] gap-1",
-                  selectedApp?.status === "connected"
-                    ? "border-emerald-500/30 text-emerald-400"
-                    : "border-red-500/30 text-red-400"
-                )}
-                style={{
-                  background: selectedApp?.status === "connected" ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                }}
-              >
-                {selectedApp?.status === "connected" ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                {selectedApp?.status === "connected" ? "已连接" : "断开"}
-              </Badge>
+          {selectedApp && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="app-api-url">API 地址</Label>
+                <Input id="app-api-url" value={selectedApp.api_url ?? ""} onChange={(e) => setSelectedApp({ ...selectedApp, api_url: e.target.value })} className={inputClass} name="api_url" type="url" autoComplete="off" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="app-api-key">API Key / Token</Label>
+                <Input id="app-api-key" value={selectedApp.api_key ?? ""} onChange={(e) => setSelectedApp({ ...selectedApp, api_key: e.target.value })} className={inputClass} type="password" autoComplete="off" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="app-sync-freq">同步频率</Label>
+                <Select value={selectedApp.sync_frequency} onValueChange={(value) => setSelectedApp({ ...selectedApp, sync_frequency: value || '' })}>
+                  <SelectTrigger id="app-sync-freq" className={inputClass}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5min">每 5 分钟</SelectItem>
+                    <SelectItem value="15min">每 15 分钟</SelectItem>
+                    <SelectItem value="30min">每 30 分钟</SelectItem>
+                    <SelectItem value="1h">每小时</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedApp(null)}>取消</Button>
+                <Button onClick={() => saveAppConfig({ ...selectedApp, status: "connected" })} className="bg-cyan-600 text-white hover:bg-cyan-700">保存配置</Button>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">最后同步</p>
-              <p className="text-xs text-slate-500">{selectedApp?.lastSync}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">同步频率</p>
-              <Select>
-                <SelectTrigger size="sm" className="w-full border-slate-200 bg-white/[0.04] text-slate-400">
-                  <SelectValue placeholder="选择同步频率" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5min">每5分钟</SelectItem>
-                  <SelectItem value="15min">每15分钟</SelectItem>
-                  <SelectItem value="30min">每30分钟</SelectItem>
-                  <SelectItem value="1h">每小时</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <Separator className="bg-white/[0.06]" />
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-slate-400 hover:text-slate-900"
-              onClick={() => setConfigDialogOpen(false)}
-            >
-              取消
-            </Button>
-            <Button
-              size="sm"
-              className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1"
-            >
-              <CheckCircle2 className="h-3 w-3" />
-              保存配置
-            </Button>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-        <DialogContent className="sm:max-w-md border-slate-200 bg-white">
+      <Dialog open={!!selectedMarketApp} onOpenChange={() => setSelectedMarketApp(null)}>
+        <DialogContent className="border-slate-200 bg-white text-slate-900">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">
-              添加 {selectedMarketApp?.name} 集成
-            </DialogTitle>
-            <DialogDescription className="text-slate-400">
-              配置 {selectedMarketApp?.name} 集成参数以启用服务
-            </DialogDescription>
+            <DialogTitle>接入 {selectedMarketApp?.name}</DialogTitle>
+            <DialogDescription className="text-slate-500">接入后状态会切为已连接，并保存 API 参数。</DialogDescription>
           </DialogHeader>
-          <Separator className="bg-white/[0.06]" />
-          <div className="space-y-3">
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">服务描述</p>
-              <p className="text-xs text-slate-500">{selectedMarketApp?.description}</p>
+          {selectedMarketApp && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="market-api-url">API 地址</Label>
+                <Input id="market-api-url" value={selectedMarketApp.api_url ?? ""} onChange={(e) => setSelectedMarketApp({ ...selectedMarketApp, api_url: e.target.value })} className={inputClass} name="api_url" type="url" autoComplete="off" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="market-auth-key">认证密钥</Label>
+                <Input id="market-auth-key" value={selectedMarketApp.api_key ?? ""} onChange={(e) => setSelectedMarketApp({ ...selectedMarketApp, api_key: e.target.value })} className={inputClass} type="password" autoComplete="off" />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelectedMarketApp(null)}>取消</Button>
+                <Button onClick={addMarketplaceApp} className="bg-cyan-600 text-white hover:bg-cyan-700">确认接入</Button>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">API 端点</p>
-              <Input
-                placeholder="输入 API 端点 URL"
-                className="h-7 border-slate-200 bg-white/[0.04] text-xs text-slate-500 placeholder:text-slate-300"
-              />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={webhookDialogOpen} onOpenChange={setWebhookDialogOpen}>
+        <DialogContent className="border-slate-200 bg-white text-slate-900">
+          <DialogHeader>
+            <DialogTitle>新建 Webhook</DialogTitle>
+            <DialogDescription className="text-slate-500">事件用英文逗号分隔，创建后会直接写入数据库。</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="webhook-name">名称</Label>
+              <Input id="webhook-name" value={newWebhook.name} onChange={(e) => setNewWebhook((prev) => ({ ...prev, name: e.target.value }))} className={inputClass} name="name" type="text" autoComplete="off" />
             </div>
-            <div>
-              <p className="text-[10px] text-slate-300 mb-1">认证密钥</p>
-              <Input
-                placeholder="输入 API Key 或 Token"
-                className="h-7 border-slate-200 bg-white/[0.04] text-xs text-slate-500 placeholder:text-slate-300"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="webhook-url">URL</Label>
+              <Input id="webhook-url" value={newWebhook.url} onChange={(e) => setNewWebhook((prev) => ({ ...prev, url: e.target.value }))} className={inputClass} name="url" type="url" autoComplete="off" />
             </div>
-          </div>
-          <Separator className="bg-white/[0.06]" />
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-slate-400 hover:text-slate-900"
-              onClick={() => setAddDialogOpen(false)}
-            >
-              取消
-            </Button>
-            <Button
-              size="sm"
-              className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white gap-1"
-            >
-              <Plus className="h-3 w-3" />
-              确认添加
-            </Button>
+            <div className="space-y-2">
+              <Label htmlFor="webhook-events">事件</Label>
+              <Input id="webhook-events" value={newWebhook.events} onChange={(e) => setNewWebhook((prev) => ({ ...prev, events: e.target.value }))} className={inputClass} name="events" type="text" autoComplete="off" />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setWebhookDialogOpen(false)}>取消</Button>
+              <Button onClick={createWebhook} className="bg-cyan-600 text-white hover:bg-cyan-700">创建</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

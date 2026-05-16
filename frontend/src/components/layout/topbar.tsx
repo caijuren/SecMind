@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   Search,
   Bell,
@@ -137,6 +138,8 @@ export function Topbar() {
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
           <Input
+            name="q"
+            autoComplete="off"
             placeholder={searchPlaceholder}
             className="h-9 border-slate-200 bg-slate-50 pl-9 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
           />
@@ -147,6 +150,7 @@ export function Topbar() {
         <DropdownMenu>
           <DropdownMenuTrigger
             className="flex items-center justify-center rounded-md h-8 w-8 text-slate-500 hover:text-cyan-600 hover:bg-slate-100 transition-colors cursor-pointer"
+            aria-label="切换语言"
             render={
               <button type="button">
                 <Globe className="size-[18px]" />
@@ -175,9 +179,10 @@ export function Topbar() {
           size="icon-sm"
           className="relative text-slate-500 hover:text-cyan-600"
           onClick={() => router.push("/notifications")}
+          aria-label="通知 (5条未读)"
         >
-          <Bell className="size-[18px]" />
-          <Badge className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-cyan-500 p-0 text-[10px] font-bold text-white">
+          <Bell className="size-[18px]" aria-hidden="true" />
+          <Badge className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-cyan-500 p-0 text-[10px] font-bold text-white" aria-hidden="true">
             5
           </Badge>
         </Button>
@@ -186,17 +191,19 @@ export function Topbar() {
           variant="ghost"
           size="icon-sm"
           className="text-slate-500 hover:text-cyan-600"
+          aria-label="AI 助手"
         >
-          <Sparkles className="size-[18px]" />
+          <Sparkles className="size-[18px]" aria-hidden="true" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger
             className="ml-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/40 cursor-pointer"
+            aria-label="用户菜单"
             render={
               <button type="button" className="flex items-center justify-center h-8 w-8 rounded-full overflow-hidden bg-cyan-100 text-cyan-700 text-xs font-medium">
                 {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                  <Image src={user.avatarUrl} alt={user?.name ?? "用户头像"} width={32} height={32} className="h-full w-full object-cover" unoptimized />
                 ) : (
                   initials
                 )}

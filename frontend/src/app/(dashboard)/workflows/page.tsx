@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Workflow,
   Search,
@@ -18,17 +20,29 @@ import {
   UserCheck,
   ArrowRight,
   ChevronRight,
+  ChevronDown,
   Activity,
   ToggleLeft,
   ToggleRight,
   Filter,
+  Save,
+  X,
+  GripVertical,
+  Bell,
+  Shield,
+  PenTool,
 } from "lucide-react"
+import type { Node as RfNode, Edge as RfEdge } from "@xyflow/react"
 import { cn } from "@/lib/utils"
+import { api, formatDateTime } from "@/lib/api"
+import { PlaybookEditor, convertPlaybookToFlow } from "@/components/playbook-editor"
 import { PageHeader } from "@/components/layout/page-header"
+import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Select,
   SelectTrigger,
@@ -83,392 +97,36 @@ interface ExecutionRecord {
   duration: string
 }
 
-const playbooks: Playbook[] = [
-  {
-    id: "PB-001",
-    name: "账号失陷自动处置",
-    description: "当AI研判账号失陷置信度≥85%时，自动触发冻结→重置→隔离处置链",
-    trigger: "置信度 ≥ 85%",
-    steps: 5,
-    executions: 347,
-    lastExecution: "2026-05-10 09:32",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "AI研判触发", detail: "置信度 ≥ 85%" },
-      { id: "n2", type: "condition", label: "影响评估", detail: "评估冻结影响范围" },
-      { id: "n3", type: "action", label: "冻结账号", detail: "禁用AD账号登录" },
-      { id: "n4", type: "action", label: "隔离终端", detail: "网络隔离受控设备" },
-      { id: "n5", type: "approval", label: "人工审批", detail: "VPN凭证重置审批" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3", label: "影响可控" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-002",
-    name: "C2通信自动阻断",
-    description: "当AI确认C2通信置信度≥90%时，自动执行阻断→隔离→通知链",
-    trigger: "置信度 ≥ 90%",
-    steps: 4,
-    executions: 218,
-    lastExecution: "2026-05-10 08:15",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "C2通信检测", detail: "置信度 ≥ 90%" },
-      { id: "n2", type: "action", label: "封禁IP", detail: "防火墙双向封禁" },
-      { id: "n3", type: "action", label: "隔离终端", detail: "阻断C2心跳" },
-      { id: "n4", type: "action", label: "通知团队", detail: "发送攻击研判报告" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-003",
-    name: "暴力破解自动防御",
-    description: "当检测到暴力破解失败次数≥50时，自动封禁→锁定→启用MFA",
-    trigger: "失败次数 ≥ 50",
-    steps: 4,
-    executions: 512,
-    lastExecution: "2026-05-10 07:48",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "暴力破解检测", detail: "失败次数 ≥ 50" },
-      { id: "n2", type: "action", label: "封禁来源IP", detail: "防火墙规则添加" },
-      { id: "n3", type: "action", label: "锁定账号", detail: "AD账号临时锁定" },
-      { id: "n4", type: "action", label: "启用MFA", detail: "强制多因子认证" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-004",
-    name: "数据外泄自动遏制",
-    description: "当检测到数据外传≥100MB时，自动阻断→取证→通知DLP",
-    trigger: "外传数据 ≥ 100MB",
-    steps: 4,
-    executions: 89,
-    lastExecution: "2026-05-09 22:10",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "DLP策略触发", detail: "外传 ≥ 100MB" },
-      { id: "n2", type: "action", label: "阻断连接", detail: "中断数据传输" },
-      { id: "n3", type: "action", label: "保全取证", detail: "远程内存镜像" },
-      { id: "n4", type: "action", label: "通知DLP", detail: "合规事件上报" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-005",
-    name: "WebShell自动清除",
-    description: "当EDR检测到WebShell植入时，自动隔离→清除→加固",
-    trigger: "WebShell特征匹配",
-    steps: 5,
-    executions: 156,
-    lastExecution: "2026-05-09 18:33",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "WebShell检测", detail: "特征匹配 ≥ 95%" },
-      { id: "n2", type: "condition", label: "业务影响评估", detail: "检查服务依赖" },
-      { id: "n3", type: "action", label: "隔离Web服务", detail: "摘除流量入口" },
-      { id: "n4", type: "action", label: "清除后门", detail: "删除恶意文件" },
-      { id: "n5", type: "approval", label: "恢复审批", detail: "确认清除后恢复" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3", label: "可隔离" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-006",
-    name: "钓鱼邮件自动处置",
-    description: "当邮件网关检测到钓鱼邮件时，自动隔离→通知→重置凭证",
-    trigger: "钓鱼评分 ≥ 90",
-    steps: 4,
-    executions: 423,
-    lastExecution: "2026-05-10 10:05",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "钓鱼邮件检测", detail: "评分 ≥ 90" },
-      { id: "n2", type: "action", label: "隔离邮件", detail: "从收件箱移除" },
-      { id: "n3", type: "action", label: "通知用户", detail: "安全提醒通知" },
-      { id: "n4", type: "action", label: "重置凭证", detail: "预防性密码重置" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-007",
-    name: "横向移动自动阻断",
-    description: "当检测到内网横向移动行为时，自动隔离→封禁→取证",
-    trigger: "横向移动行为检测",
-    steps: 5,
-    executions: 67,
-    lastExecution: "2026-05-08 14:22",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "横向移动检测", detail: "RDP/SMB异常" },
-      { id: "n2", type: "condition", label: "攻击范围评估", detail: "判断扩散范围" },
-      { id: "n3", type: "action", label: "隔离源主机", detail: "网络微隔离" },
-      { id: "n4", type: "action", label: "封禁凭证", detail: "禁用被盗账号" },
-      { id: "n5", type: "action", label: "取证保全", detail: "采集攻击证据" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3", label: "确认攻击" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-008",
-    name: "DNS隧道自动阻断",
-    description: "当检测到DNS隧道通信时，自动封禁域名→隔离主机→告警",
-    trigger: "DNS隧道特征匹配",
-    steps: 3,
-    executions: 34,
-    lastExecution: "2026-05-07 16:45",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "DNS隧道检测", detail: "TXT高频查询" },
-      { id: "n2", type: "action", label: "封禁域名", detail: "DNS RPZ规则" },
-      { id: "n3", type: "action", label: "隔离主机", detail: "阻断C2通信" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-    ],
-  },
-  {
-    id: "PB-009",
-    name: "权限提升自动遏制",
-    description: "当检测到异常提权操作时，自动回滚→锁定→审计",
-    trigger: "异常提权操作",
-    steps: 4,
-    executions: 45,
-    lastExecution: "2026-05-06 11:30",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "提权行为检测", detail: "IAM异常操作" },
-      { id: "n2", type: "action", label: "回滚权限", detail: "撤销提权变更" },
-      { id: "n3", type: "action", label: "锁定账号", detail: "临时冻结操作" },
-      { id: "n4", type: "approval", label: "安全审计", detail: "人工复核确认" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-010",
-    name: "勒索软件自动防御",
-    description: "当检测到勒索软件加密行为时，自动隔离→阻断→备份恢复",
-    trigger: "勒索软件特征检测",
-    steps: 5,
-    executions: 12,
-    lastExecution: "2026-05-04 03:18",
-    status: "enabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "勒索行为检测", detail: "批量文件加密" },
-      { id: "n2", type: "action", label: "隔离主机", detail: "紧急网络隔离" },
-      { id: "n3", type: "action", label: "阻断传播", detail: "关闭SMB/RDP" },
-      { id: "n4", type: "action", label: "备份快照", detail: "保护未感染数据" },
-      { id: "n5", type: "approval", label: "恢复审批", detail: "确认安全后恢复" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-011",
-    name: "VPN异常登录处置",
-    description: "当检测到VPN不可能旅行或异常地域登录时，自动冻结→验证→通知",
-    trigger: "不可能旅行检测",
-    steps: 4,
-    executions: 198,
-    lastExecution: "2026-05-09 20:55",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "VPN异常检测", detail: "不可能旅行" },
-      { id: "n2", type: "condition", label: "出差核实", detail: "查询HR出差记录" },
-      { id: "n3", type: "action", label: "冻结VPN", detail: "中断VPN会话" },
-      { id: "n4", type: "action", label: "通知用户", detail: "验证登录真实性" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3", label: "无出差" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-012",
-    name: "内部威胁监控处置",
-    description: "当检测到内部威胁行为时，自动增强监控→限制权限→告警",
-    trigger: "内部威胁评分 ≥ 70",
-    steps: 4,
-    executions: 56,
-    lastExecution: "2026-05-08 09:12",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "内部威胁检测", detail: "评分 ≥ 70" },
-      { id: "n2", type: "action", label: "增强监控", detail: "全操作日志采集" },
-      { id: "n3", type: "action", label: "限制权限", detail: "降级访问控制" },
-      { id: "n4", type: "approval", label: "HR审批", detail: "确认处置方案" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-013",
-    name: "云资源异常处置",
-    description: "当检测到云资源异常操作时，自动回滚→告警→审计",
-    trigger: "云资源异常变更",
-    steps: 3,
-    executions: 78,
-    lastExecution: "2026-05-07 15:40",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "云资源异常", detail: "IAM/K8s异常" },
-      { id: "n2", type: "action", label: "回滚变更", detail: "撤销资源配置" },
-      { id: "n3", type: "action", label: "安全告警", detail: "通知运维团队" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-    ],
-  },
-  {
-    id: "PB-014",
-    name: "供应链攻击响应",
-    description: "当检测到供应链攻击时，自动隔离→阻断→溯源",
-    trigger: "供应链异常检测",
-    steps: 5,
-    executions: 8,
-    lastExecution: "2026-05-02 11:20",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "供应链异常", detail: "依赖包篡改" },
-      { id: "n2", type: "condition", label: "影响范围评估", detail: "扫描受影响服务" },
-      { id: "n3", type: "action", label: "隔离服务", detail: "摘除受影响实例" },
-      { id: "n4", type: "action", label: "阻断流量", detail: "WAF规则更新" },
-      { id: "n5", type: "action", label: "攻击溯源", detail: "威胁情报关联" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3", label: "确认受影响" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-015",
-    name: "零日漏洞应急响应",
-    description: "当检测到零日漏洞利用时，自动加固→监控→补丁",
-    trigger: "零日漏洞利用检测",
-    steps: 5,
-    executions: 3,
-    lastExecution: "2026-04-28 08:45",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "0day利用检测", detail: "异常漏洞利用" },
-      { id: "n2", type: "action", label: "紧急加固", detail: "虚拟补丁部署" },
-      { id: "n3", type: "action", label: "增强监控", detail: "全流量分析" },
-      { id: "n4", type: "approval", label: "补丁审批", detail: "确认补丁安全性" },
-      { id: "n5", type: "action", label: "补丁部署", detail: "滚动更新部署" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-      { from: "n4", to: "n5" },
-    ],
-  },
-  {
-    id: "PB-016",
-    name: "DDoS攻击自动缓解",
-    description: "当检测到DDoS攻击时，自动引流→清洗→恢复",
-    trigger: "流量异常检测",
-    steps: 4,
-    executions: 23,
-    lastExecution: "2026-05-05 14:30",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "DDoS检测", detail: "流量基线偏离" },
-      { id: "n2", type: "action", label: "流量牵引", detail: "DNS/Anycast引流" },
-      { id: "n3", type: "action", label: "流量清洗", detail: "恶意流量过滤" },
-      { id: "n4", type: "action", label: "恢复服务", detail: "回源正常流量" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-  {
-    id: "PB-017",
-    name: "数据库异常访问处置",
-    description: "当检测到数据库异常访问时，自动阻断→审计→通知",
-    trigger: "数据库异常查询",
-    steps: 3,
-    executions: 145,
-    lastExecution: "2026-05-09 16:22",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "异常查询检测", detail: "SQL注入/大量导出" },
-      { id: "n2", type: "action", label: "阻断连接", detail: "终止异常会话" },
-      { id: "n3", type: "action", label: "安全审计", detail: "记录操作日志" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-    ],
-  },
-  {
-    id: "PB-018",
-    name: "终端恶意软件清除",
-    description: "当EDR检测到终端恶意软件时，自动隔离→清除→修复",
-    trigger: "恶意软件检测",
-    steps: 4,
-    executions: 267,
-    lastExecution: "2026-05-10 06:18",
-    status: "disabled",
-    nodes: [
-      { id: "n1", type: "trigger", label: "恶意软件检测", detail: "EDR特征匹配" },
-      { id: "n2", type: "action", label: "隔离终端", detail: "网络微隔离" },
-      { id: "n3", type: "action", label: "清除恶意文件", detail: "删除+注册表修复" },
-      { id: "n4", type: "action", label: "恢复终端", detail: "安全扫描后恢复" },
-    ],
-    edges: [
-      { from: "n1", to: "n2" },
-      { from: "n2", to: "n3" },
-      { from: "n3", to: "n4" },
-    ],
-  },
-]
+interface ApiPlaybook {
+  id: number
+  name: string
+  description: string | null
+  trigger: string | null
+  steps: number
+  executions: number
+  last_execution: string | null
+  status: string
+  nodes: FlowNode[] | null
+  edges: FlowEdge[] | null
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+function mapApiPlaybook(raw: ApiPlaybook): Playbook {
+  return {
+    id: String(raw.id),
+    name: raw.name,
+    description: raw.description || "",
+    trigger: raw.trigger || "",
+    steps: raw.steps,
+    executions: raw.executions,
+    lastExecution: formatDateTime(raw.last_execution),
+    status: (raw.status as PlaybookStatus) || "disabled",
+    nodes: raw.nodes || [],
+    edges: raw.edges || [],
+  }
+}
 
 const executionHistory: ExecutionRecord[] = [
   { id: "EX-20260510-001", playbookName: "账号失陷自动处置", triggerTime: "2026-05-10 09:32:15", status: "success", duration: "12.3s" },
@@ -490,6 +148,40 @@ const NODE_TYPE_CONFIG: Record<NodeType, { color: string; bgColor: string; borde
   approval: { color: "#a855f7", bgColor: "rgba(168,85,247,0.08)", borderColor: "rgba(168,85,247,0.25)", icon: UserCheck, label: "人工审批" },
 }
 
+interface TemplateItem {
+  id: string
+  label: string
+  detail: string
+  icon: string
+}
+
+interface TemplateCategory {
+  type: string
+  label: string
+  icon: string
+  category: string
+  description: string
+  templates: TemplateItem[]
+}
+
+const TEMPLATE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  trigger: { bg: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.3)", text: "#22d3ee" },
+  condition: { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.3)", text: "#f59e0b" },
+  action: { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.3)", text: "#ef4444" },
+  approval: { bg: "rgba(168,85,247,0.08)", border: "rgba(168,85,247,0.3)", text: "#a855f7" },
+  notify: { bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.3)", text: "#3b82f6" },
+  delay: { bg: "rgba(100,116,139,0.08)", border: "rgba(100,116,139,0.3)", text: "#64748b" },
+}
+
+const TEMPLATE_ICONS: Record<string, typeof Zap> = {
+  trigger: Zap,
+  condition: GitBranch,
+  action: Shield,
+  approval: UserCheck,
+  notify: Bell,
+  delay: Clock,
+}
+
 const EXECUTION_STATUS_CONFIG: Record<ExecutionStatus, { color: string; icon: typeof CheckCircle2; label: string }> = {
   success: { color: "#22c55e", icon: CheckCircle2, label: "成功" },
   failed: { color: "#ff4d4f", icon: XCircle, label: "失败" },
@@ -498,29 +190,193 @@ const EXECUTION_STATUS_CONFIG: Record<ExecutionStatus, { color: string; icon: ty
 
 export default function WorkflowsPage() {
   const { t } = useLocaleStore()
+  const router = useRouter()
+  const [playbooks, setPlaybooks] = useState<Playbook[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [filterType, setFilterType] = useState<"all" | "enabled" | "disabled">("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlaybook, setSelectedPlaybook] = useState<Playbook | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
-  const [playbookStates, setPlaybookStates] = useState<Record<string, PlaybookStatus>>(
-    Object.fromEntries(playbooks.map((p) => [p.id, p.status]))
-  )
+  const [createForm, setCreateForm] = useState({ name: "", description: "", trigger: "" })
+  const [viewMode, setViewMode] = useState<"list" | "editor">("list")
+  const [editingPlaybook, setEditingPlaybook] = useState<Playbook | null>(null)
+  const [flowNodes, setFlowNodes] = useState<RfNode[]>([])
+  const [flowEdges, setFlowEdges] = useState<RfEdge[]>([])
+  const [templates, setTemplates] = useState<TemplateCategory[]>([])
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(["trigger"]))
+  const [saving, setSaving] = useState(false)
+  const nodeCounterRef = useRef(0)
+
+  const fetchPlaybooks = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.get<ApiPlaybook[]>("/playbooks")
+      setPlaybooks(res.data.map(mapApiPlaybook))
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "加载剧本列表失败"
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await api.get<ApiPlaybook[]>("/playbooks")
+        if (!cancelled) setPlaybooks(res.data.map(mapApiPlaybook))
+      } catch (err: unknown) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "加载剧本列表失败"
+          setError(message)
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const loadTemplates = async () => {
+      try {
+        const res = await api.get<TemplateCategory[]>("/playbook-editor/templates")
+        if (!cancelled) setTemplates(res.data)
+      } catch {}
+    }
+    loadTemplates()
+    return () => { cancelled = true }
+  }, [])
 
   const filteredPlaybooks = playbooks.filter((p) => {
-    if (filterType === "enabled" && playbookStates[p.id] !== "enabled") return false
-    if (filterType === "disabled" && playbookStates[p.id] !== "disabled") return false
+    if (filterType === "enabled" && p.status !== "enabled") return false
+    if (filterType === "disabled" && p.status !== "disabled") return false
     if (searchQuery && !p.name.includes(searchQuery) && !p.description.includes(searchQuery)) return false
     return true
   })
 
-  const enabledCount = Object.values(playbookStates).filter((s) => s === "enabled").length
-  const disabledCount = Object.values(playbookStates).filter((s) => s === "disabled").length
+  const enabledCount = playbooks.filter((p) => p.status === "enabled").length
+  const disabledCount = playbooks.filter((p) => p.status === "disabled").length
 
-  const togglePlaybookStatus = (id: string) => {
-    setPlaybookStates((prev) => ({
-      ...prev,
-      [id]: prev[id] === "enabled" ? "disabled" : "enabled",
-    }))
+  const togglePlaybookStatus = async (id: string) => {
+    try {
+      await api.post(`/playbooks/${id}/toggle`)
+      await fetchPlaybooks()
+    } catch {
+      setError("切换剧本状态失败")
+    }
+  }
+
+  const deletePlaybook = async (id: string) => {
+    try {
+      await api.delete(`/playbooks/${id}`)
+      if (selectedPlaybook?.id === id) setSelectedPlaybook(null)
+      await fetchPlaybooks()
+    } catch {
+      setError("删除剧本失败")
+    }
+  }
+
+  const handleCreate = async () => {
+    if (!createForm.name.trim()) return
+    setSubmitting(true)
+    try {
+      await api.post("/playbooks", {
+        name: createForm.name,
+        description: createForm.description,
+        trigger: createForm.trigger,
+        steps: 0,
+        executions: 0,
+        status: "enabled",
+        created_by: "current_user",
+      })
+      await fetchPlaybooks()
+      setCreateDialogOpen(false)
+      setCreateForm({ name: "", description: "", trigger: "" })
+    } catch {
+      setError("创建剧本失败")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const openEditor = (playbook: Playbook) => {
+    setEditingPlaybook(playbook)
+    const { nodes, edges } = convertPlaybookToFlow(playbook.nodes, playbook.edges)
+    setFlowNodes(nodes)
+    setFlowEdges(edges)
+    nodeCounterRef.current = playbook.nodes.length
+    setViewMode("editor")
+  }
+
+  const closeEditor = () => {
+    setViewMode("list")
+    setEditingPlaybook(null)
+    setFlowNodes([])
+    setFlowEdges([])
+  }
+
+  const handleEditorChange = useCallback((nodes: RfNode[], edges: RfEdge[]) => {
+    setFlowNodes(nodes)
+    setFlowEdges(edges)
+  }, [])
+
+  const savePlaybook = async () => {
+    if (!editingPlaybook) return
+    setSaving(true)
+    try {
+      const pbNodes: FlowNode[] = flowNodes.map((n) => ({
+        id: n.id,
+        type: ((n.data as Record<string, unknown>)?.icon as string || "action") as NodeType,
+        label: (n.data as Record<string, unknown>)?.label as string || "",
+        detail: (n.data as Record<string, unknown>)?.detail as string || "",
+      }))
+      const pbEdges: FlowEdge[] = flowEdges.map((e) => ({
+        from: e.source,
+        to: e.target,
+        ...(e.label ? { label: String(e.label) } : {}),
+      }))
+      await api.put(`/playbooks/${editingPlaybook.id}`, {
+        nodes: pbNodes,
+        edges: pbEdges,
+        steps: pbNodes.length,
+      })
+      await fetchPlaybooks()
+      setEditingPlaybook((prev) => prev ? { ...prev, nodes: pbNodes, edges: pbEdges, steps: pbNodes.length } : null)
+      setError(null)
+    } catch {
+      setError("保存剧本失败")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const addNodeFromTemplate = (template: TemplateItem) => {
+    nodeCounterRef.current += 1
+    const newNode: RfNode = {
+      id: `${template.id}-${nodeCounterRef.current}`,
+      type: "playbook",
+      position: { x: 250, y: nodeCounterRef.current * 120 },
+      data: { label: template.label, detail: template.detail, icon: template.icon },
+    }
+    setFlowNodes((prev) => [...prev, newNode])
+  }
+
+  const toggleCategory = (type: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(type)) next.delete(type)
+      else next.add(type)
+      return next
+    })
   }
 
   const filterCards = [
@@ -537,19 +393,30 @@ export default function WorkflowsPage() {
         subtitle="安全响应剧本与工作流自动化引擎"
       />
 
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+          <button className="ml-auto text-xs underline" onClick={() => setError(null)}>
+            关闭
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-4">
         {filterCards.map((card) => (
           <button
             key={card.key}
+            aria-pressed={filterType === card.key}
             onClick={() => setFilterType(card.key)}
             className={cn(
-              "card-default p-4 text-left transition-all cursor-pointer",
+              `${softCardClass} p-4 text-left transition-colors cursor-pointer`,
               filterType === card.key && "ring-1"
             )}
             style={
               filterType === card.key
-                ? { borderColor: `${card.color}40`, boxShadow: `0 0 16px ${card.color}15` }
-                : undefined
+                  ? { borderColor: `${card.color}40` }
+                  : undefined
             }
           >
             <div className="flex items-center justify-between">
@@ -560,14 +427,128 @@ export default function WorkflowsPage() {
         ))}
       </div>
 
+      {viewMode === "editor" ? (
+        <div className="flex gap-4" style={{ height: "calc(100vh - 340px)", minHeight: 500 }}>
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/workflows"
+                  onClick={closeEditor}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-slate-400 hover:text-slate-600"
+                >
+                  <ArrowRight className="h-4 w-4 rotate-180" />
+                  返回列表
+                </Link>
+                <div className="h-4 w-px bg-slate-200" />
+                <div className="flex items-center gap-2">
+                  <Workflow className="h-4 w-4 text-cyan-600" />
+                  <span className="text-sm font-semibold text-slate-900">{editingPlaybook?.name}</span>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px]"
+                    style={{
+                      borderColor: editingPlaybook?.status === "enabled" ? "rgba(34,197,94,0.3)" : "rgba(100,116,139,0.3)",
+                      color: editingPlaybook?.status === "enabled" ? "#22c55e" : "#64748b",
+                    }}
+                  >
+                    {editingPlaybook?.status === "enabled" ? "已启用" : "已停用"}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-400">
+                  {flowNodes.length} 个节点 · {flowEdges.length} 条连线
+                </span>
+                <Button
+                  className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+                  disabled={saving}
+                  onClick={savePlaybook}
+                >
+                  {saving ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  保存
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0">
+              <PlaybookEditor
+                nodes={flowNodes}
+                edges={flowEdges}
+                onChange={handleEditorChange}
+                readOnly={false}
+              />
+            </div>
+          </div>
+
+          <div className="w-64 shrink-0 flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-slate-100 bg-slate-50/50">
+              <h4 className="text-xs font-semibold text-slate-700">节点模板</h4>
+              <p className="text-[10px] text-slate-400 mt-0.5">点击添加到画布</p>
+            </div>
+            <ScrollArea className="flex-1">
+              <div className="p-2 space-y-1">
+                {templates.map((category) => {
+                  const colors = TEMPLATE_COLORS[category.type] || TEMPLATE_COLORS.action
+                  const Icon = TEMPLATE_ICONS[category.type] || Shield
+                  const isExpanded = expandedCategories.has(category.type)
+                  return (
+                    <div key={category.type} className="rounded-lg border border-slate-100 overflow-hidden">
+                      <button
+                        className="w-full flex items-center gap-2 px-2.5 py-2 text-left hover:bg-slate-50 transition-colors"
+                        aria-expanded={isExpanded}
+                        onClick={() => toggleCategory(category.type)}
+                      >
+                        <div
+                          className="flex items-center justify-center w-5 h-5 rounded"
+                          style={{ backgroundColor: colors.bg, border: `1px solid ${colors.border}` }}
+                        >
+                          <Icon className="h-3 w-3" style={{ color: colors.text }} />
+                        </div>
+                        <span className="text-xs font-medium text-slate-700 flex-1">{category.category}</span>
+                        <ChevronDown
+                          className={cn("h-3 w-3 text-slate-400 transition-transform", isExpanded && "rotate-180")}
+                        />
+                      </button>
+                      {isExpanded && (
+                        <div className="border-t border-slate-50 bg-slate-50/30">
+                          {category.templates.map((template) => (
+                            <button
+                              key={template.id}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-white transition-colors group"
+                              onClick={() => addNodeFromTemplate(template)}
+                            >
+                              <GripVertical className="h-3 w-3 text-slate-300 group-hover:text-slate-400 shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-medium text-slate-600 truncate">{template.label}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{template.detail}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
           <Input
-            placeholder="搜索剧本名称或描述..."
+              name="search"
+              autoComplete="off"
+              placeholder="搜索剧本名称或描述…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+            className={`pl-9 ${inputClass}`}
           />
         </div>
         <Button
@@ -577,18 +558,46 @@ export default function WorkflowsPage() {
           <Plus className="h-4 w-4" />
           创建剧本
         </Button>
+        <Button
+          variant="outline"
+          className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-cyan-700"
+          onClick={() => router.push("/playbooks/editor")}
+        >
+          <PenTool className="h-4 w-4" />
+          可视化编辑器
+        </Button>
+        {selectedPlaybook && viewMode === "list" && (
+          <Button
+            variant="outline"
+            className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-cyan-700"
+            onClick={() => router.push(`/playbooks/editor?id=${selectedPlaybook.id}`)}
+          >
+            <Edit3 className="h-4 w-4" />
+            可视化编辑
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <div className="lg:col-span-2 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          {filteredPlaybooks.map((playbook) => {
-            const isEnabled = playbookStates[playbook.id] === "enabled"
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+            </div>
+          ) : filteredPlaybooks.length === 0 ? (
+            <div className="flex items-center justify-center py-20 text-xs text-slate-400">
+              暂无剧本数据
+            </div>
+          ) : (
+            <>
+              {filteredPlaybooks.map((playbook) => {
+            const isEnabled = playbook.status === "enabled"
             return (
               <div
                 key={playbook.id}
                 className={cn(
-                  "card-default p-4 transition-all cursor-pointer",
-                  selectedPlaybook?.id === playbook.id && "border-cyan-500/30 shadow-[0_0_16px_rgba(6,182,212,0.12)]"
+                  `${softCardClass} p-4 transition-colors cursor-pointer`,
+                  selectedPlaybook?.id === playbook.id && "border-cyan-200 shadow-sm shadow-slate-200/60"
                 )}
                 onClick={() => setSelectedPlaybook(playbook)}
               >
@@ -639,6 +648,7 @@ export default function WorkflowsPage() {
 
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <button
+                      aria-pressed={isEnabled}
                       onClick={(e) => {
                         e.stopPropagation()
                         togglePlaybookStatus(playbook.id)
@@ -655,9 +665,11 @@ export default function WorkflowsPage() {
                       <Button
                         size="icon-xs"
                         variant="ghost"
+                        aria-label="编辑剧本"
                         className="text-slate-300 hover:text-cyan-600"
                         onClick={(e) => {
                           e.stopPropagation()
+                          openEditor(playbook)
                         }}
                       >
                         <Edit3 className="h-3 w-3" />
@@ -665,6 +677,7 @@ export default function WorkflowsPage() {
                       <Button
                         size="icon-xs"
                         variant="ghost"
+                        aria-label="运行剧本"
                         className="text-slate-300 hover:text-cyan-600"
                         onClick={(e) => {
                           e.stopPropagation()
@@ -675,9 +688,11 @@ export default function WorkflowsPage() {
                       <Button
                         size="icon-xs"
                         variant="ghost"
+                        aria-label="删除剧本"
                         className="text-slate-300 hover:text-red-600"
                         onClick={(e) => {
                           e.stopPropagation()
+                          deletePlaybook(playbook.id)
                         }}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -688,28 +703,30 @@ export default function WorkflowsPage() {
               </div>
             )
           })}
+            </>
+          )}
         </div>
 
         <div className="lg:col-span-3 space-y-6">
           {selectedPlaybook ? (
             <>
-              <div className="card-default p-5">
+              <div className={`${pageCardClass} p-5`}>
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <Workflow className="h-4 w-4 text-cyan-400" />
+                    <Workflow className="h-4 w-4 text-cyan-600" />
                     <h3 className="text-sm font-semibold text-slate-900">{selectedPlaybook.name}</h3>
                     <Badge
                       variant="outline"
                       className="text-[10px]"
                       style={{
-                        borderColor: playbookStates[selectedPlaybook.id] === "enabled" ? "rgba(34,197,94,0.3)" : "rgba(100,116,139,0.3)",
-                        color: playbookStates[selectedPlaybook.id] === "enabled" ? "#22c55e" : "#64748b",
+                        borderColor: selectedPlaybook.status === "enabled" ? "rgba(34,197,94,0.3)" : "rgba(100,116,139,0.3)",
+                        color: selectedPlaybook.status === "enabled" ? "#22c55e" : "#64748b",
                       }}
                     >
-                      {playbookStates[selectedPlaybook.id] === "enabled" ? "已启用" : "已停用"}
+                      {selectedPlaybook.status === "enabled" ? "已启用" : "已停用"}
                     </Badge>
                   </div>
-                  <span className="text-xs text-slate-300 font-mono">{selectedPlaybook.id}</span>
+                  <span className="text-xs text-slate-500 font-mono">{selectedPlaybook.id}</span>
                 </div>
 
                 <div className="flex items-center gap-6 mb-5 text-xs text-slate-400">
@@ -794,7 +811,7 @@ export default function WorkflowsPage() {
                 </div>
               </div>
 
-              <div className="card-default p-5">
+              <div className={`${pageCardClass} p-5`}>
                 <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-4">
                   <Clock className="h-4 w-4 text-cyan-400" />
                   执行历史
@@ -808,7 +825,7 @@ export default function WorkflowsPage() {
                       return (
                         <div
                           key={record.id}
-                          className="flex items-center gap-4 rounded-lg bg-white/[0.02] border border-slate-200/[0.04] px-4 py-2.5"
+                          className="flex items-center gap-4 rounded-lg bg-slate-50/50 border border-slate-100 px-4 py-2.5"
                         >
                           <span className="text-xs font-mono text-slate-300 shrink-0">{record.id}</span>
                           <span className="text-xs text-slate-500 flex-1 truncate">{record.playbookName}</span>
@@ -829,7 +846,7 @@ export default function WorkflowsPage() {
                       )
                     })}
                   {executionHistory.filter((r) => r.playbookName === selectedPlaybook.name).length === 0 && (
-                    <div className="flex items-center justify-center py-8 text-xs text-slate-300">
+                    <div className="flex items-center justify-center py-8 text-xs text-slate-400">
                       暂无执行记录
                     </div>
                   )}
@@ -837,16 +854,16 @@ export default function WorkflowsPage() {
               </div>
             </>
           ) : (
-            <div className="card-default p-12 flex flex-col items-center justify-center text-center min-h-[400px]">
+            <div className={`${softCardClass} p-12 flex flex-col items-center justify-center text-center min-h-[400px]`}>
               <Workflow className="h-12 w-12 text-slate-200 mb-4" />
-              <p className="text-sm text-slate-300">选择左侧剧本查看可视化流程</p>
-              <p className="text-xs text-slate-300 mt-1">点击任意剧本卡片以展示编排流程图</p>
+              <p className="text-sm text-slate-400">选择左侧剧本查看可视化流程</p>
+              <p className="text-xs text-slate-400 mt-1">点击任意剧本卡片以展示编排流程图</p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="card-default p-5">
+      <div className={`${pageCardClass} p-5`}>
         <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-4">
           <Activity className="h-4 w-4 text-cyan-400" />
           最近执行记录
@@ -858,7 +875,7 @@ export default function WorkflowsPage() {
             return (
               <div
                 key={record.id}
-                className="flex items-center gap-4 rounded-lg bg-white/[0.02] border border-slate-200/[0.04] px-4 py-2.5 hover:border-slate-200/[0.08] transition-colors"
+                className="flex items-center gap-4 rounded-lg bg-slate-50/50 border border-slate-100 px-4 py-2.5 hover:border-slate-200 transition-colors"
               >
                 <span className="text-xs font-mono text-slate-300 shrink-0 w-36">{record.id}</span>
                 <span className="text-xs text-slate-500 flex-1 truncate">{record.playbookName}</span>
@@ -880,6 +897,8 @@ export default function WorkflowsPage() {
           })}
         </div>
       </div>
+      </>
+      )}
 
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-lg bg-white border-slate-200">
@@ -891,23 +910,36 @@ export default function WorkflowsPage() {
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label className="text-xs text-slate-400 mb-1.5 block">剧本名称</label>
+              <label htmlFor="playbook-name" className="text-xs text-slate-400 mb-1.5 block">剧本名称</label>
               <Input
+                id="playbook-name"
+                name="name"
+                autoComplete="off"
                 placeholder="输入剧本名称"
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                value={createForm.name}
+                onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
+                className="border-slate-200 bg-white text-slate-700 placeholder:text-slate-300"
               />
             </div>
             <div>
-              <label className="text-xs text-slate-400 mb-1.5 block">剧本描述</label>
+              <label htmlFor="playbook-description" className="text-xs text-slate-400 mb-1.5 block">剧本描述</label>
               <Input
+                id="playbook-description"
+                name="description"
+                autoComplete="off"
                 placeholder="输入剧本描述"
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                value={createForm.description}
+                onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
+                className="border-slate-200 bg-white text-slate-700 placeholder:text-slate-300"
               />
             </div>
             <div>
               <label className="text-xs text-slate-400 mb-1.5 block">触发条件</label>
-              <Select>
-                <SelectTrigger className="w-full border-slate-200 bg-white/[0.04] text-slate-600">
+              <Select
+                value={createForm.trigger}
+                onValueChange={(v) => setCreateForm((f) => ({ ...f, trigger: v ?? "" }))}
+              >
+                <SelectTrigger className="w-full border-slate-200 bg-white text-slate-600">
                   <SelectValue placeholder="选择触发条件类型" />
                 </SelectTrigger>
                 <SelectContent>
@@ -920,8 +952,16 @@ export default function WorkflowsPage() {
               </Select>
             </div>
             <div className="flex items-center gap-3 pt-2">
-              <Button className="flex-1 bg-cyan-600 text-white hover:bg-cyan-700 gap-1.5">
-                <Plus className="h-4 w-4" />
+              <Button
+                className="flex-1 bg-cyan-600 text-white hover:bg-cyan-700 gap-1.5"
+                disabled={submitting}
+                onClick={handleCreate}
+              >
+                {submitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
                 创建剧本
               </Button>
               <Button

@@ -8,7 +8,6 @@ import {
   User,
   Settings,
   Database,
-  Shield,
   CheckCircle2,
   XCircle,
   Clock,
@@ -36,6 +35,7 @@ import {
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { PageHeader } from "@/components/layout/page-header"
+import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
 import { useLocaleStore } from "@/store/locale-store"
 
 type OperationType = "登录" | "查询" | "修改" | "删除" | "导出"
@@ -95,7 +95,7 @@ const mockLogs: AuditLog[] = [
 ]
 
 export default function AuditPage() {
-  const { t } = useLocaleStore()
+  useLocaleStore()
   const [activeCategory, setActiveCategory] = useState<FilterCategory>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -137,17 +137,15 @@ export default function AuditPage() {
             <Card
               key={key}
               className={cn(
-                "cursor-pointer transition-all overflow-hidden",
+                "cursor-pointer transition-colors overflow-hidden",
                 isActive && "ring-1"
               )}
               style={{
                 background: isActive
                   ? `linear-gradient(135deg, ${config.color}15, ${config.color}08)`
-                  : "rgba(255,255,255,0.03)",
-                borderColor: isActive ? `${config.color}40` : "rgba(255,255,255,0.06)",
-                boxShadow: isActive
-                  ? `0 0 20px ${config.color}15, inset 0 0 20px ${config.color}05`
-                  : undefined,
+                  : "#ffffff",
+                borderColor: isActive ? `${config.color}40` : "#e2e8f0",
+                boxShadow: isActive ? "0 1px 3px rgba(15,23,42,0.08)" : "0 1px 2px rgba(15,23,42,0.04)",
               }}
               onClick={() => setActiveCategory(isActive ? "all" : key as FilterCategory)}
             >
@@ -168,8 +166,7 @@ export default function AuditPage() {
                       <p
                         className="text-xl font-bold font-mono"
                         style={{
-                          color: isActive ? config.color : "rgba(255,255,255,0.9)",
-                          textShadow: isActive ? `0 0 12px ${config.color}50` : undefined,
+                          color: isActive ? config.color : "#0f172a",
                         }}
                       >
                         {config.count.toLocaleString()}
@@ -198,7 +195,7 @@ export default function AuditPage() {
         })}
       </div>
 
-      <div className="glass-card p-4">
+        <div className={`${softCardClass} p-4`}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -206,12 +203,16 @@ export default function AuditPage() {
               placeholder="搜索操作人、对象、详情、IP..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 bg-white/5 border-cyan-200 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
+              className={`pl-8 h-8 ${inputClass}`}
+              aria-label="搜索审计日志"
+              name="search"
+              type="search"
+              autoComplete="off"
             />
           </div>
 
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
-            <SelectTrigger className="h-8 w-[130px] border-cyan-200 bg-white/5 text-foreground">
+            <SelectTrigger className={`h-8 w-[130px] ${inputClass}`} aria-label="操作类型筛选">
               <Filter className="h-3.5 w-3.5 mr-1 text-slate-400" />
               <SelectValue placeholder="操作类型" />
             </SelectTrigger>
@@ -229,11 +230,14 @@ export default function AuditPage() {
             placeholder="操作人"
             value={operatorFilter}
             onChange={(e) => setOperatorFilter(e.target.value)}
-            className="h-8 w-[120px] bg-white/5 border-cyan-200 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-cyan-500/40 focus-visible:ring-cyan-500/20"
+            className={`h-8 w-[120px] ${inputClass}`}
+            aria-label="操作人筛选"
+            name="operator"
+            autoComplete="off"
           />
 
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v ?? "7d")}>
-            <SelectTrigger className="h-8 w-[120px] border-cyan-200 bg-white/5 text-foreground">
+            <SelectTrigger className={`h-8 w-[120px] ${inputClass}`} aria-label="时间范围筛选">
               <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
               <SelectValue />
             </SelectTrigger>
@@ -247,18 +251,11 @@ export default function AuditPage() {
         </div>
       </div>
 
-      <Card
-        className="overflow-hidden"
-        style={{
-          background: "rgba(255,255,255,0.02)",
-          borderColor: "rgba(34,211,238,0.1)",
-          boxShadow: "0 0 16px rgba(34,211,238,0.04)",
-        }}
-      >
+      <Card className={`${pageCardClass} overflow-hidden`}>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-cyan-500/10 hover:bg-transparent">
+              <TableRow className="border-b border-slate-200 hover:bg-transparent">
                 <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">时间</TableHead>
                 <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
                 <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
@@ -291,7 +288,7 @@ export default function AuditPage() {
                             {log.operatorAvatar}
                           </AvatarFallback>
                         </Avatar>
-                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-400" : "text-slate-700")}>
+                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-600" : "text-slate-700")}>
                           {log.operator}
                         </span>
                       </div>
@@ -346,7 +343,7 @@ export default function AuditPage() {
               })}
               {filteredLogs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-sm text-slate-300">
+                  <TableCell colSpan={7} className="h-32 text-center text-sm text-slate-500">
                     暂无匹配的审计日志
                   </TableCell>
                 </TableRow>
@@ -357,20 +354,20 @@ export default function AuditPage() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-300">
+        <span className="text-xs text-slate-500">
           共 {filteredLogs.length} 条记录
         </span>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="border-cyan-500/20 bg-cyan-500/[0.06] text-cyan-400 hover:bg-cyan-500/15 hover:border-cyan-500/30 gap-2"
+            className="border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-200 gap-2"
           >
             <Download className="h-3.5 w-3.5" />
             导出CSV
           </Button>
           <Button
             variant="outline"
-            className="border-purple-500/20 bg-purple-500/[0.06] text-purple-400 hover:bg-purple-500/15 hover:border-purple-500/30 gap-2"
+            className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-200 gap-2"
           >
             <Download className="h-3.5 w-3.5" />
             导出PDF

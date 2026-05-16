@@ -7,6 +7,7 @@ class Alert(Base):
     __tablename__ = "alerts"
 
     id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=True, index=True)
     type = Column(String, index=True)
     title = Column(String)
     description = Column(Text)

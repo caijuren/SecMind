@@ -1,539 +1,762 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import ReactEChartsCore from "echarts-for-react/lib/core"
-import * as echarts from "echarts/core"
-import { LineChart, BarChart, PieChart, GaugeChart, EffectScatterChart, MapChart, LinesChart } from "echarts/charts"
+import { useState, useEffect, useCallback } from "react"
+import { cn } from "@/lib/utils"
 import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-  GeoComponent,
-  VisualMapComponent,
-} from "echarts/components"
-import { CanvasRenderer } from "echarts/renderers"
-import {
-  AlertTriangle,
+  ShieldAlert,
   Activity,
-  Clock,
-  TrendingUp,
-  Zap,
-  Eye,
-  ArrowUpRight,
-  ArrowDownRight,
-  Radio,
   Globe,
-  Server,
-  Maximize2,
+  TrendingUp,
+  Users,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ArrowUpRight,
+  Eye,
+  RefreshCw,
+  Loader2,
 } from "lucide-react"
-import { mockDashboardStats, mockAlerts } from "@/data/mock-data"
-import worldJson from "@/data/world.json"
+import ReactECharts from "echarts-for-react"
+import { PageHeader } from "@/components/layout/page-header"
+import { useLocaleStore } from "@/store/locale-store"
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+import { inputClass } from "@/lib/admin-ui"
+import {
+  TYPOGRAPHY,
+  CARD,
+  RADIUS,
+  getSeverityStyles,
+} from "@/lib/design-system"
+import { api } from "@/lib/api"
 
-echarts.use([
-  LineChart, BarChart, PieChart, GaugeChart, EffectScatterChart, MapChart, LinesChart,
-  TitleComponent, TooltipComponent, GridComponent, LegendComponent, GeoComponent, VisualMapComponent,
-  CanvasRenderer,
-])
+// ==================== 类型定义 ====================
 
-echarts.registerMap("world", worldJson as unknown as Parameters<typeof echarts.registerMap>[1])
-
-const ATTACK_DATA = [
-  { name: "Russia", coords: [100, 60], risk: 85 },
-  { name: "Nigeria", coords: [8, 10], risk: 82 },
-  { name: "Tor Exit", coords: [-1, 52], risk: 88 },
-  { name: "China", coords: [108, 34], risk: 35 },
-]
-
-const ATTACK_LINES_DATA = [
-  { coords: [[100, 60], [108, 34]] },
-  { coords: [[8, 10], [108, 34]] },
-  { coords: [[-1, 52], [108, 34]] },
-  { coords: [[108, 34], [121, 31]] },
-  { coords: [[108, 34], [114, 22]] },
-]
-
-function useCurrentTime() {
-  const [time, setTime] = useState(new Date())
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-  return time
-}
-
-function AnimatedNumber({ value, duration = 1200 }: { value: number; duration?: number }) {
-  const [display, setDisplay] = useState(0)
-  useEffect(() => {
-    const startTime = performance.now()
-    const step = (now: number) => {
-      const progress = Math.min((now - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(Math.round(value * eased))
-      if (progress < 1) requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  }, [value, duration])
-  return <>{display}</>
-}
-
-function KPICard({
-  icon: Icon,
-  label,
-  value,
-  suffix,
-  trend,
-  trendValue,
-  color,
-}: {
-  icon: React.ElementType
+interface KPIItem {
   label: string
-  value: number
-  suffix?: string
-  trend?: "up" | "down"
-  trendValue?: string
+  value: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement> & { className?: string }>
   color: string
-}) {
-  return (
-    <div
-      className="relative rounded-xl border px-4 py-3 overflow-hidden"
-      style={{
-        borderColor: `${color}18`,
-        background: `linear-gradient(135deg, ${color}0a, ${color}03)`,
-      }}
-    >
-      <div className="absolute -top-8 -right-8 size-20 rounded-full blur-2xl" style={{ background: `${color}10` }} />
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${color}18` }}>
-          <Icon className="size-3.5" style={{ color }} />
-        </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-[11px] font-medium ${trend === "up" ? "text-red-600" : "text-emerald-600"}`}>
-            {trend === "up" ? <ArrowUpRight className="size-2.5" /> : <ArrowDownRight className="size-2.5" />}
-            {trendValue || "12%"}
-          </div>
-        )}
-      </div>
-      <div className="text-2xl font-bold tracking-tight" style={{ color, textShadow: `0 0 12px ${color}30` }}>
-        <AnimatedNumber value={value} />
-        {suffix && <span className="text-sm font-normal ml-0.5 opacity-50">{suffix}</span>}
-      </div>
-      <div className="mt-1 text-[11px] text-slate-400">{label}</div>
-    </div>
-  )
+  trend: string | null
 }
 
-function AlertTicker({ alerts }: { alerts: typeof mockAlerts }) {
-  const [visibleAlerts, setVisibleAlerts] = useState(alerts.slice(0, 12))
-  const [highlight, setHighlight] = useState(-1)
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setHighlight((prev) => {
-        const next = prev + 1
-        if (next >= visibleAlerts.length) {
-          setVisibleAlerts((old) => [...old.slice(1), old[0]])
-          return 0
-        }
-        return next
-      })
-    }, 3000)
-    return () => clearInterval(timer)
-  }, [visibleAlerts.length])
-
-  const riskColor: Record<string, string> = { critical: "#ef4444", high: "#f97316", medium: "#eab308", low: "#22c55e" }
-  const riskLabel: Record<string, string> = { critical: "严重", high: "高危", medium: "中危", low: "低危" }
-
-  return (
-    <div className="space-y-0.5">
-      {visibleAlerts.map((alert, i) => (
-        <div
-          key={`${alert.id}-${i}`}
-          className="flex items-center gap-2 rounded-md px-2 py-1 transition-all duration-500"
-          style={{
-            background: i === highlight ? `${riskColor[alert.riskLevel]}08` : "transparent",
-            borderLeft: i === highlight ? `2px solid ${riskColor[alert.riskLevel]}50` : "2px solid transparent",
-          }}
-        >
-          <div className="size-1.5 rounded-full shrink-0" style={{ backgroundColor: riskColor[alert.riskLevel], boxShadow: `0 0 4px ${riskColor[alert.riskLevel]}60` }} />
-          <span className="text-[9px] px-1 py-0.5 rounded shrink-0" style={{ color: riskColor[alert.riskLevel], backgroundColor: `${riskColor[alert.riskLevel]}12` }}>
-            {riskLabel[alert.riskLevel]}
-          </span>
-          <span className="text-[11px] text-slate-500 truncate flex-1">{alert.title}</span>
-          <span className="text-[9px] text-slate-400 shrink-0">{alert.source}</span>
-        </div>
-      ))}
-    </div>
-  )
+interface AlertItem {
+  time: string
+  source: string
+  level: "critical" | "high" | "medium" | "low" | "info"
+  message: string
 }
 
-function SectionHeader({ icon: Icon, title, extra }: { icon: React.ElementType; title: string; extra?: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between px-3 pt-2.5 pb-0.5 shrink-0">
-      <div className="flex items-center gap-1.5">
-        <Icon className="size-3 text-cyan-600/50" />
-        <span className="text-[11px] font-medium text-slate-600">{title}</span>
-      </div>
-      {extra}
-    </div>
-  )
+interface OverviewSummary {
+  total_alerts_today: number
+  total_devices: number
+  online_devices: number
+  device_online_rate: number
+  mttd_minutes: number
+  mttr_minutes: number
+  ai_accuracy: number
+  auto_response_rate: number
 }
 
-export default function ScreenPage() {
-  const now = useCurrentTime()
-  const stats = mockDashboardStats
-  const [mounted, setMounted] = useState(false)
+interface HourlyAlert {
+  hour: number
+  count: number
+}
 
-  useEffect(() => { setMounted(true) }, [])
+interface AttackType {
+  type: string
+  count: number
+  trend: string
+}
 
-  const mapOption = useMemo(() => ({
+interface ThreatRegion {
+  region: string
+  attacks: number
+  top_type: string
+}
+
+interface RealtimeEvent {
+  id: number
+  type: string
+  severity: "critical" | "high" | "medium" | "low" | "info"
+  source: string
+  message: string
+  timestamp: string
+}
+
+// ==================== 常量 ====================
+
+const REGION_COORDS: Record<string, [number, number]> = {
+  "华北": [116.46, 39.92],
+  "华东": [121.48, 31.22],
+  "华南": [113.27, 23.13],
+  "华中": [114.31, 30.52],
+  "西南": [104.08, 30.66],
+  "西北": [108.95, 34.27],
+  "东北": [123.43, 41.80],
+}
+
+const ATTACK_TYPE_COLORS = ["#dc2626", "#f59e0b", "#8b5cf6", "#0891b2", "#ec4899", "#94a3b8"]
+
+const SEVERITY_LABEL: Record<string, string> = {
+  critical: "严重",
+  high: "高危",
+  medium: "中危",
+  low: "低危",
+  info: "信息",
+}
+
+const teamStats = [
+  { name: "张明远", avatar: "张", cases: 147, accuracy: "97.2%", status: "active" as const },
+  { name: "李思涵", avatar: "李", cases: 132, accuracy: "95.6%", status: "busy" as const },
+  { name: "王建国", avatar: "王", cases: 128, accuracy: "93.8%", status: "offline" as const },
+  { name: "陈雨晴", avatar: "陈", cases: 119, accuracy: "96.4%", status: "active" as const },
+  { name: "刘浩然", avatar: "刘", cases: 108, accuracy: "94.1%", status: "busy" as const },
+]
+
+const systemHealth = [
+  { name: "EDR引擎", status: "normal" as const, load: 67 },
+  { name: "NDR探针", status: "warning" as const, load: 85 },
+  { name: "邮件网关", status: "normal" as const, load: 45 },
+  { name: "DNS过滤", status: "normal" as const, load: 52 },
+  { name: "AI推理引擎", status: "normal" as const, load: 73 },
+]
+
+// ==================== ECharts 配置 - Linear浅色精致风格 ====================
+
+/** 折线图 - 干净的Linear风格 */
+function getLineChartOption(hourlyAlerts: HourlyAlert[]) {
+  const hours = hourlyAlerts.map(h => `${String(h.hour).padStart(2, "0")}:00`)
+  const counts = hourlyAlerts.map(h => h.count)
+
+  return {
     backgroundColor: "transparent",
-    geo: {
-      map: "world",
-      roam: false,
-      zoom: 1.3,
-      center: [30, 30],
-      itemStyle: {
-        areaColor: "rgba(34,211,238,0.04)",
-        borderColor: "rgba(34,211,238,0.1)",
-        borderWidth: 0.5,
-      },
-      emphasis: { disabled: true },
-      label: { show: false },
-      silent: true,
-    },
     tooltip: {
-      backgroundColor: "rgba(248,250,252,0.9)",
-      borderColor: "rgba(34,211,238,0.2)",
-      textStyle: { color: "#fff", fontSize: 11 },
+      trigger: "axis",
+      backgroundColor: "#ffffff",
+      borderColor: "#e4e4e7",
+      borderWidth: 1,
+      borderRadius: RADIUS.md.replace('rounded-', ''),
+      padding: [12, 16],
+      textStyle: {
+        color: "#18181b",
+        fontSize: 13,
+        fontWeight: 500,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      },
+      axisPointer: {
+        lineStyle: { color: "#d4d4d8", width: 1, type: "dashed" },
+      },
+    },
+    legend: {
+      data: ["告警总数"],
+      top: 10,
+      textStyle: {
+        color: "#71717a",
+        fontSize: 13,
+        fontWeight: 500,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      },
+      itemWidth: 20,
+      itemHeight: 3,
+      itemGap: 24,
+    },
+    grid: { top: 60, right: 30, bottom: 50, left: 60, containLabel: true },
+    xAxis: {
+      type: "category",
+      boundaryGap: false,
+      data: hours,
+      axisLine: { lineStyle: { color: "#e4e4e7", width: 1 } },
+      axisTick: { show: false },
+      axisLabel: {
+        color: "#a1a1aa",
+        fontSize: 12,
+        interval: 3,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      },
+      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
+    },
+    yAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: {
+        color: "#a1a1aa",
+        fontSize: 12,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      },
+      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
     },
     series: [
       {
-        type: "effectScatter",
-        coordinateSystem: "geo",
-        data: ATTACK_DATA.map((d) => ({
-          name: d.name,
-          value: [...d.coords, d.risk],
-        })),
-        symbolSize: (val: number[]) => Math.max(val[2] / 8, 6),
-        rippleEffect: { brushType: "stroke", scale: 3.5, period: 4 },
-        itemStyle: {
-          color: (params: { value: number[] }) => {
-            const v = params.value[2]
-            if (v >= 80) return "#ef4444"
-            if (v >= 50) return "#f97316"
-            return "#22d3ee"
-          },
-          shadowBlur: 10,
-          shadowColor: "rgba(34,211,238,0.3)",
+        name: "告警总数",
+        type: "line",
+        smooth: true,
+        symbol: "circle",
+        symbolSize: 6,
+        data: counts,
+        lineStyle: { color: "#0891b2", width: 2.5 },
+        itemStyle: { color: "#0891b2", borderColor: "#ffffff", borderWidth: 2 },
+        areaStyle: {
+          color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "rgba(8,145,178,0.12)" }, { offset: 1, color: "rgba(8,145,178,0.01)" }] }
         },
-        label: {
-          show: true,
-          position: "right",
-          formatter: "{b}",
-          color: "rgba(0,0,0,0.4)",
-          fontSize: 10,
-        },
-      },
-      {
-        type: "lines",
-        coordinateSystem: "geo",
-        zlevel: 2,
-        effect: {
-          show: true,
-          period: 4,
-          trailLength: 0.4,
-          symbolSize: 3,
-          color: "#22d3ee",
-        },
-        lineStyle: {
-          color: "rgba(34,211,238,0.15)",
-          width: 1.5,
-          curveness: 0.3,
-        },
-        data: ATTACK_LINES_DATA,
       },
     ],
-  }), [])
+  }
+}
 
-  const alertTrendOption = useMemo(() => ({
-    grid: { top: 16, right: 12, bottom: 20, left: 36 },
-    xAxis: {
-      type: "category" as const,
-      data: stats.alertsTrend.map((d) => d.date.slice(5)),
-      axisLine: { lineStyle: { color: "rgba(0,0,0,0.06)" } },
-      axisLabel: { color: "rgba(0,0,0,0.25)", fontSize: 9, interval: 4 },
-      axisTick: { show: false },
-    },
-    yAxis: {
-      type: "value" as const,
-      axisLine: { show: false },
-      axisLabel: { color: "rgba(0,0,0,0.2)", fontSize: 9 },
-      splitLine: { lineStyle: { color: "rgba(0,0,0,0.04)" } },
-    },
-    tooltip: { backgroundColor: "rgba(248,250,252,0.9)", borderColor: "rgba(34,211,238,0.2)", textStyle: { color: "#fff", fontSize: 11 } },
-    series: [{
-      type: "line" as const,
-      data: stats.alertsTrend.map((d) => d.count),
-      smooth: true,
-      symbol: "none",
-      lineStyle: { color: "#22d3ee", width: 2 },
-      areaStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: "rgba(34,211,238,0.25)" },
-          { offset: 1, color: "rgba(34,211,238,0)" },
-        ]),
-      },
-    }],
-  }), [stats.alertsTrend])
+/** 饼图 - 精致的环形设计 */
+function getPieChartOption(attackTypes: AttackType[]) {
+  const pieData = attackTypes.map((item, idx) => ({
+    name: item.type,
+    value: item.count,
+    itemStyle: { color: ATTACK_TYPE_COLORS[idx % ATTACK_TYPE_COLORS.length] },
+  }))
 
-  const riskDistOption = useMemo(() => ({
+  return {
+    backgroundColor: "transparent",
+    tooltip: {
+      trigger: "item",
+      backgroundColor: "#ffffff",
+      borderColor: "#e4e4e7",
+      borderWidth: 1,
+      borderRadius: RADIUS.md.replace('rounded-', ''),
+      padding: [12, 16],
+      textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      formatter: "{b}: <strong>{c}</strong> ({d}%)",
+    },
+    legend: {
+      orient: "vertical",
+      right: "5%",
+      top: "center",
+      textStyle: { color: "#71717a", fontSize: 13, fontWeight: 500, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      itemWidth: 16,
+      itemHeight: 16,
+      itemGap: 16,
+      icon: "roundRect",
+    },
     series: [{
-      type: "pie" as const,
-      radius: ["45%", "68%"],
-      center: ["50%", "50%"],
-      avoidLabelOverlap: false,
-      itemStyle: { borderColor: "#020a1a", borderWidth: 2 },
+      type: "pie",
+      radius: ["48%", "72%"],
+      center: ["40%", "50%"],
+      avoidLabelOverlap: true,
+      padAngle: 2,
+      itemStyle: { borderRadius: 8, borderColor: "#ffffff", borderWidth: 3 },
       label: {
         show: true,
-        position: "center" as const,
-        formatter: `{total|${stats.totalAlerts}}\n{label|告警总数}`,
-        rich: {
-          total: { fontSize: 20, fontWeight: "bold", color: "#fff", lineHeight: 28 },
-          label: { fontSize: 9, color: "rgba(0,0,0,0.3)", lineHeight: 16 },
-        },
+        position: "outside",
+        color: "#52525b",
+        fontSize: 13,
+        fontWeight: 600,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        formatter: "{b}\n{d}%",
       },
-      data: [
-        { value: 12, name: "严重", itemStyle: { color: "#ef4444" } },
-        { value: 18, name: "高危", itemStyle: { color: "#f97316" } },
-        { value: 15, name: "中危", itemStyle: { color: "#eab308" } },
-        { value: 7, name: "低危", itemStyle: { color: "#22c55e" } },
-        { value: 3, name: "信息", itemStyle: { color: "#64748b" } },
-      ],
+      emphasis: {
+        label: { show: true, fontSize: 15, fontWeight: "bold" },
+        itemStyle: { shadowBlur: 20, shadowColor: "rgba(0,0,0,0.1)", shadowOffsetX: 0, shadowOffsetY: 4 },
+      },
+      labelLine: { show: true, lineStyle: { color: "#d4d4d8", width: 1.5 } },
+      data: pieData,
     }],
-    tooltip: { backgroundColor: "rgba(248,250,252,0.9)", borderColor: "rgba(34,211,238,0.2)", textStyle: { color: "#fff", fontSize: 11 } },
-  }), [stats.totalAlerts])
+  }
+}
 
-  const attackTypeOption = useMemo(() => ({
-    grid: { top: 8, right: 45, bottom: 8, left: 65 },
+/** 柱状图 - 渐变+圆角 */
+function getBarChartOption(hourlyAlerts: HourlyAlert[]) {
+  const hours = hourlyAlerts.map(h => `${String(h.hour).padStart(2, "0")}:00`)
+  const values = hourlyAlerts.map(h => h.count)
+  
+  return {
+    backgroundColor: "transparent",
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "#ffffff",
+      borderColor: "#e4e4e7",
+      borderWidth: 1,
+      borderRadius: RADIUS.md.replace('rounded-', ''),
+      padding: [12, 16],
+      textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      axisPointer: { type: "shadow", shadowStyle: { color: "rgba(8,145,178,0.06)" } },
+    },
+    grid: { top: 30, right: 30, bottom: 50, left: 60, containLabel: true },
     xAxis: {
-      type: "value" as const,
-      axisLine: { show: false },
-      axisLabel: { show: false },
-      splitLine: { show: false },
+      type: "category",
+      data: hours,
+      axisLine: { lineStyle: { color: "#e4e4e7", width: 1 } },
+      axisTick: { show: false },
+      axisLabel: { color: "#a1a1aa", fontSize: 11, interval: 3, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
     },
     yAxis: {
-      type: "category" as const,
-      data: stats.topAttackTypes.map((t) => t.type).reverse(),
+      type: "value",
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: "rgba(0,0,0,0.45)", fontSize: 10 },
+      axisLabel: { color: "#a1a1aa", fontSize: 12, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
     },
     series: [{
-      type: "bar" as const,
-      data: stats.topAttackTypes.map((t, i) => ({
-        value: t.count,
+      type: "bar",
+      barWidth: "55%",
+      data: values.map(val => ({
+        value: val,
         itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: `rgba(34,211,238,${0.15 + i * 0.08})` },
-            { offset: 1, color: `rgba(34,211,238,${0.4 + i * 0.06})` },
-          ]),
-          borderRadius: [0, 3, 3, 0],
+          color: {
+            type: "linear", x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [{ offset: 0, color: "#0891b2" }, { offset: 1, color: "#67e8f9" }]
+          },
+          borderRadius: [4, 4, 0, 0],
         },
-      })).reverse(),
-      barWidth: 10,
+      })),
+      emphasis: {
+        itemStyle: {
+          color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#0e7490" }, { offset: 1, color: "#22d3ee" }] },
+          shadowBlur: 16,
+          shadowColor: "rgba(8,145,178,0.25)",
+          shadowOffsetY: 4,
+        },
+      },
+    }],
+  }
+}
+
+/** 地图 - 散点图替代（无需GeoJSON） */
+function getMapOption(regions: ThreatRegion[]) {
+  const mapData = regions
+    .filter(r => REGION_COORDS[r.region])
+    .map(r => ({
+      name: r.region,
+      value: [...REGION_COORDS[r.region], r.attacks],
+      topType: r.top_type,
+    }))
+
+  return {
+    backgroundColor: "transparent",
+    tooltip: {
+      trigger: "item",
+      backgroundColor: "#ffffff",
+      borderColor: "#e4e4e7",
+      borderWidth: 1,
+      padding: [12, 16],
+      textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      formatter: (params: any) => params.data ? `<div style="font-size:13px;font-weight:600;margin-bottom:4px">${params.data.name}</div><div style="color:#71717a;font-size:12px">告警数: <strong style="color:#0891b2">${params.data.value[2]}</strong></div><div style="color:#71717a;font-size:12px">主要威胁: <strong style="color:#ef4444">${params.data.topType}</strong></div>` : params.name,
+    },
+    xAxis: {
+      show: false,
+      min: 73, max: 136,
+    },
+    yAxis: {
+      show: false,
+      min: 18, max: 54,
+    },
+    grid: { left: 10, right: 10, top: 10, bottom: 10 },
+    series: [{
+      name: "告警分布",
+      type: "effectScatter",
+      data: mapData,
+      symbolSize: (val: number[]) => Math.max(Math.sqrt(val[2]) * 2.5, 14),
+      showEffectOn: "render",
+      rippleEffect: { brushType: "stroke", scale: 4, period: 4 },
+      itemStyle: { color: "#0891b2", shadowBlur: 16, shadowColor: "rgba(8,145,178,0.4)" },
       label: {
         show: true,
-        position: "right" as const,
-        color: "rgba(34,211,238,0.6)",
-        fontSize: 9,
+        formatter: "{b}",
+        position: "right",
+        color: "#334155",
+        fontSize: 12,
+        fontWeight: 600,
       },
+      zlevel: 1,
     }],
-    tooltip: { backgroundColor: "rgba(248,250,252,0.9)", borderColor: "rgba(34,211,238,0.2)", textStyle: { color: "#fff", fontSize: 11 } },
-  }), [stats.topAttackTypes])
+  }
+}
 
-  const gaugeOption = useMemo(() => ({
-    series: [{
-      type: "gauge" as const,
-      startAngle: 220,
-      endAngle: -40,
-      min: 0,
-      max: 100,
-      radius: "78%",
-      center: ["50%", "55%"],
-      progress: {
-        show: true,
-        width: 8,
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: "#22d3ee" },
-            { offset: 1, color: "#06b6d4" },
-          ]),
-        },
-      },
-      axisLine: { lineStyle: { width: 8, color: [[1, "rgba(0,0,0,0.04)"]] } },
-      axisTick: { show: false },
-      splitLine: { show: false },
-      axisLabel: { show: false },
-      pointer: { show: false },
-      anchor: { show: false },
-      title: { show: false },
-      detail: {
-        valueAnimation: true,
-        fontSize: 20,
-        fontWeight: "bold",
-        color: "#22d3ee",
-        offsetCenter: [0, "10%"],
-        formatter: "{value}%",
-      },
-      data: [{ value: stats.aiProcessedRate }],
-    }],
-  }), [stats.aiProcessedRate])
+// ==================== 组件 ====================
 
-  const timeStr = now.toLocaleString("zh-CN", {
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false,
-  })
+/** KPI卡片 - 浅色精致版 */
+function DashboardKPICard({ item }: { item: KPIItem }) {
+  const Icon = item.icon
+  
+  return (
+    <Card className={CARD.elevated + " group hover:border-slate-300 transition-colors duration-200"}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div 
+              className="flex size-11 items-center justify-center rounded-xl"
+              style={{ backgroundColor: `${item.color}08`, border: `1px solid ${item.color}18` }}
+            >
+              <Icon className="size-5" style={{ color: item.color }} />
+            </div>
+            <span className={String(TYPOGRAPHY.caption) + " text-slate-500 uppercase tracking-wide font-medium"}>
+              {item.label}
+            </span>
+          </div>
+          
+          {item.trend && (
+            <span className={cn(
+              "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold",
+              item.trend.startsWith("+") ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
+            )}>
+              <ArrowUpRight className="size-3.5" />
+              {item.trend}
+            </span>
+          )}
+        </div>
 
-  if (!mounted) return null
+        <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-slate-900">
+          {item.value}
+        </div>
+        
+        <div className={String(TYPOGRAPHY.micro) + " text-slate-400 mt-1"}>实时更新</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/** 告警列表项 */
+function AlertListItem({ alert }: { alert: AlertItem }) {
+  const severity = getSeverityStyles(alert.level === "info" ? "low" : alert.level)
+  
+  return (
+    <div className={cn(
+      "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-150",
+      "hover:bg-slate-50 border border-transparent hover:border-slate-200"
+    )}>
+      <span className={String(TYPOGRAPHY.caption) + "font-mono text-slate-400 w-20 shrink-0 tabular-nums"}>
+        {alert.time}
+      </span>
+      
+      <span className={String(TYPOGRAPHY.body) + "text-slate-500 w-14 shrink-0 font-medium"}>
+        {alert.source}
+      </span>
+      
+      <span className={cn(
+        "shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border",
+        severity.bg, severity.textColor, severity.borderColor
+      )}>
+        {SEVERITY_LABEL[alert.level] ?? alert.level}
+      </span>
+      
+      <span className={String(TYPOGRAPHY.body) + "text-slate-700 truncate flex-1 ml-1"}>
+        {alert.message}
+      </span>
+    </div>
+  )
+}
+
+/** 团队成员卡片 */
+function TeamMemberCard({ member }: { member: typeof teamStats[number] }) {
+  const statusColors = { active: "bg-emerald-500", busy: "bg-amber-500", offline: "bg-slate-300" }
 
   return (
-    <div className="h-full flex flex-col gap-2.5 p-3 overflow-hidden">
-      <div className="flex items-center justify-between shrink-0 px-1">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-300">
-            <span className="flex items-center gap-1"><Radio className="size-2.5 text-cyan-600 animate-pulse" />实时监控</span>
-            <span className="flex items-center gap-1"><Server className="size-2.5" />数据源 7/8</span>
-            <span className="flex items-center gap-1"><Zap className="size-2.5" />AI引擎正常</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-[11px] text-cyan-600/50 tracking-wider">{timeStr}</span>
-          <button
-            className="flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] text-slate-300 hover:text-slate-600 hover:bg-white transition-colors"
-            onClick={() => {
-              const el = document.documentElement
-              if (!document.fullscreenElement) el.requestFullscreen()
-              else document.exitFullscreen()
-            }}
+    <Card className={CARD.base + " p-3.5 hover:border-slate-300 transition-colors"}>
+      <CardContent className="p-0 flex items-center gap-3">
+        <div className="relative shrink-0">
+          <div 
+            className="flex size-9 items-center justify-center rounded-full text-sm font-bold"
+            style={{ backgroundColor: "#0891b210", color: "#0891b2" }}
           >
-            <Maximize2 className="size-3" />
-            全屏
-          </button>
+            {member.avatar}
+          </div>
+          <div className={cn("absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white", statusColors[member.status])} />
         </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className={String(TYPOGRAPHY.body) + "text-slate-800 font-medium truncate"}>
+            {member.name}
+          </div>
+          <div className={String(TYPOGRAPHY.caption) + "text-slate-500 mt-0.5"}>
+            {member.cases}件 · {member.accuracy}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/** 系统健康指示器 */
+function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
+  const statusColors = { normal: "from-emerald-500 to-emerald-400", warning: "from-amber-500 to-amber-400", error: "from-red-500 to-red-400" }
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className={String(TYPOGRAPHY.body) + "text-slate-700 w-24 truncate font-medium"}>
+        {item.name}
+      </span>
+      
+      <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div
+          className={cn("h-full rounded-full bg-gradient-to-r transition-[width] duration-500", statusColors[item.status])}
+          style={{ width: `${item.load}%` }}
+        />
+      </div>
+      
+      <span className={String(TYPOGRAPHY.caption) + "text-slate-400 w-10 text-right font-mono tabular-nums"}>
+        {item.load}%
+      </span>
+    </div>
+  )
+}
+
+// ==================== 主页面 ====================
+
+export default function ScreenPage() {
+  useLocaleStore()
+  const [timeRange, setTimeRange] = useState("today")
+  const [summary, setSummary] = useState<OverviewSummary | null>(null)
+  const [hourlyAlerts, setHourlyAlerts] = useState<HourlyAlert[]>([])
+  const [attackTypes, setAttackTypes] = useState<AttackType[]>([])
+  const [regions, setRegions] = useState<ThreatRegion[]>([])
+  const [realtimeEvents, setRealtimeEvents] = useState<RealtimeEvent[]>([])
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [overviewRes, threatMapRes, realtimeRes] = await Promise.all([
+        api.get("/situation/overview"),
+        api.get("/situation/threat-map"),
+        api.get("/situation/realtime-feed"),
+      ])
+      const overview = overviewRes.data
+      setSummary(overview.summary)
+      setHourlyAlerts(overview.hourly_alerts ?? [])
+      setAttackTypes(overview.attack_types ?? [])
+      setRegions(threatMapRes.data.regions ?? [])
+      setRealtimeEvents(realtimeRes.data.events ?? [])
+      setLastUpdated(new Date())
+    } catch (error) {
+      console.error("获取态势数据失败:", error)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(fetchData, 30000)
+    return () => clearInterval(interval)
+  }, [fetchData])
+
+  const kpiData: KPIItem[] = summary ? [
+    { label: "今日告警", value: String(summary.total_alerts_today), icon: AlertTriangle, color: "#dc2626", trend: null },
+    { label: "设备在线率", value: `${(summary.device_online_rate * 100).toFixed(1)}%`, icon: Globe, color: "#0891b2", trend: null },
+    { label: "MTTD", value: `${summary.mttd_minutes}分钟`, icon: Clock, color: "#ea580c", trend: null },
+    { label: "自动处置率", value: `${(summary.auto_response_rate * 100).toFixed(1)}%`, icon: CheckCircle2, color: "#16a34a", trend: null },
+  ] : []
+
+  const realtimeAlerts: AlertItem[] = realtimeEvents.map(e => ({
+    time: new Date(e.timestamp).toLocaleTimeString("zh-CN", { hour12: false }),
+    source: e.source,
+    level: e.severity,
+    message: e.message,
+  }))
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        icon={Activity}
+        title="安全运营态势大屏"
+        subtitle="SecMind Security Operations Center - Real-time Threat Monitoring"
+        actions={
+          <div className="flex items-center gap-3">
+            <Select value={timeRange} onValueChange={(v) => setTimeRange(v ?? "today")}>
+              <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="时间范围">
+                <SelectValue placeholder="时间范围" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="today">今天</SelectItem>
+                <SelectItem value="week">本周</SelectItem>
+                <SelectItem value="month">本月</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold",
+                "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+                "transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+            >
+              <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
+              刷新数据
+            </button>
+            
+            <Badge variant="outline" className={cn("gap-1.5 px-3 py-1.5", "border-emerald-200 text-emerald-700")}>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              实时监控中
+            </Badge>
+          </div>
+        }
+      />
+
+      <div className="grid grid-cols-4 gap-4">
+        {kpiData.map((kpi) => (
+          <DashboardKPICard key={kpi.label} item={kpi} />
+        ))}
       </div>
 
-      <div className="grid grid-cols-4 gap-2 shrink-0">
-        <KPICard icon={AlertTriangle} label="严重告警" value={stats.criticalAlerts} trend="up" color="#ef4444" />
-        <KPICard icon={Activity} label="高危告警" value={stats.highAlerts} trend="up" color="#f97316" />
-        <KPICard icon={Zap} label="AI处置率" value={Math.round(stats.aiProcessedRate)} suffix="%" color="#22d3ee" />
-        <KPICard icon={Clock} label="平均响应" value={Math.round(stats.avgResponseTime * 10)} suffix="min" trend="down" color="#a78bfa" />
-      </div>
-
-      <div className="flex-1 min-h-0 grid grid-cols-12 gap-2">
-        <div className="col-span-5 rounded-xl border border-slate-100 bg-slate-50 overflow-hidden flex flex-col">
-          <SectionHeader icon={Globe} title="攻击态势感知"
-            extra={
-              <div className="flex items-center gap-3 text-[9px] text-slate-300">
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-red-500" />严重</span>
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-orange-500" />高危</span>
-                <span className="flex items-center gap-1"><span className="size-1.5 rounded-full bg-cyan-500" />正常</span>
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-5">
+          <Card className={CARD.elevated + " h-full"}>
+            <CardContent className="p-5 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="size-5 text-primary" />
+                <h2 className={String(TYPOGRAPHY.h2)}>全国威胁分布</h2>
               </div>
-            }
-          />
-          <div className="flex-1 min-h-0">
-            <ReactEChartsCore echarts={echarts} option={mapOption} style={{ height: "100%", width: "100%" }} opts={{ renderer: "canvas" }} />
-          </div>
-        </div>
-
-        <div className="col-span-2 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={Eye} title="风险等级分布" />
-          <div className="flex-1 min-h-0">
-            <ReactEChartsCore echarts={echarts} option={riskDistOption} style={{ height: "100%", width: "100%" }} opts={{ renderer: "canvas" }} />
-          </div>
-          <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-0.5 px-2">
-            {stats.riskDistribution.map((r) => {
-              const colors: Record<string, string> = { "严重": "#ef4444", "高危": "#f97316", "中危": "#eab308", "低危": "#22c55e", "信息": "#64748b" }
-              return (
-                <span key={r.level} className="flex items-center gap-1 text-[9px] text-slate-300">
-                  <span className="size-1.5 rounded-full" style={{ backgroundColor: colors[r.level] }} />
-                  {r.level} {r.count}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="col-span-2 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={TrendingUp} title="攻击类型 TOP8" />
-          <div className="flex-1 min-h-0">
-            <ReactEChartsCore echarts={echarts} option={attackTypeOption} style={{ height: "100%", width: "100%" }} opts={{ renderer: "canvas" }} />
-          </div>
-        </div>
-
-        <div className="col-span-3 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={Activity} title="30天告警趋势" />
-          <div className="flex-1 min-h-0">
-            <ReactEChartsCore echarts={echarts} option={alertTrendOption} style={{ height: "100%", width: "100%" }} opts={{ renderer: "canvas" }} />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12 gap-2 shrink-0" style={{ height: "36%" }}>
-        <div className="col-span-6 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={AlertTriangle} title="实时告警流水" extra={<span className="text-[9px] text-slate-300">自动刷新</span>} />
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <AlertTicker alerts={mockAlerts} />
-          </div>
-        </div>
-
-        <div className="col-span-3 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={Zap} title="AI处置率" />
-          <div className="flex-1 min-h-0">
-            <ReactEChartsCore echarts={echarts} option={gaugeOption} style={{ height: "100%", width: "100%" }} opts={{ renderer: "canvas" }} />
-          </div>
-        </div>
-
-        <div className="col-span-3 rounded-xl border border-slate-100 bg-slate-50 p-2 flex flex-col">
-          <SectionHeader icon={Clock} title="安全指标" />
-          <div className="flex-1 min-h-0 flex flex-col justify-center gap-2.5 px-3">
-            {[
-              { label: "钓鱼攻击拦截", value: "128", total: "本月", color: "#ef4444" },
-              { label: "暴力破解阻断", value: "2,340", total: "本月", color: "#f97316" },
-              { label: "VPN异常检测", value: "56", total: "本月", color: "#eab308" },
-              { label: "数据外泄防护", value: "23", total: "本月", color: "#22d3ee" },
-              { label: "恶意软件清除", value: "89", total: "本月", color: "#a78bfa" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full" style={{ backgroundColor: item.color, boxShadow: `0 0 4px ${item.color}40` }} />
-                  <span className="text-[11px] text-slate-600">{item.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold" style={{ color: item.color }}>{item.value}</span>
-                  <span className="text-[9px] text-slate-300">{item.total}</span>
-                </div>
+              
+              <div className="flex-1 min-h-[350px]">
+                <ReactECharts option={getMapOption(regions)} style={{ height: "100%" }} opts={{ renderer: "canvas" }} />
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="col-span-4">
+          <Card className={CARD.elevated + " h-full"}>
+            <CardContent className="p-5 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="size-5 text-primary" />
+                <h2 className={String(TYPOGRAPHY.h2)}>24小时攻击趋势</h2>
+              </div>
+              
+              <div className="flex-1 min-h-[350px]">
+                <ReactECharts option={getLineChartOption(hourlyAlerts)} style={{ height: "100%" }} opts={{ renderer: "canvas" }} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="col-span-3">
+          <Card className={CARD.elevated + " h-full"}>
+            <CardContent className="p-5 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldAlert className="size-5 text-primary" />
+                <h2 className={String(TYPOGRAPHY.h2)}>威胁类型分布</h2>
+              </div>
+              
+              <div className="flex-1 min-h-[350px]">
+                <ReactECharts option={getPieChartOption(attackTypes)} style={{ height: "100%" }} opts={{ renderer: "canvas" }} />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <div className="flex items-center justify-between shrink-0 px-1 pt-0.5">
-        <div className="flex items-center gap-2.5 text-[9px] text-slate-300">
-          <span>SecMind AI Security Platform v2.0</span>
-          <span>|</span>
-          <span>刷新间隔: 30s</span>
+      <div className="grid grid-cols-12 gap-4">
+        <div className="col-span-7">
+          <Card className={CARD.elevated + " h-full"}>
+            <CardContent className="p-5 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <span className="absolute flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                    </span>
+                  </div>
+                  <Eye className="size-5 text-primary" />
+                  <h2 className={String(TYPOGRAPHY.h2)}>实时告警流</h2>
+                </div>
+                
+                <Badge variant="outline" className={cn("border-red-200 text-red-600", TYPOGRAPHY.caption)}>
+                  最近 {Math.min(realtimeAlerts.length, 8)} 条
+                </Badge>
+              </div>
+              
+              <div className="flex-1 space-y-1 overflow-hidden">
+                {realtimeAlerts.length > 0 ? (
+                  realtimeAlerts.slice(0, 8).map((alert, index) => (
+                    <AlertListItem key={`${alert.time}-${index}`} alert={alert} />
+                  ))
+                ) : (
+                  <div className="flex items-center justify-center h-32 text-slate-400 text-sm">
+                    {loading ? (
+                      <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />加载中...</span>
+                    ) : (
+                      "暂无实时告警"
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex items-center gap-2 text-[9px] text-slate-300">
-          <span className="flex items-center gap-1">
-            <span className="size-1 rounded-full bg-emerald-500 animate-pulse" />
+
+        <div className="col-span-5 space-y-4">
+          <Card className={CARD.elevated}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="size-5 text-primary" />
+                <h2 className={String(TYPOGRAPHY.h2)}>团队在线状态</h2>
+              </div>
+              
+              <div className="space-y-2">
+                {teamStats.map((member) => (
+                  <TeamMemberCard key={member.name} member={member} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={CARD.elevated}>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Activity className="size-5 text-primary" />
+                <h2 className={String(TYPOGRAPHY.h2)}>系统健康状态</h2>
+              </div>
+              
+              <div className="space-y-3">
+                {systemHealth.map((item) => (
+                  <HealthIndicator key={item.name} item={item} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className={cn(
+        "flex items-center justify-between px-5 py-3",
+        CARD.base
+      )}>
+        <div className="flex items-center gap-6">
+          <span className={String(TYPOGRAPHY.caption) + "text-slate-500"}>
+            SecMind AI SOC Platform v2.0 | 刷新间隔: 30s
+          </span>
+          {lastUpdated && (
+            <span className={String(TYPOGRAPHY.caption) + "text-slate-400"}>
+              上次更新: {lastUpdated.toLocaleTimeString("zh-CN", { hour12: false })}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-6">
+          <span className={String(TYPOGRAPHY.caption) + "text-slate-500 flex items-center gap-1.5"}>
+            <CheckCircle2 className="size-3.5 text-emerald-500 animate-pulse" />
             系统正常
           </span>
-          <span>MEM 62%</span>
-          <span>CPU 34%</span>
-          <span>DISK 51%</span>
+          
+          <span className={String(TYPOGRAPHY.caption) + "text-slate-500"}>
+            内存: 62% | CPU: 34% | 磁盘: 51%
+          </span>
+          
+          <Clock className="size-4 text-slate-400" />
+          <time dateTime={new Date().toISOString()} className={String(TYPOGRAPHY.caption) + "font-mono text-slate-400 tabular-nums"} suppressHydrationWarning>
+            {new Date().toLocaleTimeString("zh-CN")}
+          </time>
         </div>
       </div>
     </div>

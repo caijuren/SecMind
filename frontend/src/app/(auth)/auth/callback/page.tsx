@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Shield, Loader2, CheckCircle2, XCircle } from 'lucide-react'
 import { useAuthStore } from '@/store/auth-store'
@@ -81,7 +82,7 @@ function CallbackContent() {
             <div className="relative">
               <div className="flex size-16 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06]">
                 {providerInfo ? (
-                  <span className="text-2xl">{providerInfo.icon}</span>
+                  <span className="text-2xl" role="img" aria-label={providerInfo.name}>{providerInfo.icon}</span>
                 ) : (
                   <Shield className="size-7 text-cyan-400" />
                 )}
@@ -132,12 +133,12 @@ function CallbackContent() {
               </h2>
               <p className="text-sm text-white/40">{errorMsg}</p>
             </div>
-            <button
-              onClick={() => router.push('/login')}
+            <Link
+              href="/login"
               className="mt-2 text-sm text-cyan-400/70 hover:text-cyan-400 transition-colors"
             >
               返回登录
-            </button>
+            </Link>
           </>
         )}
       </div>
@@ -151,7 +152,7 @@ export default function AuthCallbackPage() {
       fallback={
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <Loader2 className="size-8 text-cyan-400 animate-spin" />
-          <p className="text-sm text-white/40">加载中...</p>
+          <p className="text-sm text-white/40">加载中…</p>
         </div>
       }
     >

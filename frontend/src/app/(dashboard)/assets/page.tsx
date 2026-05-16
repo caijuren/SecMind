@@ -14,13 +14,11 @@ import {
   AlertTriangle,
   Eye,
   Trash2,
-  ChevronRight,
   BarChart3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/page-header"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -46,6 +44,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useLocaleStore } from "@/store/locale-store"
+import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
 
 type AssetType = "服务器" | "网络设备" | "安全设备" | "终端" | "数据库" | "云资源"
 type RiskGrade = "高" | "中" | "低"
@@ -70,12 +69,6 @@ const ASSET_TYPE_CONFIG: Record<AssetType, { icon: typeof Server; color: string;
   "终端": { icon: Monitor, color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/20" },
   "数据库": { icon: Database, color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" },
   "云资源": { icon: Cloud, color: "text-pink-400", bg: "bg-pink-400/10 border-pink-400/20" },
-}
-
-const RISK_GRADE_CONFIG: Record<RiskGrade, { color: string; bg: string; barColor: string }> = {
-  "高": { color: "text-red-400", bg: "bg-red-400/10 border-red-400/20", barColor: "bg-red-500" },
-  "中": { color: "text-orange-400", bg: "bg-orange-400/10 border-orange-400/20", barColor: "bg-orange-500" },
-  "低": { color: "text-green-400", bg: "bg-green-400/10 border-green-400/20", barColor: "bg-green-500" },
 }
 
 const FILTER_CARDS = [
@@ -130,7 +123,7 @@ function getRiskTextColor(score: number): string {
 }
 
 export default function AssetsPage() {
-  const { t } = useLocaleStore()
+  useLocaleStore()
   const [activeFilter, setActiveFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -173,10 +166,10 @@ export default function AssetsPage() {
             <Card
               key={card.key}
               className={cn(
-                "cursor-pointer transition-all duration-200",
+                "cursor-pointer transition-colors duration-200",
                 activeFilter === card.key
-                  ? `${card.borderColor} ${card.bgColor} shadow-[0_0_20px_${card.color}15]`
-                  : "card-default hover:border-slate-200"
+                  ? `${card.borderColor} ${card.bgColor} shadow-sm shadow-slate-200/50`
+                  : softCardClass
               )}
               onClick={() => setActiveFilter(card.key)}
             >
@@ -201,13 +194,14 @@ export default function AssetsPage() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-300" />
           <Input
             placeholder="搜索资产名称、IP、部门、负责人..."
-            className="pl-9 border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            aria-label="搜索资产"
+            className={`pl-9 ${inputClass}`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <Button
-          className="bg-cyan-500/15 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500/25 gap-1.5"
+          className="bg-cyan-600 text-white hover:bg-cyan-700 gap-1.5"
           onClick={() => setDialogOpen(true)}
         >
           <Plus className="size-4" />
@@ -225,7 +219,7 @@ export default function AssetsPage() {
             <div className="space-y-1.5">
               <label className="text-xs text-slate-400">资产名称</label>
               <Input
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                className={inputClass}
                 placeholder="请输入资产名称"
                 value={formData.name}
                 onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
@@ -234,7 +228,7 @@ export default function AssetsPage() {
             <div className="space-y-1.5">
               <label className="text-xs text-slate-400">IP地址</label>
               <Input
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                className={inputClass}
                 placeholder="请输入IP地址"
                 value={formData.ip}
                 onChange={(e) => setFormData((p) => ({ ...p, ip: e.target.value }))}
@@ -244,7 +238,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400">资产类型</label>
                 <Select value={formData.type} onValueChange={(v) => v && setFormData((p) => ({ ...p, type: v as AssetType }))}>
-                  <SelectTrigger className="w-full border-slate-200 bg-white/[0.04] text-slate-600">
+                  <SelectTrigger className={`w-full ${inputClass}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-slate-200">
@@ -260,7 +254,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400">风险等级</label>
                 <Select value={formData.riskGrade} onValueChange={(v) => v && setFormData((p) => ({ ...p, riskGrade: v as RiskGrade }))}>
-                  <SelectTrigger className="w-full border-slate-200 bg-white/[0.04] text-slate-600">
+                  <SelectTrigger className={`w-full ${inputClass}`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-white border-slate-200">
@@ -275,7 +269,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400">所属部门</label>
                 <Input
-                  className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                  className={inputClass}
                   placeholder="请输入所属部门"
                   value={formData.department}
                   onChange={(e) => setFormData((p) => ({ ...p, department: e.target.value }))}
@@ -284,7 +278,7 @@ export default function AssetsPage() {
               <div className="space-y-1.5">
                 <label className="text-xs text-slate-400">负责人</label>
                 <Input
-                  className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300"
+                  className={inputClass}
                   placeholder="请输入负责人"
                   value={formData.owner}
                   onChange={(e) => setFormData((p) => ({ ...p, owner: e.target.value }))}
@@ -294,13 +288,13 @@ export default function AssetsPage() {
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="outline"
-                className="border-slate-200 bg-white/[0.04] text-slate-400 hover:text-slate-600"
+                className="border-slate-200 bg-white text-slate-500 hover:text-slate-700"
                 onClick={() => setDialogOpen(false)}
               >
                 取消
               </Button>
               <Button
-                className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 hover:bg-cyan-500/30"
+                className="bg-cyan-600 text-white hover:bg-cyan-700"
                 onClick={() => setDialogOpen(false)}
               >
                 确认添加
@@ -310,11 +304,11 @@ export default function AssetsPage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="card-default">
+      <Card className={pageCardClass}>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-slate-200/[0.06] hover:bg-transparent">
+                <TableRow className="border-slate-200 hover:bg-transparent">
                 <TableHead className="text-slate-400 font-medium text-xs">资产名称</TableHead>
                 <TableHead className="text-slate-400 font-medium text-xs">IP地址</TableHead>
                 <TableHead className="text-slate-400 font-medium text-xs">类型</TableHead>
@@ -330,12 +324,11 @@ export default function AssetsPage() {
               {filteredAssets.map((asset) => {
                 const typeConfig = ASSET_TYPE_CONFIG[asset.type]
                 const TypeIcon = typeConfig.icon
-                const gradeConfig = RISK_GRADE_CONFIG[asset.riskGrade]
                 return (
                   <TableRow
                     key={asset.id}
                     className={cn(
-                      "border-slate-200/[0.04] hover:bg-white/[0.02]",
+                      "border-slate-100 hover:bg-slate-50",
                       asset.riskGrade === "高" && "bg-red-400/[0.02]"
                     )}
                   >
@@ -405,7 +398,7 @@ export default function AssetsPage() {
             const config = ASSET_TYPE_CONFIG[item.type]
             const Icon = config.icon
             return (
-              <Card key={item.type} className="card-default hover:border-slate-200 transition-all">
+              <Card key={item.type} className="card-default hover:border-slate-200 transition-colors">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">

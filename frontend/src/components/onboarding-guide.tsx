@@ -105,11 +105,12 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
       <div className="relative w-full max-w-md mx-4 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15">
         <button
           onClick={onComplete}
           className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label="关闭引导"
         >
           <X className="size-5" />
         </button>
@@ -152,6 +153,7 @@ export function OnboardingGuide({ onComplete }: OnboardingGuideProps) {
                         ? 'w-1.5 bg-cyan-400/40'
                         : 'w-1.5 bg-slate-200'
                   }`}
+                  {...(idx === currentStep ? { 'aria-current': 'step' as const } : {})}
                 />
               ))}
             </div>

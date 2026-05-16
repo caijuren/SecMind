@@ -35,6 +35,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { useLocaleStore } from "@/store/locale-store"
+import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
 
 type AlertLevel = "P0" | "P1" | "P2" | "P3"
 type AlertSource = "防火墙" | "IDS" | "EDR" | "SIEM" | "态势感知"
@@ -68,11 +69,11 @@ const LEVEL_CONFIG: Record<AlertLevel, { color: string; bg: string; border: stri
 }
 
 const SOURCE_CONFIG: Record<AlertSource, { icon: typeof Shield; color: string; bg: string }> = {
-  "防火墙": { icon: Shield, color: "text-red-600", bg: "bg-red-50 border-red-200" },
-  "IDS": { icon: Radio, color: "text-purple-600", bg: "bg-purple-50 border-purple-200" },
-  "EDR": { icon: Monitor, color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-200" },
-  "SIEM": { icon: Brain, color: "text-amber-600", bg: "bg-amber-50 border-amber-200" },
-  "态势感知": { icon: Globe, color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200" },
+  "防火墙": { icon: Shield, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  "IDS": { icon: Radio, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  "EDR": { icon: Monitor, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  "SIEM": { icon: Brain, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  "态势感知": { icon: Globe, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
 }
 
 const STATUS_CONFIG: Record<AlertStatus, { color: string; bg: string; border: string }> = {
@@ -185,10 +186,10 @@ export default function NotificationsPage() {
             <Card
               key={level}
               className={cn(
-                "cursor-pointer transition-all duration-200 backdrop-blur-xl",
+                "cursor-pointer transition-colors duration-200",
                 isSelected
-                  ? cn(config.border, config.bg, "shadow-[0_0_20px_rgba(34,211,238,0.1)]")
-                  : "border-slate-200/[0.06] bg-white/[0.02] hover:border-slate-200 hover:bg-white/[0.04]"
+                  ? cn(config.border, config.bg, "shadow-sm shadow-slate-200/50")
+                  : softCardClass
               )}
               onClick={() => handleLevelClick(level)}
             >
@@ -199,7 +200,7 @@ export default function NotificationsPage() {
                   </span>
                   <LevelIcon className={cn("size-4", isSelected ? config.color : "text-slate-300")} />
                 </div>
-                <p className={cn("mt-1 text-2xl font-bold font-mono", isSelected ? config.color : "text-slate-900")}>
+                <p className={cn("mt-1 text-2xl font-bold font-mono tabular-nums", isSelected ? config.color : "text-slate-900")}>
                   {LEVEL_COUNTS[level]}
                 </p>
               </CardContent>
@@ -215,11 +216,15 @@ export default function NotificationsPage() {
             placeholder="搜索告警标题、描述或ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className={`pl-9 ${inputClass}`}
+            aria-label="搜索告警"
+            name="search"
+            type="search"
+            autoComplete="off"
           />
         </div>
         <Select value={sourceFilter} onValueChange={(v) => v && setSourceFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-slate-200 bg-white/[0.04] text-slate-600">
+          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="告警来源筛选">
             <SelectValue placeholder="告警来源" />
           </SelectTrigger>
           <SelectContent>
@@ -232,7 +237,7 @@ export default function NotificationsPage() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-slate-200 bg-white/[0.04] text-slate-600">
+          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="告警状态筛选">
             <SelectValue placeholder="告警状态" />
           </SelectTrigger>
           <SelectContent>
@@ -275,17 +280,17 @@ export default function NotificationsPage() {
             <div
               key={alert.id}
               className={cn(
-                "rounded-lg border bg-white/[0.02] p-3.5 transition-all",
-                alert.level === "P0" && "border-[#ef4444]/25 shadow-[0_0_12px_rgba(239,68,68,0.1)]",
+                "rounded-lg border bg-white p-3.5 transition-colors shadow-sm shadow-slate-200/30",
+                alert.level === "P0" && "border-[#ef4444]/25",
                 alert.level === "P1" && "border-[#f97316]/20",
                 alert.level === "P2" && "border-[#eab308]/15",
-                alert.level === "P3" && "border-slate-200/[0.06]"
+                alert.level === "P3" && "border-slate-200"
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono text-slate-300">{alert.time}</span>
+                    <span className="text-xs font-mono tabular-nums text-slate-500">{alert.time}</span>
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold",
@@ -317,15 +322,16 @@ export default function NotificationsPage() {
                     </span>
                   </div>
                   <p className="text-sm font-medium text-slate-700 leading-snug">{alert.title}</p>
-                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{alert.description}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{alert.description}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {alert.status !== "已确认" && (
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-emerald-400/70 hover:text-emerald-400 hover:bg-emerald-400/10 gap-1"
+                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1"
                       onClick={() => handleConfirm(alert.id)}
+                      aria-label="确认告警"
                     >
                       <CheckCircle2 className="size-3" />
                       确认
@@ -335,8 +341,9 @@ export default function NotificationsPage() {
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-slate-400/70 hover:text-slate-400 hover:bg-slate-400/10 gap-1"
+                      className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 gap-1"
                       onClick={() => handleMute(alert.id)}
+                      aria-label="静默告警"
                     >
                       <VolumeX className="size-3" />
                       静默
@@ -345,7 +352,8 @@ export default function NotificationsPage() {
                   <Button
                     size="xs"
                     variant="ghost"
-                    className="text-cyan-400/70 hover:text-cyan-600 hover:bg-cyan-400/10 gap-1"
+                    className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 gap-1"
+                    aria-label="查看告警详情"
                   >
                     <Eye className="size-3" />
                     查看
@@ -369,10 +377,10 @@ export default function NotificationsPage() {
               <Card
                 key={channel.id}
                 className={cn(
-                  "backdrop-blur-xl transition-all",
+                  "transition-colors",
                   channel.enabled
-                    ? cn(channel.bg, "border-slate-200/[0.06]")
-                    : "border-slate-200/[0.06] bg-white/[0.02]"
+                    ? cn(channel.bg, "border-slate-200")
+                    : softCardClass
                 )}
               >
                 <CardContent className="p-4 space-y-3">
@@ -389,6 +397,9 @@ export default function NotificationsPage() {
                         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
                         channel.enabled ? "bg-cyan-500/60" : "bg-white"
                       )}
+                      role="switch"
+                      aria-checked={channel.enabled}
+                      aria-label={`切换${channel.name}`}
                     >
                       <span
                         className={cn(
@@ -398,7 +409,7 @@ export default function NotificationsPage() {
                       />
                     </button>
                   </div>
-                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-slate-400" : "text-slate-300")}>
+                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-slate-500" : "text-slate-300")}>
                     {channel.summary}
                   </p>
                   <Badge

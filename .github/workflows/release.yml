@@ -1,0 +1,163 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  version-check:
+    name: 版本一致性检查
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 读取 VERSION 文件
+        id: get_version
+        run: echo "version=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: 验证标签与 VERSION 一致
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          FILE_VERSION="${{ steps.get_version.outputs.version }}"
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "❌ 标签版本 ($TAG_VERSION) 与 VERSION 文件 ($FILE_VERSION) 不一致"
+            exit 1
+          fi
+          echo "✅ 版本一致: v$FILE_VERSION"
+
+      - name: 验证前端版本
+        run: |
+          FRONTEND_VERSION=$(node -p "require('./frontend/package.json').version")
+          FILE_VERSION="${{ steps.get_version.outputs.version }}"
+          if [ "$FRONTEND_VERSION" != "$FILE_VERSION" ]; then
+            echo "⚠️ 前端 package.json 版本 ($FRONTEND_VERSION) 与 VERSION ($FILE_VERSION) 不一致"
+          else
+            echo "✅ 前端版本一致"
+          fi
+
+  build-backend:
+    name: 构建后端镜像
+    needs: version-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 构建并推送后端镜像
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/secmind-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/secmind-backend:${{ needs.version-check.outputs.version }}
+          build-args: |
+            APP_VERSION=${{ needs.version-check.outputs.version }}
+
+  build-frontend:
+    name: 构建前端镜像
+    needs: version-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 构建并推送前端镜像
+        uses: docker/build-push-action@v5
+        with:
+          context: frontend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/secmind-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/secmind-frontend:${{ needs.version-check.outputs.version }}
+          build-args: |
+            APP_VERSION=${{ needs.version-check.outputs.version }}
+
+  create-release:
+    name: 创建 GitHub Release
+    needs: [version-check, build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 生成 Release Notes
+        id: release_notes
+        run: |
+          VERSION="${{ needs.version-check.outputs.version }}"
+          {
+            echo "notes<<EOF"
+            echo "## SecMind v${VERSION}"
+            echo ""
+            echo "### Docker 镜像"
+            echo "- \`secmind-backend:v${VERSION}\`"
+            echo "- \`secmind-frontend:v${VERSION}\`"
+            echo ""
+            echo "### 变更日志"
+            echo ""
+            if [ -f CHANGELOG.md ]; then
+              sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | head -n -2
+            else
+              echo "请查看 CHANGELOG.md 获取详细变更记录。"
+            fi
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: SecMind v${{ needs.version-check.outputs.version }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          generate_release_notes: false
+
+  deploy:
+    name: 自动部署到服务器
+    needs: [version-check, build-backend, build-frontend, create-release]
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' && !contains(github.ref_name, 'rc')
+    steps:
+      - name: SSH 部署到服务器
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT || '22' }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH || '/opt/secmind' }}
+            export APP_VERSION=${{ needs.version-check.outputs.version }}
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            echo "🚀 开始部署 SecMind v${APP_VERSION}"
+            echo "APP_VERSION=${APP_VERSION}" > .env
+            echo "DOCKER_USERNAME=${DOCKER_USERNAME}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            docker compose pull
+            docker compose up -d
+            echo "⏳ 等待后端就绪..."
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                echo "✅ 后端就绪"
+                break
+              fi
+              if [ "$i" -eq 30 ]; then
+                echo "❌ 后端启动超时"
+                exit 1
+              fi
+              sleep 2
+            done
+            docker exec secmind-backend alembic upgrade head 2>/dev/null || echo "⚠️  数据库迁移跳过"
+            docker image prune -f > /dev/null 2>&1 || true
+            echo "✅ 部署完成！版本: v${APP_VERSION}"

@@ -63,6 +63,8 @@ export default function RiskBadge({
 
   return (
     <span
+      role="status"
+      aria-label={`风险等级: ${config.label}`}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap select-none",
         sizeClasses[size],

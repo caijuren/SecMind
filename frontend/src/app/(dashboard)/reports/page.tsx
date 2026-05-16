@@ -42,6 +42,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { useLocaleStore } from "@/store/locale-store"
+import { softCardClass } from "@/lib/admin-ui"
 
 type ReportStatus = "generating" | "completed" | "sent"
 type ReportType = "daily" | "weekly" | "monthly" | "special"
@@ -190,7 +191,7 @@ function GenerateReportDialog({
                     type="button"
                     onClick={() => toggleModule(mod.key)}
                     className={cn(
-                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-all",
+                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors",
                       isSelected
                         ? "border-cyan-200 bg-cyan-50 text-cyan-700"
                         : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700"
@@ -255,11 +256,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-500/20"
-            style={{
-              background: "linear-gradient(135deg, rgba(34,211,238,0.15), rgba(34,211,238,0.05))",
-              boxShadow: "0 0 16px rgba(34,211,238,0.15)",
-            }}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/20"
           >
             <FileBarChart className="h-5 w-5 text-cyan-400" />
           </div>
@@ -278,29 +275,26 @@ export default function ReportsPage() {
             <Card
               key={card.key}
               className={cn(
-                "cursor-pointer transition-all border",
-                isActive ? "scale-[1.02]" : "hover:scale-[1.01]"
+                "cursor-pointer transition-colors border",
               )}
               style={{
                 borderColor: isActive ? `${card.color}50` : `${card.color}20`,
                 backgroundColor: isActive ? `${card.color}12` : `${card.color}06`,
-                boxShadow: isActive ? `0 0 20px ${card.color}15` : "none",
               }}
               onClick={() => setActiveFilter(isActive ? null : card.key)}
             >
               <CardContent className="flex items-center gap-4 p-5">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{
-                    backgroundColor: `${card.color}18`,
-                    boxShadow: `0 0 12px ${card.color}20`,
-                  }}
-                >
+                      className="flex h-10 w-10 items-center justify-center rounded-lg"
+                      style={{
+                        backgroundColor: `${card.color}18`,
+                      }}
+                    >
                   <Icon className="h-5 w-5" style={{ color: card.color }} />
                 </div>
                 <div>
                   <p className="text-sm text-slate-500">{card.label}</p>
-                  <p className="text-2xl font-bold" style={{ color: card.color }}>
+                  <p className="text-2xl font-bold tabular-nums" style={{ color: card.color }}>
                     {card.count}
                     <span className="text-xs font-normal text-slate-300 ml-1">
                       {card.key === "template" ? "个" : "份"}
@@ -321,6 +315,10 @@ export default function ReportsPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="h-9 border-slate-200 bg-white pl-9 text-sm text-slate-700 placeholder:text-slate-400 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+            aria-label="搜索报告"
+            name="search"
+            type="search"
+            autoComplete="off"
           />
         </div>
         <Button
@@ -344,13 +342,13 @@ export default function ReportsPage() {
           return (
             <Card
               key={report.id}
-              className="border-slate-200 bg-white hover:border-cyan-200 transition-all"
+              className="border-slate-200 bg-white hover:border-cyan-200 transition-colors"
             >
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0 space-y-3">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono text-slate-300">{report.id}</span>
+                      <span className="text-xs font-mono tabular-nums text-slate-300">{report.id}</span>
                       <Badge
                         variant="outline"
                         className="text-[10px] font-semibold rounded-md px-1.5 py-0"
@@ -387,7 +385,7 @@ export default function ReportsPage() {
                         {report.modules.map((mod) => (
                           <span
                             key={mod}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-400 border border-slate-200/[0.06]"
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-slate-50 text-slate-400 border border-slate-100"
                           >
                             {mod}
                           </span>
@@ -401,6 +399,7 @@ export default function ReportsPage() {
                       size="icon-sm"
                       className="text-slate-300 hover:text-cyan-600 hover:bg-cyan-50"
                       disabled={report.status === "generating"}
+                      aria-label="下载报告"
                     >
                       <Download className="h-3.5 w-3.5" />
                     </Button>
@@ -409,6 +408,7 @@ export default function ReportsPage() {
                       size="icon-sm"
                       className="text-slate-300 hover:text-cyan-600 hover:bg-cyan-50"
                       disabled={report.status === "generating"}
+                      aria-label="发送报告"
                     >
                       <Mail className="h-3.5 w-3.5" />
                     </Button>
@@ -417,6 +417,7 @@ export default function ReportsPage() {
                       size="icon-sm"
                       className="text-slate-300 hover:text-red-400 hover:bg-red-50"
                       onClick={() => handleDelete(report.id)}
+                      aria-label="删除报告"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -430,7 +431,7 @@ export default function ReportsPage() {
 
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-600 flex items-center gap-2">
-          <BookOpen className="h-4 w-4 text-purple-400" />
+          <BookOpen className="h-4 w-4 text-cyan-600" />
           报告模板
         </h2>
         <div className="grid grid-cols-3 gap-4">
@@ -439,7 +440,7 @@ export default function ReportsPage() {
             return (
               <Card
                 key={tpl.id}
-                className="border-slate-200/[0.06] bg-white/[0.02] hover:border-cyan-500/15 transition-all cursor-pointer group"
+                className={`${softCardClass} hover:border-cyan-200 transition-colors cursor-pointer group`}
               >
                 <CardContent className="p-5 space-y-3">
                   <div className="flex items-center gap-3">
@@ -447,7 +448,6 @@ export default function ReportsPage() {
                       className="flex h-9 w-9 items-center justify-center rounded-lg"
                       style={{
                         backgroundColor: `${tpl.color}15`,
-                        boxShadow: `0 0 10px ${tpl.color}15`,
                       }}
                     >
                       <Icon className="h-4 w-4" style={{ color: tpl.color }} />
@@ -456,9 +456,9 @@ export default function ReportsPage() {
                       <h3 className="text-sm font-semibold text-slate-800 group-hover:text-cyan-600 transition-colors">{tpl.name}</h3>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{tpl.description}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed">{tpl.description}</p>
                   <div className="flex items-center justify-between pt-1">
-                    <span className="text-[10px] text-slate-300">已使用 {tpl.usageCount} 次</span>
+                    <span className="text-[10px] text-slate-500">已使用 {tpl.usageCount} 次</span>
                     <Button
                       variant="ghost"
                       size="sm"

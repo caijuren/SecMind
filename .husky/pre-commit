@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+# SecMind UI Guidelines Pre-commit Hook
+# 
+# 基于 admin-ui-guidelines-v1.md 的自动化检查
+# 防止 UI 规范违规代码进入代码库
+#
+# @see docs/admin-ui-guidelines-v1.md#第19章
+
+set -e
+
+echo "🔍 Running UI Guidelines compliance check..."
+echo ""
+
+# 运行 UI 规范检查脚本
+node frontend/scripts/check-ui-guidelines.js
+
+# 检查退出码
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ UI Guidelines check failed!"
+  echo "   请修复上述违规项后再提交"
+  echo "   参考: docs/admin-ui-guidelines-v1.md"
+  exit 1
+fi
+
+echo ""
+echo "✅ UI Guidelines check passed!"
+exit 0

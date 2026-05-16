@@ -28,6 +28,9 @@ import {
   GitBranch,
   Brain,
   MessageSquare,
+  Building2,
+  CreditCard,
+  ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/locale-store"
@@ -79,6 +82,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       items: [
         { label: t("nav.aiAnalysis") || "工作台", href: "/ai-analysis", icon: Brain, accent: "#8b5cf6" },
         { label: t("nav.dashboard"), href: "/dashboard", icon: LayoutDashboard, accent: "#0891b2" },
+        { label: "态势大屏", href: "/screen", icon: Monitor, accent: "#06b6d4" },
         { label: t("nav.metrics"), href: "/metrics", icon: TrendingUp, accent: "#22c55e" },
         { label: t("nav.notifications"), href: "/notifications", icon: Bell, accent: "#ef4444" },
       ],
@@ -133,6 +137,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         { label: t("nav.audit"), href: "/audit", icon: FileText, accent: "#64748b" },
         { label: t("nav.integrations"), href: "/integrations", icon: Plug, accent: "#14b8a6" },
         { label: t("nav.system"), href: "/system", icon: Settings, accent: "#64748b" },
+        { label: "权限管理", href: "/system/rbac", icon: Shield, accent: "#8b5cf6" },
+        { label: "租户管理", href: "/system/tenants", icon: Building2, accent: "#0891b2" },
+        { label: "账单订阅", href: "/system/billing", icon: CreditCard, accent: "#f59e0b" },
+        { label: "合规管理", href: "/system/compliance", icon: ShieldCheck, accent: "#16a34a" },
       ],
     },
   ], [t])
@@ -235,6 +243,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <button
                   type="button"
                   onClick={() => toggleGroup(group.label)}
+                  aria-expanded={isExpanded}
                   className={cn(
                     "group/group flex w-full items-center gap-3 rounded-lg px-4 py-2 text-[13px] font-medium transition-all duration-200",
                     groupActive ? "text-slate-700" : "text-slate-400 hover:text-slate-600"
@@ -293,6 +302,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               variant="ghost"
               size="icon-sm"
               onClick={onToggle}
+              aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
               className="text-slate-400 hover:text-cyan-600 transition-colors"
             >
               {collapsed ? (

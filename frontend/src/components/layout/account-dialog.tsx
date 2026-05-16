@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import Image from "next/image"
 import { Camera, User, Lock, Save, Upload } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/auth-store"
@@ -67,10 +68,13 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
     <div className="flex flex-col items-center gap-4 py-4">
       <div className="relative group">
         {currentAvatar ? (
-          <img
+          <Image
             src={currentAvatar}
-            alt={user?.name ?? "avatar"}
+            alt={user?.name ?? "用户头像"}
+            width={80}
+            height={80}
             className="h-20 w-20 rounded-full object-cover"
+            unoptimized
           />
         ) : (
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cyan-50 text-cyan-700 text-2xl font-medium ring-1 ring-cyan-100">
@@ -80,6 +84,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
+          aria-label="更换头像"
           className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         >
           <Camera className="size-5 text-white" />
@@ -140,8 +145,11 @@ function NicknameTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <label className="text-xs text-slate-400">{t("topbar.nicknameLabel")}</label>
+        <label htmlFor="nickname-input" className="text-xs text-slate-400">{t("topbar.nicknameLabel")}</label>
         <Input
+          id="nickname-input"
+          name="nickname"
+          autoComplete="nickname"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           placeholder={t("topbar.nicknamePlaceholder")}
@@ -181,9 +189,11 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <label className="text-xs text-slate-400">{t("topbar.currentPassword")}</label>
+        <label htmlFor="current-password" className="text-xs text-slate-400">{t("topbar.currentPassword")}</label>
         <Input
+          id="current-password"
           type="password"
+          autoComplete="current-password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder={t("topbar.currentPasswordPlaceholder")}
@@ -192,9 +202,11 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
       </div>
       <Separator className="bg-slate-100" />
       <div className="space-y-2">
-        <label className="text-xs text-slate-400">{t("topbar.newPassword")}</label>
+        <label htmlFor="new-password" className="text-xs text-slate-400">{t("topbar.newPassword")}</label>
         <Input
+          id="new-password"
           type="password"
+          autoComplete="new-password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder={t("topbar.newPasswordPlaceholder")}
@@ -202,9 +214,11 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
         />
       </div>
       <div className="space-y-2">
-        <label className="text-xs text-slate-400">{t("topbar.confirmPassword")}</label>
+        <label htmlFor="confirm-password" className="text-xs text-slate-400">{t("topbar.confirmPassword")}</label>
         <Input
+          id="confirm-password"
           type="password"
+          autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder={t("topbar.confirmPasswordPlaceholder")}

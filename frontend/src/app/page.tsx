@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Shield,
-  Radio,
-  Inbox,
   Sparkles,
   Crosshair,
   Brain,
@@ -20,11 +18,19 @@ import {
   Menu,
   X,
   Target,
+  Building2,
+  Server,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/auth-store";
-import { ContactFormDialog } from "@/components/contact-form-dialog";
+import { useLocaleStore } from "@/store/locale-store";
+import type { Locale } from "@/i18n/types";
+import { localeNames } from "@/i18n/types";
+import { DynamicContactFormDialog } from "@/components/dynamic-imports";
+
+const locales: Locale[] = ["zh-CN", "en"];
 
 function useCountUp(target: number, duration: number = 2000) {
   const [count, setCount] = useState(0);
@@ -42,62 +48,31 @@ function useCountUp(target: number, duration: number = 2000) {
   return count;
 }
 
-function useTypingEffect(text: string, speed: number = 40) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
-  useEffect(() => {
-    let i = 0;
-    setDisplayed("");
-    setDone(false);
-    const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayed(text.slice(0, i + 1));
-        i++;
-      } else {
-        clearInterval(timer);
-        setDone(true);
-      }
-    }, speed);
-    return () => clearInterval(timer);
-  }, [text, speed]);
-  return { displayed, done };
-}
-
 function AnimatedSuggestionCount() {
   const count = useCountUp(47, 2000);
   return <span>{count}</span>;
 }
 
-function TypingTriage() {
-  const triageText =
-    "AI推理引擎启动... 接收VPN异常登录信号，源IP 185.220.101.34 为Tor出口节点。关联分析：同一用户5分钟前点击钓鱼邮件链接，随后触发PowerShell编码反向Shell执行。攻击链推理：VPN凭证窃取→钓鱼邮件投递→恶意载荷执行→C2通信建立。生成攻击研判：账号失陷（置信度82%），建议启动调查。";
-  const { displayed, done } = useTypingEffect(triageText, 25);
+function AnimateIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.1 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="font-mono text-xs leading-relaxed text-cyan-700/80">
-      <span className="text-cyan-600/80">{"> "}</span>
-      {displayed}
-      {!done && (
-        <span className="inline-block w-2 h-4 ml-0.5 bg-cyan-500 animate-pulse" />
-      )}
+    <div ref={ref} className={`transition-[opacity,transform] duration-700 ease-out ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'} ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}>
+      {children}
     </div>
   );
 }
-
-const navItems = [
-  { label: "首页", href: "/" },
-  { label: "解决方案", href: "/solutions" },
-  { label: "文档", href: "/docs" },
-  { label: "定价", href: "/pricing" },
-];
-
-const capabilities = [
-  { icon: Brain, title: "AI信号推理", desc: "自动感知安全信号、推理攻击意图，识别需要调查的威胁", color: "cyan" },
-  { icon: Crosshair, title: "攻击研判引擎", desc: "基于证据链自动构建攻击假设，映射MITRE ATT&CK", color: "red" },
-  { icon: Eye, title: "自主调查", desc: "AI自主完成调查，生成攻击链与推理结论供分析师复核", color: "amber" },
-  { icon: Link2, title: "证据链自动构建", desc: "跨数据源自动关联，构建完整的攻击证据链", color: "teal" },
-  { icon: Shield, title: "案件研判闭环", desc: "AI完成调查后生成案件，人类复核决策，确保研判可追溯", color: "purple" },
-  { icon: Zap, title: "AI自动处置", desc: "基于攻击研判的AI自动处置策略，从研判到响应闭环", color: "emerald" },
-];
 
 const colorMap: Record<string, { border: string; bg: string; icon: string; text: string }> = {
   cyan: { border: "border-cyan-500/30", bg: "bg-cyan-500/10", icon: "text-cyan-600", text: "text-cyan-700" },
@@ -108,26 +83,37 @@ const colorMap: Record<string, { border: string; bg: string; icon: string; text:
   emerald: { border: "border-emerald-500/30", bg: "bg-emerald-500/10", icon: "text-emerald-600", text: "text-emerald-700" },
 };
 
-const architectureSteps = [
-  { icon: Radio, label: "信号", color: "text-cyan-600" },
-  { icon: Brain, label: "AI推理", color: "text-cyan-600" },
-  { icon: Eye, label: "调查", color: "text-purple-600" },
-  { icon: Shield, label: "案件", color: "text-amber-600" },
-  { icon: Crosshair, label: "处置", color: "text-red-600" },
-  { icon: Zap, label: "学习", color: "text-emerald-600" },
-];
-
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
+  const { locale, setLocale, t } = useLocaleStore();
+
+  const stat87 = useCountUp(87, 1500);
+  const stat3x = useCountUp(3, 1500);
+
+  const navItems = [
+    { label: t("marketing.nav.home"), href: "/" },
+    { label: t("marketing.nav.solutions"), href: "/solutions" },
+    { label: t("marketing.nav.docs"), href: "/docs" },
+    { label: t("marketing.nav.pricing"), href: "/pricing" },
+  ];
+
+  const capabilities = [
+    { icon: Brain, title: t("landing.capabilities.signalReasoning"), desc: t("landing.capabilities.signalReasoningDesc"), color: "cyan" },
+    { icon: Crosshair, title: t("landing.capabilities.attackAssessment"), desc: t("landing.capabilities.attackAssessmentDesc"), color: "red" },
+    { icon: Eye, title: t("landing.capabilities.autonomousInvestigation"), desc: t("landing.capabilities.autonomousInvestigationDesc"), color: "amber" },
+    { icon: Link2, title: t("landing.capabilities.evidenceChain"), desc: t("landing.capabilities.evidenceChainDesc"), color: "teal" },
+    { icon: Shield, title: t("landing.capabilities.assessmentLoop"), desc: t("landing.capabilities.assessmentLoopDesc"), color: "purple" },
+    { icon: Zap, title: t("landing.capabilities.autoResponse"), desc: t("landing.capabilities.autoResponseDesc"), color: "emerald" },
+  ];
 
   const handleDemoExperience = async () => {
     login(
       {
         id: 'DEMO001',
-        name: '体验用户',
+        name: t("landing.demoUser"),
         email: 'demo@secmind.com',
         role: 'viewer',
         isDemo: true,
@@ -152,7 +138,7 @@ export default function Home() {
               </span>
               <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-cyan-500/30 bg-cyan-500/[0.08] px-2 py-0.5 text-[10px] font-medium text-cyan-600">
                 <Sparkles className="size-2.5" />
-                AI研判平台
+                {t("marketing.nav.aiPlatform")}
               </span>
             </div>
           </Link>
@@ -162,7 +148,7 @@ export default function Home() {
               <Link
                 key={item.label}
                 href={item.href}
-                className={`relative px-4 py-2 text-sm transition-all duration-200 rounded-lg ${
+                className={`relative px-4 py-2 text-sm transition-colors duration-200 rounded-lg ${
                   pathname === item.href
                     ? "text-cyan-700 bg-cyan-50"
                     : "text-slate-600 hover:text-cyan-700 hover:bg-slate-100"
@@ -172,21 +158,28 @@ export default function Home() {
               </Link>
             ))}
             <div className="w-px h-5 bg-slate-200 mx-2" />
+            <button
+              onClick={() => setLocale(locale === "zh-CN" ? "en" : "zh-CN")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-500 hover:text-cyan-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <Globe className="size-4" />
+              <span>{locale === "zh-CN" ? "EN" : "中"}</span>
+            </button>
             <Link href="/login">
               <Button
                 variant="ghost"
                 size="default"
                 className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-sm h-9 px-5"
               >
-                登录
+                {t("marketing.nav.login")}
               </Button>
             </Link>
             <Button
               size="default"
-              className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:brightness-110 transition-all text-sm h-9 px-5"
+              className="rounded-xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold shadow-[0_8px_24px_rgba(6,182,212,0.28)] hover:shadow-[0_12px_30px_rgba(6,182,212,0.38)] hover:-translate-y-0.5 transition-[shadow,transform] text-sm h-9 px-5"
               onClick={handleDemoExperience}
             >
-              免费体验
+              {t("marketing.nav.freeTrial")}
               <ArrowRight className="size-3.5 ml-1" />
             </Button>
           </div>
@@ -194,6 +187,8 @@ export default function Home() {
           <button
             className="md:hidden text-slate-500 hover:text-cyan-600 transition-colors"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="打开导航菜单"
+            aria-expanded={mobileMenuOpen}
           >
             {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -215,171 +210,216 @@ export default function Home() {
                 {item.label}
               </Link>
             ))}
-            <div className="flex gap-2 pt-3 border-t border-slate-200 mt-2">
+            <div className="flex items-center gap-2 pt-3 border-t border-slate-200 mt-2">
+              <button
+                onClick={() => setLocale(locale === "zh-CN" ? "en" : "zh-CN")}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-500 hover:text-cyan-600 hover:bg-slate-100 rounded-md transition-colors"
+              >
+                <Globe className="size-4" />
+                {localeNames[locale === "zh-CN" ? "en" : "zh-CN"]}
+              </button>
+            </div>
+            <div className="flex gap-2 pt-2">
               <Link href="/login" className="flex-1">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="w-full text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                 >
-                  登录
+                  {t("marketing.nav.login")}
                 </Button>
               </Link>
               <Button
                 size="sm"
-                className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                className="w-full rounded-lg border border-cyan-400/20 bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold shadow-[0_8px_22px_rgba(6,182,212,0.24)]"
                 onClick={handleDemoExperience}
               >
-                免费体验
+                {t("marketing.nav.freeTrial")}
               </Button>
             </div>
           </div>
         )}
       </nav>
 
+      {/* Hero Section - Bento Grid */}
       <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.08)_0%,transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(13,148,136,0.06)_0%,transparent_60%)]" />
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-400/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-400/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(6,182,212,0.12)_0%,transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(13,148,136,0.08)_0%,transparent_60%)]" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 w-full">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="space-y-8">
               <Badge className="border-cyan-500/30 bg-cyan-50 text-cyan-700 px-3 py-1 text-sm">
-                🚀 AI自主安全研判平台
+                {t("landing.hero.badge")}
               </Badge>
 
               <div className="space-y-4">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold bg-gradient-to-r from-cyan-600 via-cyan-500 to-teal-600 bg-clip-text text-transparent leading-tight">
-                  SecMind
+                  {t("landing.hero.title")}
                 </h1>
                 <h2 className="text-xl sm:text-2xl font-semibold text-slate-800">
-                  AI自主安全研判平台
+                  {t("landing.hero.subtitle")}
                 </h2>
                 <p className="text-lg text-slate-500 max-w-lg">
-                  信号感知、攻击推理、案件研判、自动处置 — 让安全从人工处理走向AI自主
+                  {t("landing.hero.description")}
                 </p>
               </div>
 
               <div className="flex flex-wrap gap-4">
                 <Button
                   size="lg"
-                  className="bg-cyan-600 text-white font-semibold shadow-[0_0_24px_rgba(6,182,212,0.4)] hover:bg-cyan-500 hover:shadow-[0_0_36px_rgba(6,182,212,0.6)] text-base px-6 h-11"
+                  className="rounded-xl border border-cyan-500/20 bg-cyan-600 text-white font-semibold shadow-[0_10px_26px_rgba(6,182,212,0.28)] hover:bg-cyan-500 hover:shadow-[0_14px_32px_rgba(6,182,212,0.36)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-6 h-11"
                   onClick={handleDemoExperience}
                 >
-                  免费体验
+                  {t("landing.hero.freeTrial")}
                   <ChevronRight className="size-4 ml-1" />
                 </Button>
-                <ContactFormDialog>
+                <DynamicContactFormDialog>
                   <Button
                     variant="outline"
                     size="lg"
-                    className="border-cyan-500/40 text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 text-base px-6 h-11"
+                    className="rounded-xl border-cyan-300 bg-white text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 text-base px-6 h-11"
                   >
-                    预约演示
+                    {t("landing.hero.bookDemo")}
                   </Button>
-                </ContactFormDialog>
+                </DynamicContactFormDialog>
               </div>
 
               <div className="flex flex-wrap gap-8 pt-4">
-                {[
-                  { value: "87%", label: "推理准确率" },
-                  { value: "<5min", label: "调查启动" },
-                  { value: "3x", label: "效率提升" },
-                ].map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <div className="text-2xl font-bold text-cyan-600 animate-pulse">
-                      {stat.value}
-                    </div>
-                    <div className="text-xs text-slate-400 mt-1">{stat.label}</div>
-                  </div>
-                ))}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-600 tabular-nums">{stat87}%</div>
+                  <div className="text-xs text-slate-500 mt-1">{t("landing.hero.statAccuracy")}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-600 tabular-nums">&lt;5min</div>
+                  <div className="text-xs text-slate-500 mt-1">{t("landing.hero.statInvestigation")}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-cyan-600 tabular-nums">{stat3x}x</div>
+                  <div className="text-xs text-slate-500 mt-1">{t("landing.hero.statEfficiency")}</div>
+                </div>
               </div>
             </div>
 
+            {/* Bento Grid */}
             <div className="relative hidden lg:block">
-              <div className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_0_40px_rgba(0,0,0,0.06)]">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="size-4 text-cyan-600" />
-                    <span className="text-sm font-medium text-slate-800">
-                      AI推理概览
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-xs text-emerald-600">AI在线</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
-                    <div className="text-2xl font-bold text-amber-600">
-                      <AnimatedSuggestionCount />
+              <div className="grid grid-cols-2 grid-rows-2 gap-3">
+                <div className="col-span-1 row-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_0_40px_rgba(0,0,0,0.06)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="size-4 text-cyan-600" />
+                      <span className="text-sm font-medium text-slate-800">{t("landing.bento.aiCenter")}</span>
                     </div>
-                    <div className="text-xs text-amber-600/70 mt-1">待复核</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs text-emerald-600">{t("landing.bento.online")}</span>
+                    </div>
                   </div>
-                  <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-center">
-                    <div className="text-2xl font-bold text-cyan-600">23</div>
-                    <div className="text-xs text-cyan-600/70 mt-1">调查中</div>
-                  </div>
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-                    <div className="text-2xl font-bold text-emerald-600">156</div>
-                    <div className="text-xs text-emerald-600/70 mt-1">已研判</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-center">
+                      <div className="text-xl font-bold text-amber-600"><AnimatedSuggestionCount /></div>
+                      <div className="text-[10px] text-amber-600/70 mt-0.5">{t("landing.bento.pendingReview")}</div>
+                    </div>
+                    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-center">
+                      <div className="text-xl font-bold text-cyan-600">23</div>
+                      <div className="text-[10px] text-cyan-600/70 mt-0.5">{t("landing.bento.investigating")}</div>
+                    </div>
+                    <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
+                      <div className="text-xl font-bold text-emerald-600">156</div>
+                      <div className="text-[10px] text-emerald-600/70 mt-0.5">{t("landing.bento.assessed")}</div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 mb-4">
-                  <div className="text-xs text-slate-500 mb-3">最新调查结论</div>
+                <div className="col-span-1 row-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_0_40px_rgba(0,0,0,0.06)]">
+                  <div className="text-xs text-slate-500 mb-3 font-medium">{t("landing.bento.attackDistribution")}</div>
+                  <div className="space-y-2.5">
+                    {[
+                      { label: t("landing.bento.accountCompromise"), pct: 35, color: "bg-red-500", textColor: "text-red-600" },
+                      { label: t("landing.bento.credentialTheft"), pct: 28, color: "bg-amber-500", textColor: "text-amber-600" },
+                      { label: t("landing.bento.c2Communication"), pct: 22, color: "bg-cyan-500", textColor: "text-cyan-600" },
+                      { label: t("landing.bento.other"), pct: 15, color: "bg-teal-500", textColor: "text-teal-600" },
+                    ].map((item) => (
+                      <div key={item.label}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-[10px] ${item.textColor}`}>{item.label}</span>
+                          <span className="text-[10px] text-slate-500">{item.pct}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div className={`h-full rounded-full ${item.color} transition-[width] duration-1000`} style={{ width: `${item.pct}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="col-span-1 row-span-1 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_0_40px_rgba(0,0,0,0.06)]">
+                  <div className="text-xs text-slate-500 mb-3 font-medium">{t("landing.bento.latestConclusions")}</div>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2">
-                      <span className="size-1.5 rounded-full bg-red-500" />
-                      <span className="text-xs text-slate-700 flex-1">账号失陷</span>
-                      <Badge className="text-[9px] bg-red-100 text-red-600 border-red-200">风险 87</Badge>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
-                      <span className="size-1.5 rounded-full bg-amber-500" />
-                      <span className="text-xs text-slate-700 flex-1">凭证窃取</span>
-                      <Badge className="text-[9px] bg-amber-100 text-amber-600 border-amber-200">风险 78</Badge>
-                    </div>
-                    <div className="flex items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2">
-                      <span className="size-1.5 rounded-full bg-cyan-500" />
-                      <span className="text-xs text-slate-700 flex-1">横向移动</span>
-                      <Badge className="text-[9px] bg-cyan-100 text-cyan-600 border-cyan-200">风险 65</Badge>
-                    </div>
+                    {[
+                      {
+                        name: t("landing.bento.accountCompromise"),
+                        risk: 87,
+                        row: "border-red-200 bg-red-50",
+                        dot: "bg-red-500",
+                        badge: "border-red-200 bg-red-100 text-red-700",
+                      },
+                      {
+                        name: t("landing.bento.credentialTheft"),
+                        risk: 78,
+                        row: "border-amber-200 bg-amber-50",
+                        dot: "bg-amber-500",
+                        badge: "border-amber-200 bg-amber-100 text-amber-700",
+                      },
+                      {
+                        name: t("landing.bento.lateralMovement"),
+                        risk: 65,
+                        row: "border-cyan-200 bg-cyan-50",
+                        dot: "bg-cyan-500",
+                        badge: "border-cyan-200 bg-cyan-100 text-cyan-700",
+                      },
+                    ].map((item) => (
+                      <div key={item.name} className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${item.row}`}>
+                        <span className={`size-1.5 rounded-full ${item.dot}`} />
+                        <span className="text-xs text-slate-700 flex-1">{item.name}</span>
+                        <Badge className={`text-[9px] ${item.badge}`}>{t("landing.bento.risk")} {item.risk}</Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="text-xs text-slate-500 mb-2">攻击研判分布</div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-red-600 w-12">账号失陷</span>
-                    <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full rounded-full bg-red-500" style={{ width: "35%" }} />
-                    </div>
-                    <span className="text-xs text-slate-500">35%</span>
+                <div className="col-span-1 row-span-1 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-cyan-50/40 p-5 shadow-[0_0_40px_rgba(0,0,0,0.06)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-xs text-slate-600 font-semibold tracking-wide">{t("landing.bento.systemStatus")}</div>
+                    <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700 text-[10px]">{t("landing.bento.healthy")}</Badge>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-amber-600 w-12">凭证窃取</span>
-                    <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full rounded-full bg-amber-500" style={{ width: "28%" }} />
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-2.5">
+                      <div className="text-[10px] text-slate-500">{t("landing.bento.avgResponse")}</div>
+                      <div className="text-sm font-bold text-cyan-700 mt-0.5">1.2s</div>
                     </div>
-                    <span className="text-xs text-slate-500">28%</span>
+                    <div className="rounded-lg border border-violet-200 bg-violet-50 p-2.5">
+                      <div className="text-[10px] text-slate-500">{t("landing.bento.todayAssessments")}</div>
+                      <div className="text-sm font-bold text-violet-700 mt-0.5">226</div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-cyan-600 w-12">C2通信</span>
-                    <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full rounded-full bg-cyan-500" style={{ width: "22%" }} />
+                  <div className="space-y-2.5">
+                    <div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+                        <span>{t("landing.bento.aiEngineLoad")}</span>
+                        <span className="font-semibold text-slate-700">64%</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full w-[64%] rounded-full bg-gradient-to-r from-cyan-500 to-teal-500" />
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-500">22%</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-teal-600 w-12">其他</span>
-                    <div className="flex-1 h-2 rounded-full bg-slate-200 overflow-hidden">
-                      <div className="h-full rounded-full bg-teal-500" style={{ width: "15%" }} />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-500">{t("landing.bento.modelVersion")}</span>
+                      <span className="text-[10px] text-slate-600 font-mono">v3.2.1</span>
                     </div>
-                    <span className="text-xs text-slate-500">15%</span>
                   </div>
                 </div>
               </div>
@@ -391,179 +431,280 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Social Proof */}
+      <section className="relative py-20 bg-white">
+        <AnimateIn>
+          <div className="text-center mb-12">
+            <p className="text-sm text-slate-500 mb-8">{t("landing.social.servedClients")}</p>
+            <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-4">
+              {[
+                { name: t("landing.social.company1Name"), mark: t("landing.social.company1Mark"), tone: "from-red-500 to-rose-500" },
+                { name: t("landing.social.company2Name"), mark: t("landing.social.company2Mark"), tone: "from-blue-500 to-cyan-500" },
+                { name: t("landing.social.company3Name"), mark: t("landing.social.company3Mark"), tone: "from-emerald-500 to-teal-500" },
+                { name: t("landing.social.company4Name"), mark: t("landing.social.company4Mark"), tone: "from-sky-500 to-indigo-500" },
+                { name: t("landing.social.company5Name"), mark: t("landing.social.company5Mark"), tone: "from-amber-500 to-orange-500" },
+                { name: t("landing.social.company6Name"), mark: t("landing.social.company6Mark"), tone: "from-rose-500 to-pink-500" },
+              ].map((item) => (
+                <div key={item.name} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.06)]">
+                  <span className={`flex size-6 items-center justify-center rounded-full bg-gradient-to-br ${item.tone} text-white text-xs font-bold`}>
+                    {item.mark}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-700">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </AnimateIn>
+
+        <AnimateIn delay={200}>
+          <div className="max-w-4xl mx-auto mt-16 grid md:grid-cols-3 gap-6 px-4 sm:px-6 lg:px-8">
+            {[
+              { quote: t("landing.social.t1Quote"), company: t("landing.social.t1Company"), role: t("landing.social.t1Role") },
+              { quote: t("landing.social.t2Quote"), company: t("landing.social.t2Company"), role: t("landing.social.t2Role") },
+              { quote: t("landing.social.t3Quote"), company: t("landing.social.t3Company"), role: t("landing.social.t3Role") },
+            ].map((item, i) => (
+              <div key={i} className="rounded-2xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/80 p-6 shadow-[0_10px_24px_rgba(15,23,42,0.06)] hover:shadow-[0_16px_30px_rgba(15,23,42,0.10)] hover:-translate-y-0.5 transition-[shadow,transform]">
+                <p className="text-sm text-slate-600 leading-relaxed mb-4">&ldquo;{item.quote}&rdquo;</p>
+                <div className="flex items-center gap-3">
+                  <div className="size-10 rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 text-white flex items-center justify-center font-bold text-sm">
+                    {item.company[0]}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-slate-800">{item.role}</div>
+                    <div className="text-xs text-slate-500">{item.company}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </AnimateIn>
+      </section>
+
+      {/* AI Reasoning Demo */}
       <section className="relative py-24 bg-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.05)_0%,transparent_60%)]" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">
-              AI推理能力展示
-            </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">
-              体验AI如何自主感知信号、推理攻击链、生成研判结论
-            </p>
-          </div>
+          <AnimateIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">
+                {t("landing.demo.title")}
+              </h2>
+              <p className="text-slate-500 max-w-2xl mx-auto">
+                {t("landing.demo.subtitle")}
+              </p>
+            </div>
+          </AnimateIn>
 
-          <div className="mx-auto max-w-3xl">
-            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.06)]">
-              <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-200 bg-slate-50">
-                <div className="size-2 rounded-full bg-red-400" />
-                <div className="size-2 rounded-full bg-yellow-400" />
-                <div className="size-2 rounded-full bg-emerald-400" />
-                <span className="ml-3 text-xs text-slate-400">
-                  SecMind AI推理引擎
-                </span>
-              </div>
+          <AnimateIn delay={150}>
+            <div className="mx-auto max-w-3xl">
+              <div className="rounded-2xl border border-slate-200/90 bg-white overflow-hidden shadow-[0_14px_34px_rgba(15,23,42,0.08)]">
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-200 bg-slate-50">
+                  <div className="size-2 rounded-full bg-red-400" />
+                  <div className="size-2 rounded-full bg-yellow-400" />
+                  <div className="size-2 rounded-full bg-emerald-400" />
+                  <span className="ml-3 text-xs text-slate-500">
+                    {t("landing.demo.engineTitle")}
+                  </span>
+                </div>
 
-              <div className="p-6 space-y-5">
-                <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-                  <AlertTriangle className="size-5 text-amber-600 mt-0.5 shrink-0" />
-                  <div>
-                    <div className="text-sm font-medium text-amber-800">
-                      接收新信号 — VPN异常登录
+                <div className="p-6 space-y-5">
+                  <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <AlertTriangle className="size-5 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium text-amber-800">
+                        {t("landing.demo.signalReceived")}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {t("landing.demo.signalSource")}
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
-                      来源: VPN网关 | 时间: 2026-05-09 14:32:18 | 风险初评: 87
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200/90 bg-slate-50/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="size-4 text-cyan-600" />
+                      <span className="text-sm font-medium text-slate-800">
+                        {t("landing.demo.aiReasoning")}
+                      </span>
+                    </div>
+                    <div className="font-mono text-xs leading-relaxed text-cyan-700/80">
+                      <span className="text-cyan-600/80">{"> "}</span>
+                      {t("landing.demo.reasoningText")}
                     </div>
                   </div>
-                </div>
 
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="size-4 text-cyan-600" />
-                    <span className="text-sm font-medium text-slate-800">
-                      AI 推理过程
-                    </span>
+                  <div className="rounded-lg border border-slate-200/90 bg-slate-50/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="size-4 text-cyan-600" />
+                      <span className="text-sm font-medium text-slate-800">
+                        {t("landing.demo.attackConclusion")}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
+                        {t("landing.demo.accountCompromise")}
+                      </Badge>
+                      <Badge className="bg-cyan-100 text-cyan-700 border-cyan-200 text-xs">
+                        {t("landing.demo.confidence")}
+                      </Badge>
+                      <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                        {t("landing.demo.riskScore")}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      {t("landing.demo.attackChain")}
+                    </p>
                   </div>
-                  <TypingTriage />
-                </div>
 
-                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target className="size-4 text-cyan-600" />
-                    <span className="text-sm font-medium text-slate-800">
-                      攻击研判结论
-                    </span>
+                  <div className="rounded-lg border border-emerald-200/90 bg-emerald-50/95 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)]">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 className="size-4 text-emerald-600" />
+                      <span className="text-sm font-medium text-emerald-800">
+                        {t("landing.demo.investigationConclusion")}
+                      </span>
+                    </div>
+                    <ul className="space-y-2">
+                      {[
+                        t("landing.demo.rec1"),
+                        t("landing.demo.rec2"),
+                        t("landing.demo.rec3"),
+                        t("landing.demo.rec4"),
+                        t("landing.demo.rec5"),
+                      ].map((rec, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border border-cyan-300 bg-cyan-50 text-[10px] text-cyan-700">
+                            {i + 1}
+                          </span>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className="bg-red-100 text-red-700 border-red-200 text-xs">
-                      账号失陷
-                    </Badge>
-                    <Badge className="bg-cyan-100 text-cyan-700 border-cyan-200 text-xs">
-                      置信度: 82%
-                    </Badge>
-                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
-                      风险: 87
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    攻击链：VPN凭证窃取 → 钓鱼邮件投递 → PowerShell执行 → C2通信建立。建议立即启动调查。
-                  </p>
-                </div>
-
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <CheckCircle2 className="size-4 text-emerald-600" />
-                    <span className="text-sm font-medium text-emerald-800">
-                      AI调查结论
-                    </span>
-                  </div>
-                  <ul className="space-y-2">
-                    {[
-                      "AI自主启动调查 — 攻击研判置信度超过阈值",
-                      "关联证据：VPN异常 + 钓鱼邮件 + PowerShell执行",
-                      "推荐复核人：陈明（安全主管）",
-                      "建议处置：冻结账号 + 隔离设备 + 封禁C2 IP",
-                      "MITRE映射：T1078 → T1566 → T1059 → T1071",
-                    ].map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
-                        <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border border-cyan-300 bg-cyan-50 text-[10px] text-cyan-700">
-                          {i + 1}
-                        </span>
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
             </div>
-          </div>
+          </AnimateIn>
         </div>
       </section>
 
+      {/* Core Capabilities */}
       <section className="relative py-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(6,182,212,0.05)_0%,transparent_60%)]" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">
-              核心能力
-            </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">
-              六大AI核心能力，覆盖安全研判全链路
-            </p>
-          </div>
+          <AnimateIn>
+            <div className="text-center mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">
+                {t("landing.capabilities.title")}
+              </h2>
+              <p className="text-slate-500 max-w-2xl mx-auto">
+                {t("landing.capabilities.subtitle")}
+              </p>
+            </div>
+          </AnimateIn>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {capabilities.map((cap) => {
+            {capabilities.map((cap, idx) => {
               const colors = colorMap[cap.color];
               return (
-                <div
-                  key={cap.title}
-                  className={`group relative rounded-2xl border ${colors.border} bg-white p-6 transition-all duration-300 hover:shadow-[0_0_30px_rgba(6,182,212,0.08)]`}
-                >
-                  <div className={`inline-flex items-center justify-center size-12 rounded-xl ${colors.bg} mb-4`}>
-                    <cap.icon className={`size-6 ${colors.icon}`} />
+                <AnimateIn key={cap.title} delay={idx * 100}>
+                  <div
+                    className={`group relative rounded-2xl border ${colors.border} bg-white p-6 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-[shadow,transform] duration-300 hover:shadow-[0_18px_34px_rgba(6,182,212,0.14)] hover:-translate-y-0.5`}
+                  >
+                    <div className={`inline-flex items-center justify-center size-12 rounded-xl ${colors.bg} mb-4`}>
+                      <cap.icon className={`size-6 ${colors.icon}`} />
+                    </div>
+                    <h3 className={`text-lg font-semibold ${colors.text} mb-2`}>
+                      {cap.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 leading-relaxed">
+                      {cap.desc}
+                    </p>
                   </div>
-                  <h3 className={`text-lg font-semibold ${colors.text} mb-2`}>
-                    {cap.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
-                    {cap.desc}
-                  </p>
-                </div>
+                </AnimateIn>
               );
             })}
           </div>
         </div>
       </section>
 
+      {/* Use Cases */}
       <section className="relative py-24 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(6,182,212,0.04)_0%,transparent_60%)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <AnimateIn>
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">
-              系统架构
-            </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">
-              AI安全认知闭环，从信号感知到学习进化全链路贯通
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-cyan-600 to-teal-600 bg-clip-text text-transparent mb-4">{t("landing.scenarios.title")}</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto">{t("landing.scenarios.subtitle")}</p>
           </div>
-          <div className="relative">
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-0">
-              {architectureSteps.map((step, idx) => (
-                <div key={step.label} className="flex items-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="relative rounded-2xl border border-slate-200 bg-white p-5 w-36 h-32 flex flex-col items-center justify-center gap-3 transition-all duration-300 hover:border-cyan-300 hover:shadow-[0_0_24px_rgba(6,182,212,0.1)]">
-                      <step.icon className={`size-7 ${step.color}`} />
-                      <span className="text-sm font-medium text-slate-700 text-center">
-                        {step.label}
-                      </span>
-                    </div>
-                  </div>
-                  {idx < architectureSteps.length - 1 && (
-                    <>
-                      <ChevronRight className="hidden lg:block size-5 text-cyan-500/40 mx-2 shrink-0" />
-                      <div className="lg:hidden flex justify-center py-1">
-                        <ChevronRight className="size-5 text-cyan-500/40 rotate-90" />
-                      </div>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/10 to-transparent hidden lg:block" />
-          </div>
+        </AnimateIn>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {[
+            { icon: Building2, title: t("landing.scenarios.finance"), desc: t("landing.scenarios.financeDesc"), color: "blue" },
+            { icon: Server, title: t("landing.scenarios.government"), desc: t("landing.scenarios.governmentDesc"), color: "red" },
+            { icon: Globe, title: t("landing.scenarios.internet"), desc: t("landing.scenarios.internetDesc"), color: "purple" },
+            { icon: Zap, title: t("landing.scenarios.energy"), desc: t("landing.scenarios.energyDesc"), color: "amber" },
+          ].map((scene, idx) => (
+            <AnimateIn key={scene.title} delay={idx * 100}>
+              <div className="group rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_10px_22px_rgba(15,23,42,0.05)] hover:border-cyan-300 hover:shadow-[0_16px_30px_rgba(6,182,212,0.12)] hover:-translate-y-0.5 transition-[shadow,transform] duration-300">
+                <scene.icon className="size-8 text-cyan-600 mb-4" />
+                <h3 className="font-semibold text-slate-800 mb-2">{scene.title}</h3>
+                <p className="text-sm text-slate-500">{scene.desc}</p>
+              </div>
+            </AnimateIn>
+          ))}
         </div>
       </section>
 
+      {/* CTA */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-600 via-cyan-700 to-teal-800" />
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 25% 25%, white 1px, transparent 1px), radial-gradient(circle at 75% 75%, white 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
+
+        <div className="relative max-w-4xl mx-auto text-center px-4">
+          <AnimateIn>
+            <Badge className="border-white/30 bg-white/10 text-white mb-6">{t("landing.cta.badge")}</Badge>
+          </AnimateIn>
+          <AnimateIn delay={100}>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
+              {t("landing.cta.title")}
+            </h2>
+          </AnimateIn>
+          <AnimateIn delay={200}>
+            <p className="text-lg text-cyan-100/80 mb-10 max-w-2xl mx-auto">
+              {t("landing.cta.subtitle")}
+            </p>
+          </AnimateIn>
+          <AnimateIn delay={300}>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button size="lg" onClick={handleDemoExperience}
+                className="rounded-xl border border-white/50 bg-white text-cyan-700 font-semibold hover:bg-cyan-50 shadow-[0_10px_30px_rgba(255,255,255,0.24)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-8 h-12">
+                {t("landing.cta.freeTrial")}
+                <ArrowRight className="size-4 ml-2" />
+              </Button>
+              <DynamicContactFormDialog>
+                <Button size="lg" variant="outline"
+                  className="rounded-xl border-white/60 bg-white text-cyan-700 hover:bg-cyan-50 text-base px-8 h-12">
+                  {t("landing.cta.bookDemo")}
+                </Button>
+              </DynamicContactFormDialog>
+            </div>
+          </AnimateIn>
+          <AnimateIn delay={400}>
+            <div className="mt-14 pt-10 border-t border-white/10 flex flex-wrap justify-center gap-x-12 gap-y-4">
+              {[
+                { value: "200+", label: t("landing.cta.statClients") },
+                { value: "99%", label: t("landing.cta.statNoiseReduction") },
+                { value: "<5min", label: t("landing.cta.statResponseTime") },
+                { value: "24/7", label: t("landing.cta.statMonitoring") },
+              ].map(stat => (
+                <div key={stat.label} className="text-center">
+                  <div className="text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-xs text-cyan-200/60 mt-1">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </AnimateIn>
+        </div>
+      </section>
+
+      {/* Footer */}
       <footer className="relative border-t border-slate-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -575,17 +716,16 @@ export default function Home() {
                 </span>
               </Link>
               <p className="text-sm text-slate-500 leading-relaxed">
-                AI自主安全研判平台，让安全从告警处理走向AI自主调查。
+                {t("marketing.footer.description")}
               </p>
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-4">产品</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-4">{t("marketing.footer.product")}</h4>
               <ul className="space-y-2">
                 {[
-                  { label: "解决方案", href: "/solutions" },
-                  { label: "定价", href: "/pricing" },
-                  { label: "更新日志", href: "#" },
+                  { label: t("marketing.footer.solutions"), href: "/solutions" },
+                  { label: t("marketing.footer.pricing"), href: "/pricing" },
                 ].map((item) => (
                   <li key={item.label}>
                     <Link
@@ -600,13 +740,11 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-4">资源</h4>
+              <h4 className="text-sm font-semibold text-slate-700 mb-4">{t("marketing.footer.resources")}</h4>
               <ul className="space-y-2">
                 {[
-                  { label: "文档", href: "/docs" },
-                  { label: "API参考", href: "/docs" },
-                  { label: "GitHub", href: "#" },
-                  { label: "联系我们", href: "#" },
+                  { label: t("marketing.footer.docs"), href: "/docs" },
+                  { label: t("marketing.footer.apiRef"), href: "/docs" },
                 ].map((item) => (
                   <li key={item.label}>
                     <Link
@@ -621,37 +759,17 @@ export default function Home() {
             </div>
 
             <div>
-              <h4 className="text-sm font-semibold text-slate-700 mb-4">关于</h4>
-              <ul className="space-y-2">
-                {["团队", "博客", "招聘", "合作伙伴"].map((item) => (
-                  <li key={item}>
-                    <a
-                      href="#"
-                      className="text-sm text-slate-500 hover:text-cyan-600 transition-colors"
-                    >
-                      {item}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <h4 className="text-sm font-semibold text-slate-700 mb-4">{t("marketing.footer.about")}</h4>
+              <p className="text-sm text-slate-500">
+                {t("marketing.footer.aboutDesc")}
+              </p>
             </div>
           </div>
 
           <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500">
               © 2026 SecMind. All rights reserved.
             </p>
-            <div className="flex items-center gap-6">
-              {["隐私政策", "服务条款", "Cookie设置"].map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="text-xs text-slate-400 hover:text-cyan-600 transition-colors"
-                >
-                  {item}
-                </a>
-              ))}
-            </div>
           </div>
         </div>
       </footer>

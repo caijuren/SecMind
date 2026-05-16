@@ -5,6 +5,9 @@ from app.models.alert import Alert
 from app.models.device import Device
 from app.models.itsm import ITSMTicket
 from app.models.ai_analysis import AIAnalysis
+from app.models.system_setting import SystemSetting
+from app.models.integration import IntegrationApp, Webhook
+from app.services.auth_service import get_password_hash
 
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
@@ -24,8 +27,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="zhangwei@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword1",
+            phone="13800010011",
+            hashed_password=get_password_hash("admin123"),
             role="admin",
+            status="active",
+            last_login=datetime.now(),
         ),
         User(
             id=2,
@@ -40,8 +46,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="lina@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword2",
+            phone="13800010012",
+            hashed_password=get_password_hash("secmind123"),
             role="user",
+            status="active",
+            last_login=datetime.now() - timedelta(days=1),
         ),
         User(
             id=3,
@@ -56,8 +65,11 @@ def seed_users():
             is_on_leave=True,
             is_resigned=False,
             email="wangqiang@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword3",
+            phone="13800010013",
+            hashed_password=get_password_hash("secmind123"),
             role="user",
+            status="active",
+            last_login=datetime.now() - timedelta(hours=8),
         ),
         User(
             id=4,
@@ -72,8 +84,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="liuyang@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword4",
+            phone="13800010014",
+            hashed_password=get_password_hash("secmind123"),
             role="user",
+            status="disabled",
+            last_login=datetime.now() - timedelta(days=3),
         ),
         User(
             id=5,
@@ -88,8 +103,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="chenjing@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword5",
+            phone="13800010015",
+            hashed_password=get_password_hash("secmind123"),
             role="user",
+            status="active",
+            last_login=datetime.now() - timedelta(hours=20),
         ),
         User(
             id=6,
@@ -104,8 +122,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="zhaolei@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword6",
+            phone="13800010016",
+            hashed_password=get_password_hash("secmind123"),
             role="analyst",
+            status="active",
+            last_login=datetime.now() - timedelta(hours=2),
         ),
         User(
             id=7,
@@ -120,8 +141,11 @@ def seed_users():
             is_on_leave=False,
             is_resigned=True,
             email="sunyue@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword7",
+            phone="13800010017",
+            hashed_password=get_password_hash("viewer123"),
             role="user",
+            status="disabled",
+            last_login=datetime.now() - timedelta(days=15),
         ),
         User(
             id=8,
@@ -136,8 +160,30 @@ def seed_users():
             is_on_leave=False,
             is_resigned=False,
             email="zhouming@secmind.com",
-            hashed_password="$2b$12$mockhashedpassword8",
+            phone="13800010018",
+            hashed_password=get_password_hash("admin123"),
             role="admin",
+            status="active",
+            last_login=datetime.now() - timedelta(minutes=35),
+        ),
+        User(
+            id=9,
+            name="系统管理员",
+            department="安全运营中心",
+            position="平台管理员",
+            level="P9",
+            manager="CTO",
+            is_sensitive=True,
+            office="北京总部",
+            recent_login_location="北京",
+            is_on_leave=False,
+            is_resigned=False,
+            email="admin@secmind.com",
+            phone="13800019999",
+            hashed_password=get_password_hash("admin123"),
+            role="admin",
+            status="active",
+            last_login=datetime.now(),
         ),
     ]
     for u in users:
@@ -305,21 +351,112 @@ def seed_alerts():
     db.commit()
     print(f"  ✓ 告警表：{len(alerts)} 条记录")
 
+
 def seed_devices():
     devices = [
-        Device(id=1, name="核心防火墙-01", type="防火墙", ip="10.0.0.1", port=443, protocol="HTTPS", status="在线", last_sync=datetime.now() - timedelta(minutes=5), log_format="syslog", vendor="Palo Alto"),
-        Device(id=2, name="IDS/IPS-01", type="入侵检测", ip="10.0.0.2", port=443, protocol="HTTPS", status="在线", last_sync=datetime.now() - timedelta(minutes=2), log_format="CEF", vendor="Snort"),
-        Device(id=3, name="SIEM平台", type="日志分析", ip="10.0.0.10", port=443, protocol="HTTPS", status="在线", last_sync=datetime.now() - timedelta(minutes=1), log_format="JSON", vendor="Splunk"),
-        Device(id=4, name="邮件网关-01", type="邮件安全", ip="10.0.0.5", port=25, protocol="SMTP", status="在线", last_sync=datetime.now() - timedelta(minutes=3), log_format="syslog", vendor="Proofpoint"),
-        Device(id=5, name="VPN网关-01", type="VPN", ip="10.0.0.3", port=443, protocol="HTTPS", status="在线", last_sync=datetime.now() - timedelta(minutes=4), log_format="syslog", vendor="Cisco"),
-        Device(id=6, name="EDR终端管理", type="终端安全", ip="10.0.0.8", port=443, protocol="HTTPS", status="在线", last_sync=datetime.now() - timedelta(minutes=6), log_format="JSON", vendor="CrowdStrike"),
-        Device(id=7, name="DLP数据防泄露", type="数据安全", ip="10.0.0.6", port=443, protocol="HTTPS", status="告警", last_sync=datetime.now() - timedelta(minutes=10), log_format="JSON", vendor="Symantec"),
-        Device(id=8, name="AD域控制器-01", type="身份认证", ip="10.0.1.1", port=389, protocol="LDAP", status="在线", last_sync=datetime.now() - timedelta(minutes=2), log_format="Windows Event", vendor="Microsoft"),
+        Device(
+            id=1,
+            name="核心防火墙-北京",
+            type="防火墙",
+            brand="深信服",
+            model="AF-2000",
+            ip="10.0.0.1",
+            port=514,
+            protocol="Syslog",
+            status="online",
+            last_sync=datetime.now(),
+            log_format="CEF",
+            vendor="深信服",
+            log_level="all",
+            direction="push",
+            daily_volume=230000,
+            health=99,
+            protocol_config={"transport": "UDP", "syslogFormat": "RFC5424"},
+        ),
+        Device(
+            id=2,
+            name="VPN网关-主",
+            type="VPN网关",
+            brand="深信服",
+            model="SSL VPN",
+            ip="10.0.0.5",
+            port=443,
+            protocol="API",
+            status="online",
+            last_sync=datetime.now(),
+            log_format="JSON",
+            vendor="深信服",
+            log_level="alert",
+            direction="pull",
+            daily_volume=45000,
+            health=98,
+            protocol_config={"apiUrl": "https://10.0.0.5/api/v1/logs", "authType": "Token", "pollInterval": "30s"},
+        ),
+        Device(
+            id=3,
+            name="NAC准入控制",
+            type="NAC",
+            brand="深信服",
+            model="AC-1000",
+            ip="10.0.5.5",
+            port=161,
+            protocol="SNMP",
+            status="offline",
+            last_sync=datetime.now() - timedelta(hours=2),
+            log_format="原生",
+            vendor="深信服",
+            log_level="all",
+            direction="pull",
+            daily_volume=0,
+            health=0,
+            protocol_config={"snmpVersion": "v2c", "trapPort": "162"},
+        ),
     ]
-    for d in devices:
-        db.merge(d)
+    for device in devices:
+        db.merge(device)
     db.commit()
     print(f"  ✓ 设备表：{len(devices)} 条记录")
+
+
+def seed_system_settings():
+    settings = SystemSetting(
+        id=1,
+        system_name="SecMind",
+        session_timeout=30,
+        ip_whitelist="",
+        log_retention=90,
+        mfa_enabled=True,
+        password_min_length=12,
+        ai_model="gpt-4o",
+        ai_temperature=0.3,
+        ai_max_tokens=4096,
+        rag_enabled=True,
+    )
+    db.merge(settings)
+    db.commit()
+    print("  ✓ 系统设置表：1 条记录")
+
+
+def seed_integrations():
+    apps = [
+        IntegrationApp(id=1, slug="jira", name="Jira", description="工单与项目管理集成，自动创建安全工单", status="connected", color="#2684ff", last_sync="2026-05-10 14:22", sync_frequency="15min", source="integrated"),
+        IntegrationApp(id=2, slug="servicenow", name="ServiceNow", description="IT服务管理平台，同步事件与变更", status="connected", color="#81b5a1", last_sync="2026-05-10 13:45", sync_frequency="30min", source="integrated"),
+        IntegrationApp(id=3, slug="feishu", name="飞书", description="即时通讯与协作，告警推送与通知", status="connected", color="#3370ff", last_sync="2026-05-10 14:30", sync_frequency="5min", source="integrated"),
+        IntegrationApp(id=4, slug="slack", name="Slack", description="团队协作与即时通讯，安全告警频道推送", category="协作", status="disconnected", color="#06b6d4", sync_frequency="15min", source="marketplace"),
+        IntegrationApp(id=5, slug="pagerduty", name="PagerDuty", description="事件响应与告警升级，自动分派值班", category="响应", status="disconnected", color="#f59e0b", sync_frequency="15min", source="marketplace"),
+    ]
+    webhooks = [
+        Webhook(id=1, name="告警通知", url="https://api.example.com/webhook/alerts", events=["告警创建", "告警升级"], active=True, created_at="2026-03-15"),
+        Webhook(id=2, name="案件同步", url="https://soc.internal.com/hooks/cases", events=["案件状态变更"], active=True, created_at="2026-04-02"),
+        Webhook(id=3, name="周报回调", url="https://dashboard.corp.com/hooks/metrics", events=["日报生成", "周报生成"], active=False, created_at="2026-05-08"),
+    ]
+    for app in apps:
+        db.merge(app)
+    for webhook in webhooks:
+        db.merge(webhook)
+    db.commit()
+    print(f"  ✓ 集成表：{len(apps)} 条记录")
+    print(f"  ✓ Webhook表：{len(webhooks)} 条记录")
 
 def seed_tickets():
     tickets = [
@@ -382,11 +519,22 @@ def main():
         seed_users()
         seed_alerts()
         seed_devices()
+        seed_system_settings()
+        seed_integrations()
         seed_tickets()
         seed_analyses()
 
         print("=" * 40)
-        total = db.query(User).count() + db.query(Alert).count() + db.query(Device).count() + db.query(ITSMTicket).count() + db.query(AIAnalysis).count()
+        total = (
+            db.query(User).count()
+            + db.query(Alert).count()
+            + db.query(Device).count()
+            + db.query(SystemSetting).count()
+            + db.query(IntegrationApp).count()
+            + db.query(Webhook).count()
+            + db.query(ITSMTicket).count()
+            + db.query(AIAnalysis).count()
+        )
         print(f"\n✅ 数据库初始化完成！共导入 {total} 条记录")
     except Exception as e:
         print(f"\n❌ 初始化失败: {e}")

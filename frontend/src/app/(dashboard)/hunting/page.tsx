@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   Crosshair,
   Search,
@@ -10,21 +10,28 @@ import {
   Target,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Globe,
   Hash,
   Link2,
   Zap,
   Brain,
   FileWarning,
+  Database,
+  RefreshCw,
+  Bug,
+  ShieldCheck,
+  Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { api, formatDateTime, batchLookupIOC, type IOCLookupResult } from "@/lib/api"
 import { PageHeader } from "@/components/layout/page-header"
+import { inputClass, softCardClass } from "@/lib/admin-ui"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import RiskBadge from "@/components/common/RiskBadge"
 import {
   Select,
   SelectTrigger,
@@ -56,16 +63,6 @@ interface HuntingHypothesis {
   confidence: number
 }
 
-interface IOCResult {
-  id: string
-  value: string
-  type: "IP" | "域名" | "Hash" | "URL"
-  threatScore: number
-  relatedIntel: string
-  firstSeen: string
-  lastSeen: string
-}
-
 const ATTCK_TACTICS = [
   "侦察",
   "资源开发",
@@ -84,60 +81,65 @@ const ATTCK_TACTICS = [
 ]
 
 const STATUS_CONFIG: Record<HypothesisStatus, { color: string; bg: string; border: string; icon: typeof Clock }> = {
-  "验证中": { color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20", icon: Clock },
-  "已确认": { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: AlertTriangle },
-  "已排除": { color: "text-green-400", bg: "bg-green-500/10", border: "border-green-500/20", icon: CheckCircle2 },
+  "验证中": { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", icon: Clock },
+  "已确认": { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle },
+  "已排除": { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2 },
 }
 
-const FILTER_CARDS: { label: string; count: number; color: string; bg: string; border: string; status: HypothesisStatus | "全部" }[] = [
-  { label: "全部假设", count: 15, color: "text-cyan-400", bg: "bg-cyan-500/[0.06]", border: "border-cyan-500/20", status: "全部" },
-  { label: "验证中", count: 5, color: "text-yellow-400", bg: "bg-yellow-500/[0.06]", border: "border-yellow-500/20", status: "验证中" },
-  { label: "已确认", count: 3, color: "text-red-400", bg: "bg-red-500/[0.06]", border: "border-red-500/20", status: "已确认" },
-  { label: "已排除", count: 7, color: "text-green-400", bg: "bg-green-500/[0.06]", border: "border-green-500/20", status: "已排除" },
-]
+interface ApiHuntingHypothesis {
+  id: number
+  name: string
+  tactic: string
+  technique: string | null
+  technique_id: string | null
+  description: string | null
+  status: string
+  confidence: number
+  ioc_count: number
+  related_ioc: string | null
+  alert_id: number | null
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
+}
 
-const mockHypotheses: HuntingHypothesis[] = [
-  { id: "HT-001", name: "APT29钓鱼攻击凭证窃取", tactic: "初始访问", technique: "鱼叉式钓鱼", techniqueId: "T1566.001", createdAt: "2026-05-10 09:12", status: "验证中", iocCount: 8, confidence: 87 },
-  { id: "HT-002", name: "Cobalt Strike C2隧道通信", tactic: "C2", technique: "应用层协议", techniqueId: "T1071.001", createdAt: "2026-05-10 08:45", status: "已确认", iocCount: 12, confidence: 94 },
-  { id: "HT-003", name: "内网横向移动Pass-the-Hash", tactic: "横向移动", technique: "Pass-the-Hash", techniqueId: "T1550.002", createdAt: "2026-05-09 22:30", status: "已确认", iocCount: 6, confidence: 91 },
-  { id: "HT-004", name: "DNS隧道数据外泄", tactic: "数据外泄", technique: "替代通道", techniqueId: "T1048", createdAt: "2026-05-09 18:15", status: "验证中", iocCount: 4, confidence: 72 },
-  { id: "HT-005", name: "PowerShell编码执行恶意脚本", tactic: "执行", technique: "PowerShell", techniqueId: "T1059.001", createdAt: "2026-05-09 16:40", status: "已排除", iocCount: 2, confidence: 35 },
-  { id: "HT-006", name: "Mimikatz凭证转储", tactic: "凭证访问", technique: "OS凭证转储", techniqueId: "T1003.001", createdAt: "2026-05-09 14:22", status: "已确认", iocCount: 9, confidence: 96 },
-  { id: "HT-007", name: "注册表持久化后门", tactic: "持久化", technique: "注册表运行键", techniqueId: "T1547.001", createdAt: "2026-05-09 11:08", status: "验证中", iocCount: 3, confidence: 65 },
-  { id: "HT-008", name: "WebShell植入后门", tactic: "持久化", technique: "Web Shell", techniqueId: "T1505.003", createdAt: "2026-05-08 20:55", status: "已排除", iocCount: 1, confidence: 22 },
-  { id: "HT-009", name: "域控权限提升攻击", tactic: "权限提升", technique: "域权限提升", techniqueId: "T1068", createdAt: "2026-05-08 17:33", status: "验证中", iocCount: 7, confidence: 83 },
-  { id: "HT-010", name: "防御规避-禁用安全软件", tactic: "防御规避", technique: "禁用安全工具", techniqueId: "T1562.001", createdAt: "2026-05-08 15:10", status: "已排除", iocCount: 0, confidence: 18 },
-  { id: "HT-011", name: "RDP暴力破解横向扩散", tactic: "横向移动", technique: "远程服务", techniqueId: "T1021.001", createdAt: "2026-05-08 12:47", status: "验证中", iocCount: 5, confidence: 78 },
-  { id: "HT-012", name: "供应链投毒恶意更新", tactic: "初始访问", technique: "供应链妥协", techniqueId: "T1195.002", createdAt: "2026-05-07 23:20", status: "已排除", iocCount: 3, confidence: 28 },
-  { id: "HT-013", name: "Kerberoasting域凭证攻击", tactic: "凭证访问", technique: "Kerberoasting", techniqueId: "T1558.003", createdAt: "2026-05-07 19:05", status: "已确认", iocCount: 11, confidence: 89 },
-  { id: "HT-014", name: "计划任务持久化驻留", tactic: "持久化", technique: "计划任务", techniqueId: "T1053.005", createdAt: "2026-05-07 14:38", status: "已排除", iocCount: 2, confidence: 41 },
-  { id: "HT-015", name: "云资源权限滥用", tactic: "权限提升", technique: "云权限提升", techniqueId: "T1548.005", createdAt: "2026-05-07 10:15", status: "已排除", iocCount: 1, confidence: 15 },
-]
+function mapApiHypothesis(raw: ApiHuntingHypothesis): HuntingHypothesis {
+  return {
+    id: String(raw.id),
+    name: raw.name,
+    tactic: raw.tactic,
+    technique: raw.technique || "",
+    techniqueId: raw.technique_id || "",
+    createdAt: formatDateTime(raw.created_at),
+    status: (raw.status as HypothesisStatus) || "验证中",
+    iocCount: raw.ioc_count,
+    confidence: raw.confidence,
+  }
+}
 
-const mockIOCResults: IOCResult[] = [
-  { id: "ioc-1", value: "185.220.101.34", type: "IP", threatScore: 92, relatedIntel: "Tor出口节点，APT29基础设施", firstSeen: "2026-04-12", lastSeen: "2026-05-10" },
-  { id: "ioc-2", value: "evil-domain.xyz", type: "域名", threatScore: 88, relatedIntel: "DGA域名，C2通信关联", firstSeen: "2026-04-20", lastSeen: "2026-05-09" },
-  { id: "ioc-3", value: "a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5", type: "Hash", threatScore: 95, relatedIntel: "Cobalt Strike Beacon样本", firstSeen: "2026-03-15", lastSeen: "2026-05-10" },
-  { id: "ioc-4", value: "https://cmd6.malware-c2.xyz/update", type: "URL", threatScore: 91, relatedIntel: "恶意软件更新通道", firstSeen: "2026-04-28", lastSeen: "2026-05-10" },
-  { id: "ioc-5", value: "103.45.67.89", type: "IP", threatScore: 76, relatedIntel: "代理服务器，数据外泄目标", firstSeen: "2026-05-01", lastSeen: "2026-05-09" },
-  { id: "ioc-6", value: "shipping@dhl-phish.com", type: "域名", threatScore: 84, relatedIntel: "钓鱼域名，定向攻击", firstSeen: "2026-05-05", lastSeen: "2026-05-08" },
-  { id: "ioc-7", value: "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9", type: "Hash", threatScore: 97, relatedIntel: "Agent Tesla木马变种", firstSeen: "2026-04-18", lastSeen: "2026-05-10" },
-  { id: "ioc-8", value: "10.0.2.100", type: "IP", threatScore: 68, relatedIntel: "内网失陷主机，横向移动源", firstSeen: "2026-05-02", lastSeen: "2026-05-10" },
-]
+type IocTypeDisplay = "IP" | "域名" | "Hash" | "URL"
 
-const IOC_TYPE_CONFIG: Record<IOCResult["type"], { color: string; bg: string; border: string; icon: typeof Globe }> = {
-  IP: { color: "text-cyan-400", bg: "bg-cyan-500/10", border: "border-cyan-500/20", icon: Globe },
-  域名: { color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", icon: Link2 },
-  Hash: { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: Hash },
-  URL: { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: Zap },
+function mapIocType(apiType: string): IocTypeDisplay {
+  const t = apiType.toLowerCase()
+  if (t === "ip") return "IP"
+  if (t === "domain") return "域名"
+  if (t === "hash" || t === "file") return "Hash"
+  if (t === "url" || t === "uri") return "URL"
+  return "域名"
+}
+
+const IOC_TYPE_CONFIG: Record<IocTypeDisplay, { color: string; bg: string; border: string; icon: typeof Globe }> = {
+  IP: { color: "text-cyan-700", bg: "bg-cyan-50", border: "border-cyan-200", icon: Globe },
+  域名: { color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200", icon: Link2 },
+  Hash: { color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: Hash },
+  URL: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: Zap },
 }
 
 function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 80 ? "bg-red-400" : value >= 50 ? "bg-yellow-400" : "bg-cyan-400"
-  const glow = value >= 80 ? "shadow-[0_0_8px_rgba(248,113,113,0.4)]" : value >= 50 ? "shadow-[0_0_8px_rgba(250,204,21,0.3)]" : ""
+  const color = value >= 80 ? "bg-red-500" : value >= 50 ? "bg-amber-400" : "bg-cyan-500"
   return (
-    <div className="h-1.5 w-full rounded-full bg-white/[0.08] overflow-hidden">
-      <div className={cn("h-full rounded-full transition-all duration-700", color, glow)} style={{ width: `${value}%` }} />
+    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+      <div className={cn("h-full rounded-full transition-colors duration-700", color)} style={{ width: `${value}%` }} />
     </div>
   )
 }
@@ -147,11 +149,10 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
   const StatusIcon = statusCfg.icon
   return (
     <Card className={cn(
-      "border bg-white/[0.02] backdrop-blur-xl transition-all hover:bg-white/[0.04]",
-      hypothesis.status === "已确认" && "border-red-500/15 shadow-[0_0_12px_rgba(239,68,68,0.08)]",
-      hypothesis.status === "验证中" && "border-yellow-500/15",
-      hypothesis.status === "已排除" && "border-green-500/10",
-      hypothesis.status !== "已确认" && hypothesis.status !== "验证中" && hypothesis.status !== "已排除" && "border-slate-200/[0.06]"
+      "border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-50 hover:shadow-md",
+      hypothesis.status === "已确认" && "border-red-200 bg-red-50/50",
+      hypothesis.status === "验证中" && "border-amber-200 bg-amber-50/30",
+      hypothesis.status === "已排除" && "border-emerald-200 bg-emerald-50/30"
     )}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
@@ -161,11 +162,11 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
               <span className="text-sm font-medium text-slate-800 truncate">{hypothesis.name}</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-[10px] text-cyan-400 bg-cyan-500/10 border-cyan-500/20 py-0 px-1.5">
+              <Badge variant="outline" className="text-[10px] text-cyan-700 bg-cyan-50 border-cyan-200 py-0 px-1.5">
                 <Target className="size-3 mr-0.5" />
                 {hypothesis.tactic}
               </Badge>
-              <Badge variant="outline" className="text-[10px] text-purple-400 bg-purple-500/10 border-purple-500/20 py-0 px-1.5">
+              <Badge variant="outline" className="text-[10px] text-indigo-600 bg-indigo-50 border-indigo-200 py-0 px-1.5">
                 <span className="font-mono mr-0.5">{hypothesis.techniqueId}</span>
                 {hypothesis.technique}
               </Badge>
@@ -189,13 +190,13 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-300 shrink-0">置信度</span>
+          <span className="text-xs text-slate-500 shrink-0">置信度</span>
           <div className="flex-1">
             <ConfidenceBar value={hypothesis.confidence} />
           </div>
           <span className={cn(
-            "text-xs font-mono font-bold shrink-0",
-            hypothesis.confidence >= 80 ? "text-red-400" : hypothesis.confidence >= 50 ? "text-yellow-400" : "text-cyan-400"
+            "text-xs font-mono font-semibold shrink-0",
+            hypothesis.confidence >= 80 ? "text-red-600" : hypothesis.confidence >= 50 ? "text-amber-600" : "text-cyan-600"
           )}>
             {hypothesis.confidence}%
           </span>
@@ -206,25 +207,51 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
 }
 
 function IOCBatchQuery() {
-  const { t } = useLocaleStore()
+  useLocaleStore()
   const [iocInput, setIocInput] = useState("")
-  const [results, setResults] = useState<IOCResult[]>([])
+  const [results, setResults] = useState<IOCLookupResult[]>([])
+  const [cacheInfo, setCacheInfo] = useState<{ hits: number; misses: number } | null>(null)
   const [isQuerying, setIsQuerying] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleQuery = () => {
-    if (!iocInput.trim()) return
+  const handleQuery = async () => {
+    const lines = iocInput.trim().split("\n").filter(Boolean)
+    if (lines.length === 0) return
+
     setIsQuerying(true)
-    setTimeout(() => {
-      setResults(mockIOCResults)
+    setError(null)
+    setCacheInfo(null)
+
+    try {
+      const response = await batchLookupIOC(lines)
+      setResults(response.results)
+      setCacheInfo({ hits: response.cache_hits, misses: response.cache_misses })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "IOC查询失败，请检查网络连接"
+      setError(message)
+      setResults([])
+    } finally {
       setIsQuerying(false)
-    }, 800)
+    }
+  }
+
+  const riskScoreColor = (score: number) => {
+    if (score >= 90) return "text-red-600"
+    if (score >= 70) return "text-amber-600"
+    return "text-cyan-600"
+  }
+
+  const riskBarColor = (score: number) => {
+    if (score >= 90) return "bg-red-500"
+    if (score >= 70) return "bg-amber-400"
+    return "bg-cyan-500"
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20">
-          <Brain className="h-4 w-4 text-amber-400" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 border border-amber-200">
+          <Brain className="h-4 w-4 text-amber-600" />
         </div>
         <div>
           <h2 className="text-sm font-medium text-slate-800">IOC批量查询</h2>
@@ -232,16 +259,16 @@ function IOCBatchQuery() {
         </div>
       </div>
 
-      <Card className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl">
+      <Card className="border-slate-200 bg-white shadow-sm shadow-slate-200/30">
         <CardContent className="p-4 space-y-3">
           <Textarea
             placeholder={"每行输入一个IOC指标，支持以下格式：\nIP: 185.220.101.34\n域名: evil-domain.xyz\nHash: a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5\nURL: https://cmd6.malware-c2.xyz/update"}
             value={iocInput}
             onChange={(e) => setIocInput(e.target.value)}
-            className="min-h-[120px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="min-h-[120px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-300">
+            <span className="text-xs text-slate-500">
               {iocInput.trim() ? `已输入 ${iocInput.trim().split("\n").filter(Boolean).length} 条IOC` : "等待输入"}
             </span>
             <Button
@@ -249,66 +276,168 @@ function IOCBatchQuery() {
               disabled={!iocInput.trim() || isQuerying}
               className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs gap-1.5"
             >
-              <Search className="size-3.5" />
-              {isQuerying ? "查询中..." : "批量查询"}
+              {isQuerying ? (
+                <>
+                  <RefreshCw className="size-3.5 animate-spin" />
+                  查询中…
+                </>
+              ) : (
+                <>
+                  <Search className="size-3.5" />
+                  批量查询
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {results.length > 0 && (
+      {isQuerying && (
+        <div className="flex flex-col items-center justify-center py-8 text-slate-300">
+          <div className="size-6 mb-2 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500" />
+          <p className="text-xs">正在查询威胁情报...</p>
+        </div>
+      )}
+
+      {error && !isQuerying && (
+        <div className="flex flex-col items-center justify-center py-8 text-red-400">
+          <AlertTriangle className="size-6 mb-2" />
+          <p className="text-xs text-center">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2 border-red-200 bg-white text-red-500 hover:text-red-700 text-xs h-7"
+            onClick={handleQuery}
+          >
+            重试
+          </Button>
+        </div>
+      )}
+
+      {!isQuerying && !error && results.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">查询结果 ({results.length})</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">查询结果 ({results.length})</span>
+              {cacheInfo && (
+                <div className="flex items-center gap-1.5">
+                  <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-50 border-emerald-200 py-0 px-1.5">
+                    <Database className="size-2.5 mr-0.5" />
+                    缓存命中: {cacheInfo.hits}
+                  </Badge>
+                  {cacheInfo.misses > 0 && (
+                    <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 py-0 px-1.5">
+                      实时查询: {cacheInfo.misses}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
             <Button
               variant="outline"
               size="sm"
-              className="border-slate-200 bg-white/[0.04] text-slate-400 hover:text-cyan-600 hover:border-cyan-300 text-xs h-7"
-              onClick={() => setResults([])}
+              className="border-slate-200 bg-white text-slate-500 hover:text-cyan-700 hover:border-cyan-200 text-xs h-7"
+              onClick={() => { setResults([]); setCacheInfo(null) }}
             >
               清除结果
             </Button>
           </div>
-          <div className="space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            {results.map((result) => {
-              const typeCfg = IOC_TYPE_CONFIG[result.type]
+          <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            {results.map((result, idx) => {
+              const typeDisplay = mapIocType(result.ioc_type)
+              const typeCfg = IOC_TYPE_CONFIG[typeDisplay]
               const TypeIcon = typeCfg.icon
+              const maliciousSources = result.sources.filter((s) => s.result.malicious)
+              const cleanSources = result.sources.filter((s) => !s.result.malicious)
+
               return (
-                <Card key={result.id} className="border-slate-200/[0.06] bg-white/[0.02] backdrop-blur-xl hover:bg-white/[0.04] transition-all">
-                  <CardContent className="p-3 space-y-2">
+                <Card key={`${result.ioc_value}-${idx}`} className={cn(
+                  "border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-sm shadow-slate-200/30",
+                  result.risk_level === "critical" && "border-red-200 bg-red-50/30",
+                  result.risk_level === "high" && "border-orange-200 bg-orange-50/20"
+                )}>
+                  <CardContent className="p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <TypeIcon className={cn("size-3.5 shrink-0", typeCfg.color)} />
-                        <span className="text-xs font-mono text-slate-700 truncate">{result.value}</span>
+                        <span className="text-xs font-mono text-slate-700 truncate">{result.ioc_value}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5", typeCfg.color, typeCfg.bg, typeCfg.border)}>
-                          {result.type}
+                          {typeDisplay}
                         </Badge>
-                        <span className={cn(
-                          "text-xs font-mono font-bold",
-                          result.threatScore >= 90 ? "text-red-400" : result.threatScore >= 70 ? "text-amber-400" : "text-cyan-400"
-                        )}>
-                          {result.threatScore}
+                        {result.from_cache && (
+                          <Badge variant="outline" className="text-[10px] text-slate-400 bg-slate-50 border-slate-200 py-0 px-1.5">
+                            <Database className="size-2.5 mr-0.5" />
+                            缓存
+                          </Badge>
+                        )}
+                        <RiskBadge level={result.risk_level} size="sm" />
+                        <span className={cn("text-xs font-mono font-semibold", riskScoreColor(result.risk_score))}>
+                          {result.risk_score}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="size-3 text-slate-300 shrink-0" />
-                      <span className="text-xs text-slate-400 truncate">{result.relatedIntel}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] text-slate-300">
-                      <span>首次出现: {result.firstSeen}</span>
-                      <span>末次出现: {result.lastSeen}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded-full bg-white/[0.06] overflow-hidden">
-                        <div
-                          className={cn(
-                            "h-full rounded-full transition-all",
-                            result.threatScore >= 90 ? "bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]" : result.threatScore >= 70 ? "bg-amber-400" : "bg-cyan-400"
+
+                    {result.tags.length > 0 && (
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {result.tags.map((tag) => (
+                          <Badge key={tag} variant="outline" className="text-[10px] text-slate-500 bg-slate-50 border-slate-200 py-0 px-1.5">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {result.sources.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <Info className="size-3 text-slate-400 shrink-0" />
+                          <span className="text-[10px] text-slate-400">情报源 ({result.sources.length})</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          {result.sources.slice(0, 3).map((source) => (
+                            <div key={source.source_name} className="flex items-center justify-between text-[10px]">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {source.result.malicious ? (
+                                  <Bug className="size-2.5 text-red-500 shrink-0" />
+                                ) : (
+                                  <ShieldCheck className="size-2.5 text-emerald-500 shrink-0" />
+                                )}
+                                <span className="text-slate-500 truncate">{source.source_name}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className={cn("font-mono", source.result.malicious ? "text-red-500" : "text-emerald-500")}>
+                                  {source.result.score}
+                                </span>
+                                <span className="text-slate-300 truncate max-w-[80px] hidden sm:inline">
+                                  {source.result.details}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {result.sources.length > 3 && (
+                            <p className="text-[10px] text-slate-300">还有 {result.sources.length - 3} 个情报源...</p>
                           )}
-                          style={{ width: `${result.threatScore}%` }}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <div className="flex items-center gap-1">
+                        <span>恶意源: {maliciousSources.length}/{result.sources.length}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {result.first_seen && <span>首次: {formatDateTime(result.first_seen)}</span>}
+                        {result.last_seen && <span>末次: {formatDateTime(result.last_seen)}</span>}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className={cn("h-full rounded-full transition-colors", riskBarColor(result.risk_score))}
+                          style={{ width: `${result.risk_score}%` }}
                         />
                       </div>
                     </div>
@@ -319,15 +448,26 @@ function IOCBatchQuery() {
           </div>
         </div>
       )}
+
+      {!isQuerying && !error && results.length === 0 && iocInput.trim() && (
+        <div className="flex flex-col items-center justify-center py-8 text-slate-300">
+          <Search className="size-6 mb-2" />
+          <p className="text-xs">输入IOC后点击批量查询</p>
+        </div>
+      )}
     </div>
   )
 }
 
 export default function HuntingPage() {
-  const { t } = useLocaleStore()
+  useLocaleStore()
   const [activeFilter, setActiveFilter] = useState<HypothesisStatus | "全部">("全部")
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [hypotheses, setHypotheses] = useState<HuntingHypothesis[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   const [newHypothesis, setNewHypothesis] = useState({
     name: "",
     tactic: "",
@@ -335,11 +475,58 @@ export default function HuntingPage() {
     relatedIOC: "",
   })
 
-  const filteredHypotheses = mockHypotheses.filter((h) => {
+  const fetchHypotheses = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.get("/hunting/hypotheses")
+      const items: ApiHuntingHypothesis[] = res.data.items ?? res.data
+      setHypotheses(items.map(mapApiHypothesis))
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "加载假设列表失败"
+      setError(message)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchHypotheses()
+  }, [fetchHypotheses])
+
+  const filteredHypotheses = hypotheses.filter((h) => {
     if (activeFilter !== "全部" && h.status !== activeFilter) return false
     if (searchQuery && !h.name.toLowerCase().includes(searchQuery.toLowerCase()) && !h.techniqueId.toLowerCase().includes(searchQuery.toLowerCase()) && !h.tactic.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   })
+
+  const filterCards: { label: string; count: number; color: string; bg: string; border: string; status: HypothesisStatus | "全部" }[] = [
+    { label: "全部假设", count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-50", border: "border-cyan-200", status: "全部" },
+    { label: "验证中", count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", status: "验证中" },
+    { label: "已确认", count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-50", border: "border-red-200", status: "已确认" },
+    { label: "已排除", count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", status: "已排除" },
+  ]
+
+  const handleCreateHypothesis = async () => {
+    setSubmitting(true)
+    try {
+      await api.post("/hunting/hypotheses", {
+        name: newHypothesis.name,
+        tactic: newHypothesis.tactic,
+        description: newHypothesis.description,
+        related_ioc: newHypothesis.relatedIOC,
+        confidence: 50.0,
+        created_by: "current_user",
+      })
+      setNewHypothesis({ name: "", tactic: "", description: "", relatedIOC: "" })
+      setDialogOpen(false)
+      await fetchHypotheses()
+    } catch {
+      setError("创建假设失败")
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -350,24 +537,24 @@ export default function HuntingPage() {
       />
 
       <div className="grid grid-cols-4 gap-4">
-        {FILTER_CARDS.map((card) => (
+        {filterCards.map((card) => (
           <Card
             key={card.status}
             className={cn(
-              "cursor-pointer transition-all border backdrop-blur-xl",
+              "cursor-pointer transition-colors border",
               activeFilter === card.status
-                ? cn(card.border, card.bg, "shadow-[0_0_16px_rgba(6,182,212,0.1)]")
-                : "border-slate-200/[0.06] bg-white/[0.02] hover:bg-white/[0.04]"
+                ? cn(card.border, card.bg, "shadow-sm shadow-slate-200/50")
+                : softCardClass
             )}
             onClick={() => setActiveFilter(card.status)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-slate-400")}>{card.label}</span>
-                {card.status === "验证中" && <Clock className="size-4 text-yellow-400/40" />}
-                {card.status === "已确认" && <AlertTriangle className="size-4 text-red-400/40" />}
-                {card.status === "已排除" && <CheckCircle2 className="size-4 text-green-400/40" />}
-                {card.status === "全部" && <Crosshair className="size-4 text-cyan-400/40" />}
+                {card.status === "验证中" && <Clock className="size-4 text-amber-400" />}
+                {card.status === "已确认" && <AlertTriangle className="size-4 text-red-400" />}
+                {card.status === "已排除" && <CheckCircle2 className="size-4 text-emerald-400" />}
+                {card.status === "全部" && <Crosshair className="size-4 text-cyan-500" />}
               </div>
               <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-slate-600")}>{card.count}</p>
             </CardContent>
@@ -379,11 +566,15 @@ export default function HuntingPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
           <Input
-            placeholder="搜索假设名称、战术、技术ID..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 border-slate-200 bg-white/[0.04] pl-8 text-xs text-slate-700 placeholder:text-slate-300 focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
-          />
+              placeholder="搜索假设名称、战术、技术ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`h-8 pl-8 text-xs ${inputClass}`}
+              aria-label="搜索狩猎假设"
+              name="search"
+              type="search"
+              autoComplete="off"
+            />
         </div>
         <Button
           onClick={() => setDialogOpen(true)}
@@ -399,11 +590,23 @@ export default function HuntingPage() {
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">狩猎假设列表 ({filteredHypotheses.length})</span>
           </div>
-          <div className="space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-            {filteredHypotheses.map((hypothesis) => (
+          <div className="space-y-3 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+                <div className="size-8 mb-2 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500" />
+                <p className="text-sm">加载中…</p>
+              </div>
+            )}
+            {error && !loading && (
+              <div className="flex flex-col items-center justify-center py-12 text-red-400">
+                <AlertTriangle className="size-8 mb-2" />
+                <p className="text-sm">{error}</p>
+              </div>
+            )}
+            {!loading && !error && filteredHypotheses.map((hypothesis) => (
               <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />
             ))}
-            {filteredHypotheses.length === 0 && (
+            {!loading && !error && filteredHypotheses.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-slate-300">
                 <Search className="size-8 mb-2" />
                 <p className="text-sm">未找到匹配的狩猎假设</p>
@@ -425,23 +628,26 @@ export default function HuntingPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">假设名称</label>
+              <label htmlFor="hypothesis-name" className="text-xs text-slate-400">假设名称</label>
               <Input
+                id="hypothesis-name"
                 placeholder="输入假设名称"
                 value={newHypothesis.name}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, name: e.target.value }))}
-                className="border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className={`text-xs ${inputClass}`}
+                name="name"
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">ATT&CK战术</label>
+              <label htmlFor="hypothesis-tactic" className="text-xs text-slate-400">ATT&CK战术</label>
               <Select value={newHypothesis.tactic} onValueChange={(v) => v && setNewHypothesis((prev) => ({ ...prev, tactic: v }))}>
-                <SelectTrigger className="w-full border-slate-200 bg-white/[0.04] text-slate-600 text-xs">
+                <SelectTrigger id="hypothesis-tactic" className={`w-full text-xs ${inputClass}`}>
                   <SelectValue placeholder="选择ATT&CK战术" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-slate-200">
                   {ATTCK_TACTICS.map((tactic) => (
-                    <SelectItem key={tactic} value={tactic} className="text-slate-600 text-xs focus:bg-cyan-500/10 focus:text-cyan-400">
+                    <SelectItem key={tactic} value={tactic} className="text-slate-600 text-xs focus:bg-cyan-50 focus:text-cyan-700">
                       {tactic}
                     </SelectItem>
                   ))}
@@ -449,21 +655,27 @@ export default function HuntingPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">描述</label>
+              <label htmlFor="hypothesis-description" className="text-xs text-slate-400">描述</label>
               <Textarea
+                id="hypothesis-description"
                 placeholder="描述假设的攻击场景和狩猎目标"
                 value={newHypothesis.description}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, description: e.target.value }))}
-                className="min-h-[80px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[80px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                name="description"
+                autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">关联IOC</label>
+              <label htmlFor="hypothesis-ioc" className="text-xs text-slate-400">关联IOC</label>
               <Textarea
+                id="hypothesis-ioc"
                 placeholder={"每行输入一个IOC指标\n如: 185.220.101.34\nevil-domain.xyz"}
                 value={newHypothesis.relatedIOC}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, relatedIOC: e.target.value }))}
-                className="min-h-[60px] border-slate-200 bg-white/[0.04] text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[60px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                name="relatedIOC"
+                autoComplete="off"
               />
             </div>
           </div>
@@ -477,9 +689,10 @@ export default function HuntingPage() {
             </Button>
             <Button
               className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
-              onClick={() => setDialogOpen(false)}
+              disabled={submitting || !newHypothesis.name || !newHypothesis.tactic}
+              onClick={handleCreateHypothesis}
             >
-              创建假设
+              {submitting ? "创建中…" : "创建假设"}
             </Button>
           </DialogFooter>
         </DialogContent>
