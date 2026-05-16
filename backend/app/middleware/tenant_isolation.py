@@ -118,7 +118,6 @@ class TenantIsolation:
     def is_admin(user) -> bool:
         if user is None:
             return False
-        role = getattr(user, "role", None)
-        if role == "admin":
-            return True
+        if hasattr(user, "roles"):
+            return any(r.name == "admin" for r in user.roles)
         return False

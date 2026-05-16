@@ -118,51 +118,6 @@ class RBACMiddleware(BaseHTTPMiddleware):
         "POST:/api/v1/model-router": "ai:write",
     }
 
-    ROLE_PERMISSIONS = {
-        "admin": ["*"],
-        "analyst": [
-            "dashboard:read", "devices:read", "users:read",
-            "tickets:read", "tickets:write",
-            "ai:read", "ai:write",
-            "email:read", "vpn:read", "brute_force:read",
-            "integrations:read", "documents:read",
-            "ioc:read", "ioc:write",
-            "response:read", "response:execute",
-            "playbooks:read", "playbooks:write",
-            "reports:read", "reports:write",
-            "compliance:read",
-            "strategies:read", "strategies:write",
-            "collaboration:read", "collaboration:write",
-            "settings:read",
-            "alerts:read", "alerts:write",
-            "hunting:read", "hunting:write",
-            "rbac:read", "tenants:read", "billing:read",
-        ],
-        "viewer": [
-            "dashboard:read", "devices:read", "users:read",
-            "tickets:read", "ai:read", "email:read", "vpn:read",
-            "brute_force:read", "integrations:read", "documents:read",
-            "ioc:read", "response:read", "playbooks:read",
-            "reports:read", "compliance:read", "strategies:read",
-            "collaboration:read", "settings:read",
-            "alerts:read", "hunting:read",
-            "rbac:read", "tenants:read", "billing:read",
-        ],
-        "soc_manager": [
-            "dashboard:read", "devices:read", "users:read",
-            "tickets:read", "ai:read", "email:read", "vpn:read",
-            "brute_force:read", "integrations:read", "documents:read",
-            "ioc:read", "response:read", "response:execute",
-            "playbooks:read", "playbooks:write",
-            "reports:read", "compliance:read",
-            "strategies:read", "strategies:write",
-            "collaboration:read", "settings:read",
-            "alerts:read", "alerts:write",
-            "hunting:read", "hunting:write",
-            "rbac:read", "tenants:read", "billing:read",
-        ],
-    }
-
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         path = request.url.path
         method = request.method

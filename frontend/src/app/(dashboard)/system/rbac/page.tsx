@@ -85,10 +85,10 @@ const actionLabelMap: Record<string, string> = {
 }
 
 const rbacColorMap: Record<string, string> = {
-  cyan: "bg-cyan-50 text-cyan-700",
-  amber: "bg-amber-50 text-amber-700",
-  emerald: "bg-emerald-50 text-emerald-700",
-  violet: "bg-violet-50 text-violet-700",
+  cyan: "bg-cyan-500/10 text-cyan-400",
+  amber: "bg-amber-500/10 text-amber-400",
+  emerald: "bg-emerald-500/10 text-emerald-400",
+  violet: "bg-violet-500/10 text-violet-400",
 }
 
 function CreateRoleDialog({
@@ -143,10 +143,10 @@ function CreateRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-lg max-h-[80vh] overflow-y-auto">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100 sm:max-w-lg max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>创建角色</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             创建自定义角色并分配权限，非系统角色可随时编辑和删除。
           </DialogDescription>
         </DialogHeader>
@@ -189,10 +189,10 @@ function CreateRoleDialog({
           </div>
           <div className="space-y-2">
             <Label>选择权限</Label>
-            <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-200 p-3 space-y-3">
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-white/[0.06] p-3 space-y-3">
               {Array.from(grouped.entries()).map(([resource, perms]) => (
                 <div key={resource}>
-                  <p className={`text-xs font-medium text-slate-500 mb-1.5`}>
+                  <p className={`text-xs font-medium text-zinc-500 mb-1.5`}>
                     {resourceLabelMap[resource] || resource}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -204,8 +204,8 @@ function CreateRoleDialog({
                         onClick={() => togglePermission(p.id)}
                         className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs transition-colors ${
                           selectedPermIds.includes(p.id)
-                            ? "border-cyan-300 bg-cyan-50 text-cyan-700"
-                            : "border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300"
+                            ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                            : "border-white/[0.06] bg-white/[0.03] text-zinc-400 hover:border-white/[0.1]"
                         }`}
                       >
                         {p.action}
@@ -286,10 +286,10 @@ function AssignRoleDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>用户角色分配</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             为指定用户分配角色，分配后将覆盖该用户的所有角色。
           </DialogDescription>
         </DialogHeader>
@@ -318,15 +318,15 @@ function AssignRoleDialog({
                   onClick={() => toggleRole(role.id)}
                   className={`w-full flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
                     selectedRoleIds.includes(role.id)
-                      ? "border-cyan-300 bg-cyan-50 text-cyan-700"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                      ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-400"
+                      : "border-white/[0.06] bg-white/[0.03] text-zinc-300 hover:border-white/[0.1]"
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <Shield className="size-3.5" />
                     <span className="font-medium">{role.display_name}</span>
                     {role.is_system === 1 && (
-                      <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-600 text-[10px] px-1">
+                      <Badge variant="outline" className="border-amber-500/25 bg-amber-500/10 text-amber-400 text-[10px] px-1">
                         系统
                       </Badge>
                     )}
@@ -337,15 +337,15 @@ function AssignRoleDialog({
             </div>
           </div>
           {result && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-1">
-              <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+            <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3 space-y-1">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-400">
                 <CheckCircle2 className="size-4" />
                 分配成功
               </div>
-              <p className={`text-xs text-emerald-600`}>
+              <p className={`text-xs text-emerald-400`}>
                 角色: {result.roles.join(", ") || "无"}
               </p>
-              <p className={`text-xs text-emerald-600`}>
+              <p className={`text-xs text-emerald-400`}>
                 权限数: {result.permissions.length}
               </p>
             </div>
@@ -398,7 +398,7 @@ function UserPermissionLookup() {
           </div>
           <div>
             <h2 className={String(TYPOGRAPHY.h2)}>用户权限查询</h2>
-            <p className={String(TYPOGRAPHY.caption) + " text-slate-500 mt-0.5"}>
+            <p className={String(TYPOGRAPHY.caption) + " text-zinc-500 mt-0.5"}>
               输入用户ID查看其角色和权限
             </p>
           </div>
@@ -424,16 +424,16 @@ function UserPermissionLookup() {
           </Button>
         </div>
         {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+          <div className="rounded-lg border border-red-500/25 bg-red-500/10 p-3 text-sm text-red-400">
             {error}
           </div>
         )}
         {result && (
           <div className="space-y-3">
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="size-4 text-slate-500" />
-                <span className={`text-sm font-medium text-slate-700`}>
+                <Users className="size-4 text-zinc-500" />
+                <span className={`text-sm font-medium text-zinc-300`}>
                   用户 #{result.user_id} 的角色
                 </span>
               </div>
@@ -443,7 +443,7 @@ function UserPermissionLookup() {
                     <Badge
                       key={role}
                       variant="outline"
-                      className="border-cyan-200 bg-cyan-50 text-cyan-700"
+                      className="border-cyan-500/25 bg-cyan-500/10 text-cyan-400"
                     >
                       {role}
                     </Badge>
@@ -453,10 +453,10 @@ function UserPermissionLookup() {
                 )}
               </div>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-4">
               <div className="flex items-center gap-2 mb-2">
-                <Key className="size-4 text-slate-500" />
-                <span className={`text-sm font-medium text-slate-700`}>
+                <Key className="size-4 text-zinc-500" />
+                <span className={`text-sm font-medium text-zinc-300`}>
                   权限列表 ({result.permissions.length})
                 </span>
               </div>
@@ -466,7 +466,7 @@ function UserPermissionLookup() {
                     <Badge
                       key={perm}
                       variant="outline"
-                      className="border-slate-200 bg-white text-slate-600 text-[11px]"
+                      className="border-white/[0.08] bg-white/[0.03] text-zinc-400 text-[11px]"
                     >
                       {perm}
                     </Badge>
@@ -618,7 +618,7 @@ export default function RbacPage() {
       />
 
       {seedMessage && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
           <CheckCircle2 className="size-4" />
           {seedMessage}
         </div>
@@ -635,10 +635,10 @@ export default function RbacPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-xs ${subtleTextClass}`}>{item.label}</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{item.value}</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{item.value}</p>
               </div>
               <span
-                className={`rounded-lg ${rbacColorMap[item.color] ?? "bg-slate-50 text-slate-700"} p-2`}
+                className={`rounded-lg ${rbacColorMap[item.color] ?? "bg-white/[0.03] text-zinc-300"} p-2`}
               >
                 <item.icon className="size-4" />
               </span>
@@ -662,7 +662,7 @@ export default function RbacPage() {
         <TabsContent value="roles" className="mt-4 space-y-4">
           <div className={`${softCardClass} flex items-center gap-3 p-4`}>
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -681,9 +681,9 @@ export default function RbacPage() {
           </div>
 
           {loading ? (
-            <div className="p-10 text-center text-slate-500">加载中…</div>
+            <div className="p-10 text-center text-zinc-500">加载中…</div>
           ) : filteredRoles.length === 0 ? (
-            <div className="p-10 text-center text-slate-500">
+            <div className="p-10 text-center text-zinc-500">
               {searchQuery ? "没有匹配的角色" : "暂无角色数据，请先点击「初始化权限」"}
             </div>
           ) : (
@@ -694,29 +694,29 @@ export default function RbacPage() {
                     <button
                       type="button"
                       aria-expanded={expandedRoleId === role.id}
-                      className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50/50 transition-colors"
+                      className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-white/[0.03] transition-colors"
                       onClick={() =>
                         setExpandedRoleId(expandedRoleId === role.id ? null : role.id)
                       }
                     >
-                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
+                      <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-400">
                         <Shield className="size-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={`text-sm font-semibold text-slate-900`}>
+                          <span className={`text-sm font-semibold text-zinc-100`}>
                             {role.display_name}
                           </span>
                           <Badge
                             variant="outline"
-                            className="border-slate-200 bg-slate-50 text-slate-500 text-[11px]"
+                            className="border-white/[0.08] bg-white/[0.03] text-zinc-500 text-[11px]"
                           >
                             {role.name}
                           </Badge>
                           {role.is_system === 1 && (
                             <Badge
                               variant="outline"
-                              className="border-amber-200 bg-amber-50 text-amber-600 text-[11px]"
+                              className="border-amber-500/25 bg-amber-500/10 text-amber-400 text-[11px]"
                             >
                               系统角色
                             </Badge>
@@ -729,29 +729,29 @@ export default function RbacPage() {
                       <div className="flex items-center gap-3 shrink-0">
                         <div className="text-right">
                           <p className={`text-xs ${subtleTextClass}`}>权限数</p>
-                          <p className="text-sm font-semibold tabular-nums text-slate-900">
+                          <p className="text-sm font-semibold tabular-nums text-zinc-100">
                             {role.permissions?.length || 0}
                           </p>
                         </div>
                         {expandedRoleId === role.id ? (
-                          <ChevronDown className="size-4 text-slate-500" />
+                          <ChevronDown className="size-4 text-zinc-500" />
                         ) : (
-                          <ChevronRight className="size-4 text-slate-500" />
+                          <ChevronRight className="size-4 text-zinc-500" />
                         )}
                       </div>
                     </button>
 
                     {expandedRoleId === role.id && (
-                      <div className="border-t border-slate-100 px-5 py-4">
+                      <div className="border-t border-white/[0.04] px-5 py-4">
                         <div className="flex items-center justify-between mb-3">
-                          <p className={`text-xs font-medium text-slate-500`}>
+                          <p className={`text-xs font-medium text-zinc-500`}>
                             角色权限列表
                           </p>
                           {role.is_system === 0 && (
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-red-200 text-red-600 hover:bg-red-50"
+                              className="border-red-500/25 text-red-400 hover:bg-red-500/10"
                               onClick={() => handleDeleteRole(role.id)}
                             >
                               <Trash2 className="mr-1 size-3.5" />
@@ -765,7 +765,7 @@ export default function RbacPage() {
                               <Badge
                                 key={p.id}
                                 variant="outline"
-                                className="border-cyan-200 bg-cyan-50 text-cyan-700 text-[11px]"
+                                className="border-cyan-500/25 bg-cyan-500/10 text-cyan-400 text-[11px]"
                               >
                                 {p.resource}:{p.action}
                               </Badge>
@@ -785,9 +785,9 @@ export default function RbacPage() {
 
         <TabsContent value="permissions" className="mt-4 space-y-4">
           {loading ? (
-            <div className="p-10 text-center text-slate-500">加载中…</div>
+            <div className="p-10 text-center text-zinc-500">加载中…</div>
           ) : permissions.length === 0 ? (
-            <div className="p-10 text-center text-slate-500">
+            <div className="p-10 text-center text-zinc-500">
               暂无权限数据，请先点击「初始化权限」
             </div>
           ) : (
@@ -795,12 +795,12 @@ export default function RbacPage() {
               {Array.from(groupedPermissions.entries()).map(([resource, perms]) => (
                 <Card key={resource} className={pageCardClass}>
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-3">
-                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                    <div className="flex items-center gap-3 border-b border-white/[0.04] px-5 py-3">
+                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white/[0.05] text-zinc-400">
                         <Lock className="size-4" />
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold text-slate-900`}>
+                        <p className={`text-sm font-semibold text-zinc-100`}>
                           {resourceLabelMap[resource] || resource}
                         </p>
                         <p className={`text-xs ${subtleTextClass}`}>
@@ -810,15 +810,15 @@ export default function RbacPage() {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-slate-50">
-                          <tr className="border-b border-slate-200">
-                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-slate-500">
+                        <thead className="bg-white/[0.03]">
+                          <tr className="border-b border-white/[0.06]">
+                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-zinc-500">
                               操作
                             </th>
-                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-slate-500">
+                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-zinc-500">
                               权限代码
                             </th>
-                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-slate-500">
+                            <th scope="col" className="px-5 py-2.5 text-left text-xs text-zinc-500">
                               说明
                             </th>
                           </tr>
@@ -827,22 +827,22 @@ export default function RbacPage() {
                           {perms.map((p) => (
                             <tr
                               key={p.id}
-                              className="border-b border-slate-100 last:border-b-0"
+                              className="border-b border-white/[0.04] last:border-b-0"
                             >
                               <td className="px-5 py-2.5">
                                 <Badge
                                   variant="outline"
-                                  className="border-slate-200 bg-white text-slate-700"
+                                  className="border-white/[0.08] bg-white/[0.03] text-zinc-300"
                                 >
                                   {actionLabelMap[p.action] || p.action}
                                 </Badge>
                               </td>
                               <td className="px-5 py-2.5">
-                                <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cyan-700 font-mono">
+                                <code className="rounded bg-white/[0.05] px-1.5 py-0.5 text-xs text-cyan-400 font-mono">
                                   {p.resource}:{p.action}
                                 </code>
                               </td>
-                              <td className={`px-5 py-2.5 text-slate-500`}>
+                              <td className={`px-5 py-2.5 text-zinc-500`}>
                                 {p.description || "-"}
                               </td>
                             </tr>

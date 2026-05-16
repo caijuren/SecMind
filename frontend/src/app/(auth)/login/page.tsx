@@ -124,19 +124,28 @@ export default function LoginPage() {
 
       const account = profileResponse.data
 
+      const permResponse = await api.get(`/rbac/users/${account.id}/permissions`, {
+        headers: {
+          Authorization: `Bearer ${loginResponse.data.access_token}`,
+        },
+      })
+      const roles = permResponse.data.roles || []
+      const permissions = permResponse.data.permissions || []
+
       login(
         {
           id: String(account.id),
           name: account.name || `用户${phone.slice(-4)}`,
           email: account.email || `${phone}@phone.secmind.com`,
           phone,
-          role: account.role === 'admin' ? 'admin' : account.role === 'analyst' ? 'analyst' : 'viewer',
+          role: roles.includes('admin') ? 'admin' : roles.includes('soc_manager') ? 'soc_manager' : roles.includes('analyst') ? 'analyst' : 'viewer',
           avatarUrl: account.avatar_url ?? undefined,
         },
         loginResponse.data.access_token,
         rememberMe,
         loginResponse.data.refresh_token ?? null
       )
+      useAuthStore.getState().setPermissions(permissions)
       toast('登录成功', 'success')
       router.push('/investigate')
     } catch (err) {
@@ -187,19 +196,28 @@ export default function LoginPage() {
 
       const account = profileResponse.data
 
+      const permResponse = await api.get(`/rbac/users/${account.id}/permissions`, {
+        headers: {
+          Authorization: `Bearer ${loginResponse.data.access_token}`,
+        },
+      })
+      const roles = permResponse.data.roles || []
+      const permissions = permResponse.data.permissions || []
+
       login(
         {
           id: String(account.id),
           name: account.name,
           email: account.email,
           phone: account.phone ?? undefined,
-          role: account.role === 'admin' ? 'admin' : account.role === 'analyst' ? 'analyst' : 'viewer',
+          role: roles.includes('admin') ? 'admin' : roles.includes('soc_manager') ? 'soc_manager' : roles.includes('analyst') ? 'analyst' : 'viewer',
           avatarUrl: account.avatar_url ?? undefined,
         },
         loginResponse.data.access_token,
         rememberMe,
         loginResponse.data.refresh_token ?? null
       )
+      useAuthStore.getState().setPermissions(permissions)
       toast('登录成功', 'success')
       router.push('/investigate')
     } catch (err) {

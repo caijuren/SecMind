@@ -107,7 +107,7 @@ function BaseNode({ data, nodeType }: { data: NodeData; nodeType: string }) {
         <Handle
           type="target"
           position={Position.Top}
-          className="!w-3 !h-3 !bg-slate-700 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
+          className="!w-3 !h-3 !bg-zinc-800 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
         />
       )}
       <div className="flex items-center gap-2.5 mb-1">
@@ -123,7 +123,7 @@ function BaseNode({ data, nodeType }: { data: NodeData; nodeType: string }) {
         <Handle
           type="source"
           position={Position.Bottom}
-          className="!w-3 !h-3 !bg-slate-700 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
+          className="!w-3 !h-3 !bg-zinc-800 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
         />
       )}
     </div>

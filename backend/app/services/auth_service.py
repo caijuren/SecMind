@@ -133,7 +133,6 @@ def create_user(db: Session, email: str, password: str, name: str, **kwargs) -> 
         recent_login_location=kwargs.get("recent_login_location"),
         is_on_leave=kwargs.get("is_on_leave", False),
         is_resigned=kwargs.get("is_resigned", False),
-        role=kwargs.get("role", "user"),
         status=kwargs.get("status", "active"),
         avatar_url=kwargs.get("avatar_url"),
         last_login=kwargs.get("last_login"),

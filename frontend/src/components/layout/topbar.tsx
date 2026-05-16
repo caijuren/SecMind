@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
 import {
@@ -119,7 +119,12 @@ export function Topbar() {
   const pathname = usePathname()
   const router = useRouter()
   const [accountDialogOpen, setAccountDialogOpen] = useState(false)
-  const [isLightMode, setIsLightMode] = useState(false)
+  const [isLightMode, setIsLightMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('secmind-theme') === 'light'
+    }
+    return false
+  })
   const initials = user?.name
     ? user.name.slice(0, 2).toUpperCase()
     : "U"
@@ -135,15 +140,26 @@ export function Topbar() {
 
   const toggleTheme = () => {
     const html = document.documentElement
-    if (isLightMode) {
-      html.classList.add("dark")
-      html.classList.remove("light")
-    } else {
+    const newMode = !isLightMode
+    if (newMode) {
       html.classList.remove("dark")
       html.classList.add("light")
+    } else {
+      html.classList.add("dark")
+      html.classList.remove("light")
     }
-    setIsLightMode(!isLightMode)
+    localStorage.setItem('secmind-theme', newMode ? 'light' : 'dark')
+    setIsLightMode(newMode)
   }
+
+  useEffect(() => {
+    const saved = localStorage.getItem('secmind-theme')
+    if (saved === 'light' && !isLightMode) {
+      setIsLightMode(true)
+      document.documentElement.classList.remove('dark')
+      document.documentElement.classList.add('light')
+    }
+  }, [])
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-[#0c0c10]/90 px-6 backdrop-blur-xl">

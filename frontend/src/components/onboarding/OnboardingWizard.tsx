@@ -142,20 +142,20 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-white/[0.06] bg-[#18181b] shadow-2xl shadow-black/30 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.04]">
           <div className="flex items-center gap-3">
             <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-500">
               <Shield className="size-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">新手引导</h2>
-              <p className="text-xs text-slate-500">步骤 {currentStep + 1} / {steps.length}</p>
+              <h2 className="text-sm font-semibold text-zinc-100">新手引导</h2>
+              <p className="text-xs text-zinc-500">步骤 {currentStep + 1} / {steps.length}</p>
             </div>
           </div>
           <button
             onClick={handleSkip}
-            className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+            className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             跳过全部
             <SkipForward className="size-3" />
@@ -167,7 +167,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <div key={s.id} className="flex-1 flex items-center gap-1">
               <div
                 className={`flex-1 h-1 rounded-full transition-all duration-300 ${
-                  idx <= currentStep ? 'bg-cyan-400' : 'bg-slate-200'
+                  idx <= currentStep ? 'bg-cyan-400' : 'bg-white/[0.06]'
                 }`}
               />
             </div>
@@ -176,32 +176,32 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex size-12 items-center justify-center rounded-xl bg-cyan-50 border border-cyan-200">
-              <StepIcon className="size-6 text-cyan-600" />
+            <div className="flex size-12 items-center justify-center rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+              <StepIcon className="size-6 text-cyan-400" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-900">{step.title}</h3>
-              <p className="text-sm text-slate-500">{step.subtitle}</p>
+              <h3 className="text-lg font-bold text-zinc-100">{step.title}</h3>
+              <p className="text-sm text-zinc-500">{step.subtitle}</p>
             </div>
           </div>
 
           <div className="min-h-[200px]">
             {currentStep === 0 && (
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   欢迎使用 SecMind！AI 自主安全研判平台将帮助您自动完成安全调查、攻击关联、风险推理与处置建议。
                 </p>
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-600">您的姓名 / 团队名称</Label>
+                  <Label className="text-sm text-zinc-400">您的姓名 / 团队名称</Label>
                   <Input
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="请输入您的姓名或团队名称"
-                    className="h-11 border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:border-cyan-500/50 focus-visible:ring-cyan-500/20"
+                    className="h-11 border-white/[0.06] bg-white/[0.03] text-zinc-100 placeholder:text-zinc-500 focus-visible:border-cyan-500/50 focus-visible:ring-cyan-500/20"
                   />
                 </div>
-                <div className="rounded-lg border border-cyan-200 bg-cyan-50/60 p-3">
-                  <p className="text-xs text-cyan-700 leading-relaxed">
+                <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3">
+                  <p className="text-xs text-cyan-300 leading-relaxed">
                     您的 14 天专业版免费试用已开启，所有功能均可使用
                   </p>
                 </div>
@@ -210,7 +210,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
             {currentStep === 1 && (
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   选择您需要接入的安全数据源，AI 将自动聚合和分析来自这些系统的安全信号。
                 </p>
                 <div className="grid grid-cols-2 gap-2">
@@ -223,8 +223,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         onClick={() => toggleIntegration(integration.id)}
                         className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
                           isSelected
-                            ? 'border-cyan-400 bg-cyan-50/50 ring-1 ring-cyan-200/60'
-                            : 'border-slate-200 bg-white hover:border-slate-300'
+                            ? 'border-cyan-400 bg-cyan-500/10 ring-1 ring-cyan-500/30'
+                            : 'border-white/[0.06] bg-white/[0.03] hover:border-white/[0.08]'
                         }`}
                       >
                         <div
@@ -234,8 +234,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                           <Icon className="size-4" style={{ color: integration.color }} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{integration.name}</p>
-                          <p className="text-xs text-slate-500 truncate">{integration.description}</p>
+                          <p className="text-sm font-medium text-zinc-100">{integration.name}</p>
+                          <p className="text-xs text-zinc-500 truncate">{integration.description}</p>
                         </div>
                         {isSelected && (
                           <CheckCircle2 className="size-4 text-cyan-500 shrink-0 mt-1" />
@@ -245,7 +245,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   })}
                 </div>
                 {selectedIntegrations.length > 0 && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-zinc-500">
                     已选择 {selectedIntegrations.length} 个数据源
                   </p>
                 )}
@@ -254,53 +254,53 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
             {currentStep === 2 && (
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   观看 AI 如何自动完成一次完整的安全调查：从告警接收、信号聚合、攻击链构建到结论生成。
                 </p>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 space-y-3">
                   <div className="flex items-center gap-2">
-                    <Brain className="size-4 text-cyan-600" />
-                    <span className="text-sm font-semibold text-slate-900">演示场景：钓鱼邮件攻击调查</span>
+                    <Brain className="size-4 text-cyan-400" />
+                    <span className="text-sm font-semibold text-zinc-100">演示场景：钓鱼邮件攻击调查</span>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-xs">
-                      <CheckCircle2 className="size-3 text-emerald-500" />
-                      <span className="text-slate-600">步骤 1: 接收邮件网关告警</span>
+                      <CheckCircle2 className="size-3 text-emerald-400" />
+                      <span className="text-zinc-400">步骤 1: 接收邮件网关告警</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <CheckCircle2 className="size-3 text-emerald-500" />
-                      <span className="text-slate-600">步骤 2: AI 提取 IOC 并查询威胁情报</span>
+                      <CheckCircle2 className="size-3 text-emerald-400" />
+                      <span className="text-zinc-400">步骤 2: AI 提取 IOC 并查询威胁情报</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {demoRunning ? (
                         <>
                           <div className="size-3 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
-                          <span className="text-amber-600">步骤 3: AI 构建攻击链...</span>
+                          <span className="text-amber-400">步骤 3: AI 构建攻击链...</span>
                         </>
                       ) : demoComplete ? (
                         <>
-                          <CheckCircle2 className="size-3 text-emerald-500" />
-                          <span className="text-slate-600">步骤 3: AI 构建攻击链 - 完成</span>
+                          <CheckCircle2 className="size-3 text-emerald-400" />
+                          <span className="text-zinc-400">步骤 3: AI 构建攻击链 - 完成</span>
                         </>
                       ) : (
                         <>
-                          <div className="size-3 rounded-full bg-slate-300" />
-                          <span className="text-slate-500">步骤 3: AI 构建攻击链</span>
+                          <div className="size-3 rounded-full bg-zinc-600" />
+                          <span className="text-zinc-500">步骤 3: AI 构建攻击链</span>
                         </>
                       )}
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       {demoComplete ? (
                         <>
-                          <CheckCircle2 className="size-3 text-emerald-500" />
-                          <span className="text-slate-600">步骤 4: 生成结论报告</span>
+                          <CheckCircle2 className="size-3 text-emerald-400" />
+                          <span className="text-zinc-400">步骤 4: 生成结论报告</span>
                         </>
                       ) : (
                         <>
-                          <div className="size-3 rounded-full bg-slate-300" />
-                          <span className="text-slate-500">步骤 4: 生成结论报告</span>
+                          <div className="size-3 rounded-full bg-zinc-600" />
+                          <span className="text-zinc-500">步骤 4: 生成结论报告</span>
                         </>
                       )}
                     </div>
@@ -328,8 +328,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 )}
 
                 {demoComplete && (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
-                    <p className="text-xs text-emerald-700 leading-relaxed">
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+                    <p className="text-xs text-emerald-300 leading-relaxed">
                       AI 调查完成！检测到 3 个恶意 IOC，识别为 APT-41 关联攻击，可信度 96.8%
                     </p>
                   </div>
@@ -339,37 +339,37 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
             {currentStep === 3 && (
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   AI 完成调查后会自动生成详细报告，包含攻击画像、推理过程、处置建议。
                 </p>
-                <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-3">
+                <div className="rounded-xl border border-white/[0.06] bg-white/[0.03] p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-slate-900">报告预览</span>
-                    <span className="text-xs text-slate-500">2026-05-16 14:35</span>
+                    <span className="text-sm font-semibold text-zinc-100">报告预览</span>
+                    <span className="text-xs text-zinc-500">2026-05-16 14:35</span>
                   </div>
-                  <div className="h-px bg-slate-100" />
+                  <div className="h-px bg-white/[0.04]" />
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Shield className="size-4 text-red-500" />
-                      <span className="text-slate-700">威胁等级：<strong className="text-red-600">严重</strong></span>
+                      <div className="flex items-center gap-2">
+                        <Shield className="size-4 text-red-400" />
+                        <span className="text-zinc-300">威胁等级：<strong className="text-red-400">严重</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Brain className="size-4 text-cyan-400" />
+                        <span className="text-zinc-300">AI 可信度：<strong className="text-cyan-400">96.8%</strong></span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Activity className="size-4 text-orange-400" />
+                        <span className="text-zinc-300">攻击类型：<strong>鱼叉式钓鱼攻击</strong></span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Brain className="size-4 text-cyan-500" />
-                      <span className="text-slate-700">AI 可信度：<strong className="text-cyan-600">96.8%</strong></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Activity className="size-4 text-orange-500" />
-                      <span className="text-slate-700">攻击类型：<strong>鱼叉式钓鱼攻击</strong></span>
-                    </div>
-                  </div>
-                  <div className="h-px bg-slate-100" />
-                  <p className="text-xs text-slate-500 leading-relaxed">
+                    <div className="h-px bg-white/[0.04]" />
+                    <p className="text-xs text-zinc-500 leading-relaxed">
                     处置建议：立即隔离受影响终端 WIN-DESK-15，重置受影响用户凭证，封禁 IOC 中涉及的 IP 和域名。
                   </p>
                 </div>
                 <Button
                   variant="outline"
-                  className="w-full border-cyan-300 text-cyan-700"
+                  className="w-full border-cyan-500/30 text-cyan-400"
                   onClick={() => router.push('/dashboard')}
                 >
                   查看完整报告
@@ -380,18 +380,18 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
             {currentStep === 4 && (
               <div className="space-y-4">
-                <p className="text-sm text-slate-600 leading-relaxed">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   邀请团队成员加入，共同进行安全运营协作。
                 </p>
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-slate-600">邀请邮箱（多个用逗号分隔）</Label>
+                  <Label className="text-sm text-zinc-400">邀请邮箱（多个用逗号分隔）</Label>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
                     <Input
                       value={teamEmails}
                       onChange={(e) => setTeamEmails(e.target.value)}
                       placeholder="colleague@company.com, analyst@company.com"
-                      className="h-11 border-slate-200 bg-white pl-10 text-slate-900 placeholder:text-slate-400 focus-visible:border-cyan-500/50 focus-visible:ring-cyan-500/20"
+                      className="h-11 border-white/[0.06] bg-white/[0.03] pl-10 text-zinc-100 placeholder:text-zinc-500 focus-visible:border-cyan-500/50 focus-visible:ring-cyan-500/20"
                       disabled={invited}
                     />
                   </div>
@@ -405,14 +405,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     发送邀请
                   </Button>
                 ) : (
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
-                    <p className="text-xs text-emerald-700 leading-relaxed flex items-center gap-1.5">
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-3">
+                    <p className="text-xs text-emerald-300 leading-relaxed flex items-center gap-1.5">
                       <CheckCircle2 className="size-3.5" />
                       邀请已发送，团队成员将收到注册邮件
                     </p>
                   </div>
                 )}
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-zinc-500">
                   您也可以稍后在团队管理中邀请更多成员
                 </p>
               </div>

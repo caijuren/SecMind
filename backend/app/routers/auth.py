@@ -109,7 +109,6 @@ def register(request: Request, body: UserCreate, db: Session = Depends(get_db)):
         name=user.name,
         email=user.email,
         phone=user.phone,
-        role=user.role or "user",
         access_token=access_token,
         refresh_token=refresh_token,
     )

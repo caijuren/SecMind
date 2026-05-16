@@ -36,10 +36,10 @@ const roleLabelMap: Record<UserRole, string> = {
 }
 
 const roleClassMap: Record<UserRole, string> = {
-  admin: "border-red-200 bg-red-50 text-red-600",
-  analyst: "border-cyan-200 bg-cyan-50 text-cyan-700",
-  viewer: "border-slate-200 bg-slate-50 text-slate-600",
-  user: "border-amber-200 bg-amber-50 text-amber-700",
+  admin: "border-red-500/25 bg-red-500/10 text-red-400",
+  analyst: "border-cyan-500/25 bg-cyan-500/10 text-cyan-400",
+  viewer: "border-white/[0.08] bg-white/[0.03] text-zinc-400",
+  user: "border-amber-500/25 bg-amber-500/10 text-amber-400",
 }
 
 function AddUserDialog({
@@ -79,10 +79,10 @@ function AddUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100">
         <DialogHeader>
           <DialogTitle>添加用户</DialogTitle>
-          <DialogDescription className="text-slate-500">新用户会直接写入数据库。</DialogDescription>
+          <DialogDescription className="text-zinc-500">新用户会直接写入数据库。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -205,9 +205,9 @@ export default function UsersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-xs ${subtleTextClass}`}>{item.label}</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{item.value}</p>
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{item.value}</p>
               </div>
-              <span className="rounded-lg bg-cyan-50 p-2 text-cyan-700">
+              <span className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400">
                 <item.icon className="size-4" />
               </span>
             </div>
@@ -217,7 +217,7 @@ export default function UsersPage() {
 
       <div className={`${softCardClass} flex flex-col gap-3 p-4 md:flex-row md:items-center`}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -225,65 +225,65 @@ export default function UsersPage() {
             className={`pl-9 ${inputClass}`}
           />
         </div>
-        <div className="text-sm text-slate-500">当前显示 {filteredUsers.length} 人</div>
+        <div className="text-sm text-zinc-500">当前显示 {filteredUsers.length} 人</div>
       </div>
 
       <Card className={pageCardClass}>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr className="border-b border-slate-200">
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">用户</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">联系方式</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">角色 / 部门</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">状态</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">最后登录</th>
-                  <th scope="col" className="px-4 py-3 text-right text-slate-500">操作</th>
+              <thead className="bg-white/[0.03]">
+                <tr className="border-b border-white/[0.06]">
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">用户</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">联系方式</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">角色 / 部门</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">状态</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">最后登录</th>
+                  <th scope="col" className="px-4 py-3 text-right text-zinc-500">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0">
+                  <tr key={user.id} className="border-b border-white/[0.04] last:border-b-0">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-full bg-cyan-50 font-semibold text-cyan-700">
+                        <div className="flex size-9 items-center justify-center rounded-full bg-cyan-500/10 font-semibold text-cyan-400">
                           {user.name.slice(0, 1)}
                         </div>
                         <div>
-                          <p className="font-medium text-slate-900">{user.name}</p>
-                          <p className="text-xs text-slate-500">ID #{user.id}</p>
+                          <p className="font-medium text-zinc-100">{user.name}</p>
+                          <p className="text-xs text-zinc-500">ID #{user.id}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="space-y-1 text-slate-600">
-                        <div className="flex items-center gap-2"><Mail className="size-3.5 text-slate-400" />{user.email}</div>
-                        <div className="flex items-center gap-2"><Phone className="size-3.5 text-slate-400" />{user.phone || "-"}</div>
+                      <div className="space-y-1 text-zinc-400">
+                        <div className="flex items-center gap-2"><Mail className="size-3.5 text-zinc-500" />{user.email}</div>
+                        <div className="flex items-center gap-2"><Phone className="size-3.5 text-zinc-500" />{user.phone || "-"}</div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">
                         <Badge variant="outline" className={roleClassMap[user.role]}>{roleLabelMap[user.role]}</Badge>
-                        <div className="flex items-center gap-2 text-slate-500">
+                        <div className="flex items-center gap-2 text-zinc-500">
                           <Building2 className="size-3.5" />
                           {user.department || "-"}
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <Badge variant="outline" className={user.status === "active" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-600"}>
+                      <Badge variant="outline" className={user.status === "active" ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400" : "border-red-500/25 bg-red-500/10 text-red-400"}>
                         {user.status === "active" ? "活跃" : "禁用"}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 text-slate-500">{formatDateTime(user.last_login)}</td>
+                    <td className="px-4 py-4 text-zinc-500">{formatDateTime(user.last_login)}</td>
                     <td className="px-4 py-4">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" onClick={() => toggleStatus(user)}>
                           <UserCog className="mr-1 size-3.5" />
                           {user.status === "active" ? "禁用" : "启用"}
                         </Button>
-                        <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => deleteUser(user.id)}>
+                        <Button variant="outline" size="sm" className="border-red-500/25 text-red-400 hover:bg-red-500/10" onClick={() => deleteUser(user.id)}>
                           <Trash2 className="mr-1 size-3.5" />
                           删除
                         </Button>
@@ -294,8 +294,8 @@ export default function UsersPage() {
               </tbody>
             </table>
           </div>
-          {!loading && filteredUsers.length === 0 && <div className="p-10 text-center text-slate-500">没有匹配的用户</div>}
-          {loading && <div className="p-10 text-center text-slate-500">加载中…</div>}
+          {!loading && filteredUsers.length === 0 && <div className="p-10 text-center text-zinc-500">没有匹配的用户</div>}
+          {loading && <div className="p-10 text-center text-zinc-500">加载中…</div>}
         </CardContent>
       </Card>
 

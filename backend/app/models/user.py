@@ -21,7 +21,6 @@ class User(Base):
     is_resigned = Column(Boolean, default=False)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    role = Column(String, default="user")
     status = Column(String, default="active")
     avatar_url = Column(String, nullable=True)
     last_login = Column(DateTime, default=datetime.utcnow)

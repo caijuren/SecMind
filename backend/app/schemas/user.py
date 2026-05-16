@@ -16,7 +16,6 @@ class UserBase(BaseModel):
     is_on_leave: Optional[bool] = False
     is_resigned: Optional[bool] = False
     email: Optional[str] = None
-    role: Optional[str] = "user"
     status: Optional[str] = "active"
     avatar_url: Optional[str] = None
     last_login: Optional[datetime] = None
@@ -39,7 +38,6 @@ class UserUpdate(BaseModel):
     is_on_leave: Optional[bool] = None
     is_resigned: Optional[bool] = None
     email: Optional[str] = None
-    role: Optional[str] = None
     status: Optional[str] = None
     avatar_url: Optional[str] = None
     last_login: Optional[datetime] = None
@@ -68,7 +66,6 @@ class RegisterResponse(Token):
     name: str
     email: str
     phone: Optional[str] = None
-    role: str = "user"
 
 
 class TokenData(BaseModel):

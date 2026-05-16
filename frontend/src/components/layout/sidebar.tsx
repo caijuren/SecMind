@@ -166,8 +166,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           collapsed ? "w-16" : "w-56"
         )}
         style={{
-          borderColor: "rgba(255,255,255,0.04)",
-          background: "#0c0c10",
+          borderColor: "rgba(255,255,255,0.06)",
+          background: "rgba(12,12,16,0.85)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
         }}
       >
         <div className="flex h-16 items-center gap-3 px-4">
@@ -255,7 +257,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   )} style={groupActive ? { backgroundColor: `${group.accent}15` } : undefined}>
                     <GroupIcon className="size-[15px]" style={{ color: groupActive ? group.accent : undefined }} />
                   </div>
-                  <span className="truncate flex-1 text-left">{group.label}</span>
+                  <span className="truncate flex-1 text-left font-mono text-[11px] tracking-widest uppercase">{group.label}</span>
                   <ChevronDown
                     className={cn(
                       "size-3.5 shrink-0 text-zinc-500 transition-transform duration-200",
@@ -272,12 +274,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                           <Link
                             href={item.href}
                             className={cn(
-                              "group/item flex items-center gap-3 rounded-lg pl-10 pr-3 py-1.5 text-[13px] font-medium transition-all duration-200",
+                              "group/item flex items-center gap-3 rounded-lg pl-10 pr-3 py-1.5 text-[13px] font-medium transition-all duration-200 relative",
+                              active && "border-l-2",
                               active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-300"
                             )}
                             style={active ? {
                               background: `linear-gradient(135deg, ${item.accent}12, ${item.accent}06)`,
                               boxShadow: `inset 0 0 0 1px ${item.accent}20`,
+                              borderLeftColor: item.accent,
                             } : undefined}
                           >
                             <item.icon className={cn("size-[14px] shrink-0 transition-all duration-200", active ? "" : "group-hover/item:scale-110")} style={{ color: active ? item.accent : undefined }} />

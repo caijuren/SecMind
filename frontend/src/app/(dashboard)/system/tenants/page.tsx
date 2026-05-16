@@ -97,10 +97,10 @@ const planLabelMap: Record<TenantPlan, string> = {
 }
 
 const planClassMap: Record<TenantPlan, string> = {
-  free: "border-slate-200 bg-slate-50 text-slate-600",
-  starter: "border-blue-200 bg-blue-50 text-blue-700",
-  professional: "border-purple-200 bg-purple-50 text-purple-700",
-  enterprise: "border-amber-200 bg-amber-50 text-amber-700",
+  free: "border-white/[0.08] bg-white/[0.03] text-zinc-400",
+  starter: "border-blue-500/25 bg-blue-500/10 text-blue-400",
+  professional: "border-purple-500/25 bg-purple-500/10 text-purple-400",
+  enterprise: "border-amber-500/25 bg-amber-500/10 text-amber-400",
 }
 
 const statusLabelMap: Record<TenantStatus, string> = {
@@ -111,10 +111,10 @@ const statusLabelMap: Record<TenantStatus, string> = {
 }
 
 const statusClassMap: Record<TenantStatus, string> = {
-  active: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  trial: "border-cyan-200 bg-cyan-50 text-cyan-700",
-  expired: "border-red-200 bg-red-50 text-red-600",
-  suspended: "border-gray-200 bg-gray-50 text-gray-600",
+  active: "border-emerald-500/25 bg-emerald-500/10 text-emerald-400",
+  trial: "border-cyan-500/25 bg-cyan-500/10 text-cyan-400",
+  expired: "border-red-500/25 bg-red-500/10 text-red-400",
+  suspended: "border-zinc-500/25 bg-zinc-800/30 text-zinc-400",
 }
 
 function QuotaBar({
@@ -141,21 +141,21 @@ function QuotaBar({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-slate-700">
-          <Icon className="size-4 text-slate-500" />
+        <div className="flex items-center gap-2 text-sm text-zinc-300">
+          <Icon className="size-4 text-zinc-500" />
           {label}
         </div>
-        <span className="text-sm font-medium text-slate-900">
+        <span className="text-sm font-medium text-zinc-100">
           {current} / {max}
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.04]">
         <div
           className={`h-full rounded-full transition-[width] duration-500 ${barColor}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-zinc-500">
         {pct > 90 ? "即将达到上限" : pct > 70 ? "使用量较高" : `已使用 ${pct.toFixed(0)}%`}
       </p>
     </div>
@@ -194,10 +194,10 @@ function CreateTenantDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>创建租户</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             创建新的租户组织，指定名称、标识和订阅计划。
           </DialogDescription>
         </DialogHeader>
@@ -313,10 +313,10 @@ function AddMemberDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-sm">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100 sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>添加成员</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             将用户添加到此租户组织。
           </DialogDescription>
         </DialogHeader>
@@ -448,7 +448,7 @@ function TenantDetailView({
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
-        <Link href="/system/tenants" onClick={onBack} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
+        <Link href="/system/tenants" onClick={onBack} className="inline-flex items-center gap-1 rounded-md border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-sm text-zinc-300 hover:bg-white/[0.04]">
           <ArrowLeft className="mr-1 size-4" />
           返回列表
         </Link>
@@ -458,13 +458,13 @@ function TenantDetailView({
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className={`flex size-12 items-center justify-center ${RADIUS.lg} bg-cyan-50`}>
-                <Building2 className="size-6 text-cyan-700" />
+              <div className={`flex size-12 items-center justify-center ${RADIUS.lg} bg-cyan-500/10`}>
+                <Building2 className="size-6 text-cyan-400" />
               </div>
               <div>
                 <h2 className={String(TYPOGRAPHY.h1)}>{tenant.name}</h2>
                 <div className="mt-1 flex items-center gap-3">
-                  <span className="text-sm text-slate-500">{tenant.slug}</span>
+                  <span className="text-sm text-zinc-500">{tenant.slug}</span>
                   <Badge variant="outline" className={planClassMap[tenant.plan]}>
                     {planLabelMap[tenant.plan]}
                   </Badge>
@@ -474,7 +474,7 @@ function TenantDetailView({
                 </div>
               </div>
             </div>
-            <div className="text-right text-sm text-slate-500">
+            <div className="text-right text-sm text-zinc-500">
               <div className="flex items-center gap-1 justify-end">
                 <Mail className="size-3.5" />
                 {tenant.owner_email}
@@ -486,7 +486,7 @@ function TenantDetailView({
       </Card>
 
       {loading ? (
-        <div className="p-10 text-center text-slate-500">加载中…</div>
+        <div className="p-10 text-center text-zinc-500">加载中…</div>
       ) : (
         <Tabs defaultValue="quota">
           <TabsList variant="line">
@@ -508,10 +508,10 @@ function TenantDetailView({
             <Card className={CARD.elevated}>
               <CardContent className="p-6 space-y-6">
                 <div>
-                  <h3 className={String(TYPOGRAPHY.h2) + " text-slate-800"}>
+                  <h3 className={String(TYPOGRAPHY.h2) + " text-zinc-200"}>
                     资源配额
                   </h3>
-                  <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-slate-500`}>
+                  <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-zinc-500`}>
                     当前租户的资源使用情况
                   </p>
                 </div>
@@ -540,7 +540,7 @@ function TenantDetailView({
                     />
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-slate-500">
+                  <div className="py-8 text-center text-zinc-500">
                     暂无配额数据
                   </div>
                 )}
@@ -553,10 +553,10 @@ function TenantDetailView({
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className={String(TYPOGRAPHY.h2) + " text-slate-800"}>
+                    <h3 className={String(TYPOGRAPHY.h2) + " text-zinc-200"}>
                       成员列表
                     </h3>
-                    <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-slate-500`}>
+                    <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-zinc-500`}>
                       共 {members.length} 名成员
                     </p>
                   </div>

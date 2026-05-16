@@ -337,7 +337,7 @@ export function Canvas({
     : null
 
   return (
-    <div className="flex-1 relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50/50">
+    <div className="flex-1 relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03]">
       <svg
         ref={svgRef}
         width="100%"
@@ -358,7 +358,7 @@ export function Canvas({
             height={20}
             patternUnits="userSpaceOnUse"
           >
-            <circle cx={10} cy={10} r={0.8} fill="#cbd5e1" />
+            <circle cx={10} cy={10} r={0.8} fill="#3f4a5c" />
           </pattern>
           <marker
             id="arrowhead"
@@ -382,7 +382,7 @@ export function Canvas({
           </marker>
         </defs>
 
-        <rect width="100%" height="100%" fill="#f8fafc" />
+        <rect width="100%" height="100%" fill="#0d1117" />
 
         <g transform={`translate(${pan.x},${pan.y}) scale(${zoom})`}>
           <rect
@@ -479,13 +479,13 @@ export function Canvas({
                   width={NODE_WIDTH}
                   height={NODE_HEIGHT}
                   rx={12}
-                  fill="rgba(0,0,0,0.03)"
+                  fill="rgba(0,0,0,0.2)"
                 />
                 <rect
                   width={NODE_WIDTH}
                   height={NODE_HEIGHT}
                   rx={12}
-                  fill="white"
+                  fill="#1a1f2e"
                   stroke={isSelected ? config.color : config.borderColor}
                   strokeWidth={isSelected ? 2.5 : 1.5}
                 />
@@ -535,7 +535,7 @@ export function Canvas({
                 <text
                   x={64}
                   y={34}
-                  fill="#1e293b"
+                  fill="#e2e8f0"
                   fontSize={13}
                   fontWeight={600}
                   fontFamily="system-ui, sans-serif"
@@ -548,7 +548,7 @@ export function Canvas({
                 <text
                   x={64}
                   y={52}
-                  fill="#94a3b8"
+                  fill="#71717a"
                   fontSize={11}
                   fontFamily="system-ui, sans-serif"
                   style={{ pointerEvents: "none" }}
@@ -563,7 +563,7 @@ export function Canvas({
                     cx={NODE_WIDTH / 2}
                     cy={0}
                     r={PORT_RADIUS}
-                    fill="white"
+                    fill="#1a1f2e"
                     stroke={
                       hoveredPort === `input-${node.id}`
                         ? config.color
@@ -593,7 +593,7 @@ export function Canvas({
                     cx={NODE_WIDTH / 2}
                     cy={NODE_HEIGHT}
                     r={PORT_RADIUS}
-                    fill="white"
+                    fill="#1a1f2e"
                     stroke={
                       hoveredPort === `output-${node.id}`
                         ? config.color
@@ -623,32 +623,32 @@ export function Canvas({
         </g>
       </svg>
 
-      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-white rounded-lg border border-slate-200 px-1 py-1 shadow-sm">
+      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-[#131316] rounded-lg border border-white/[0.06] px-1 py-1 shadow-sm">
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleZoomOut}
-          className="text-slate-500 hover:text-slate-700"
+          className="text-zinc-500 hover:text-zinc-300"
         >
           <ZoomOut className="h-3.5 w-3.5" />
         </Button>
-        <span className="text-[10px] text-slate-500 font-mono w-10 text-center">
+        <span className="text-[10px] text-zinc-500 font-mono w-10 text-center">
           {Math.round(zoom * 100)}%
         </span>
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleZoomIn}
-          className="text-slate-500 hover:text-slate-700"
+          className="text-zinc-500 hover:text-zinc-300"
         >
           <ZoomIn className="h-3.5 w-3.5" />
         </Button>
-        <div className="w-px h-4 bg-slate-200 mx-0.5" />
+        <div className="w-px h-4 bg-white/[0.06] mx-0.5" />
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleFitView}
-          className="text-slate-500 hover:text-slate-700"
+          className="text-zinc-500 hover:text-zinc-300"
           title="适应画布"
         >
           <Maximize className="h-3.5 w-3.5" />
