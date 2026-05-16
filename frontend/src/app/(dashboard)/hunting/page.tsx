@@ -564,7 +564,7 @@ export default function HuntingPage() {
 
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-300" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-700" />
           <Input
               placeholder="搜索假设名称、战术、技术ID..."
               value={searchQuery}
@@ -588,12 +588,12 @@ export default function HuntingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">狩猎假设列表 ({filteredHypotheses.length})</span>
+            <span className="text-xs text-zinc-600">狩猎假设列表 ({filteredHypotheses.length})</span>
           </div>
-          <div className="space-y-3 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          <div className="space-y-3 scrollbar-thin scrollbar-thumb-white/[0.10] scrollbar-track-transparent">
             {loading && (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-300">
-                <div className="size-8 mb-2 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500" />
+              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+                <div className="size-8 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
                 <p className="text-sm">加载中…</p>
               </div>
             )}
@@ -607,7 +607,7 @@ export default function HuntingPage() {
               <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />
             ))}
             {!loading && !error && filteredHypotheses.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-slate-300">
+              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
                 <Search className="size-8 mb-2" />
                 <p className="text-sm">未找到匹配的狩猎假设</p>
               </div>
@@ -621,14 +621,14 @@ export default function HuntingPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-white border-slate-200 text-slate-900">
+        <DialogContent className="sm:max-w-md bg-[#131316] border-white/[0.06] text-zinc-100">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">新建狩猎假设</DialogTitle>
-            <DialogDescription className="text-slate-400">创建基于ATT&CK框架的威胁狩猎假设</DialogDescription>
+            <DialogTitle className="text-zinc-100">新建狩猎假设</DialogTitle>
+            <DialogDescription className="text-zinc-600">创建基于ATT&CK框架的威胁狩猎假设</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-name" className="text-xs text-slate-400">假设名称</label>
+              <label htmlFor="hypothesis-name" className="text-xs text-zinc-600">假设名称</label>
               <Input
                 id="hypothesis-name"
                 placeholder="输入假设名称"
@@ -645,9 +645,9 @@ export default function HuntingPage() {
                 <SelectTrigger id="hypothesis-tactic" className={`w-full text-xs ${inputClass}`}>
                   <SelectValue placeholder="选择ATT&CK战术" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
+                <SelectContent className="bg-[#131316] border-white/[0.06]">
                   {ATTCK_TACTICS.map((tactic) => (
-                    <SelectItem key={tactic} value={tactic} className="text-slate-600 text-xs focus:bg-cyan-50 focus:text-cyan-700">
+                    <SelectItem key={tactic} value={tactic} className="text-zinc-400 text-xs focus:bg-cyan-500/10 focus:text-cyan-700">
                       {tactic}
                     </SelectItem>
                   ))}
@@ -655,25 +655,25 @@ export default function HuntingPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-description" className="text-xs text-slate-400">描述</label>
+              <label htmlFor="hypothesis-description" className="text-xs text-zinc-600">描述</label>
               <Textarea
                 id="hypothesis-description"
                 placeholder="描述假设的攻击场景和狩猎目标"
                 value={newHypothesis.description}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, description: e.target.value }))}
-                className="min-h-[80px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[80px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
                 name="description"
                 autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-ioc" className="text-xs text-slate-400">关联IOC</label>
+              <label htmlFor="hypothesis-ioc" className="text-xs text-zinc-600">关联IOC</label>
               <Textarea
                 id="hypothesis-ioc"
                 placeholder={"每行输入一个IOC指标\n如: 185.220.101.34\nevil-domain.xyz"}
                 value={newHypothesis.relatedIOC}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, relatedIOC: e.target.value }))}
-                className="min-h-[60px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[60px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
                 name="relatedIOC"
                 autoComplete="off"
               />
@@ -682,7 +682,7 @@ export default function HuntingPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              className="border-slate-200 bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 text-xs"
+              className="border-white/[0.06] bg-[#131316] text-zinc-600 hover:text-zinc-100 hover:bg-white/[0.04] text-xs"
               onClick={() => setDialogOpen(false)}
             >
               取消

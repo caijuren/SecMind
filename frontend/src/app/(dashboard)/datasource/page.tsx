@@ -92,10 +92,10 @@ function AddDataSourceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900">
+      <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100">
         <DialogHeader>
           <DialogTitle>添加数据源</DialogTitle>
-          <DialogDescription className="text-slate-500">新数据源会直接保存到数据库中的 `devices` 表。</DialogDescription>
+          <DialogDescription className="text-zinc-500">新数据源会直接保存到数据库中的 `devices` 表。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
@@ -224,30 +224,30 @@ export default function DataSourcePage() {
       <div className="grid gap-4 md:grid-cols-3">
         <button aria-pressed={statusFilter === "online"} onClick={() => setStatusFilter(statusFilter === "online" ? "all" : "online")} className={`${softCardClass} p-4 text-left ${statusFilter === "online" ? "ring-2 ring-emerald-200" : ""}`}>
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-slate-500">在线设备</p><p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{onlineCount}</p></div>
-            <span className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Wifi className="size-4" /></span>
+            <div><p className="text-xs text-zinc-500">在线设备</p><p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{onlineCount}</p></div>
+            <span className="rounded-lg bg-emerald-500/10 p-2 text-emerald-400"><Wifi className="size-4" /></span>
           </div>
         </button>
         <button aria-pressed={statusFilter === "offline"} onClick={() => setStatusFilter(statusFilter === "offline" ? "all" : "offline")} className={`${softCardClass} p-4 text-left ${statusFilter === "offline" ? "ring-2 ring-red-200" : ""}`}>
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-slate-500">离线设备</p><p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{offlineCount}</p></div>
-            <span className="rounded-lg bg-red-50 p-2 text-red-600"><WifiOff className="size-4" /></span>
+            <div><p className="text-xs text-zinc-500">离线设备</p><p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{offlineCount}</p></div>
+            <span className="rounded-lg bg-red-500/10 p-2 text-red-400"><WifiOff className="size-4" /></span>
           </div>
         </button>
         <div className={`${softCardClass} p-4`}>
           <div className="flex items-center justify-between">
-            <div><p className="text-xs text-slate-500">日均日志量</p><p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{Math.round(totalVolume / 1000)}K</p></div>
-            <span className="rounded-lg bg-cyan-50 p-2 text-cyan-700"><Database className="size-4" /></span>
+            <div><p className="text-xs text-zinc-500">日均日志量</p><p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">{Math.round(totalVolume / 1000)}K</p></div>
+            <span className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400"><Database className="size-4" /></span>
           </div>
         </div>
       </div>
 
       <div className={`${softCardClass} flex flex-col gap-3 p-4 md:flex-row md:items-center`}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索设备名称、品牌、类型、IP…" className={`pl-9 ${inputClass}`} />
         </div>
-        <div className="text-sm text-slate-500">当前显示 {filtered.length} 台设备</div>
+        <div className="text-sm text-zinc-500">当前显示 {filtered.length} 台设备</div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -257,23 +257,23 @@ export default function DataSourcePage() {
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-lg bg-cyan-50 p-2 text-cyan-700"><Server className="size-4" /></span>
+                    <span className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400"><Server className="size-4" /></span>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{item.name}</h3>
-                      <p className="text-sm text-slate-500">{item.brand || "-"} {item.model || ""}</p>
+                      <h3 className="font-semibold text-zinc-100">{item.name}</h3>
+                      <p className="text-sm text-zinc-500">{item.brand || "-"} {item.model || ""}</p>
                     </div>
                   </div>
                 </div>
-                <Badge variant="outline" className={item.status === "online" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-600"}>
+                <Badge variant="outline" className={item.status === "online" ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-400" : "border-red-500/25 bg-red-500/10 text-red-400"}>
                   {item.status === "online" ? "在线" : "离线"}
                 </Badge>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">{item.type}</Badge>
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">{item.protocol || "-"}</Badge>
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">{item.log_format || "-"}</Badge>
+                <Badge variant="outline" className="border-cyan-500/25 bg-cyan-500/10 text-cyan-400">{item.type}</Badge>
+                <Badge variant="outline" className="border-white/[0.08] bg-white/[0.03] text-zinc-400">{item.protocol || "-"}</Badge>
+                <Badge variant="outline" className="border-white/[0.08] bg-white/[0.03] text-zinc-400">{item.log_format || "-"}</Badge>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm text-slate-500">
+              <div className="grid grid-cols-2 gap-3 text-sm text-zinc-500">
                 <div>地址：{item.ip}:{item.port || "-"}</div>
                 <div>方向：{item.direction || "-"}</div>
                 <div>级别：{item.log_level || "-"}</div>
@@ -284,7 +284,7 @@ export default function DataSourcePage() {
         ))}
       </div>
 
-      {loading && <div className="text-slate-500">数据源加载中…</div>}
+      {loading && <div className="text-zinc-500">数据源加载中…</div>}
 
       <AddDataSourceDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={loadDevices} />
     </div>

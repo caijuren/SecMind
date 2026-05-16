@@ -241,7 +241,7 @@ export default function AuditPage() {
               <Clock className="h-3.5 w-3.5 mr-1 text-zinc-500" />
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="border-cyan-200 bg-white text-foreground">
+            <SelectContent className="border-cyan-500/25 bg-[#131316] text-foreground">
               <SelectItem value="today">今天</SelectItem>
               <SelectItem value="7d">近7天</SelectItem>
               <SelectItem value="30d">近30天</SelectItem>
@@ -255,14 +255,14 @@ export default function AuditPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="border-b border-slate-200 hover:bg-transparent">
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">时间</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作对象</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">操作详情</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">IP地址</TableHead>
-                <TableHead className="text-slate-400 text-xs font-semibold tracking-wider h-9">结果</TableHead>
+              <TableRow className="border-b border-white/[0.06] hover:bg-transparent">
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">时间</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作对象</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作详情</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">IP地址</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">结果</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -272,9 +272,9 @@ export default function AuditPage() {
                 return (
                   <TableRow
                     key={log.id}
-                    className="border-b border-slate-100 hover:bg-cyan-50 transition-colors"
+                    className="border-b border-white/[0.04] hover:bg-cyan-500/5 transition-colors"
                   >
-                    <TableCell className="text-xs font-mono text-slate-400 py-2.5">{log.time}</TableCell>
+                    <TableCell className="text-xs font-mono text-zinc-500 py-2.5">{log.time}</TableCell>
                     <TableCell className="py-2.5">
                       <div className="flex items-center gap-2">
                         <Avatar size="sm">
@@ -288,7 +288,7 @@ export default function AuditPage() {
                             {log.operatorAvatar}
                           </AvatarFallback>
                         </Avatar>
-                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-600" : "text-slate-700")}>
+                        <span className={cn("text-xs font-medium", isSystem ? "text-purple-400" : "text-zinc-200")}>
                           {log.operator}
                         </span>
                       </div>
@@ -306,9 +306,9 @@ export default function AuditPage() {
                         {log.operationType}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-xs text-slate-600 font-medium py-2.5">{log.target}</TableCell>
-                    <TableCell className="text-xs text-slate-400 max-w-[280px] truncate py-2.5">{log.detail}</TableCell>
-                    <TableCell className="text-xs font-mono text-slate-400 py-2.5">{log.ip}</TableCell>
+                    <TableCell className="text-xs text-zinc-300 font-medium py-2.5">{log.target}</TableCell>
+                    <TableCell className="text-xs text-zinc-500 max-w-[280px] truncate py-2.5">{log.detail}</TableCell>
+                    <TableCell className="text-xs font-mono text-zinc-500 py-2.5">{log.ip}</TableCell>
                     <TableCell className="py-2.5">
                       {log.result === "成功" ? (
                         <Badge
@@ -343,7 +343,7 @@ export default function AuditPage() {
               })}
               {filteredLogs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center text-sm text-slate-500">
+                  <TableCell colSpan={7} className="h-32 text-center text-sm text-zinc-500">
                     暂无匹配的审计日志
                   </TableCell>
                 </TableRow>
@@ -354,20 +354,20 @@ export default function AuditPage() {
       </Card>
 
       <div className="flex items-center justify-between">
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-zinc-500">
           共 {filteredLogs.length} 条记录
         </span>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:border-cyan-200 gap-2"
+            className="border-cyan-500/25 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/30 gap-2"
           >
             <Download className="h-3.5 w-3.5" />
             导出CSV
           </Button>
           <Button
             variant="outline"
-            className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-200 gap-2"
+            className="border-white/[0.06] bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05] hover:border-white/[0.08] gap-2"
           >
             <Download className="h-3.5 w-3.5" />
             导出PDF

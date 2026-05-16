@@ -4,7 +4,6 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { useRealtimeAlerts } from "@/hooks/use-realtime"
 import {
   Bell,
-  Briefcase,
   ShieldAlert,
   Activity,
   Zap,
@@ -75,7 +74,7 @@ const coreKPIs = [
     id: 'pending-cases',
     label: '进行中案件',
     value: '8',
-    icon: Briefcase,
+    icon: Shield,
     severity: 'high' as const,
     trend: { direction: 'down' as const, value: '-2' },
     subtitle: '2件今日到期',
@@ -135,13 +134,6 @@ const priorityAlerts = [
     status: 'investigating' as const,
     assignee: '李思涵',
   },
-]
-
-/** 最近案件 */
-const recentCases = [
-  { id: 'CASE-2024-0891', type: 'APT攻击链', level: 'critical' as const, status: '调查中', owner: '张明远', updatedAt: '10分钟前' },
-  { id: 'CASE-2024-0890', type: '凭证窃取', level: 'high' as const, status: '处置中', owner: '李思涵', updatedAt: '25分钟前' },
-  { id: 'CASE-2024-0889', type: '数据外泄', level: 'high' as const, status: '待确认', owner: '-', updatedAt: '1小时前' },
 ]
 
 /** AI能力概览 - 精简为关键指标 */
@@ -245,8 +237,13 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
     ? COLORS.primary[500]
     : COLORS.severity[item.severity === 'critical' || item.severity === 'high' || item.severity === 'medium' ? item.severity : 'low'].solid
 
+  const glowClass = item.severity === 'critical' ? 'glow-red'
+    : item.severity === 'high' ? 'glow-orange'
+    : item.severity === 'primary' ? 'glow-blue'
+    : 'glow-green'
+
   return (
-    <Card className={cn(CARD.elevated, "group cursor-pointer hover:border-white/[0.12] transition-[shadow,transform]")}>
+    <Card className={cn(CARD.elevated, glowClass, "group cursor-pointer hover:border-white/[0.12] transition-[shadow,transform]")}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -343,59 +340,6 @@ function PriorityAlertCard({ alert }: { alert: typeof priorityAlerts[number] }) 
         </div>
         <Button variant="outline" size="sm" className={cn(TYPOGRAPHY.micro, "gap-1")}>
           立即处理
-          <ArrowRight className="size-3.5" />
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-/** 案件列表项 */
-function CaseItem({ caseItem }: { caseItem: typeof recentCases[number] }) {
-  const severity = getSeverityStyles(caseItem.level)
-
-  return (
-    <div className={cn(CARD.ghost, "px-4 py-3 flex items-center justify-between group hover:bg-white/[0.04]")}>
-      <div className="flex items-center gap-4 min-w-0">
-        <span className={cn(TYPOGRAPHY.caption, "font-mono text-zinc-600 shrink-0")}>{caseItem.id}</span>
-        <span className={cn(TYPOGRAPHY.body, "font-medium text-zinc-300 truncate")}>{caseItem.type}</span>
-        <span
-          className={cn(
-            "shrink-0 inline-flex items-center px-2 py-0.5 rounded",
-            TYPOGRAPHY.micro,
-            "font-medium",
-            severity.bg,
-            severity.textColor
-          )}
-        >
-          {caseItem.level === 'critical' ? '严重' : '高危'}
-        </span>
-        <span
-          className={cn(
-            "shrink-0 px-2 py-0.5 rounded text-xs font-medium",
-            caseItem.status === '调查中'
-              ? "bg-blue-500/10 text-blue-400"
-              : caseItem.status === '处置中'
-              ? "bg-orange-500/10 text-orange-400"
-              : "bg-white/[0.05] text-zinc-400"
-          )}
-        >
-          {caseItem.status}
-        </span>
-      </div>
-
-      <div className="flex items-center gap-4 shrink-0">
-        <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>{caseItem.owner}</span>
-        <span className={cn(TYPOGRAPHY.micro, "text-zinc-600 w-16 text-right")}>{caseItem.updatedAt}</span>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={cn(
-            TYPOGRAPHY.micro,
-            "opacity-0 group-hover:opacity-100 transition-opacity gap-1 text-primary"
-          )}
-        >
-          查看
           <ArrowRight className="size-3.5" />
         </Button>
       </div>
@@ -899,8 +843,9 @@ function DashboardContent() {
         }
       />
 
-      {/* 第一行：核心KPI - 聚焦"需要行动的内容" */}
-      <div className="grid grid-cols-4 gap-4">
+      {/* Bento Grid 布局 */}
+      <div className="bento-grid">
+        {/* KPI 卡片行 */}
         {coreKPIs.map((kpi) => {
           const override = kpiOverrides[kpi.id]
           const merged = override
@@ -908,12 +853,9 @@ function DashboardContent() {
             : kpi
           return <KPICard key={kpi.id} item={merged} />
         })}
-      </div>
 
-      {/* 第二行：左侧最高优先级告警 + 右侧最近案件 */}
-      <div className="grid grid-cols-12 gap-4">
-        {/* 左侧：最高优先级告警 */}
-        <div className="col-span-7 space-y-4">
+        {/* 左侧：最高优先级告警 - 占2列2行 */}
+        <div className="bento-col-span-2 bento-row-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="size-5 text-red-500" />
@@ -944,51 +886,8 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* 右侧：最近案件 */}
-        <div className="col-span-5">
-          <Card className={CARD.default}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Briefcase className="size-5 text-orange-500" />
-                  <h2 className={String(TYPOGRAPHY.h2)}>最近案件</h2>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}
-                >
-                  全部案件
-                  <ArrowRight className="size-4" />
-                </Button>
-              </div>
-
-              <div className="divide-y divide-white/[0.04]">
-                {recentCases.map((caseItem) => (
-                  <CaseItem key={caseItem.id} caseItem={caseItem} />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {/* 第三行：AI智能分析中心（新增板块） */}
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-12">
-          <AICapabilityShowcase />
-        </div>
-      </div>
-
-      {/* 第四行：左侧实时告警流 + 右侧AI能力概览 */}
-      <div className="grid grid-cols-12 gap-4">
-        {/* 左侧：实时告警流 */}
-        <div className="col-span-7">
-          <RealtimeAlertStream />
-        </div>
-
-        {/* 右侧：AI能力概览 */}
-        <div className="col-span-5">
+        {/* 右侧上：AI能力概览 */}
+        <div className="bento-col-span-2">
           <Card className={CARD.elevated}>
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
@@ -1028,6 +927,16 @@ function DashboardContent() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* 右侧下：实时告警流 */}
+        <div className="bento-col-span-2">
+          <RealtimeAlertStream />
+        </div>
+
+        {/* 底部全宽：AI智能分析中心 */}
+        <div className="bento-col-span-4">
+          <AICapabilityShowcase />
         </div>
       </div>
     </div>

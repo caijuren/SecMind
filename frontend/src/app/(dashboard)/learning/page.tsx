@@ -985,8 +985,8 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
   const color = isPositive ? "#22c55e" : "#ff4d4f"
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-xs text-slate-400">{before}%</span>
-      <ArrowRight className="h-3 w-3 text-slate-300" />
+      <span className="font-mono text-xs text-zinc-600">{before}%</span>
+      <ArrowRight className="h-3 w-3 text-zinc-700" />
       <span
         className="font-mono text-xs font-bold"
         style={{ color }}
@@ -1011,7 +1011,7 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
 function MiniBar({ value, max = 100, color = "#22d3ee" }: { value: number; max?: number; color?: string }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
       <div
         className="h-full rounded-full transition-colors"
         style={{
@@ -1033,33 +1033,33 @@ function KnowledgeFeedbackTab() {
       >
         <div className="flex items-center gap-2 mb-5">
           <Sparkles className="h-4 w-4 text-cyan-600" />
-          <h3 className="text-sm font-semibold text-slate-700">{t("learning.feedbackFlow")}</h3>
+          <h3 className="text-sm font-semibold text-zinc-200">{t("learning.feedbackFlow")}</h3>
         </div>
         <div className="flex items-center justify-center gap-4 py-6">
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-6 py-4"
+            className="flex flex-col items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-6 py-4"
           >
             <Shield className="h-6 w-6 text-amber-600" />
             <span className="text-xs font-medium text-amber-700">{t("learning.humanConfirmAttack")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-slate-200" />
+            <div className="h-px w-8 bg-white/[0.06]" />
             <ArrowRight className="h-4 w-4 text-cyan-500" />
-            <div className="h-px w-8 bg-slate-200" />
+            <div className="h-px w-8 bg-white/[0.06]" />
           </div>
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-cyan-200 bg-cyan-50 px-6 py-4"
+            className="flex flex-col items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-6 py-4"
           >
             <Brain className="h-6 w-6 text-cyan-600" />
             <span className="text-xs font-medium text-cyan-700">{t("learning.aiUpdateWeight")}</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-slate-200" />
+            <div className="h-px w-8 bg-white/[0.06]" />
             <ArrowRight className="h-4 w-4 text-emerald-500" />
-            <div className="h-px w-8 bg-slate-200" />
+            <div className="h-px w-8 bg-white/[0.06]" />
           </div>
           <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-4"
+            className="flex flex-col items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-6 py-4"
           >
             <TrendingUp className="h-6 w-6 text-emerald-600" />
             <span className="text-xs font-medium text-emerald-700">{t("learning.futureMoreAccurate")}</span>
@@ -1074,8 +1074,8 @@ function KnowledgeFeedbackTab() {
               <Activity className="h-5 w-5 text-cyan-600" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.feedbackTotal")}</p>
-              <p className="text-2xl font-bold tabular-nums text-slate-900">1,847</p>
+              <p className="text-xs text-zinc-600">{t("learning.feedbackTotal")}</p>
+              <p className="text-2xl font-bold tabular-nums text-zinc-100">1,847</p>
             </div>
           </div>
         </div>
@@ -1085,7 +1085,7 @@ function KnowledgeFeedbackTab() {
               <TrendingUp className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.accuracyImprovement")}</p>
+              <p className="text-xs text-zinc-600">{t("learning.accuracyImprovement")}</p>
               <p className="text-2xl font-bold tabular-nums text-emerald-600">+19%</p>
             </div>
           </div>
@@ -1096,7 +1096,7 @@ function KnowledgeFeedbackTab() {
               <Shield className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.falsePositiveReduction")}</p>
+              <p className="text-xs text-zinc-600">{t("learning.falsePositiveReduction")}</p>
               <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
             </div>
           </div>
@@ -1104,7 +1104,7 @@ function KnowledgeFeedbackTab() {
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
           <Clock className="h-4 w-4 text-cyan-600" />
           {t("learning.recentFeedback")}
         </h3>
@@ -1127,7 +1127,7 @@ function KnowledgeFeedbackTab() {
                   {t(item.attackType)}
                 </span>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono">{item.timestamp}</span>
+              <span className="text-[10px] text-zinc-500 font-mono">{item.timestamp}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
@@ -1165,8 +1165,8 @@ function FeedbackLearningTab() {
         <div
           className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "all"
-              ? "border-cyan-200 bg-cyan-50 shadow-sm"
-              : "border-slate-200 bg-white hover:border-cyan-200"
+              ? "border-cyan-500/20 bg-cyan-500/10 shadow-sm"
+              : "border-white/[0.06] bg-[#131316] hover:border-cyan-500/20"
           }`}
           onClick={() => setFilter("all")}
         >
@@ -1183,8 +1183,8 @@ function FeedbackLearningTab() {
         <div
           className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "confirmed"
-              ? "border-emerald-200 bg-emerald-50 shadow-sm"
-              : "border-slate-200 bg-white hover:border-emerald-200"
+              ? "border-emerald-500/20 bg-emerald-500/10 shadow-sm"
+              : "border-white/[0.06] bg-[#131316] hover:border-emerald-500/20"
           }`}
           onClick={() => setFilter(filter === "confirmed" ? "all" : "confirmed")}
         >
@@ -1201,8 +1201,8 @@ function FeedbackLearningTab() {
         <div
           className={`rounded-xl border p-5 cursor-pointer transition-colors ${
             filter === "disputed"
-              ? "border-red-200 bg-red-50 shadow-sm"
-              : "border-slate-200 bg-white hover:border-red-200"
+              ? "border-red-500/20 bg-red-500/10 shadow-sm"
+              : "border-white/[0.06] bg-[#131316] hover:border-red-500/20"
           }`}
           onClick={() => setFilter(filter === "disputed" ? "all" : "disputed")}
         >
@@ -1253,40 +1253,40 @@ function FeedbackLearningTab() {
                     {isConfirmed ? t("learning.thumbsUp") : t("learning.thumbsDown")}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-mono">{item.timestamp}</span>
+                <span className="text-[10px] text-zinc-500 font-mono">{item.timestamp}</span>
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <Brain className="h-3 w-3 text-cyan-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
                       {t("learning.originalAssessment")}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{item.originalAssessment}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{item.originalAssessment}</p>
                   <div className="mt-2">
                     <MiniBar value={item.originalConfidence} color={item.originalConfidence >= 80 ? "#22c55e" : "#faad14"} />
-                    <span className="text-[10px] font-mono text-slate-400 mt-1 inline-block">{item.originalConfidence}%</span>
+                    <span className="text-[10px] font-mono text-zinc-600 mt-1 inline-block">{item.originalConfidence}%</span>
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
                   <div className="flex items-center gap-1.5 mb-2">
                     <MessageSquare className="h-3 w-3 text-amber-400" />
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/70">
                       {t("learning.userFeedback")}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{item.comment}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{item.comment}</p>
                 </div>
-                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Sparkles className="h-3 w-3 text-emerald-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
+                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Sparkles className="h-3 w-3 text-emerald-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
                       {t("learning.learningOutcome")}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed">{t(item.aiLearningOutcome)}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{t(item.aiLearningOutcome)}</p>
                 </div>
               </div>
             </div>
@@ -1303,7 +1303,7 @@ function ReasoningCorrectionTab() {
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
           <RotateCcw className="h-4 w-4 text-cyan-400" />
           {t("learning.recentCorrections")}
         </h3>
@@ -1314,14 +1314,14 @@ function ReasoningCorrectionTab() {
           return (
             <div
               key={correction.id}
-              className="rounded-xl border border-slate-200 bg-white p-5 hover:border-cyan-300 transition-colors"
+              className="rounded-xl border border-white/[0.06] bg-[#131316] p-5 hover:border-cyan-500/30 transition-colors"
             >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2.5">
                   <Brain className="h-4 w-4 text-cyan-400" />
-                  <span className="text-sm font-semibold text-slate-900">{t(correction.ruleName)}</span>
+                  <span className="text-sm font-semibold text-zinc-100">{t(correction.ruleName)}</span>
                 </div>
-                <span className="text-[10px] text-slate-300 font-mono">{correction.timestamp}</span>
+                <span className="text-[10px] text-zinc-700 font-mono">{correction.timestamp}</span>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
@@ -1330,8 +1330,8 @@ function ReasoningCorrectionTab() {
                     {t("learning.weightAdjustment")}
                   </span>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm text-slate-500">{correction.beforeWeight.toFixed(2)}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-slate-300" />
+                    <span className="font-mono text-sm text-zinc-500">{correction.beforeWeight.toFixed(2)}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-zinc-700" />
                     <span
                       className="font-mono text-sm font-bold"
                       style={{ color: weightColor }}
@@ -1358,14 +1358,14 @@ function ReasoningCorrectionTab() {
                 </div>
               </div>
 
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+              <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
                 <div className="flex items-center gap-1.5 mb-2">
                   <Target className="h-3 w-3 text-cyan-400" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
                     {t("learning.patternRecognition")}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{t(correction.pattern)}</p>
+                <p className="text-xs text-zinc-500 mb-2">{t(correction.pattern)}</p>
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="h-3 w-3 text-emerald-400" />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
@@ -1391,7 +1391,7 @@ function AiGrowthTab() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
               <Target className="h-5 w-5 text-cyan-600" />
@@ -1402,7 +1402,7 @@ function AiGrowthTab() {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
               <Activity className="h-5 w-5 text-emerald-600" />
@@ -1413,7 +1413,7 @@ function AiGrowthTab() {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
               <TrendingUp className="h-5 w-5 text-amber-600" />
@@ -1424,7 +1424,7 @@ function AiGrowthTab() {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/15">
               <Shield className="h-5 w-5 text-purple-600" />
@@ -1439,11 +1439,11 @@ function AiGrowthTab() {
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div
-          className="rounded-xl border border-slate-200 bg-white p-5"
+          className="rounded-xl border border-white/[0.06] bg-[#131316] p-5"
         >
           <div className="flex items-center gap-2 mb-4">
             <LineChart className="h-4 w-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-slate-700">{t("learning.accuracyTrend")}</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">{t("learning.accuracyTrend")}</h3>
           </div>
           <ReactEChartsCore
             echarts={echarts}
@@ -1452,24 +1452,24 @@ function AiGrowthTab() {
               xAxis: {
                 type: "category",
                 data: ACCURACY_DATA.map((d) => d.month.slice(5)),
-                axisLine: { lineStyle: { color: "#e2e8f0" } },
-                axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "monospace" },
+                axisLine: { lineStyle: { color: "#27272a" } },
+                axisLabel: { color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" },
                 axisTick: { show: false },
               },
               yAxis: {
                 type: "value",
                 min: 60,
                 max: 100,
-                splitLine: { lineStyle: { color: "#f1f5f9" } },
-                axisLabel: { color: "#94a3b8", fontSize: 10, formatter: "{value}%" },
+                splitLine: { lineStyle: { color: "#27272a" } },
+                axisLabel: { color: "#a1a1aa", fontSize: 10, formatter: "{value}%" },
                 axisLine: { show: false },
                 axisTick: { show: false },
               },
               tooltip: {
                 trigger: "axis",
-                backgroundColor: "#ffffff",
-                borderColor: "#e2e8f0",
-                textStyle: { color: "#1e293b", fontSize: 12 },
+                backgroundColor: "#18181b",
+                borderColor: "#27272a",
+                textStyle: { color: "#e4e4e7", fontSize: 12 },
                 formatter: (params: any) => {
                   const p = params[0]
                   return `${p.name}<br/><span style="color:#0891b2;font-weight:bold">${p.value}%</span>`
@@ -1483,7 +1483,7 @@ function AiGrowthTab() {
                   symbol: "circle",
                   symbolSize: 6,
                   lineStyle: { color: "#0891b2", width: 2.5 },
-                  itemStyle: { color: "#0891b2", borderColor: "#ffffff", borderWidth: 2 },
+                  itemStyle: { color: "#0891b2", borderColor: "#18181b", borderWidth: 2 },
                   areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                       { offset: 0, color: "rgba(8,145,178,0.15)" },
@@ -1506,11 +1506,11 @@ function AiGrowthTab() {
         </div>
 
         <div
-          className="rounded-xl border border-slate-200 bg-white p-5"
+          className="rounded-xl border border-white/[0.06] bg-[#131316] p-5"
         >
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="h-4 w-4 text-emerald-400" />
-            <h3 className="text-sm font-semibold text-slate-700">{t("learning.falsePositiveTrend")}</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">{t("learning.falsePositiveTrend")}</h3>
           </div>
           <ReactEChartsCore
             echarts={echarts}
@@ -1519,24 +1519,24 @@ function AiGrowthTab() {
               xAxis: {
                 type: "category",
                 data: FALSE_POSITIVE_DATA.map((d) => d.month.slice(5)),
-                axisLine: { lineStyle: { color: "#e2e8f0" } },
-                axisLabel: { color: "#94a3b8", fontSize: 10, fontFamily: "monospace" },
+                axisLine: { lineStyle: { color: "#27272a" } },
+                axisLabel: { color: "#a1a1aa", fontSize: 10, fontFamily: "monospace" },
                 axisTick: { show: false },
               },
               yAxis: {
                 type: "value",
                 min: 0,
                 max: 35,
-                splitLine: { lineStyle: { color: "#f1f5f9" } },
-                axisLabel: { color: "#94a3b8", fontSize: 10, formatter: "{value}%" },
+                splitLine: { lineStyle: { color: "#27272a" } },
+                axisLabel: { color: "#a1a1aa", fontSize: 10, formatter: "{value}%" },
                 axisLine: { show: false },
                 axisTick: { show: false },
               },
               tooltip: {
                 trigger: "axis",
-                backgroundColor: "#ffffff",
-                borderColor: "#e2e8f0",
-                textStyle: { color: "#1e293b", fontSize: 12 },
+                backgroundColor: "#18181b",
+                borderColor: "#27272a",
+                textStyle: { color: "#e4e4e7", fontSize: 12 },
                 formatter: (params: any) => {
                   const p = params[0]
                   return `${p.name}<br/><span style="color:#059669;font-weight:bold">${p.value}%</span>`
@@ -1572,7 +1572,7 @@ function AiGrowthTab() {
                   symbol: "circle",
                   symbolSize: 5,
                   lineStyle: { color: "#059669", width: 2, type: "dashed" },
-                  itemStyle: { color: "#059669", borderColor: "#ffffff", borderWidth: 2 },
+                  itemStyle: { color: "#059669", borderColor: "#18181b", borderWidth: 2 },
                 },
               ],
             }}
@@ -1583,18 +1583,18 @@ function AiGrowthTab() {
       </div>
 
       <div
-        className="rounded-xl border border-slate-200 bg-white p-6"
+        className="rounded-xl border border-white/[0.06] bg-[#131316] p-6"
       >
         <div className="flex items-center gap-2 mb-5">
           <Radar className="h-4 w-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold text-slate-700">{t("learning.capabilityRadar")}</h3>
+          <h3 className="text-sm font-semibold text-zinc-200">{t("learning.capabilityRadar")}</h3>
         </div>
         <div className="flex flex-col gap-4">
           {RADAR_DIMENSIONS.map((dim) => {
             const color = dim.value >= 90 ? "#22d3ee" : dim.value >= 80 ? "#22c55e" : "#faad14"
             return (
               <div key={dim.key} className="flex items-center gap-4">
-                <span className="text-xs text-slate-500 w-24 shrink-0">{t(dim.labelKey)}</span>
+                <span className="text-xs text-zinc-500 w-24 shrink-0">{t(dim.labelKey)}</span>
                 <div className="flex-1">
                   <MiniBar value={dim.value} color={color} />
                 </div>
@@ -1613,30 +1613,30 @@ function AiGrowthTab() {
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
           <Trophy className="h-4 w-4 text-amber-400" />
           {t("learning.learningMilestones")}
         </h3>
         <div className="relative">
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-200" />
+          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-white/[0.06]" />
           <div className="space-y-4">
             {mockMilestones.map((milestone) => {
               const Icon = milestone.icon
               return (
                 <div key={milestone.id} className="relative flex items-start gap-4 pl-10">
                   <div
-                    className="absolute left-0 top-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-amber-100 border border-amber-300"
+                    className="absolute left-0 top-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20"
                   >
                     <Icon className="h-3.5 w-3.5 text-amber-400" />
                   </div>
                   <div
-                    className="flex-1 rounded-xl border border-slate-200 bg-white p-4"
+                    className="flex-1 rounded-xl border border-white/[0.06] bg-[#131316] p-4"
                   >
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-slate-900">{t(milestone.title)}</span>
-                      <span className="text-[10px] text-slate-300 font-mono">{milestone.date}</span>
+                      <span className="text-sm font-semibold text-zinc-100">{t(milestone.title)}</span>
+                      <span className="text-[10px] text-zinc-700 font-mono">{milestone.date}</span>
                     </div>
-                    <p className="text-xs text-slate-400">{t(milestone.description)}</p>
+                    <p className="text-xs text-zinc-600">{t(milestone.description)}</p>
                   </div>
                 </div>
               )
@@ -1669,12 +1669,12 @@ export default function LearningPage() {
       />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LearningTab)} className="gap-5">
-        <TabsList variant="line" className="border-b border-slate-200 w-full justify-start gap-0">
+        <TabsList variant="line" className="border-b border-white/[0.06] w-full justify-start gap-0">
           {TABS.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="text-slate-500 data-active:text-cyan-400"
+              className="text-zinc-500 data-active:text-cyan-400"
             >
               {t(tab.labelKey)}
             </TabsTrigger>

@@ -94,15 +94,15 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-white border-cyan-300 text-slate-900 shadow-lg">
+      <DialogContent className="sm:max-w-lg bg-[#131316] border-cyan-500/20 text-zinc-100 shadow-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-900">
+          <DialogTitle className="flex items-center gap-2 text-zinc-100">
             <div className="flex size-8 items-center justify-center rounded-lg bg-cyan-500/15">
               <Upload className="size-4 text-cyan-400" />
             </div>
             导入知识
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-zinc-600">
             手动录入或粘贴知识内容到AI知识库
           </DialogDescription>
         </DialogHeader>
@@ -110,25 +110,25 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="import-title" className="text-slate-500 text-xs">知识标题 <span className="text-red-400">*</span></Label>
+              <Label htmlFor="import-title" className="text-zinc-500 text-xs">知识标题 <span className="text-red-400">*</span></Label>
               <Input
                 required
                 id="import-title"
                 value={form.title}
                 onChange={(e) => handleChange("title", e.target.value)}
                 placeholder="如：XX漏洞分析报告"
-                className="h-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200"
+                className="h-10 bg-[#131316] border-white/[0.06] text-zinc-100 placeholder:text-zinc-700 focus:border-cyan-400 focus:ring-cyan-200"
                 name="title"
                 autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="import-category" className="text-slate-500 text-xs">所属分类 <span className="text-red-400">*</span></Label>
+              <Label htmlFor="import-category" className="text-zinc-500 text-xs">所属分类 <span className="text-red-400">*</span></Label>
               <Select value={form.category} onValueChange={(v) => handleChange("category", v ?? "")}>
-                <SelectTrigger id="import-category" className="h-10 bg-white border-slate-200 text-slate-900 text-sm">
+                <SelectTrigger id="import-category" className="h-10 bg-[#131316] border-white/[0.06] text-zinc-100 text-sm">
                   <SelectValue placeholder="选择分类" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-cyan-200 text-slate-900">
+                <SelectContent className="bg-[#131316] border-white/[0.06] text-zinc-100">
                   {knowledgeCategories.map((cat) => (
                     <SelectItem key={cat.nameKey} value={cat.nameKey}>{t0(cat.nameKey)}</SelectItem>
                   ))}
@@ -138,13 +138,13 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="import-tags" className="text-slate-500 text-xs">标签</Label>
-            <Input
-              id="import-tags"
-              value={form.tags}
-              onChange={(e) => handleChange("tags", e.target.value)}
-              placeholder="多个标签用逗号分隔，如：APT, 钓鱼, CVE"
-              className="h-10 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200"
+            <Label htmlFor="import-tags" className="text-zinc-500 text-xs">标签</Label>
+              <Input
+                id="import-tags"
+                value={form.tags}
+                onChange={(e) => handleChange("tags", e.target.value)}
+                placeholder="多个标签用逗号分隔，如：APT, 钓鱼, CVE"
+                className="h-10 bg-[#131316] border-white/[0.06] text-zinc-100 placeholder:text-zinc-700 focus:border-cyan-400 focus:ring-cyan-200"
               name="tags"
               autoComplete="off"
             />
@@ -158,7 +158,7 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
               value={form.content}
               onChange={(e) => handleChange("content", e.target.value)}
               placeholder="支持Markdown格式，粘贴知识正文内容…"
-              className="min-h-[160px] bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-cyan-400 focus:ring-cyan-200 resize-none text-sm"
+              className="min-h-[160px] bg-[#131316] border-white/[0.06] text-zinc-100 placeholder:text-zinc-700 focus:border-cyan-400 focus:ring-cyan-200 resize-none text-sm"
               name="content"
               autoComplete="off"
             />
@@ -248,8 +248,8 @@ export default function KnowledgePage() {
 
         <div className={`${pageCardClass} p-6 space-y-4`}>
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">{selectedArticle.title}</h2>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
+            <h2 className="text-lg font-bold text-zinc-100">{selectedArticle.title}</h2>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-600">
               {cat && (
                 <span
                   className="inline-flex items-center rounded px-2 py-0.5 font-medium"
@@ -273,7 +273,7 @@ export default function KnowledgePage() {
             </div>
             <div className="flex flex-wrap gap-1.5">
               {selectedArticle.tags.map((tag) => (
-                <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] text-slate-500">
+                <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-white/[0.06] bg-white/[0.03] px-2 py-0.5 text-[10px] text-zinc-500">
                   <Tag className="size-2.5" />
                   {tag}
                 </span>
@@ -281,28 +281,28 @@ export default function KnowledgePage() {
             </div>
           </div>
 
-          <div className="border-t border-slate-100 pt-4">
-            <p className="text-sm text-slate-400 italic mb-4">{selectedArticle.summary}</p>
-            <div className="prose prose prose-sm max-w-none text-slate-600 space-y-3">
+          <div className="border-t border-white/[0.04] pt-4">
+            <p className="text-sm text-zinc-600 italic mb-4">{selectedArticle.summary}</p>
+            <div className="prose prose prose-sm max-w-none text-zinc-400 space-y-3">
               {selectedArticle.content.split("\n\n").map((block, i) => {
                 if (block.startsWith("## ")) {
-                  return <h3 key={i} className="text-base font-semibold text-slate-800 mt-6 mb-2">{block.replace("## ", "")}</h3>
-                }
-                if (block.startsWith("### ")) {
-                  return <h4 key={i} className="text-sm font-semibold text-slate-700 mt-4 mb-1">{block.replace("### ", "")}</h4>
+                  return <h3 key={i} className="text-base font-semibold text-zinc-100 mt-6 mb-2">{block.replace("## ", "")}</h3>
+                    }
+                    if (block.startsWith("### ")) {
+                      return <h4 key={i} className="text-sm font-semibold text-zinc-200 mt-4 mb-1">{block.replace("### ", "")}</h4>
                 }
                 if (block.startsWith("| ")) {
                   const rows = block.split("\n").filter((r) => r.startsWith("|") && !r.startsWith("|--"))
                   return (
                     <div key={i} className="overflow-x-auto my-3">
-                      <table className="w-full text-xs border border-slate-200">
+                      <table className="w-full text-xs border border-white/[0.06]">
                         <tbody>
                           {rows.map((row, ri) => {
                             const cells = row.split("|").filter(Boolean).map((c) => c.trim())
                             return (
-                              <tr key={ri} className={ri === 0 ? "bg-slate-50/50" : ""}>
+                              <tr key={ri} className={ri === 0 ? "bg-white/[0.03]" : ""}>
                                 {cells.map((cell, ci) => (
-                                  <td key={ci} className="px-3 py-1.5 border border-slate-100 text-slate-500">{cell}</td>
+                                  <td key={ci} className="px-3 py-1.5 border border-white/[0.04] text-zinc-500">{cell}</td>
                                 ))}
                               </tr>
                             )
@@ -317,9 +317,9 @@ export default function KnowledgePage() {
                   return (
                     <ul key={i} className="space-y-1 ml-4">
                       {items.map((item, j) => (
-                        <li key={j} className="text-sm text-slate-500 flex items-start gap-2">
+                        <li key={j} className="text-sm text-zinc-500 flex items-start gap-2">
                           <span className="mt-1.5 size-1 rounded-full bg-cyan-400/40 shrink-0" />
-                          <span className="text-slate-500">{renderMarkdownText(item.replace("- ", ""))}</span>
+                          <span className="text-zinc-500">{renderMarkdownText(item.replace("- ", ""))}</span>
                         </li>
                       ))}
                     </ul>
@@ -335,7 +335,7 @@ export default function KnowledgePage() {
                     </ol>
                   )
                 }
-                return <p key={i} className="text-sm text-slate-500 leading-relaxed">{renderMarkdownText(block)}</p>
+                return <p key={i} className="text-sm text-zinc-500 leading-relaxed">{renderMarkdownText(block)}</p>
               })}
             </div>
           </div>
@@ -358,12 +358,12 @@ export default function KnowledgePage() {
       />
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-700" />
         <Input
           placeholder={t("settings.searchKnowledge")}
           value={knowledgeSearch}
           onChange={(e) => setKnowledgeSearch(e.target.value)}
-          className={`pl-10 h-10 ${inputClass}`}
+          className="pl-10 h-10 bg-[#131316] border-white/[0.06] text-zinc-100 placeholder:text-zinc-700 focus:border-cyan-400 focus:ring-cyan-200"
           name="search"
           type="search"
           autoComplete="off"
@@ -390,15 +390,15 @@ export default function KnowledgePage() {
                 <Icon className="size-5" style={{ color: cat.color }} />
               </div>
               <h3 className="text-sm font-medium" style={{ color: `${cat.color}cc` }}>{t(cat.nameKey)}</h3>
-              <p className="text-xs text-slate-500">{articles.filter((a) => a.categoryKey === cat.nameKey).length} {t("settings.articles")}</p>
+              <p className="text-xs text-zinc-600">{articles.filter((a) => a.categoryKey === cat.nameKey).length} {t("settings.articles")}</p>
             </div>
           )
         })}
       </div>
 
       <div className={pageCardClass}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-          <h2 className="text-sm font-medium text-slate-700 flex items-center gap-2">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
+          <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-cyan-600" />
             {selectedCategory ? `${t0(selectedCategory)}知识` : "AI最近引用"}
           </h2>
@@ -406,31 +406,31 @@ export default function KnowledgePage() {
             {selectedCategory && (
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="text-[10px] text-slate-500 hover:text-slate-700 flex items-center gap-1 transition-colors"
+                className="text-[10px] text-zinc-600 hover:text-zinc-300 flex items-center gap-1 transition-colors"
               >
                 <X className="size-3" />
                 清除筛选
               </button>
             )}
-            <span className="text-xs text-slate-500">{filteredArticles.length} {t("settings.articles")}</span>
+            <span className="text-xs text-zinc-600">{filteredArticles.length} {t("settings.articles")}</span>
           </div>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-white/[0.04]">
           {pagedArticles.map((article) => {
             const cat = knowledgeCategories.find((c) => c.nameKey === article.categoryKey)
             return (
               <div
                 key={article.id}
-                className="flex items-center gap-4 px-5 py-3 hover:bg-slate-50 transition-colors cursor-pointer group"
+                className="flex items-center gap-4 px-5 py-3 hover:bg-white/[0.03] transition-colors cursor-pointer group"
                 onClick={() => setSelectedArticle(article)}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-700 group-hover:text-cyan-700 transition-colors truncate">
+                    <span className="text-sm text-zinc-300 group-hover:text-cyan-400 transition-colors truncate">
                       {article.title}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-[10px] text-slate-500">
+                  <div className="mt-1 flex items-center gap-3 text-[10px] text-zinc-600">
                     {cat && (
                       <span
                         className="inline-flex items-center rounded px-1.5 py-0.5 font-medium"
@@ -450,24 +450,24 @@ export default function KnowledgePage() {
                       <Brain className="h-2.5 w-2.5" />
                       AI引用 {article.citedByAI}次
                     </span>
-                    <span className="hidden sm:inline text-slate-300 truncate max-w-[200px]">{article.summary}</span>
+                    <span className="hidden sm:inline text-zinc-700 truncate max-w-[200px]">{article.summary}</span>
                   </div>
                 </div>
-                <ArrowRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-cyan-600 transition-colors shrink-0" />
+                <ArrowRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-cyan-400 transition-colors shrink-0" />
               </div>
             )
           })}
           {filteredArticles.length === 0 && (
-            <div className="py-12 text-center text-sm text-slate-300">{t("settings.noMatchingArticles")}</div>
+            <div className="py-12 text-center text-sm text-zinc-700">{t("settings.noMatchingArticles")}</div>
           )}
         </div>
         {filteredArticles.length > 0 && (
-          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200">
-            <span className="text-xs text-slate-300">共 {filteredArticles.length} 篇</span>
+          <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.06]">
+            <span className="text-xs text-zinc-700">共 {filteredArticles.length} 篇</span>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="text-slate-400">上一页</Button>
-              <span className="text-xs text-slate-400">{currentPage} / {totalPages}</span>
-              <Button variant="ghost" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="text-slate-400">下一页</Button>
+              <Button variant="ghost" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)} className="text-zinc-600 hover:text-zinc-300">上一页</Button>
+              <span className="text-xs text-zinc-600">{currentPage} / {totalPages}</span>
+              <Button variant="ghost" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)} className="text-zinc-600 hover:text-zinc-300">下一页</Button>
             </div>
           </div>
         )}

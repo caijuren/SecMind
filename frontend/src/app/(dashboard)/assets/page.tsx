@@ -168,19 +168,19 @@ export default function AssetsPage() {
               className={cn(
                 "cursor-pointer transition-colors duration-200",
                 activeFilter === card.key
-                  ? `${card.borderColor} ${card.bgColor} shadow-sm shadow-slate-200/50`
+                  ? `${card.borderColor} ${card.bgColor} shadow-sm shadow-black/[0.08]`
                   : softCardClass
               )}
               onClick={() => setActiveFilter(card.key)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs", activeFilter === card.key ? `${card.textColor}/70` : "text-slate-400")}>
+                  <span className={cn("text-xs", activeFilter === card.key ? `${card.textColor}/70` : "text-zinc-500")}>
                     {card.label}
                   </span>
-                  <Icon className={cn("size-4", activeFilter === card.key ? `${card.textColor}/60` : "text-slate-300")} />
+                  <Icon className={cn("size-4", activeFilter === card.key ? `${card.textColor}/60` : "text-zinc-600")} />
                 </div>
-                <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.key ? card.textColor : "text-slate-900")}>
+                <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.key ? card.textColor : "text-zinc-100")}>
                   {card.count}
                 </p>
               </CardContent>
@@ -191,7 +191,7 @@ export default function AssetsPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-300" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
           <Input
             placeholder="搜索资产名称、IP、部门、负责人..."
             aria-label="搜索资产"
@@ -210,14 +210,14 @@ export default function AssetsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg bg-white border-cyan-200 text-slate-900">
+        <DialogContent className="sm:max-w-lg bg-[#131316] border-cyan-500/20 text-zinc-100">
           <DialogHeader>
-            <DialogTitle className="text-slate-900">添加资产</DialogTitle>
-            <DialogDescription className="text-slate-400">录入新的IT资产信息</DialogDescription>
+            <DialogTitle className="text-zinc-100">添加资产</DialogTitle>
+            <DialogDescription className="text-zinc-500">录入新的IT资产信息</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">资产名称</label>
+              <label className="text-xs text-zinc-500">资产名称</label>
               <Input
                 className={inputClass}
                 placeholder="请输入资产名称"
@@ -226,7 +226,7 @@ export default function AssetsPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-slate-400">IP地址</label>
+              <label className="text-xs text-zinc-500">IP地址</label>
               <Input
                 className={inputClass}
                 placeholder="请输入IP地址"
@@ -236,12 +236,12 @@ export default function AssetsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400">资产类型</label>
+                <label className="text-xs text-zinc-500">资产类型</label>
                 <Select value={formData.type} onValueChange={(v) => v && setFormData((p) => ({ ...p, type: v as AssetType }))}>
                   <SelectTrigger className={`w-full ${inputClass}`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
+                  <SelectContent className="bg-[#131316] border-white/[0.06]">
                     <SelectItem value="服务器">服务器</SelectItem>
                     <SelectItem value="网络设备">网络设备</SelectItem>
                     <SelectItem value="安全设备">安全设备</SelectItem>
@@ -252,12 +252,12 @@ export default function AssetsPage() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400">风险等级</label>
+                <label className="text-xs text-zinc-500">风险等级</label>
                 <Select value={formData.riskGrade} onValueChange={(v) => v && setFormData((p) => ({ ...p, riskGrade: v as RiskGrade }))}>
                   <SelectTrigger className={`w-full ${inputClass}`}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-200">
+                  <SelectContent className="bg-[#131316] border-white/[0.06]">
                     <SelectItem value="高">高</SelectItem>
                     <SelectItem value="中">中</SelectItem>
                     <SelectItem value="低">低</SelectItem>
@@ -267,7 +267,7 @@ export default function AssetsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400">所属部门</label>
+                <label className="text-xs text-zinc-500">所属部门</label>
                 <Input
                   className={inputClass}
                   placeholder="请输入所属部门"
@@ -276,7 +276,7 @@ export default function AssetsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs text-slate-400">负责人</label>
+                <label className="text-xs text-zinc-500">负责人</label>
                 <Input
                   className={inputClass}
                   placeholder="请输入负责人"
@@ -288,7 +288,7 @@ export default function AssetsPage() {
             <div className="flex justify-end gap-2 pt-2">
               <Button
                 variant="outline"
-                className="border-slate-200 bg-white text-slate-500 hover:text-slate-700"
+                className="border-white/[0.06] bg-[#131316] text-zinc-500 hover:text-zinc-300"
                 onClick={() => setDialogOpen(false)}
               >
                 取消
@@ -308,16 +308,16 @@ export default function AssetsPage() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-                <TableRow className="border-slate-200 hover:bg-transparent">
-                <TableHead className="text-slate-400 font-medium text-xs">资产名称</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">IP地址</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">类型</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">部门</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">负责人</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">风险评分</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">关联告警</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">最后扫描</TableHead>
-                <TableHead className="text-slate-400 font-medium text-xs">操作</TableHead>
+                <TableRow className="border-white/[0.06] hover:bg-transparent">
+                <TableHead className="text-zinc-500 font-medium text-xs">资产名称</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">IP地址</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">类型</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">部门</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">负责人</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">风险评分</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">关联告警</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">最后扫描</TableHead>
+                <TableHead className="text-zinc-500 font-medium text-xs">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -328,25 +328,25 @@ export default function AssetsPage() {
                   <TableRow
                     key={asset.id}
                     className={cn(
-                      "border-slate-100 hover:bg-slate-50",
+                      "border-white/[0.04] hover:bg-white/[0.03]",
                       asset.riskGrade === "高" && "bg-red-400/[0.02]"
                     )}
                   >
-                    <TableCell className="text-slate-700 font-medium text-sm">
+                    <TableCell className="text-zinc-300 font-medium text-sm">
                       <div className="flex items-center gap-2">
                         <TypeIcon className={cn("size-4", typeConfig.color)} />
                         {asset.name}
                       </div>
                     </TableCell>
-                    <TableCell className="text-slate-400 font-mono text-xs">{asset.ip}</TableCell>
+                    <TableCell className="text-zinc-400 font-mono text-xs">{asset.ip}</TableCell>
                     <TableCell>
                       <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium", typeConfig.bg, typeConfig.color)}>
                         <TypeIcon className="size-3" />
                         {asset.type}
                       </span>
                     </TableCell>
-                    <TableCell className="text-slate-400 text-xs">{asset.department}</TableCell>
-                    <TableCell className="text-slate-400 text-xs">{asset.owner}</TableCell>
+                    <TableCell className="text-zinc-400 text-xs">{asset.department}</TableCell>
+                    <TableCell className="text-zinc-400 text-xs">{asset.owner}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 min-w-[120px]">
                         <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
@@ -366,10 +366,10 @@ export default function AssetsPage() {
                           {asset.alerts}
                         </span>
                       ) : (
-                        <span className="text-slate-300 text-xs">0</span>
+                        <span className="text-zinc-500 text-xs">0</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-slate-300 text-xs font-mono">{asset.lastScan}</TableCell>
+                    <TableCell className="text-zinc-400 text-xs font-mono">{asset.lastScan}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Button size="xs" variant="ghost" className="text-cyan-400/60 hover:text-cyan-400 hover:bg-cyan-400/10">
@@ -391,27 +391,27 @@ export default function AssetsPage() {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <BarChart3 className="size-4 text-cyan-400" />
-          <h2 className="text-sm font-bold text-slate-700">资产风险分布</h2>
+          <h2 className="text-sm font-bold text-zinc-300">资产风险分布</h2>
         </div>
         <div className="grid grid-cols-3 gap-4">
           {TYPE_DISTRIBUTION.map((item) => {
             const config = ASSET_TYPE_CONFIG[item.type]
             const Icon = config.icon
             return (
-              <Card key={item.type} className="card-default hover:border-slate-200 transition-colors">
+              <Card key={item.type} className="card-default hover:border-white/[0.08] transition-colors">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={cn("flex items-center justify-center rounded-md p-1.5", config.bg)}>
                         <Icon className={cn("size-4", config.color)} />
                       </div>
-                      <span className="text-sm text-slate-600">{item.type}</span>
+                      <span className="text-sm text-zinc-400">{item.type}</span>
                     </div>
                     <span className={cn("text-lg font-bold font-mono", config.color)}>{item.count}</span>
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-slate-300">风险占比</span>
+                      <span className="text-[10px] text-zinc-500">风险占比</span>
                       <span className={cn("text-xs font-mono font-bold", getRiskTextColor(item.riskPercent))}>
                         {item.riskPercent}%
                       </span>

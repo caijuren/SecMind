@@ -194,9 +194,11 @@
 }
 
 .card-surface:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .light .card-surface {
@@ -224,6 +226,24 @@
   box-shadow:
     0 0 20px rgba(139, 92, 246, 0.15),
     0 0 60px rgba(139, 92, 246, 0.05);
+}
+
+.glow-red {
+  box-shadow:
+    0 0 20px rgba(239, 68, 68, 0.15),
+    0 0 60px rgba(239, 68, 68, 0.05);
+}
+
+.glow-orange {
+  box-shadow:
+    0 0 20px rgba(249, 115, 22, 0.15),
+    0 0 60px rgba(249, 115, 22, 0.05);
+}
+
+.glow-green {
+  box-shadow:
+    0 0 20px rgba(34, 197, 94, 0.15),
+    0 0 60px rgba(34, 197, 94, 0.05);
 }
 
 .glow-text {

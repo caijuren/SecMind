@@ -134,13 +134,13 @@ export default function IntegrationsPage() {
           { key: "marketplace" as const, label: "集成市场", count: apps.filter((item) => item.source === "marketplace").length, icon: Plus },
           { key: "webhooks" as const, label: "Webhook", count: webhooks.length, icon: Webhook },
         ].map((item) => (
-          <button key={item.key} onClick={() => setTab(item.key)} role="tab" aria-selected={tab === item.key} className={`${softCardClass} p-4 text-left ${tab === item.key ? "ring-2 ring-cyan-200" : ""}`}>
+          <button key={item.key} onClick={() => setTab(item.key)} role="tab" aria-selected={tab === item.key} className={`${softCardClass} p-4 text-left ${tab === item.key ? "ring-2 ring-cyan-500/30" : ""}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500">{item.label}</p>
-                <p className="mt-1 text-2xl font-semibold text-slate-900">{item.count}</p>
+                <p className="text-xs text-zinc-500">{item.label}</p>
+                <p className="mt-1 text-2xl font-semibold text-zinc-100">{item.count}</p>
               </div>
-              <span className="rounded-lg bg-cyan-50 p-2 text-cyan-700"><item.icon className="size-4" /></span>
+              <span className="rounded-lg bg-cyan-500/10 p-2 text-cyan-400"><item.icon className="size-4" /></span>
             </div>
           </button>
         ))}
@@ -148,7 +148,7 @@ export default function IntegrationsPage() {
 
       <div className={`${softCardClass} flex flex-col gap-3 p-4 md:flex-row md:items-center`}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索集成名称、说明、分类..." className={`pl-9 ${inputClass}`} aria-label="搜索集成" name="search" type="search" autoComplete="off" />
         </div>
         {tab === "webhooks" && (
@@ -166,15 +166,15 @@ export default function IntegrationsPage() {
               <CardContent className="space-y-4 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-semibold text-slate-900">{app.name}</h3>
-                    <p className="mt-1 text-sm text-slate-500">{app.description}</p>
+                    <h3 className="font-semibold text-zinc-100">{app.name}</h3>
+                    <p className="mt-1 text-sm text-zinc-400">{app.description}</p>
                   </div>
-                  <Badge variant="outline" className={app.status === "connected" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}>
+                  <Badge variant="outline" className={app.status === "connected" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-white/[0.08] bg-white/[0.03] text-zinc-500"}>
                     {app.status === "connected" ? <CheckCircle2 className="mr-1 size-3.5" /> : <XCircle className="mr-1 size-3.5" />}
                     {app.status === "connected" ? "已连接" : "未连接"}
                   </Badge>
                 </div>
-                <div className="text-xs text-slate-500">最后同步：{app.last_sync || "-"}</div>
+                <div className="text-xs text-zinc-500">最后同步：{app.last_sync || "-"}</div>
                 <div className="flex gap-2">
                   {app.source === "integrated" ? (
                     <Button variant="outline" size="sm" onClick={() => setSelectedApp(app)}>
@@ -191,7 +191,7 @@ export default function IntegrationsPage() {
               </CardContent>
             </Card>
           ))}
-          {!loading && filteredApps.length === 0 && <div className="text-slate-500">没有匹配的集成</div>}
+          {!loading && filteredApps.length === 0 && <div className="text-zinc-500">没有匹配的集成</div>}
         </div>
       )}
 
@@ -202,15 +202,15 @@ export default function IntegrationsPage() {
               <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-semibold text-slate-900">{webhook.name}</h3>
-                    <Badge variant="outline" className={webhook.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}>
+                    <h3 className="font-semibold text-zinc-100">{webhook.name}</h3>
+                    <Badge variant="outline" className={webhook.active ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400" : "border-white/[0.08] bg-white/[0.03] text-zinc-500"}>
                       {webhook.active ? "启用中" : "已关闭"}
                     </Badge>
                   </div>
-                  <p className="font-mono text-sm text-slate-500">{webhook.url}</p>
+                  <p className="font-mono text-sm text-zinc-400">{webhook.url}</p>
                   <div className="flex flex-wrap gap-2">
                     {webhook.events.map((event) => (
-                      <Badge key={event} variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">{event}</Badge>
+                      <Badge key={event} variant="outline" className="border-cyan-500/20 bg-cyan-500/10 text-cyan-400">{event}</Badge>
                     ))}
                   </div>
                 </div>
@@ -230,10 +230,10 @@ export default function IntegrationsPage() {
       )}
 
       <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-        <DialogContent className="border-slate-200 bg-white text-slate-900">
+        <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100">
           <DialogHeader>
             <DialogTitle>配置 {selectedApp?.name}</DialogTitle>
-            <DialogDescription className="text-slate-500">修改后会直接更新数据库中的集成配置。</DialogDescription>
+            <DialogDescription className="text-zinc-500">修改后会直接更新数据库中的集成配置。</DialogDescription>
           </DialogHeader>
           {selectedApp && (
             <div className="space-y-4">
@@ -267,10 +267,10 @@ export default function IntegrationsPage() {
       </Dialog>
 
       <Dialog open={!!selectedMarketApp} onOpenChange={() => setSelectedMarketApp(null)}>
-        <DialogContent className="border-slate-200 bg-white text-slate-900">
+        <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100">
           <DialogHeader>
             <DialogTitle>接入 {selectedMarketApp?.name}</DialogTitle>
-            <DialogDescription className="text-slate-500">接入后状态会切为已连接，并保存 API 参数。</DialogDescription>
+            <DialogDescription className="text-zinc-500">接入后状态会切为已连接，并保存 API 参数。</DialogDescription>
           </DialogHeader>
           {selectedMarketApp && (
             <div className="space-y-4">
@@ -292,10 +292,10 @@ export default function IntegrationsPage() {
       </Dialog>
 
       <Dialog open={webhookDialogOpen} onOpenChange={setWebhookDialogOpen}>
-        <DialogContent className="border-slate-200 bg-white text-slate-900">
+        <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100">
           <DialogHeader>
             <DialogTitle>新建 Webhook</DialogTitle>
-            <DialogDescription className="text-slate-500">事件用英文逗号分隔，创建后会直接写入数据库。</DialogDescription>
+            <DialogDescription className="text-zinc-500">事件用英文逗号分隔，创建后会直接写入数据库。</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">

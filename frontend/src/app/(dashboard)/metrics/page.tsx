@@ -6,6 +6,7 @@ import {
   Wrench,
   AlertTriangle,
   ShieldX,
+  ShieldAlert,
   Bot,
   Target,
   BarChart3,
@@ -190,38 +191,38 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
               <Icon className="size-5" style={{ color: item.color }} />
             </div>
             <div>
-              <p className={String(TYPOGRAPHY.body) + 'font-medium text-slate-700'}>{item.label}</p>
-              <p className={String(TYPOGRAPHY.micro) + 'text-slate-400 mt-0.5'}>{item.description}</p>
+              <p className={String(TYPOGRAPHY.body) + 'font-medium text-zinc-300'}>{item.label}</p>
+              <p className={String(TYPOGRAPHY.micro) + 'text-zinc-500 mt-0.5'}>{item.description}</p>
             </div>
           </div>
 
           <span className={cn(
             TYPOGRAPHY.micro + 'font-semibold px-2 py-1 rounded-md',
-            item.trend.isGood ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
+            item.trend.isGood ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
           )}>
             {item.trend.value}
           </span>
         </div>
 
         <div className="flex items-end gap-2 mb-3">
-          <span className="text-3xl font-bold font-mono tracking-tight text-slate-900">
+          <span className="text-3xl font-bold font-mono tracking-tight text-zinc-100">
             {item.value}
           </span>
-          <span className={String(TYPOGRAPHY.caption) + 'text-slate-500 mb-1'}>{item.unit}</span>
+          <span className={String(TYPOGRAPHY.caption) + 'text-zinc-500 mb-1'}>{item.unit}</span>
         </div>
 
         {/* 目标达成指示器 */}
-        <div className="pt-3 border-t border-slate-100">
+        <div className="pt-3 border-t border-white/[0.06]">
           <div className="flex items-center justify-between mb-2">
-            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>目标: {item.target}</span>
+            <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>目标: {item.target}</span>
             <Badge variant="outline" className={cn(
               TYPOGRAPHY.micro,
-              item.achievement >= 100 ? 'border-emerald-300 text-emerald-700' : 'border-orange-300 text-orange-700'
+              item.achievement >= 100 ? 'border-emerald-500/20 text-emerald-400' : 'border-orange-500/20 text-orange-400'
             )}>
               达成率 {item.achievement}%
             </Badge>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="w-full h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
             <div
               className={cn('h-full rounded-full transition-colors duration-500', item.achievement >= 100 ? 'bg-emerald-500' : 'bg-orange-500')}
               style={{ width: `${Math.min(item.achievement, 100)}%` }}
@@ -248,7 +249,7 @@ function BenchmarkComparison() {
           </Badge>
         </div>
 
-        <p className={String(TYPOGRAPHY.body) + 'text-slate-600 mb-4'}>
+        <p className={String(TYPOGRAPHY.body) + 'text-zinc-400 mb-4'}>
           与同行业SOC团队相比，我们的运营效率处于领先水平
         </p>
 
@@ -257,15 +258,15 @@ function BenchmarkComparison() {
             <div key={benchmark.metric} className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className={String(TYPOGRAPHY.h3)}>{benchmark.metric}</span>
-                <span className={cn(TYPOGRAPHY.caption + 'font-semibold px-2 py-0.5 rounded', 'bg-emerald-50 text-emerald-700')}>
+                <span className={cn(TYPOGRAPHY.caption + 'font-semibold px-2 py-0.5 rounded', 'bg-emerald-500/10 text-emerald-400')}>
                   领先 {benchmark.improvement}
                 </span>
               </div>
 
               <div className="relative h-8 flex items-center">
                 {/* 行业平均 */}
-                <div className="absolute left-0 right-0 h-6 bg-slate-100 rounded flex items-center px-3">
-                  <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>
+                <div className="absolute left-0 right-0 h-6 bg-white/[0.05] rounded flex items-center px-3">
+                  <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>
                     行业平均: {benchmark.industry}{benchmark.unit}
                   </span>
                 </div>
@@ -277,15 +278,15 @@ function BenchmarkComparison() {
                     width: `${(benchmark.current / benchmark.industry) * 100}%`,
                     maxWidth: '100%',
                     backgroundColor: benchmark.better === 'lower' && benchmark.current < benchmark.industry
-                      ? '#dcfce7' // 绿色背景（更低=更好）
+                      ? 'rgba(16,185,129,0.12)' // 绿色背景（更低=更好）
                       : benchmark.better === 'higher' && benchmark.current > benchmark.industry
-                        ? '#dcfce7' // 绿色背景（更高=更好）
-                        : '#fef2f2', // 红色背景
-                    borderLeft: `3px solid ${benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#16a34a' : '#dc2626'}`,
+                        ? 'rgba(16,185,129,0.12)' // 绿色背景（更高=更好）
+                        : 'rgba(239,68,68,0.12)', // 红色背景
+                    borderLeft: `3px solid ${benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#22c55e' : '#ef4444'}`,
                   }}
                 >
                   <span className={String(TYPOGRAPHY.caption) + 'font-bold'} style={{
-                    color: benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#166534' : '#991b1b'
+                    color: benchmark.better === 'lower' && benchmark.current < benchmark.industry || benchmark.better === 'higher' && benchmark.current > benchmark.industry ? '#4ade80' : '#f87171'
                   }}>
                     我们: {benchmark.current}{benchmark.unit}
                   </span>
@@ -302,9 +303,9 @@ function BenchmarkComparison() {
 /** 改进建议卡片 */
 function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggestions[number] }) {
   const priorityColors = {
-    high: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-800' },
-    medium: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', badge: 'bg-yellow-100 text-yellow-800' },
-    low: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-800' },
+    high: { bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400', badge: 'bg-red-500/20 text-red-400' },
+    medium: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', badge: 'bg-yellow-500/20 text-yellow-400' },
+    low: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400', badge: 'bg-blue-500/20 text-blue-400' },
   }
   const colors = priorityColors[suggestion.priority as keyof typeof priorityColors]
 
@@ -320,17 +321,17 @@ function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggesti
         </Badge>
       </div>
 
-      <p className={String(TYPOGRAPHY.body) + 'text-slate-600 mb-3'}>{suggestion.description}</p>
+      <p className={String(TYPOGRAPHY.body) + 'text-zinc-400 mb-3'}>{suggestion.description}</p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-200/50">
+      <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
         <div className="flex items-center gap-4">
           <div>
-            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>预期影响</span>
-            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-emerald-600'}>{suggestion.impact}</p>
+            <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>预期影响</span>
+            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-emerald-400'}>{suggestion.impact}</p>
           </div>
           <div>
-            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>实施难度</span>
-            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-slate-700'}>{suggestion.effort}</p>
+            <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>实施难度</span>
+            <p className={String(TYPOGRAPHY.caption) + 'font-semibold text-zinc-300'}>{suggestion.effort}</p>
           </div>
         </div>
 
@@ -346,10 +347,10 @@ function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggesti
 /** 团队绩效卡片 */
 function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) {
   const efficiencyColors: Record<string, string> = {
-    'A+': 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    'A': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'B+': 'bg-blue-50 text-blue-700 border-blue-200',
-    'B': 'bg-slate-100 text-slate-700 border-slate-200',
+    'A+': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20',
+    'A': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    'B+': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    'B': 'bg-white/[0.05] text-zinc-400 border-white/[0.08]',
   }
 
   return (
@@ -365,7 +366,7 @@ function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) 
           <h4 className={String(TYPOGRAPHY.h3)}>{member.name}</h4>
           <div className="flex items-center gap-2 mt-1">
             <CheckCircle2 className="size-3.5 text-emerald-500" />
-            <span className={String(TYPOGRAPHY.micro) + 'font-mono text-emerald-600'}>{member.accuracy}</span>
+            <span className={String(TYPOGRAPHY.micro) + 'font-mono text-emerald-400'}>{member.accuracy}</span>
           </div>
         </div>
         <Badge className={cn(TYPOGRAPHY.micro, efficiencyColors[member.efficiency])}>
@@ -374,19 +375,19 @@ function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) 
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className={RADIUS.sm + ' bg-slate-50 p-2.5'}>
+        <div className={RADIUS.sm + ' bg-white/[0.03] p-2.5'}>
           <div className="flex items-center gap-1 mb-1">
-            <Users className="size-3.5 text-slate-400" />
-            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>处理案件</span>
+            <Users className="size-3.5 text-zinc-500" />
+            <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>处理案件</span>
           </div>
-          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-slate-900'}>{member.cases}</span>
+          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-zinc-100'}>{member.cases}</span>
         </div>
-        <div className={RADIUS.sm + ' bg-slate-50 p-2.5'}>
+        <div className={RADIUS.sm + ' bg-white/[0.03] p-2.5'}>
           <div className="flex items-center gap-1 mb-1">
-            <Clock className="size-3.5 text-slate-400" />
-            <span className={String(TYPOGRAPHY.micro) + 'text-slate-500'}>平均响应</span>
+            <Clock className="size-3.5 text-zinc-500" />
+            <span className={String(TYPOGRAPHY.micro) + 'text-zinc-500'}>平均响应</span>
           </div>
-          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-slate-900'}>{member.avgTime}</span>
+          <span className={String(TYPOGRAPHY.h3) + 'font-bold font-mono text-zinc-100'}>{member.avgTime}</span>
         </div>
       </div>
     </Card>
@@ -400,9 +401,9 @@ export default function MetricsPage() {
     <PermissionGate resource="dashboard_metrics" action="read" fallback={
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
-          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
-          <p className="text-sm text-slate-500 mt-1">你没有查看运营效能看板的权限</p>
+          <ShieldAlert className="mx-auto size-12 text-zinc-600 mb-4" />
+          <h2 className="text-lg font-semibold text-zinc-300">无权限访问</h2>
+          <p className="text-sm text-zinc-500 mt-1">你没有查看运营效能看板的权限</p>
         </div>
       </div>
     }>
@@ -447,8 +448,8 @@ function MetricsContent() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className={String(TYPOGRAPHY.h2)}>核心效率指标</h2>
-          <span className={String(TYPOGRAPHY.caption) + 'text-slate-500'}>
-            目标达成率: <strong className="text-emerald-600">114%</strong> (平均)
+          <span className={String(TYPOGRAPHY.caption) + 'text-zinc-500'}>
+            目标达成率: <strong className="text-emerald-400">114%</strong> (平均)
           </span>
         </div>
         <div className="grid grid-cols-3 gap-4">
@@ -492,8 +493,8 @@ function MetricsContent() {
               <h2 className={String(TYPOGRAPHY.h2)}>团队绩效</h2>
             </div>
             <div className="flex items-center gap-4">
-              <span className={String(TYPOGRAPHY.caption) + 'text-slate-500'}>本月TOP表现者</span>
-              <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">
+              <span className={String(TYPOGRAPHY.caption) + 'text-zinc-500'}>本月TOP表现者</span>
+              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/20">
                 <Star className="size-3 mr-1" /> 张明远 (A+)
               </Badge>
             </div>
