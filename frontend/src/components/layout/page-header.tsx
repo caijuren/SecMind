@@ -12,17 +12,17 @@ interface PageHeaderProps {
 
 export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="flex h-12 items-center justify-between gap-4 rounded-lg border border-slate-200/80 bg-white/90 px-4 shadow-sm shadow-slate-200/50 backdrop-blur-sm">
+    <div className="flex h-12 items-center justify-between gap-4 rounded-lg border border-white/6 bg-[#131316] px-4 shadow-sm shadow-black/10">
       <div className="flex items-center gap-3 min-w-0">
-        <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100 text-cyan-700 shadow-sm ring-1 ring-cyan-200/50">
+        <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500/20 to-violet-500/15 text-blue-400 shadow-sm ring-1 ring-blue-500/20">
           <Icon className="h-4.5 w-4.5" />
         </span>
         <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-base font-semibold text-slate-900 tracking-tight">{title}</h1>
+          <h1 className="text-base font-semibold text-zinc-100 tracking-tight">{title}</h1>
           {subtitle && (
             <>
-              <span className="h-4 w-px bg-slate-200 shrink-0" />
-              <span className="truncate text-sm text-slate-500">{subtitle}</span>
+              <span className="h-4 w-px bg-white/10 shrink-0" />
+              <span className="truncate text-sm text-zinc-500">{subtitle}</span>
             </>
           )}
         </div>

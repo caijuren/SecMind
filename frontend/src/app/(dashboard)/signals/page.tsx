@@ -84,19 +84,19 @@ interface RiskCluster {
 }
 
 const SOURCE_CONFIG: Record<SignalSource, { icon: typeof Activity; color: string; bg: string }> = {
-  EDR: { icon: Monitor, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  VPN: { icon: Wifi, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  IAM: { icon: Lock, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  Email: { icon: Mail, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  Firewall: { icon: Shield, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  DNS: { icon: Globe, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  EDR: { icon: Monitor, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  VPN: { icon: Wifi, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  IAM: { icon: Lock, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  Email: { icon: Mail, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  Firewall: { icon: Shield, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  DNS: { icon: Globe, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
 }
 
 const PREPROCESS_CONFIG: Record<AIPreprocess, { color: string; icon: typeof Brain }> = {
-  "去噪": { color: "text-cyan-600", icon: Filter },
-  "聚合": { color: "text-amber-600", icon: Layers },
-  "上下文补全": { color: "text-purple-600", icon: Brain },
-  "风险评分": { color: "text-red-600", icon: BarChart3 },
+  "去噪": { color: "text-cyan-400", icon: Filter },
+  "聚合": { color: "text-amber-400", icon: Layers },
+  "上下文补全": { color: "text-purple-400", icon: Brain },
+  "风险评分": { color: "text-red-400", icon: BarChart3 },
 }
 
 const initialSignals: LiveSignal[] = [
@@ -303,17 +303,17 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-3">
-        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-slate-600">总事件量</span><Activity className="size-4 text-slate-600" /></div><p className="mt-1 text-xl font-bold text-slate-900 font-mono tabular-nums">{signalCount.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-cyan-200 bg-cyan-50"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-600">AI去噪后</span><Filter className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-600 font-mono tabular-nums">{aiDenoised.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-amber-200 bg-amber-50"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-amber-600">异常行为</span><AlertTriangle className="size-4 text-amber-500" /></div><p className="mt-1 text-xl font-bold text-amber-600 font-mono tabular-nums">{anomalies.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-red-200 bg-red-50"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-600">风险事件</span><Zap className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-600 font-mono tabular-nums">{riskSignals.toLocaleString()}</p></CardContent></Card>
+        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-zinc-400">总事件量</span><Activity className="size-4 text-zinc-400" /></div><p className="mt-1 text-xl font-bold text-zinc-100 font-mono tabular-nums">{signalCount.toLocaleString()}</p></CardContent></Card>
+        <Card className="border-cyan-500/20 bg-cyan-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-400">AI去噪后</span><Filter className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-400 font-mono tabular-nums">{aiDenoised.toLocaleString()}</p></CardContent></Card>
+        <Card className="border-amber-500/20 bg-amber-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-amber-400">异常行为</span><AlertTriangle className="size-4 text-amber-500" /></div><p className="mt-1 text-xl font-bold text-amber-400 font-mono tabular-nums">{anomalies.toLocaleString()}</p></CardContent></Card>
+        <Card className="border-red-500/20 bg-red-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-400">风险事件</span><Zap className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-400 font-mono tabular-nums">{riskSignals.toLocaleString()}</p></CardContent></Card>
       </div>
 
       <div className="grid grid-cols-5 gap-4">
         <div className="col-span-2 space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <LivePulse />
-            <span className="text-xs font-bold text-cyan-600 tracking-wider">{t("signals.live")}</span>
+            <span className="text-xs font-bold text-cyan-400 tracking-wider">{t("signals.live")}</span>
             {isConnected ? (
               <Wifi className="size-3 text-emerald-500" />
             ) : (
@@ -322,12 +322,12 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
             {newAlertCount > 0 && (
               <button
                 onClick={clearNewAlerts}
-                className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-50 text-red-600 font-semibold animate-pulse cursor-pointer hover:bg-red-100 transition-colors"
+                className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors"
               >
                 +{newAlertCount}
               </button>
             )}
-            <span className="text-[10px] text-slate-600 ml-1">点击查看详情</span>
+            <span className="text-[10px] text-zinc-500 ml-1">点击查看详情</span>
           </div>
           {signals.map((signal, idx) => {
             const isSelected = selectedSignal?.id === signal.id
@@ -336,19 +336,19 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                 key={signal.id}
                 className={cn(
                   "rounded-lg border p-2.5 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-300 bg-cyan-50" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
                   idx === 0 && "animate-in slide-in-from-top-2 duration-500",
-                  signal.riskLevel === "critical" && !isSelected && "border-red-200",
+                  signal.riskLevel === "critical" && !isSelected && "border-red-500/20",
                 )}
                 onClick={() => setSelectedSignal(signal)}
               >
                 <div className="flex items-center gap-2 mb-1.5">
                   <SourceBadge source={signal.source} />
                   <RiskIndicator level={signal.riskLevel} />
-                  <span className="text-[10px] font-mono text-slate-600 ml-auto">{signal.timestamp}</span>
+                  <span className="text-[10px] font-mono text-zinc-500 ml-auto">{signal.timestamp}</span>
                 </div>
-                <p className="text-xs text-slate-700 font-medium leading-snug line-clamp-1">{signal.aiClassification}</p>
-                <p className="text-[10px] text-slate-600 font-mono leading-relaxed mt-1 line-clamp-1">{signal.rawInput}</p>
+                <p className="text-xs text-zinc-300 font-medium leading-snug line-clamp-1">{signal.aiClassification}</p>
+                <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mt-1 line-clamp-1">{signal.rawInput}</p>
               </div>
             )
           })}
@@ -356,79 +356,79 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
 
         <div className="col-span-3">
           {selectedSignal ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SourceBadge source={selectedSignal.source} />
                   <RiskIndicator level={selectedSignal.riskLevel} />
-                  <span className="text-xs font-mono text-slate-600">{selectedSignal.id}</span>
+                  <span className="text-xs font-mono text-zinc-500">{selectedSignal.id}</span>
                 </div>
-                <span className="text-[10px] text-slate-600 font-mono flex items-center gap-1"><Clock className="size-3" />{selectedSignal.receivedTime}</span>
+                <span className="text-[10px] text-zinc-500 font-mono flex items-center gap-1"><Clock className="size-3" />{selectedSignal.receivedTime}</span>
               </div>
 
-              <h3 className="text-sm font-semibold text-slate-900 leading-snug">{selectedSignal.aiClassification}</h3>
+              <h3 className="text-sm font-semibold text-zinc-100 leading-snug">{selectedSignal.aiClassification}</h3>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-200">
-                  <Radio className="size-3.5 text-slate-600" />
-                  <span className="text-xs font-semibold text-slate-600">来自 {selectedSignal.sourceSystemName} 的原始事件</span>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
+                  <Radio className="size-3.5 text-zinc-400" />
+                  <span className="text-xs font-semibold text-zinc-400">来自 {selectedSignal.sourceSystemName} 的原始事件</span>
                 </div>
                 <div className="space-y-2.5">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <span className="text-[10px] text-slate-600 block mb-0.5">接收时间</span>
-                      <span className="text-xs text-slate-500 font-mono">{selectedSignal.receivedTime}</span>
+                      <span className="text-[10px] text-zinc-500 block mb-0.5">接收时间</span>
+                      <span className="text-xs text-zinc-400 font-mono">{selectedSignal.receivedTime}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-600 block mb-0.5">来源系统</span>
-                      <span className="text-xs text-slate-500">{selectedSignal.sourceSystemName}</span>
+                      <span className="text-[10px] text-zinc-500 block mb-0.5">来源系统</span>
+                      <span className="text-xs text-zinc-400">{selectedSignal.sourceSystemName}</span>
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-600 block mb-1">原始推送内容</span>
-                    <div className="rounded-md bg-slate-100 p-2.5 border border-slate-200">
-                      <p className="text-[11px] text-slate-600 font-mono leading-relaxed break-all">{selectedSignal.rawInput}</p>
+                    <span className="text-[10px] text-zinc-500 block mb-1">原始推送内容</span>
+                    <div className="rounded-md bg-white/[0.04] p-2.5 border border-white/[0.06]">
+                      <p className="text-[11px] text-zinc-400 font-mono leading-relaxed break-all">{selectedSignal.rawInput}</p>
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-600 block mb-1 flex items-center gap-1"><AlertTriangle className="size-2.5 text-amber-600/60" />来源系统分析判定</span>
-                    <p className="text-xs text-slate-600 leading-relaxed">{selectedSignal.sourceAnalysis}</p>
+                    <span className="text-[10px] text-zinc-500 block mb-1 flex items-center gap-1"><AlertTriangle className="size-2.5 text-amber-400/60" />来源系统分析判定</span>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.sourceAnalysis}</p>
                   </div>
-                  <div className="rounded-md border border-amber-200 bg-amber-50 p-2.5">
-                    <span className="text-[10px] text-amber-600 block mb-1 flex items-center gap-1"><Zap className="size-2.5" />来源系统处置建议</span>
-                    <p className="text-xs text-slate-600 leading-relaxed">{selectedSignal.sourceSuggestion}</p>
+                  <div className="rounded-md border border-amber-500/20 bg-amber-500/10 p-2.5">
+                    <span className="text-[10px] text-amber-400 block mb-1 flex items-center gap-1"><Zap className="size-2.5" />来源系统处置建议</span>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.sourceSuggestion}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-4 space-y-3">
-                <div className="flex items-center gap-2 pb-2 border-b border-cyan-200">
-                  <Brain className="size-3.5 text-cyan-600" />
-                  <span className="text-xs font-semibold text-cyan-600">SecMind AI 分析增强</span>
+              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-cyan-500/20">
+                  <Brain className="size-3.5 text-cyan-400" />
+                  <span className="text-xs font-semibold text-cyan-400">SecMind AI 分析增强</span>
                 </div>
                 <div className="space-y-2.5">
-                  <div className="rounded-md border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
+                  <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-1.5">
                     {(() => {
                       const ppConfig = PREPROCESS_CONFIG[selectedSignal.aiPreprocess]
                       const PPIcon = ppConfig.icon
                       return (
                         <>
-                          <div className="flex items-center gap-1.5 text-[11px]"><PPIcon className="size-3 text-cyan-600" /><span className="text-cyan-600 font-medium">AI{selectedSignal.aiPreprocess}</span></div>
-                          <p className="text-xs text-slate-600 leading-relaxed">{selectedSignal.aiPreprocessResult}</p>
+                          <div className="flex items-center gap-1.5 text-[11px]"><PPIcon className="size-3 text-cyan-400" /><span className="text-cyan-400 font-medium">AI{selectedSignal.aiPreprocess}</span></div>
+                          <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.aiPreprocessResult}</p>
                         </>
                       )
                     })()}
                   </div>
-                  <div className="rounded-md border border-slate-100 bg-slate-50 p-2.5 space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-[11px]"><Brain className="size-3 text-cyan-600" /><span className="text-cyan-600 font-medium">AI 预分类结论</span></div>
-                    <p className="text-xs text-slate-700 font-medium leading-relaxed">{selectedSignal.aiClassification}</p>
+                  <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-1.5 text-[11px]"><Brain className="size-3 text-cyan-400" /><span className="text-cyan-400 font-medium">AI 预分类结论</span></div>
+                    <p className="text-xs text-zinc-300 font-medium leading-relaxed">{selectedSignal.aiClassification}</p>
                   </div>
                 </div>
               </div>
 
               <Button
                 variant="outline"
-                className="w-full border-cyan-300 bg-cyan-50 text-cyan-600 hover:bg-cyan-100 hover:text-cyan-700 hover:border-cyan-400 gap-2 text-xs"
+                className="w-full border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 hover:border-cyan-500/40 gap-2 text-xs"
                 onClick={() => router.push(`/investigate?from=signal&id=${selectedSignal.id}&source=${selectedSignal.source}&classification=${encodeURIComponent(selectedSignal.aiClassification)}&risk=${selectedSignal.riskLevel}`)}
               >
                 <Crosshair className="size-3.5" />
@@ -436,10 +436,10 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
               </Button>
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 h-full flex items-center justify-center">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
               <div className="text-center space-y-2">
-                <Eye className="size-8 text-slate-300 mx-auto" />
-                <p className="text-xs text-slate-300">点击左侧事件查看详情</p>
+                <Eye className="size-8 text-zinc-600 mx-auto" />
+                <p className="text-xs text-zinc-600">点击左侧事件查看详情</p>
               </div>
             </div>
           )}
@@ -464,11 +464,11 @@ function AnomalousActivityTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={sourceFilter} onValueChange={(v) => v && setSourceFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-slate-200 bg-white text-slate-600"><SelectValue placeholder="来源类型" /></SelectTrigger>
+          <SelectTrigger size="sm" className="w-32 border-white/[0.06] bg-white/[0.02] text-zinc-400"><SelectValue placeholder="来源类型" /></SelectTrigger>
           <SelectContent><SelectItem value="all">全部来源</SelectItem><SelectItem value="EDR">EDR</SelectItem><SelectItem value="VPN">VPN</SelectItem><SelectItem value="IAM">IAM</SelectItem><SelectItem value="Email">Email</SelectItem><SelectItem value="Firewall">Firewall</SelectItem><SelectItem value="DNS">DNS</SelectItem></SelectContent>
         </Select>
         <Select value={riskFilter} onValueChange={(v) => v && setRiskFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-slate-200 bg-white text-slate-600"><SelectValue placeholder="风险等级" /></SelectTrigger>
+          <SelectTrigger size="sm" className="w-32 border-white/[0.06] bg-white/[0.02] text-zinc-400"><SelectValue placeholder="风险等级" /></SelectTrigger>
           <SelectContent><SelectItem value="all">全部等级</SelectItem><SelectItem value="critical">严重</SelectItem><SelectItem value="high">高危</SelectItem><SelectItem value="medium">中危</SelectItem><SelectItem value="low">低危</SelectItem></SelectContent>
         </Select>
       </div>
@@ -482,17 +482,17 @@ function AnomalousActivityTab() {
                 key={activity.id}
                 className={cn(
                   "rounded-lg border p-3 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-300 bg-cyan-50" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                  activity.riskLevel === "critical" && !isSelected && "border-red-200",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
+                  activity.riskLevel === "critical" && !isSelected && "border-red-500/20",
                 )}
                 onClick={() => setSelectedActivity(activity)}
               >
                 <div className="flex items-center gap-2 mb-1.5">
                   <SourceBadge source={activity.source} />
                   <RiskIndicator level={activity.riskLevel} score={activity.riskScore} />
-                  <span className="text-[10px] font-mono text-slate-600">{activity.timestamp}</span>
+                  <span className="text-[10px] font-mono text-zinc-500">{activity.timestamp}</span>
                 </div>
-                <p className="text-xs text-slate-600 line-clamp-2">{activity.behavior}</p>
+                <p className="text-xs text-zinc-400 line-clamp-2">{activity.behavior}</p>
               </div>
             )
           })}
@@ -500,36 +500,36 @@ function AnomalousActivityTab() {
 
         <div className="col-span-3">
           {selectedActivity ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SourceBadge source={selectedActivity.source} />
                   <RiskIndicator level={selectedActivity.riskLevel} score={selectedActivity.riskScore} />
                 </div>
-                <span className="text-xs text-slate-600 flex items-center gap-1"><Clock className="size-3" />{selectedActivity.timestamp}</span>
+                <span className="text-xs text-zinc-500 flex items-center gap-1"><Clock className="size-3" />{selectedActivity.timestamp}</span>
               </div>
 
-              <p className="text-sm text-slate-700 leading-relaxed">{selectedActivity.behavior}</p>
+              <p className="text-sm text-zinc-300 leading-relaxed">{selectedActivity.behavior}</p>
 
               <div className="flex items-center gap-1.5 flex-wrap">
                 {selectedActivity.entities.map((entity) => (
-                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-mono"><Link2 className="size-2.5" />{entity}</span>
+                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-2 py-0.5 text-xs text-zinc-400 font-mono"><Link2 className="size-2.5" />{entity}</span>
                 ))}
               </div>
 
-              <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-600" /><span className="text-xs font-medium text-cyan-600">AI评估</span></div>
-                <p className="text-xs text-slate-600 leading-relaxed">{selectedActivity.aiAssessment}</p>
+              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-400" /><span className="text-xs font-medium text-cyan-400">AI评估</span></div>
+                <p className="text-xs text-zinc-400 leading-relaxed">{selectedActivity.aiAssessment}</p>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-white p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-slate-500" /><span className="text-xs font-medium text-slate-500">推理依据</span></div>
-                <p className="text-xs text-slate-600 leading-relaxed">{selectedActivity.aiReasoning}</p>
+              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-zinc-500" /><span className="text-xs font-medium text-zinc-500">推理依据</span></div>
+                <p className="text-xs text-zinc-400 leading-relaxed">{selectedActivity.aiReasoning}</p>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 h-full flex items-center justify-center">
-              <div className="text-center space-y-2"><Eye className="size-8 text-slate-300 mx-auto" /><p className="text-xs text-slate-300">点击左侧活动查看详情</p></div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
+              <div className="text-center space-y-2"><Eye className="size-8 text-zinc-600 mx-auto" /><p className="text-xs text-zinc-600">点击左侧活动查看详情</p></div>
             </div>
           )}
         </div>
@@ -544,9 +544,9 @@ function RiskAggregationTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-slate-600">活跃风险集群</span><Layers className="size-4 text-slate-600" /></div><p className="mt-1 text-xl font-bold text-slate-900 font-mono tabular-nums">{riskClusters.length}</p></CardContent></Card>
-        <Card className="border-red-200 bg-red-50"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-600">严重集群</span><AlertTriangle className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-600 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p></CardContent></Card>
-        <Card className="border-cyan-200 bg-cyan-50"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-600">关联事件总数</span><Activity className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-600 font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p></CardContent></Card>
+        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-zinc-400">活跃风险集群</span><Layers className="size-4 text-zinc-400" /></div><p className="mt-1 text-xl font-bold text-zinc-100 font-mono tabular-nums">{riskClusters.length}</p></CardContent></Card>
+        <Card className="border-red-500/20 bg-red-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-400">严重集群</span><AlertTriangle className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-400 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p></CardContent></Card>
+        <Card className="border-cyan-500/20 bg-cyan-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-400">关联事件总数</span><Activity className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-400 font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p></CardContent></Card>
       </div>
 
       <div className="grid grid-cols-5 gap-4">
@@ -558,21 +558,21 @@ function RiskAggregationTab() {
                 key={cluster.id}
                 className={cn(
                   "rounded-lg border p-3 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-300 bg-cyan-50" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
-                  cluster.riskLevel === "critical" && !isSelected && "border-red-200",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
+                  cluster.riskLevel === "critical" && !isSelected && "border-red-500/20",
                 )}
                 onClick={() => setSelectedCluster(cluster)}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <RiskIndicator level={cluster.riskLevel} score={cluster.riskScore} />
-                    <span className="text-[10px] font-mono text-slate-600">{cluster.id}</span>
+                    <span className="text-[10px] font-mono text-zinc-500">{cluster.id}</span>
                   </div>
-                  <span className="text-[10px] text-slate-600">{cluster.lastUpdated}</span>
+                  <span className="text-[10px] text-zinc-500">{cluster.lastUpdated}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500"><Zap className="size-2.5 text-amber-600" />{cluster.attackType}</span>
-                  <Badge variant="outline" className="border-slate-200 text-slate-600 text-[10px] h-4"><Activity className="size-2.5 mr-0.5" />{cluster.signalCount}</Badge>
+                  <span className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-zinc-400"><Zap className="size-2.5 text-amber-400" />{cluster.attackType}</span>
+                  <Badge variant="outline" className="border-white/[0.06] text-zinc-400 text-[10px] h-4"><Activity className="size-2.5 mr-0.5" />{cluster.signalCount}</Badge>
                 </div>
               </div>
             )
@@ -581,41 +581,41 @@ function RiskAggregationTab() {
 
         <div className="col-span-3">
           {selectedCluster ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <RiskIndicator level={selectedCluster.riskLevel} score={selectedCluster.riskScore} />
-                  <span className="text-xs font-mono text-slate-600">{selectedCluster.id}</span>
+                  <span className="text-xs font-mono text-zinc-500">{selectedCluster.id}</span>
                 </div>
-                <span className="text-xs text-slate-600">{selectedCluster.lastUpdated}</span>
+                <span className="text-xs text-zinc-500">{selectedCluster.lastUpdated}</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2.5 py-1 text-xs text-slate-600"><Zap className="size-3 text-amber-600" />{selectedCluster.attackType}</span>
-                <Badge variant="outline" className="border-slate-200 text-slate-600 text-[10px]"><Activity className="size-3 mr-1" />{selectedCluster.signalCount} 事件</Badge>
+                <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400"><Zap className="size-3 text-amber-400" />{selectedCluster.attackType}</span>
+                <Badge variant="outline" className="border-white/[0.06] text-zinc-400 text-[10px]"><Activity className="size-3 mr-1" />{selectedCluster.signalCount} 事件</Badge>
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
                 {selectedCluster.entities.map((entity) => (
-                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600 font-mono"><Link2 className="size-2.5" />{entity}</span>
+                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-2 py-0.5 text-xs text-zinc-400 font-mono"><Link2 className="size-2.5" />{entity}</span>
                 ))}
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div className="flex-1 h-2 rounded-full bg-white/[0.04] overflow-hidden">
                   <div className={cn("h-full rounded-full", selectedCluster.riskLevel === "critical" && "bg-red-500", selectedCluster.riskLevel === "high" && "bg-amber-500", selectedCluster.riskLevel === "medium" && "bg-cyan-500")} style={{ width: `${selectedCluster.riskScore}%` }} />
                 </div>
                 <span className={cn("text-sm font-mono tabular-nums font-bold", RISK_CONFIG[selectedCluster.riskLevel].color)}>{selectedCluster.riskScore}</span>
               </div>
 
-              <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-600" /><span className="text-xs font-medium text-cyan-600">AI评估</span></div>
-                <p className="text-xs text-slate-600 leading-relaxed">{selectedCluster.aiAssessment}</p>
+              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-400" /><span className="text-xs font-medium text-cyan-400">AI评估</span></div>
+                <p className="text-xs text-zinc-400 leading-relaxed">{selectedCluster.aiAssessment}</p>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 h-full flex items-center justify-center">
-              <div className="text-center space-y-2"><Eye className="size-8 text-slate-300 mx-auto" /><p className="text-xs text-slate-300">点击左侧集群查看详情</p></div>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
+              <div className="text-center space-y-2"><Eye className="size-8 text-zinc-600 mx-auto" /><p className="text-xs text-zinc-600">点击左侧集群查看详情</p></div>
             </div>
           )}
         </div>
@@ -639,12 +639,12 @@ export default function SignalsPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", wsConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
-              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-600" : "text-red-500")}>
+              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-400" : "text-red-400")}>
                 {wsConnected ? "实时连接" : "连接断开"}
               </span>
             </div>
             <Link href="/datasource">
-            <Button variant="outline" className="border-slate-200 bg-white text-slate-600 hover:text-cyan-600 hover:border-cyan-500/25 hover:bg-cyan-50 gap-2">
+            <Button variant="outline" className="border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-cyan-400 hover:border-cyan-500/25 hover:bg-cyan-500/10 gap-2">
               <Database className="size-4" />数据源管理
             </Button>
           </Link>
@@ -652,11 +652,11 @@ export default function SignalsPage() {
         }
       />
 
-      <div className={`${softCardClass} flex items-center gap-1 border-b border-slate-200 px-2`}>
+      <div className={`${softCardClass} flex items-center gap-1 border-b border-white/[0.06] px-2`}>
         {[
-          { value: "live", label: t("nav.tabLiveSignals"), icon: Activity, color: "text-cyan-600" },
-          { value: "anomalous", label: t("nav.tabAnomalousActivity"), icon: AlertTriangle, color: "text-amber-600" },
-          { value: "risk", label: t("nav.tabRiskAggregation"), icon: Layers, color: "text-red-600" },
+          { value: "live", label: t("nav.tabLiveSignals"), icon: Activity, color: "text-cyan-400" },
+          { value: "anomalous", label: t("nav.tabAnomalousActivity"), icon: AlertTriangle, color: "text-amber-400" },
+          { value: "risk", label: t("nav.tabRiskAggregation"), icon: Layers, color: "text-red-400" },
         ].map((tab) => (
           <button
             key={tab.value}
@@ -666,7 +666,7 @@ export default function SignalsPage() {
               "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
               activeTab === tab.value
                 ? `${tab.color} border-current`
-                : "text-slate-600 border-transparent hover:text-slate-500"
+                : "text-zinc-500 border-transparent hover:text-zinc-400"
             )}
           >
             <tab.icon className="size-3.5" />

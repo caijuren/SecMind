@@ -245,7 +245,7 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
     : COLORS.severity[item.severity === 'critical' || item.severity === 'high' || item.severity === 'medium' ? item.severity : 'low'].solid
 
   return (
-    <Card className={cn(CARD.elevated, "group cursor-pointer hover:border-slate-300 transition-[shadow,transform]")}>
+    <Card className={cn(CARD.elevated, "group cursor-pointer hover:border-white/[0.12] transition-[shadow,transform]")}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -259,8 +259,8 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
               <Icon className="size-5" style={{ color: severityColor }} />
             </div>
             <div>
-              <p className={cn(TYPOGRAPHY.body, "font-medium text-slate-700")}>{item.label}</p>
-              <p className={cn(TYPOGRAPHY.micro, "text-slate-400 mt-0.5")}>{item.subtitle}</p>
+              <p className={cn(TYPOGRAPHY.body, "font-medium text-zinc-300")}>{item.label}</p>
+              <p className={cn(TYPOGRAPHY.micro, "text-zinc-600 mt-0.5")}>{item.subtitle}</p>
             </div>
           </div>
 
@@ -270,10 +270,10 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
                 TYPOGRAPHY.micro,
                 "font-semibold px-2 py-1 rounded-md",
                 item.trend.direction === 'up' && item.severity !== 'primary'
-                  ? "bg-red-50 text-red-600"
+                  ? "bg-red-500/10 text-red-400"
                   : item.severity === 'primary'
-                  ? "bg-cyan-50 text-cyan-600"
-                  : "bg-emerald-50 text-emerald-600"
+                  ? "bg-cyan-500/10 text-cyan-400"
+                  : "bg-emerald-500/10 text-emerald-400"
               )}
             >
               {item.trend.value}
@@ -282,7 +282,7 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
         </div>
 
         <div className="flex items-end justify-between">
-          <span className="text-3xl font-bold font-mono tabular-nums tracking-tight text-slate-900">
+          <span className="text-3xl font-bold font-mono tabular-nums tracking-tight text-zinc-100">
             {item.value}
           </span>
           <Button variant="ghost" size="sm" className={cn(TYPOGRAPHY.micro, "text-primary hover:bg-primary/5 gap-1")}>
@@ -312,32 +312,32 @@ function PriorityAlertCard({ alert }: { alert: typeof priorityAlerts[number] }) 
           <span className={cn("inline-flex items-center px-2 py-0.5 rounded", TYPOGRAPHY.micro, "font-semibold", severity.bg, severity.textColor)}>
             {alert.level === 'critical' ? '严重' : alert.level === 'high' ? '高危' : '中危'}
           </span>
-          <span className={cn(TYPOGRAPHY.micro, "font-mono tabular-nums text-slate-400")}>{alert.time}</span>
-          <span className={cn(TYPOGRAPHY.micro, "text-slate-500 font-medium")}>{alert.source}</span>
+          <span className={cn(TYPOGRAPHY.micro, "font-mono tabular-nums text-zinc-600")}>{alert.time}</span>
+          <span className={cn(TYPOGRAPHY.micro, "text-zinc-500 font-medium")}>{alert.source}</span>
         </div>
         <span
           className={cn(
             TYPOGRAPHY.micro,
             "px-2 py-0.5 rounded-full",
             alert.status === 'analyzing'
-              ? "bg-blue-50 text-blue-600 animate-pulse"
+              ? "bg-blue-500/10 text-blue-400 animate-pulse"
               : alert.status === 'pending'
-              ? "bg-orange-50 text-orange-600"
-              : "bg-cyan-50 text-cyan-600"
+              ? "bg-orange-500/10 text-orange-400"
+              : "bg-cyan-500/10 text-cyan-400"
           )}
         >
           {alert.status === 'analyzing' ? 'AI分析中' : alert.status === 'pending' ? '待处理' : '调查中'}
         </span>
       </div>
 
-      <h4 className={cn(TYPOGRAPHY.h3, "text-slate-900 mb-2")}>{alert.title}</h4>
-      <p className={cn(TYPOGRAPHY.body, "text-slate-600 mb-3 line-clamp-2")}>{alert.description}</p>
+      <h4 className={cn(TYPOGRAPHY.h3, "text-zinc-100 mb-2")}>{alert.title}</h4>
+      <p className={cn(TYPOGRAPHY.body, "text-zinc-400 mb-3 line-clamp-2")}>{alert.description}</p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-3 border-t border-white/[0.04]">
         <div className="flex items-center gap-2">
-          <Eye className="size-4 text-slate-400" />
-          <span className={cn(TYPOGRAPHY.caption, "text-slate-500")}>
-            负责人: <strong className="text-slate-700">{alert.assignee}</strong>
+          <Eye className="size-4 text-zinc-600" />
+          <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>
+            负责人: <strong className="text-zinc-300">{alert.assignee}</strong>
           </span>
         </div>
         <Button variant="outline" size="sm" className={cn(TYPOGRAPHY.micro, "gap-1")}>
@@ -354,10 +354,10 @@ function CaseItem({ caseItem }: { caseItem: typeof recentCases[number] }) {
   const severity = getSeverityStyles(caseItem.level)
 
   return (
-    <div className={cn(CARD.ghost, "px-4 py-3 flex items-center justify-between group hover:bg-white")}>
+    <div className={cn(CARD.ghost, "px-4 py-3 flex items-center justify-between group hover:bg-white/[0.04]")}>
       <div className="flex items-center gap-4 min-w-0">
-        <span className={cn(TYPOGRAPHY.caption, "font-mono text-slate-400 shrink-0")}>{caseItem.id}</span>
-        <span className={cn(TYPOGRAPHY.body, "font-medium text-slate-700 truncate")}>{caseItem.type}</span>
+        <span className={cn(TYPOGRAPHY.caption, "font-mono text-zinc-600 shrink-0")}>{caseItem.id}</span>
+        <span className={cn(TYPOGRAPHY.body, "font-medium text-zinc-300 truncate")}>{caseItem.type}</span>
         <span
           className={cn(
             "shrink-0 inline-flex items-center px-2 py-0.5 rounded",
@@ -373,10 +373,10 @@ function CaseItem({ caseItem }: { caseItem: typeof recentCases[number] }) {
           className={cn(
             "shrink-0 px-2 py-0.5 rounded text-xs font-medium",
             caseItem.status === '调查中'
-              ? "bg-blue-50 text-blue-700"
+              ? "bg-blue-500/10 text-blue-400"
               : caseItem.status === '处置中'
-              ? "bg-orange-50 text-orange-700"
-              : "bg-slate-100 text-slate-600"
+              ? "bg-orange-500/10 text-orange-400"
+              : "bg-white/[0.05] text-zinc-400"
           )}
         >
           {caseItem.status}
@@ -384,8 +384,8 @@ function CaseItem({ caseItem }: { caseItem: typeof recentCases[number] }) {
       </div>
 
       <div className="flex items-center gap-4 shrink-0">
-        <span className={cn(TYPOGRAPHY.caption, "text-slate-500")}>{caseItem.owner}</span>
-        <span className={cn(TYPOGRAPHY.micro, "text-slate-400 w-16 text-right")}>{caseItem.updatedAt}</span>
+        <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>{caseItem.owner}</span>
+        <span className={cn(TYPOGRAPHY.micro, "text-zinc-600 w-16 text-right")}>{caseItem.updatedAt}</span>
         <Button
           variant="ghost"
           size="sm"
@@ -412,19 +412,19 @@ function AIMetricCard({ item }: { item: typeof aiOverview[number] }) {
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
           <Icon className="size-4 text-primary" />
-          <span className={cn(TYPOGRAPHY.caption, "text-slate-600")}>{item.label}</span>
+          <span className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>{item.label}</span>
         </div>
         <span
           className={cn(
             TYPOGRAPHY.micro,
             "font-semibold",
-            isPositive ? "text-emerald-600" : "text-red-600"
+            isPositive ? "text-emerald-400" : "text-red-400"
           )}
         >
           {isPositive ? '+' : ''}{item.change}
         </span>
       </div>
-      <div className="text-2xl font-bold font-mono tabular-nums text-slate-900">{item.value}</div>
+      <div className="text-2xl font-bold font-mono tabular-nums text-zinc-100">{item.value}</div>
     </div>
   )
 }
@@ -493,29 +493,29 @@ function RealtimeAlertStream() {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500" />
               </span>
             </div>
-            <Zap className="size-5 text-cyan-600" />
+            <Zap className="size-5 text-cyan-400" />
             <h2 className={String(TYPOGRAPHY.h2)}>实时告警流</h2>
             {isConnected ? (
               <Wifi className="size-3.5 text-emerald-500" />
             ) : (
-              <WifiOff className="size-3.5 text-slate-400" />
+              <WifiOff className="size-3.5 text-zinc-600" />
             )}
           </div>
           <div className="flex items-center gap-2">
             {newAlertCount > 0 && (
               <button
                 onClick={clearNewAlerts}
-                className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-semibold animate-pulse cursor-pointer hover:bg-red-100 transition-colors")}
+                className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors")}
               >
                 +{newAlertCount} 新告警
               </button>
             )}
-            <span className={cn(TYPOGRAPHY.caption, "text-slate-400")}>共 {alerts.length} 条</span>
+            <span className={cn(TYPOGRAPHY.caption, "text-zinc-600")}>共 {alerts.length} 条</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className={cn(TYPOGRAPHY.micro, "gap-1 text-slate-600")}
+              className={cn(TYPOGRAPHY.micro, "gap-1 text-zinc-400")}
             >
               {isExpanded ? '收起' : '展开'}
               <ChevronDown className={cn("size-3.5 transition-transform", isExpanded && "rotate-180")} />
@@ -525,7 +525,7 @@ function RealtimeAlertStream() {
 
         <div
           className={cn(
-            "space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 transition-[max-height] duration-300",
+            "space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 transition-[max-height] duration-300",
             isExpanded ? "max-h-[520px]" : "max-h-[320px]"
           )}
         >
@@ -536,13 +536,13 @@ function RealtimeAlertStream() {
                 key={`${alert.time}-${idx}`}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors duration-200",
-                  idx === 0 ? "bg-cyan-50/50 border border-cyan-200" : "hover:bg-slate-50"
+                  idx === 0 ? "bg-cyan-500/10 border border-cyan-500/20" : "hover:bg-white/[0.04]"
                 )}
               >
-                <span className={cn(TYPOGRAPHY.caption, "font-mono tabular-nums text-slate-400 shrink-0 w-16")}>
+                <span className={cn(TYPOGRAPHY.caption, "font-mono tabular-nums text-zinc-600 shrink-0 w-16")}>
                   {alert.time}
                 </span>
-                <span className={cn(TYPOGRAPHY.caption, "text-slate-500 font-medium shrink-0 w-10")}>
+                <span className={cn(TYPOGRAPHY.caption, "text-zinc-500 font-medium shrink-0 w-10")}>
                   {alert.source}
                 </span>
                 <span
@@ -556,7 +556,7 @@ function RealtimeAlertStream() {
                 >
                   {alert.level === 'critical' ? '严重' : alert.level === 'high' ? '高危' : '中危'}
                 </span>
-                <span className={cn(TYPOGRAPHY.body, "text-slate-700 truncate flex-1")}>
+                <span className={cn(TYPOGRAPHY.body, "text-zinc-300 truncate flex-1")}>
                   {alert.message}
                 </span>
               </div>
@@ -587,18 +587,18 @@ function AIDataSourceCard({ source, index }: { source: DataSource; index: number
       <div className={`
         relative rounded-lg border p-2 transition-colors duration-200
         ${source.status === "active"
-          ? `border-current/20 bg-white hover:border-current/40`
-          : "border-slate-200 bg-slate-50"}
+          ? `border-current/20 bg-[#131316] hover:border-current/40`
+          : "border-white/[0.06] bg-white/[0.02]"}
       `} style={{ color: source.color }}>
         <div className="flex items-center gap-2">
           <div className={`flex size-6 items-center justify-center rounded-md transition-[transform] duration-300 ${
-            source.status === "active" ? "bg-current/10 scale-105" : "bg-slate-100"
+            source.status === "active" ? "bg-current/10 scale-105" : "bg-white/[0.05]"
           }`} style={{ color: source.color }}>
             <Icon className="size-3" />
           </div>
-          <span className={cn(TYPOGRAPHY.micro, "font-medium text-slate-700 truncate")}>{source.name}</span>
-          <span className="text-[10px] font-mono text-slate-400 tabular-nums ml-auto">{source.eventCount.toLocaleString()}</span>
-          <div className={`size-2 rounded-full ${source.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+          <span className={cn(TYPOGRAPHY.micro, "font-medium text-zinc-300 truncate")}>{source.name}</span>
+          <span className="text-[10px] font-mono text-zinc-600 tabular-nums ml-auto">{source.eventCount.toLocaleString()}</span>
+          <div className={`size-2 rounded-full ${source.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"}`} />
         </div>
       </div>
       {source.status === "active" && pulse && (
@@ -617,8 +617,8 @@ function AIStepCard({ step, isLast }: { step: AIStep; isLast: boolean }) {
       className={cn(
         "relative rounded-xl border p-3.5 transition-[shadow,transform,border-color] duration-700",
         isLast
-          ? "border-current/30 bg-white shadow-md scale-[1.01]"
-          : "border-slate-200 bg-white hover:border-slate-300"
+          ? "border-current/30 bg-[#131316] shadow-md scale-[1.01]"
+          : "border-white/[0.06] bg-[#131316] hover:border-white/[0.12]"
       )}
       style={{ color: isLast ? step.agentColor : undefined }}
     >
@@ -636,27 +636,27 @@ function AIStepCard({ step, isLast }: { step: AIStep; isLast: boolean }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2">
-              <span className={cn(TYPOGRAPHY.caption, "font-mono tabular-nums text-slate-400")}>{step.timestamp}</span>
-              <span className={cn(TYPOGRAPHY.micro, "font-semibold text-slate-600")}>{step.agent}</span>
+              <span className={cn(TYPOGRAPHY.caption, "font-mono tabular-nums text-zinc-600")}>{step.timestamp}</span>
+              <span className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400")}>{step.agent}</span>
               <span className={cn(
                 TYPOGRAPHY.micro,
                 "px-1.5 py-0.5 rounded-full",
                 step.status === "complete"
-                  ? "bg-emerald-50 text-emerald-600"
-                  : "bg-amber-50 text-amber-600 animate-pulse"
+                  ? "bg-emerald-500/10 text-emerald-400"
+                  : "bg-amber-500/10 text-amber-400 animate-pulse"
               )}>
                 {step.status === "complete" ? "✓ 完成" : "● 分析中"}
               </span>
             </div>
           </div>
 
-          <h4 className={cn(TYPOGRAPHY.body, "font-semibold text-slate-800 mb-1.5")}>{step.message}</h4>
+          <h4 className={cn(TYPOGRAPHY.body, "font-semibold text-zinc-200 mb-1.5")}>{step.message}</h4>
 
           {step.result && (
             <ul className="space-y-1">
               {step.result.map((item, i) => (
-                <li key={i} className={cn(TYPOGRAPHY.caption, "text-slate-600 flex items-center gap-1.5")}>
-                  <span className="size-1 rounded-full bg-slate-300 shrink-0" />
+                <li key={i} className={cn(TYPOGRAPHY.caption, "text-zinc-400 flex items-center gap-1.5")}>
+                  <span className="size-1 rounded-full bg-zinc-600 shrink-0" />
                   {item}
                 </li>
               ))}
@@ -673,16 +673,16 @@ function AICollabAgent({ agent }: { agent: AIAgent }) {
   const Icon = agent.icon
 
   const statusStyles = {
-    thinking: { bg: "bg-blue-50", text: "text-blue-700", label: "思考中..." },
-    analyzing: { bg: "bg-amber-50", text: "text-amber-700", label: "分析中..." },
-    waiting: { bg: "bg-slate-100", text: "text-slate-600", label: "待命中" },
-    complete: { bg: "bg-emerald-50", text: "text-emerald-700", label: "已完成" },
+    thinking: { bg: "bg-blue-500/10", text: "text-blue-400", label: "思考中..." },
+    analyzing: { bg: "bg-amber-500/10", text: "text-amber-400", label: "分析中..." },
+    waiting: { bg: "bg-white/[0.05]", text: "text-zinc-400", label: "待命中" },
+    complete: { bg: "bg-emerald-500/10", text: "text-emerald-400", label: "已完成" },
   }
 
   const style = statusStyles[agent.status]
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-2.5 transition-colors duration-200 hover:border-slate-300">
+    <div className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#131316] p-2.5 transition-colors duration-200 hover:border-white/[0.12]">
       <div className="flex items-center gap-2.5">
         <div className="relative flex size-8 shrink-0 items-center justify-center rounded-md transition-[transform] duration-200 group-hover:scale-105" style={{ backgroundColor: `${agent.color}10` }}>
           <Icon className="size-4" style={{ color: agent.color }} />
@@ -696,7 +696,7 @@ function AICollabAgent({ agent }: { agent: AIAgent }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <span className={cn(TYPOGRAPHY.micro, "font-semibold text-slate-800 truncate")}>{agent.name}</span>
+            <span className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-200 truncate")}>{agent.name}</span>
             <span className={cn(TYPOGRAPHY.micro, "font-medium px-1.5 py-0.5 rounded-full", style.bg, style.text, "shrink-0")}>
               {style.label}
             </span>
@@ -719,7 +719,7 @@ function AICapabilityShowcase() {
           <div className="flex items-center gap-2">
             <Brain className="size-5 text-primary" />
             <h2 className={String(TYPOGRAPHY.h2)}>AI智能分析中心</h2>
-            <span className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-cyan-50 text-cyan-600 font-semibold")}>
+            <span className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold")}>
               实时演示
             </span>
           </div>
@@ -730,7 +730,7 @@ function AICapabilityShowcase() {
         </div>
 
         {/* Tab切换 */}
-        <div className="flex gap-1 mb-4 p-1 bg-slate-100 rounded-lg">
+        <div className="flex gap-1 mb-4 p-1 bg-white/[0.05] rounded-lg">
           {[
             { key: 'input' as const, label: '数据输入流', icon: Database },
             { key: 'analysis' as const, label: 'AI分析结果', icon: Brain },
@@ -746,8 +746,8 @@ function AICapabilityShowcase() {
                   TYPOGRAPHY.micro,
                   "font-medium",
                   activeTab === tab.key
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
+                    ? "bg-white/[0.06] text-zinc-100 shadow-sm"
+                    : "text-zinc-500 hover:text-zinc-300"
                 )}
               >
                 <Icon className="size-3.5" />
@@ -761,10 +761,10 @@ function AICapabilityShowcase() {
         <div className="min-h-[280px]">
           {activeTab === 'input' && (
             <div className="space-y-2">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-slate-600 flex items-center gap-1.5 mb-2")}>
+              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
                 <Zap className="size-3.5" />
                 实时数据接入
-                <span className="text-slate-400 font-normal">({demoDataSources.filter(s => s.status === 'active').length} 个活跃源)</span>
+                <span className="text-zinc-600 font-normal">({demoDataSources.filter(s => s.status === 'active').length} 个活跃源)</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {demoDataSources.map((source, index) => (
@@ -776,12 +776,12 @@ function AICapabilityShowcase() {
 
           {activeTab === 'analysis' && (
             <div className="space-y-3">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-slate-600 flex items-center gap-1.5 mb-2")}>
+              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
                 <Brain className="size-3.5" />
                 事件分析进度
-                <span className="text-slate-400 font-normal">(钓鱼邮件攻击)</span>
+                <span className="text-zinc-600 font-normal">(钓鱼邮件攻击)</span>
               </div>
-              <div className="space-y-2 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 pr-1">
+              <div className="space-y-2 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 pr-1">
                 {demoAISteps.map((step, index) => (
                   <AIStepCard key={step.id} step={step} isLast={index === demoAISteps.length - 1} />
                 ))}
@@ -791,10 +791,10 @@ function AICapabilityShowcase() {
 
           {activeTab === 'collab' && (
             <div className="space-y-2">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-slate-600 flex items-center gap-1.5 mb-2")}>
+              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
                 <Network className="size-3.5" />
                 Agent协作状态
-                <span className="text-slate-400 font-normal">({demoAIAgents.filter(a => a.status === 'complete').length}/{demoAIAgents.length} 已完成)</span>
+                <span className="text-zinc-600 font-normal">({demoAIAgents.filter(a => a.status === 'complete').length}/{demoAIAgents.length} 已完成)</span>
               </div>
               <div className="space-y-2">
                 {demoAIAgents.map((agent) => (
@@ -824,19 +824,19 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {newAlertCount > 0 && (
-        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 animate-in slide-in-from-top-2 duration-300">
+        <div className="flex items-center justify-between rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 animate-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-2">
             <Bell className="size-4 text-red-500 animate-pulse" />
-            <span className="text-sm font-medium text-red-700">
+            <span className="text-sm font-medium text-red-400">
               收到 {newAlertCount} 条新实时告警
             </span>
             {!isConnected && (
-              <span className="text-xs text-slate-400 ml-2">(WebSocket 已断开，显示为缓存数据)</span>
+              <span className="text-xs text-zinc-600 ml-2">(WebSocket 已断开，显示为缓存数据)</span>
             )}
           </div>
           <button
             onClick={clearNewAlerts}
-            className="text-xs text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+            className="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
           >
             确认
           </button>
@@ -851,12 +851,12 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", isConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
-              <span className={cn("text-xs font-medium", isConnected ? "text-emerald-600" : "text-red-500")}>
+              <span className={cn("text-xs font-medium", isConnected ? "text-emerald-400" : "text-red-500")}>
                 {isConnected ? "实时连接" : "连接断开"}
               </span>
             </div>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600" />
               <Input
                 placeholder="搜索告警、案件..."
                 className={`h-9 w-64 pl-10 ${inputClass}`}
@@ -904,7 +904,7 @@ export default function DashboardPage() {
               <span
                 className={cn(
                   TYPOGRAPHY.micro,
-                  "px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-semibold"
+                  "px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold"
                 )}
               >
                 需立即关注
@@ -946,7 +946,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
 
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-white/[0.04]">
                 {recentCases.map((caseItem) => (
                   <CaseItem key={caseItem.id} caseItem={caseItem} />
                 ))}
@@ -995,14 +995,14 @@ export default function DashboardPage() {
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-slate-100 space-y-2">
+              <div className="pt-4 border-t border-white/[0.04] space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">正在分析的安全事件</span>
-                  <span className="font-semibold text-slate-900">156 个</span>
+                  <span className="text-zinc-400">正在分析的安全事件</span>
+                  <span className="font-semibold text-zinc-100">156 个</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">今日自动处置</span>
-                  <span className="font-semibold text-emerald-600">+42 个</span>
+                  <span className="text-zinc-400">今日自动处置</span>
+                  <span className="font-semibold text-emerald-400">+42 个</span>
                 </div>
                 <Button variant="outline" className="w-full mt-3 gap-2">
                   <Eye className="size-4" />

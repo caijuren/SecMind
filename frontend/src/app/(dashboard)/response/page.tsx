@@ -263,10 +263,10 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
           <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-50 text-red-600 border border-red-200">
             -{evidenceSummary.contradicting}
           </span>
-          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-white/[0.05] text-zinc-400 border border-white/[0.06]">
             ~{evidenceSummary.neutral}
           </span>
-          <span className="text-[10px] text-slate-400 ml-0.5">{t("execution.evidenceCount")}: {total}</span>
+          <span className="text-[10px] text-zinc-600 ml-0.5">{t("execution.evidenceCount")}: {total}</span>
         </div>
       </button>
 
@@ -300,7 +300,7 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                       <span className="text-xs font-semibold" style={{ color: phase.color }}>
                         {t(phase.labelKey)}
                       </span>
-                      <span className="text-[10px] text-slate-400">#{idx + 1}</span>
+                      <span className="text-[10px] text-zinc-600">#{idx + 1}</span>
                       {step.mitreRef && (
                         <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-orange-50 text-orange-700 border border-orange-200">
                           <ExternalLink className="h-2.5 w-2.5" />
@@ -315,7 +315,7 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                       )}
                     </div>
 
-                    <p className="text-xs text-slate-500 mb-2 leading-relaxed">{step.description}</p>
+                    <p className="text-xs text-zinc-500 mb-2 leading-relaxed">{step.description}</p>
 
                     {step.evidence.length > 0 && (
                       <div className="space-y-1.5 mb-2">
@@ -324,7 +324,7 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                           return (
                             <div
                               key={evIdx}
-                              className="flex items-start gap-2 rounded-md px-2 py-1.5 bg-slate-50 border border-slate-200"
+                              className="flex items-start gap-2 rounded-md px-2 py-1.5 bg-white/[0.03] border border-white/[0.06]"
                             >
                               <div
                                 className="mt-0.5 h-1.5 w-1.5 rounded-full shrink-0"
@@ -335,13 +335,13 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                                   <span className="text-[10px] font-medium" style={{ color: dir.color }}>
                                     {t(dir.labelKey)}
                                   </span>
-                                  <span className="text-[10px] text-slate-400 font-mono">{ev.timestamp}</span>
-                                  <span className="inline-flex items-center gap-0.5 text-[10px] text-slate-400">
+                                  <span className="text-[10px] text-zinc-600 font-mono">{ev.timestamp}</span>
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] text-zinc-600">
                                     <Database className="h-2.5 w-2.5" />
                                     {ev.source}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 leading-relaxed">{ev.detail}</p>
+                                <p className="text-[11px] text-zinc-500 leading-relaxed">{ev.detail}</p>
                               </div>
                             </div>
                           )
@@ -349,7 +349,7 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                       </div>
                     )}
 
-                    <div className="flex items-start gap-1.5 pt-1.5 border-t border-slate-100">
+                    <div className="flex items-start gap-1.5 pt-1.5 border-t border-white/[0.04]">
                       <Sparkles className="h-3 w-3 text-cyan-600 shrink-0 mt-0.5" />
                       <p className="text-[11px] text-cyan-700 leading-relaxed">
                         <span className="font-medium text-cyan-800">{t("execution.stepConclusion")}:</span> {step.conclusion}
@@ -396,19 +396,19 @@ function ActionGuardrails({ action }: { action: ActionItem }) {
     { label: "审批", value: guardrails.approval, icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-50" },
     { label: "影响", value: guardrails.impact, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-50" },
     { label: "回滚", value: guardrails.rollback, icon: RotateCcw, color: "text-cyan-700", bg: "bg-cyan-50" },
-    { label: "审计", value: guardrails.audit, icon: FileSearch, color: "text-slate-600", bg: "bg-slate-50" },
+    { label: "审计", value: guardrails.audit, icon: FileSearch, color: "text-zinc-400", bg: "bg-white/[0.03]" },
   ]
 
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       {items.map((item) => (
-        <div key={item.label} className="flex items-start gap-2 rounded-lg border border-slate-200 bg-white p-2.5">
+        <div key={item.label} className="flex items-start gap-2 rounded-lg border border-white/[0.06] bg-card p-2.5">
           <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", item.bg)}>
             <item.icon className={cn("h-3.5 w-3.5", item.color)} />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] font-semibold text-slate-500">{item.label}</div>
-            <div className="mt-0.5 text-[11px] leading-4 text-slate-700">{item.value}</div>
+            <div className="text-[10px] font-semibold text-zinc-500">{item.label}</div>
+            <div className="mt-0.5 text-[11px] leading-4 text-zinc-300">{item.value}</div>
           </div>
         </div>
       ))}
@@ -569,7 +569,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+      <div className="rounded-lg border border-red-200 bg-red-500/10 p-4 text-sm text-red-400">
         {error}
       </div>
     )
@@ -588,8 +588,8 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                 <stat.icon className={cn("h-5 w-5", stat.color)} />
               </div>
               <div>
-                <p className="text-xs text-slate-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-slate-900">{stat.value.toLocaleString()}</p>
+                <p className="text-xs text-zinc-500">{stat.label}</p>
+                <p className="text-2xl font-bold text-zinc-100">{stat.value.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -599,7 +599,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
               <Cpu className="h-4 w-4 text-cyan-600" />
               {t("execution.actionQueue")}
             </h2>
@@ -610,7 +610,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                   "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                   filterHypothesis === "all"
                     ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
-                    : "text-slate-500 hover:text-slate-600 hover:bg-slate-50 border border-transparent"
+                    : "text-zinc-500 hover:text-zinc-400 hover:bg-white/[0.04] border border-transparent"
                 )}
               >
                 {t("execution.all")}
@@ -623,7 +623,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                     "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                     filterHypothesis === h.id
                         ? "bg-cyan-50 text-cyan-700 border border-cyan-200"
-                        : "text-slate-500 hover:text-slate-600 hover:bg-slate-50 border border-transparent"
+                        : "text-zinc-500 hover:text-zinc-400 hover:bg-white/[0.04] border border-transparent"
                   )}
                 >
                   {t("execution.hyp")} {h.id}
@@ -658,7 +658,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         {isAiDriven && <AIBrainIcon />}
-                        <span className="text-sm font-semibold text-slate-900">{t(action.nameKey)}</span>
+                        <span className="text-sm font-semibold text-zinc-100">{t(action.nameKey)}</span>
                         <span
                           className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium"
                           style={{
@@ -714,7 +714,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                         />
                       </div>
 
-                      <div className="flex items-center gap-4 text-xs text-slate-400">
+                      <div className="flex items-center gap-4 text-xs text-zinc-600">
                         <span className="flex items-center gap-1">
                           <Globe className="h-3 w-3" />
                           {t("execution.target")}: {action.target}
@@ -743,7 +743,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                             {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
                             {t("execution.approve")}
                           </Button>
-                          <Button size="xs" variant="outline" className="border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
+                          <Button size="xs" variant="outline" className="border-white/[0.06] text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300 gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
                             {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
                             {t("execution.cancel")}
                           </Button>
@@ -756,7 +756,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                         </Button>
                       )}
                       {(action.status === "completed" || action.status === "failed") && (
-                        <span className="text-xs text-slate-400 px-2">—</span>
+                        <span className="text-xs text-zinc-600 px-2">—</span>
                       )}
                     </div>
                   </div>
@@ -767,7 +767,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
             <Workflow className="h-4 w-4 text-cyan-600" />
             {t("execution.hypothesisActionMap")}
           </h2>
@@ -795,7 +795,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-900">{t("execution.hyp")} {h.id}</span>
+                        <span className="text-sm font-semibold text-zinc-100">{t("execution.hyp")} {h.id}</span>
                         <span
                           className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold"
                           style={{
@@ -807,26 +807,26 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                           {h.confidence}%
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500">{h.label}</p>
+                      <p className="text-xs text-zinc-500">{h.label}</p>
                     </div>
                   </div>
 
                   {h.actions.length === 0 ? (
-                    <div className="flex items-center justify-center py-6 text-xs text-slate-400 border border-dashed border-slate-200 rounded-lg">
+                    <div className="flex items-center justify-center py-6 text-xs text-zinc-600 border border-dashed border-white/[0.06] rounded-lg">
                       {t("execution.noActionsRecommended")}
                     </div>
                   ) : (
                     <>
                       <div className="mb-3">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-zinc-500">
                             {progress.completed} / {progress.total} {t("execution.actionsCompleted")}
                           </span>
                           <span className="text-xs font-medium" style={{ color: barColor }}>
                             {progress.percent}%
                           </span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
                           <div
                             className="h-full rounded-full transition-[width]"
                             style={{
@@ -840,19 +840,19 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                       <div className="grid grid-cols-4 gap-2">
                         <div className="text-center rounded-lg bg-emerald-50 border border-emerald-200 py-1.5">
                           <p className="text-sm font-bold text-emerald-700">{progress.completed}</p>
-                          <p className="text-[9px] text-slate-500">{t("execution.done")}</p>
+                          <p className="text-[9px] text-zinc-500">{t("execution.done")}</p>
                         </div>
                         <div className="text-center rounded-lg bg-cyan-50 border border-cyan-200 py-1.5">
                           <p className="text-sm font-bold text-cyan-700">{progress.executing}</p>
-                          <p className="text-[9px] text-slate-500">{t("execution.running")}</p>
+                          <p className="text-[9px] text-zinc-500">{t("execution.running")}</p>
                         </div>
                         <div className="text-center rounded-lg bg-orange-50 border border-orange-200 py-1.5">
                           <p className="text-sm font-bold text-orange-700">{progress.pending}</p>
-                          <p className="text-[9px] text-slate-500">{t("execution.pending")}</p>
+                          <p className="text-[9px] text-zinc-500">{t("execution.pending")}</p>
                         </div>
                         <div className="text-center rounded-lg bg-amber-50 border border-amber-200 py-1.5">
                           <p className="text-sm font-bold text-amber-700">{progress.awaiting}</p>
-                          <p className="text-[9px] text-slate-500">{t("execution.await")}</p>
+                          <p className="text-[9px] text-zinc-500">{t("execution.await")}</p>
                         </div>
                       </div>
 
@@ -865,11 +865,11 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
                           return (
                             <div
                               key={a.id}
-                              className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-slate-50"
+                              className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-white/[0.03]"
                             >
                               <SIcon className={cn("h-3 w-3 shrink-0", a.status === "executing" && "animate-spin")} style={{ color: s.color }} />
-                              <span className="text-slate-600 truncate flex-1">{t(actionMeta.nameKey)}</span>
-                              <span className="text-slate-400 shrink-0">{a.id}</span>
+                              <span className="text-zinc-400 truncate flex-1">{t(actionMeta.nameKey)}</span>
+                              <span className="text-zinc-600 shrink-0">{a.id}</span>
                             </div>
                           )
                         })}
@@ -899,8 +899,8 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
               <Sparkles className="h-3 w-3 text-cyan-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600">{t("execution.aiExecutionLogic")}</p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs font-medium text-zinc-400">{t("execution.aiExecutionLogic")}</p>
+              <p className="text-xs text-zinc-600 mt-0.5">
                 {t("execution.confidenceTrigger")} ≥80% → {t("execution.priorityCritical")} | 50-80% → {t("execution.priorityMedium")} | &lt;50% → {t("execution.priorityLow")}
               </p>
             </div>
@@ -910,8 +910,8 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
               <Workflow className="h-3 w-3 text-cyan-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-slate-600">{t("execution.disposalChain")}</p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs font-medium text-zinc-400">{t("execution.disposalChain")}</p>
+              <p className="text-xs text-zinc-600 mt-0.5">
                 {t("execution.hypothesis")} → {t("execution.aiReasoning")} → {t("execution.disposalAction")} → {t("execution.statusCompleted")}
               </p>
             </div>
@@ -928,7 +928,7 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <AIBrainIcon />
-                <h3 className="text-sm font-semibold text-slate-900">{s.name}</h3>
+                <h3 className="text-sm font-semibold text-zinc-100">{s.name}</h3>
               </div>
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-cyan-600" />
@@ -936,23 +936,23 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
               </div>
             </div>
 
-            <p className="text-xs text-slate-400 mb-3">{s.description}</p>
+            <p className="text-xs text-zinc-600 mb-3">{s.description}</p>
 
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-zinc-500">
                 {t("execution.disposalChain")}:
               </span>
               {s.actions.map((action, idx) => (
                 <span key={action} className="flex items-center gap-1.5">
-                  <span className="text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{action}</span>
-                  {idx < s.actions.length - 1 && <Zap className="h-3 w-3 text-slate-400" />}
+                  <span className="text-xs text-zinc-400 bg-white/[0.05] px-2 py-0.5 rounded">{action}</span>
+                  {idx < s.actions.length - 1 && <Zap className="h-3 w-3 text-zinc-600" />}
                 </span>
               ))}
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">{t("execution.confidenceTrigger")}</span>
-              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <span className="text-xs text-zinc-500">{t("execution.confidenceTrigger")}</span>
+              <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
                 <div className="h-full bg-cyan-600 rounded-full" style={{ width: `${s.confidence}%` }} />
               </div>
               <span className="text-xs text-cyan-600">{s.confidence}%</span>
@@ -1006,7 +1006,7 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-6">
       <div className="card-default p-5">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2 mb-4">
           <Brain className="h-4 w-4 text-cyan-600" />
           {t("execution.executionLog")}
         </h3>
@@ -1035,8 +1035,8 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xs font-mono text-slate-400">{rec.time}</span>
-                      <span className="text-xs font-medium text-slate-700">{rec.action}</span>
+                      <span className="text-xs font-mono text-zinc-600">{rec.time}</span>
+                      <span className="text-xs font-medium text-zinc-300">{rec.action}</span>
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium"
                         style={{
@@ -1048,13 +1048,13 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
                         <StatusIcon className={cn("h-2.5 w-2.5", rec.status === "running" && "animate-spin")} />
                         {cfg.label}
                       </span>
-                      <Badge variant="outline" className="text-[10px] border-slate-200 text-slate-400">
+                      <Badge variant="outline" className="text-[10px] border-white/[0.06] text-zinc-600">
                         {rec.hypothesis}
                       </Badge>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-zinc-600">
                         {t("execution.confidenceTrigger")}: {rec.confidence}%
                       </span>
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
+                      <span className="text-xs text-zinc-600 flex items-center gap-1">
                         {t("execution.by")}
                         {isAiAgent ? (
                           <span className="inline-flex items-center gap-0.5 text-cyan-700">
@@ -1076,7 +1076,7 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
       </div>
 
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
-        <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-4">
+        <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2 mb-4">
           <RotateCcw className="h-4 w-4 text-amber-400" />
           回滚记录
         </h3>
@@ -1089,16 +1089,16 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <RotateCcw className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-sm text-slate-700">{rb.action}</span>
+                  <span className="text-sm text-zinc-300">{rb.action}</span>
                 </div>
-                <span className="text-xs font-mono text-slate-400">{rb.id}</span>
+                <span className="text-xs font-mono text-zinc-600">{rb.id}</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-400">
+              <div className="flex items-center gap-4 text-xs text-zinc-600">
                 <span>原因: {rb.reason}</span>
                 <span>操作人: {rb.operator}</span>
                 <span className="font-mono">{rb.time}</span>
               </div>
-              <div className="mt-1.5 text-xs text-slate-500">
+              <div className="mt-1.5 text-xs text-zinc-500">
                 原始操作: {rb.originalAction}
               </div>
             </div>
@@ -1145,16 +1145,16 @@ export default function ResponsePage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className={`${softCardClass} p-2`}>
-        <TabsList variant="line" className="border-b border-slate-200 w-full justify-start gap-0">
-          <TabsTrigger value="auto-disposal" className="text-slate-500 data-active:text-cyan-700">
+        <TabsList variant="line" className="border-b border-white/[0.06] w-full justify-start gap-0">
+          <TabsTrigger value="auto-disposal" className="text-zinc-500 data-active:text-cyan-700">
             <Cpu className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabAutoDisposal")}
           </TabsTrigger>
-          <TabsTrigger value="strategy" className="text-slate-500 data-active:text-cyan-700">
+          <TabsTrigger value="strategy" className="text-zinc-500 data-active:text-cyan-700">
             <Workflow className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabDisposalStrategy")}
           </TabsTrigger>
-          <TabsTrigger value="records" className="text-slate-500 data-active:text-cyan-700">
+          <TabsTrigger value="records" className="text-zinc-500 data-active:text-cyan-700">
             <Activity className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabExecutionRecord")}
           </TabsTrigger>
