@@ -28,8 +28,8 @@ router = APIRouter(prefix="/rbac", tags=["权限管理"])
 
 
 @router.post("/seed", status_code=201)
-def seed_rbac_data(db: Session = Depends(get_db)):
-    seed_rbac(db)
+def seed_rbac_data(force: bool = Query(False, description="强制重新初始化，会清空现有数据"), db: Session = Depends(get_db)):
+    seed_rbac(db, force=force)
     return {"message": "RBAC 数据初始化完成"}
 
 

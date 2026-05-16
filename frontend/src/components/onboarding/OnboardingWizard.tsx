@@ -420,12 +420,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.04] bg-white/[0.03] rounded-b-2xl">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSkip}
-            className="text-slate-500 hover:text-slate-700 text-xs"
+            className="text-zinc-500 hover:text-zinc-300 text-xs"
           >
             跳过
           </Button>
@@ -435,7 +435,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 variant="ghost"
                 size="sm"
                 onClick={handlePrev}
-                className="text-slate-600 hover:text-slate-900 gap-1"
+                className="text-zinc-400 hover:text-zinc-100 gap-1"
               >
                 <ChevronLeft className="size-3.5" />
                 上一步

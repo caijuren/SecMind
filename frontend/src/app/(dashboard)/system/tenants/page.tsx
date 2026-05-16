@@ -440,9 +440,9 @@ function TenantDetailView({
   }
 
   const memberRoleClass: Record<string, string> = {
-    owner: "border-amber-200 bg-amber-50 text-amber-700",
-    admin: "border-cyan-200 bg-cyan-50 text-cyan-700",
-    member: "border-slate-200 bg-slate-50 text-slate-600",
+    owner: "border-amber-500/25 bg-amber-500/10 text-amber-400",
+    admin: "border-cyan-500/25 bg-cyan-500/10 text-cyan-400",
+    member: "border-white/[0.08] bg-white/[0.03] text-zinc-400",
   }
 
   return (
@@ -572,18 +572,18 @@ function TenantDetailView({
                 {members.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                      <thead className="bg-slate-50">
-                        <tr className="border-b border-slate-200">
-                          <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                      <thead className="bg-white/[0.03]">
+                        <tr className="border-b border-white/[0.06]">
+                          <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                             成员
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                          <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                             角色
                           </th>
-                          <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                          <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                             加入时间
                           </th>
-                          <th scope="col" className="px-4 py-3 text-right text-slate-500">
+                          <th scope="col" className="px-4 py-3 text-right text-zinc-500">
                             操作
                           </th>
                         </tr>
@@ -592,18 +592,18 @@ function TenantDetailView({
                         {members.map((member) => (
                           <tr
                             key={member.user_id}
-                            className="border-b border-slate-100 last:border-b-0"
+                            className="border-b border-white/[0.04] last:border-b-0"
                           >
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-3">
-                                <div className="flex size-8 items-center justify-center rounded-full bg-cyan-50 font-semibold text-cyan-700 text-xs">
+                                <div className="flex size-8 items-center justify-center rounded-full bg-cyan-500/10 font-semibold text-cyan-400 text-xs">
                                   {(member.name || member.email).slice(0, 1).toUpperCase()}
                                 </div>
                                 <div>
-                                  <p className="font-medium text-slate-900">
+                                  <p className="font-medium text-zinc-100">
                                     {member.name || "-"}
                                   </p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-zinc-500">
                                     {member.email}
                                   </p>
                                 </div>
@@ -620,7 +620,7 @@ function TenantDetailView({
                                 {memberRoleLabel[member.role] ?? member.role}
                               </Badge>
                             </td>
-                            <td className="px-4 py-3 text-slate-500">
+                            <td className="px-4 py-3 text-zinc-500">
                               {formatDateTime(member.joined_at)}
                             </td>
                             <td className="px-4 py-3">
@@ -628,7 +628,7 @@ function TenantDetailView({
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="border-red-200 text-red-600 hover:bg-red-50"
+                                  className="border-red-500/25 text-red-400 hover:bg-red-500/10"
                                   onClick={() => removeMember(member.user_id)}
                                   disabled={member.role === "owner"}
                                 >
@@ -643,7 +643,7 @@ function TenantDetailView({
                     </table>
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-slate-500">
+                  <div className="py-8 text-center text-zinc-500">
                     暂无成员
                   </div>
                 )}
@@ -661,10 +661,10 @@ function TenantDetailView({
             <Card className={CARD.elevated}>
               <CardContent className="p-6">
                 <div className="mb-4">
-                  <h3 className={String(TYPOGRAPHY.h2) + " text-slate-800"}>
+                  <h3 className={String(TYPOGRAPHY.h2) + " text-zinc-200"}>
                     订阅信息
                   </h3>
-                  <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-slate-500`}>
+                  <p className={`mt-1 ${String(TYPOGRAPHY.caption)} text-zinc-500`}>
                     当前租户的订阅计划与账单周期
                   </p>
                 </div>
@@ -684,7 +684,7 @@ function TenantDetailView({
                       </div>
                       <div className={`${softCardClass} p-4`}>
                         <p className={`text-xs ${subtleTextClass}`}>订阅状态</p>
-                        <p className="mt-2 text-sm font-medium text-slate-900">
+                        <p className="mt-2 text-sm font-medium text-zinc-100">
                           {subscription.status === "active"
                             ? "生效中"
                             : subscription.status === "canceled"
@@ -698,7 +698,7 @@ function TenantDetailView({
                         <p className={`text-xs ${subtleTextClass}`}>
                           当前计费周期
                         </p>
-                        <p className="mt-2 text-sm font-medium text-slate-900">
+                        <p className="mt-2 text-sm font-medium text-zinc-100">
                           {formatDateTime(subscription.current_period_start)} ~{" "}
                           {formatDateTime(subscription.current_period_end)}
                         </p>
@@ -707,14 +707,14 @@ function TenantDetailView({
                         <p className={`text-xs ${subtleTextClass}`}>
                           周期结束是否取消
                         </p>
-                        <p className="mt-2 text-sm font-medium text-slate-900">
+                        <p className="mt-2 text-sm font-medium text-zinc-100">
                           {subscription.cancel_at_period_end ? "是" : "否"}
                         </p>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-slate-500">
+                  <div className="py-8 text-center text-zinc-500">
                     暂无订阅信息
                   </div>
                 )}
@@ -837,11 +837,11 @@ export default function TenantsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-xs ${subtleTextClass}`}>{item.label}</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
+                <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-100">
                   {item.value}
                 </p>
               </div>
-              <span className={`rounded-lg bg-cyan-50 p-2 text-cyan-700 ${RADIUS.md}`}>
+              <span className={`rounded-lg bg-cyan-500/10 p-2 text-cyan-400 ${RADIUS.md}`}>
                 <item.icon className="size-4" />
               </span>
             </div>
@@ -853,7 +853,7 @@ export default function TenantsPage() {
         className={`${softCardClass} flex flex-col gap-3 p-4 md:flex-row md:items-center`}
       >
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -861,7 +861,7 @@ export default function TenantsPage() {
             className={`pl-9 ${inputClass}`}
           />
         </div>
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-zinc-500">
           当前显示 {filteredTenants.length} 个租户
         </div>
       </div>
@@ -870,21 +870,21 @@ export default function TenantsPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr className="border-b border-slate-200">
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">
+              <thead className="bg-white/[0.03]">
+                <tr className="border-b border-white/[0.06]">
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                     租户名称
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">标识</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">计划</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">状态</th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">标识</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">计划</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">状态</th>
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                     所有者邮箱
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                     最大用户数
                   </th>
-                  <th scope="col" className="px-4 py-3 text-left text-slate-500">
+                  <th scope="col" className="px-4 py-3 text-left text-zinc-500">
                     到期时间
                   </th>
                 </tr>
@@ -893,15 +893,15 @@ export default function TenantsPage() {
                 {filteredTenants.map((tenant) => (
                   <tr
                     key={tenant.id}
-                    className="cursor-pointer border-b border-slate-100 last:border-b-0 hover:bg-slate-50/80 transition-colors"
+                    className="cursor-pointer border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.03] transition-colors"
                     onClick={() => setSelectedTenant(tenant)}
                   >
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-50 font-semibold text-cyan-700">
+                        <div className="flex size-9 items-center justify-center rounded-lg bg-cyan-500/10 font-semibold text-cyan-400">
                           {tenant.name.slice(0, 1)}
                         </div>
-                        <p className="font-medium text-slate-900">
+                        <p className="font-medium text-zinc-100">
                           {tenant.name}
                         </p>
                       </div>

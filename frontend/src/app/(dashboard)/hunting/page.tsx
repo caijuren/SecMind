@@ -81,9 +81,9 @@ const ATTCK_TACTICS = [
 ]
 
 const STATUS_CONFIG: Record<HypothesisStatus, { color: string; bg: string; border: string; icon: typeof Clock }> = {
-  "验证中": { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", icon: Clock },
-  "已确认": { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: AlertTriangle },
-  "已排除": { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", icon: CheckCircle2 },
+  "验证中": { color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: Clock },
+  "已确认": { color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", icon: AlertTriangle },
+  "已排除": { color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: CheckCircle2 },
 }
 
 interface ApiHuntingHypothesis {
@@ -138,7 +138,7 @@ const IOC_TYPE_CONFIG: Record<IocTypeDisplay, { color: string; bg: string; borde
 function ConfidenceBar({ value }: { value: number }) {
   const color = value >= 80 ? "bg-red-500" : value >= 50 ? "bg-amber-400" : "bg-cyan-500"
   return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
       <div className={cn("h-full rounded-full transition-colors duration-700", color)} style={{ width: `${value}%` }} />
     </div>
   )
@@ -149,24 +149,24 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
   const StatusIcon = statusCfg.icon
   return (
     <Card className={cn(
-      "border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-50 hover:shadow-md",
-      hypothesis.status === "已确认" && "border-red-200 bg-red-50/50",
-      hypothesis.status === "验证中" && "border-amber-200 bg-amber-50/30",
-      hypothesis.status === "已排除" && "border-emerald-200 bg-emerald-50/30"
+      "border-white/[0.06] bg-[#131316] shadow-sm transition-colors hover:bg-white/[0.04] hover:shadow-md",
+      hypothesis.status === "已确认" && "border-red-500/20 bg-red-500/10",
+      hypothesis.status === "验证中" && "border-amber-500/20 bg-amber-500/10",
+      hypothesis.status === "已排除" && "border-emerald-500/20 bg-emerald-500/10"
     )}>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-mono text-xs text-slate-400">{hypothesis.id}</span>
-              <span className="text-sm font-medium text-slate-800 truncate">{hypothesis.name}</span>
+              <span className="font-mono text-xs text-zinc-600">{hypothesis.id}</span>
+              <span className="text-sm font-medium text-zinc-200 truncate">{hypothesis.name}</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-[10px] text-cyan-700 bg-cyan-50 border-cyan-200 py-0 px-1.5">
+              <Badge variant="outline" className="text-[10px] text-cyan-700 bg-cyan-500/10 border-cyan-500/20 py-0 px-1.5">
                 <Target className="size-3 mr-0.5" />
                 {hypothesis.tactic}
               </Badge>
-              <Badge variant="outline" className="text-[10px] text-indigo-600 bg-indigo-50 border-indigo-200 py-0 px-1.5">
+              <Badge variant="outline" className="text-[10px] text-indigo-600 bg-indigo-500/10 border-indigo-500/20 py-0 px-1.5">
                 <span className="font-mono mr-0.5">{hypothesis.techniqueId}</span>
                 {hypothesis.technique}
               </Badge>

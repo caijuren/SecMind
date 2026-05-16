@@ -68,24 +68,24 @@ function getMessage(daysLeft: number): {
 
 const variantStyles = {
   info: {
-    bg: 'bg-cyan-50/80',
-    border: 'border-cyan-200',
-    text: 'text-cyan-700',
-    icon: 'text-cyan-500',
+    bg: 'bg-cyan-500/10',
+    border: 'border-cyan-500/30',
+    text: 'text-cyan-300',
+    icon: 'text-cyan-400',
     button: 'bg-cyan-600 text-white hover:bg-cyan-700',
   },
   warning: {
-    bg: 'bg-amber-50/80',
-    border: 'border-amber-200',
-    text: 'text-amber-700',
-    icon: 'text-amber-500',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/30',
+    text: 'text-amber-300',
+    icon: 'text-amber-400',
     button: 'bg-amber-600 text-white hover:bg-amber-700',
   },
   urgent: {
-    bg: 'bg-red-50/80',
-    border: 'border-red-200',
-    text: 'text-red-700',
-    icon: 'text-red-500',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/30',
+    text: 'text-red-300',
+    icon: 'text-red-400',
     button: 'bg-red-600 text-white hover:bg-red-700',
   },
 }
@@ -140,7 +140,7 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
           <span className={cn('text-sm font-semibold shrink-0', style.text)}>
             {message.title}
           </span>
-          <span className="hidden sm:inline text-xs text-slate-500 truncate">
+          <span className="hidden sm:inline text-xs text-zinc-500 truncate">
             {message.subtitle}
           </span>
         </div>
@@ -158,7 +158,7 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
         </Link>
         <button
           onClick={handleDismiss}
-          className="text-slate-500 hover:text-slate-700 transition-colors"
+          className="text-zinc-500 hover:text-zinc-300 transition-colors"
           aria-label="关闭"
         >
           <X className="size-4" />

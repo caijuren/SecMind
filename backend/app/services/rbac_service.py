@@ -12,7 +12,7 @@ SYSTEM_ROLES = [
         "alerts:read", "alerts:write",
         "response:read", "response:write", "response:execute",
         "hunting:read", "hunting:write",
-        "dashboard:read", "dashboard:write",
+        "dashboard_overview:read",
         "reports:read", "reports:write",
         "playbooks:read", "playbooks:write",
         "users:read",
@@ -32,7 +32,7 @@ SYSTEM_ROLES = [
         "alerts:read",
         "response:read",
         "hunting:read",
-        "dashboard:read",
+        "dashboard_situation:read",
         "reports:read",
         "playbooks:read",
         "users:read",
@@ -52,7 +52,8 @@ SYSTEM_ROLES = [
         "alerts:read", "alerts:write",
         "response:read", "response:write", "response:execute",
         "hunting:read", "hunting:write",
-        "dashboard:read", "dashboard:write",
+        "dashboard_overview:read",
+        "dashboard_metrics:read",
         "reports:read", "reports:write",
         "playbooks:read", "playbooks:write",
         "users:read", "users:write",
@@ -75,7 +76,9 @@ RESOURCE_ACTIONS = [
     ("alerts", "read", "查看告警"), ("alerts", "write", "编辑告警"),
     ("response", "read", "查看处置"), ("response", "write", "编辑处置"), ("response", "execute", "执行处置"),
     ("hunting", "read", "查看狩猎"), ("hunting", "write", "创建/编辑假设"),
-    ("dashboard", "read", "查看仪表盘"), ("dashboard", "write", "编辑仪表盘"),
+    ("dashboard_overview", "read", "查看运营工作台"),
+    ("dashboard_situation", "read", "查看态势大屏"),
+    ("dashboard_metrics", "read", "查看运营效能看板"),
     ("reports", "read", "查看报表"), ("reports", "write", "创建/编辑报表"),
     ("playbooks", "read", "查看剧本"), ("playbooks", "write", "创建/编辑剧本"),
     ("users", "read", "查看用户"), ("users", "write", "编辑用户"),
@@ -100,10 +103,17 @@ RESOURCE_ACTIONS = [
 ]
 
 
-def seed_rbac(db: Session) -> None:
-    existing_perms = db.query(Permission).count()
-    if existing_perms > 0:
-        return
+def seed_rbac(db: Session, force: bool = False) -> None:
+    if force:
+        db.query(role_permissions).delete()
+        db.query(user_roles).delete()
+        db.query(Role).delete()
+        db.query(Permission).delete()
+        db.flush()
+    else:
+        existing_perms = db.query(Permission).count()
+        if existing_perms > 0:
+            return
 
     perm_map: Dict[str, Permission] = {}
     for resource, action, desc in RESOURCE_ACTIONS:
