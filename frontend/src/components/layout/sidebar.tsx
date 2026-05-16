@@ -34,6 +34,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/locale-store"
+import { useAuthStore } from "@/store/auth-store"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -47,6 +48,7 @@ interface NavItem {
   href: string
   icon: React.ElementType
   accent: string
+  permission?: string
 }
 
 interface NavGroup {
@@ -65,6 +67,7 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const { t } = useLocaleStore()
+  const hasPermission = useAuthStore((s) => s.hasPermission)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     overview: true,
     lifecycle: true,
@@ -80,11 +83,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       accent: "#3b82f6",
       defaultOpen: true,
       items: [
-        { label: t("nav.aiAnalysis") || "工作台", href: "/ai-analysis", icon: Brain, accent: "#8b5cf6" },
-        { label: t("nav.dashboard"), href: "/dashboard", icon: LayoutDashboard, accent: "#3b82f6" },
-        { label: "态势大屏", href: "/screen", icon: Monitor, accent: "#06b6d4" },
-        { label: t("nav.metrics"), href: "/metrics", icon: TrendingUp, accent: "#22c55e" },
-        { label: t("nav.notifications"), href: "/notifications", icon: Bell, accent: "#ef4444" },
+        { label: t("nav.aiAnalysis") || "工作台", href: "/ai-analysis", icon: Brain, accent: "#8b5cf6", permission: "ai:read" },
+        { label: t("nav.dashboard"), href: "/dashboard", icon: LayoutDashboard, accent: "#3b82f6", permission: "dashboard_overview:read" },
+        { label: "态势大屏", href: "/screen", icon: Monitor, accent: "#06b6d4", permission: "dashboard_situation:read" },
+        { label: t("nav.metrics"), href: "/metrics", icon: TrendingUp, accent: "#22c55e", permission: "dashboard_metrics:read" },
+        { label: t("nav.notifications"), href: "/notifications", icon: Bell, accent: "#ef4444", permission: "alerts:read" },
       ],
     },
     {
@@ -93,7 +96,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       accent: "#8b5cf6",
       defaultOpen: false,
       items: [
-        { label: t("nav.aiChat") || "AI 调查助手", href: "/ai-chat", icon: MessageSquare, accent: "#8b5cf6" },
+        { label: t("nav.aiChat") || "AI 调查助手", href: "/ai-chat", icon: MessageSquare, accent: "#8b5cf6", permission: "ai:read" },
       ],
     },
     {
@@ -102,9 +105,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       accent: "#f97316",
       defaultOpen: true,
       items: [
-        { label: t("nav.signals"), href: "/signals", icon: Radio, accent: "#06b6d4" },
-        { label: t("nav.cases"), href: "/investigate", icon: GitBranch, accent: "#f59e0b" },
-        { label: t("nav.response"), href: "/response", icon: Zap, accent: "#f97316" },
+        { label: t("nav.signals"), href: "/signals", icon: Radio, accent: "#06b6d4", permission: "alerts:read" },
+        { label: t("nav.cases"), href: "/investigate", icon: GitBranch, accent: "#f59e0b", permission: "alerts:read" },
+        { label: t("nav.response"), href: "/response", icon: Zap, accent: "#f97316", permission: "response:read" },
       ],
     },
     {
@@ -112,8 +115,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       icon: GraduationCap,
       accent: "#a78bfa",
       items: [
-        { label: t("nav.learning"), href: "/learning", icon: GraduationCap, accent: "#a78bfa" },
-        { label: t("nav.tabAiKnowledge"), href: "/knowledge", icon: BookOpen, accent: "#818cf8" },
+        { label: t("nav.learning"), href: "/learning", icon: GraduationCap, accent: "#a78bfa", permission: "ai:read" },
+        { label: t("nav.tabAiKnowledge"), href: "/knowledge", icon: BookOpen, accent: "#818cf8", permission: "ai:read" },
       ],
     },
     {
@@ -121,8 +124,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       icon: Target,
       accent: "#a855f7",
       items: [
-        { label: t("nav.hunting"), href: "/hunting", icon: Target, accent: "#a855f7" },
-        { label: t("nav.workflows"), href: "/workflows", icon: Workflow, accent: "#f59e0b" },
+        { label: t("nav.hunting"), href: "/hunting", icon: Target, accent: "#a855f7", permission: "hunting:read" },
+        { label: t("nav.workflows"), href: "/workflows", icon: Workflow, accent: "#f59e0b", permission: "playbooks:read" },
       ],
     },
     {
@@ -130,17 +133,17 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       icon: Settings,
       accent: "#71717a",
       items: [
-        { label: t("nav.tabDataSource"), href: "/datasource", icon: Database, accent: "#34d399" },
-        { label: t("nav.assets"), href: "/assets", icon: Server, accent: "#06b6d4" },
-        { label: t("nav.users"), href: "/users", icon: Users, accent: "#3b82f6" },
-        { label: t("nav.reports"), href: "/reports", icon: FileText, accent: "#8b5cf6" },
-        { label: t("nav.audit"), href: "/audit", icon: FileText, accent: "#71717a" },
-        { label: t("nav.integrations"), href: "/integrations", icon: Plug, accent: "#14b8a6" },
-        { label: t("nav.system"), href: "/system", icon: Settings, accent: "#71717a" },
-        { label: "权限管理", href: "/system/rbac", icon: Shield, accent: "#8b5cf6" },
-        { label: "租户管理", href: "/system/tenants", icon: Building2, accent: "#3b82f6" },
-        { label: "账单订阅", href: "/system/billing", icon: CreditCard, accent: "#f59e0b" },
-        { label: "合规管理", href: "/system/compliance", icon: ShieldCheck, accent: "#22c55e" },
+        { label: t("nav.tabDataSource"), href: "/datasource", icon: Database, accent: "#34d399", permission: "settings:read" },
+        { label: t("nav.assets"), href: "/assets", icon: Server, accent: "#06b6d4", permission: "devices:read" },
+        { label: t("nav.users"), href: "/users", icon: Users, accent: "#3b82f6", permission: "users:read" },
+        { label: t("nav.reports"), href: "/reports", icon: FileText, accent: "#8b5cf6", permission: "reports:read" },
+        { label: t("nav.audit"), href: "/audit", icon: FileText, accent: "#71717a", permission: "settings:read" },
+        { label: t("nav.integrations"), href: "/integrations", icon: Plug, accent: "#14b8a6", permission: "integrations:read" },
+        { label: t("nav.system"), href: "/system", icon: Settings, accent: "#71717a", permission: "settings:read" },
+        { label: "权限管理", href: "/system/rbac", icon: Shield, accent: "#8b5cf6", permission: "rbac:read" },
+        { label: "租户管理", href: "/system/tenants", icon: Building2, accent: "#3b82f6", permission: "tenants:read" },
+        { label: "账单订阅", href: "/system/billing", icon: CreditCard, accent: "#f59e0b", permission: "billing:read" },
+        { label: "合规管理", href: "/system/compliance", icon: ShieldCheck, accent: "#22c55e", permission: "compliance:read" },
       ],
     },
   ], [t])
@@ -199,10 +202,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             const GroupIcon = group.icon
 
             if (collapsed) {
+              const visibleItems = group.items.filter(item => !item.permission || hasPermission(item.permission))
+              if (visibleItems.length === 0) return null
               return (
                 <div key={gi} className="mb-1">
                   <div className="mx-3 my-2 h-px bg-white/4" />
-                  {group.items.map((item) => {
+                  {visibleItems.map((item) => {
                     const active = isActive(item.href)
                     const linkContent = (
                       <Link
@@ -267,7 +272,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 </button>
                 {isExpanded && (
                   <ul className="flex flex-col gap-0.5 px-2">
-                    {group.items.map((item) => {
+                    {group.items.filter(item => !item.permission || hasPermission(item.permission)).map((item) => {
                       const active = isActive(item.href)
                       return (
                         <li key={item.href}>

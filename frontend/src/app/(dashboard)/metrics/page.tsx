@@ -31,6 +31,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/layout/page-header"
+import { PermissionGate } from "@/components/auth/PermissionGate"
 import { useLocaleStore } from "@/store/locale-store"
 import { inputClass } from "@/lib/admin-ui"
 import {
@@ -395,6 +396,22 @@ function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) 
 // ==================== 主页面 ====================
 
 export default function MetricsPage() {
+  return (
+    <PermissionGate resource="dashboard_metrics" action="read" fallback={
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
+          <p className="text-sm text-slate-500 mt-1">你没有查看运营效能看板的权限</p>
+        </div>
+      </div>
+    }>
+      <MetricsContent />
+    </PermissionGate>
+  )
+}
+
+function MetricsContent() {
   useLocaleStore()
   const [timeRange, setTimeRange] = useState("week")
 

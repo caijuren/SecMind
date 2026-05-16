@@ -46,6 +46,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { PageHeader } from "@/components/layout/page-header"
+import { PermissionGate } from "@/components/auth/PermissionGate"
 import { inputClass } from "@/lib/admin-ui"
 import { useLocaleStore } from "@/store/locale-store"
 import {
@@ -812,6 +813,22 @@ function AICapabilityShowcase() {
 // ==================== 主页面 ====================
 
 export default function DashboardPage() {
+  return (
+    <PermissionGate resource="dashboard_overview" action="read" fallback={
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
+          <p className="text-sm text-slate-500 mt-1">你没有查看运营工作台的权限</p>
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </PermissionGate>
+  )
+}
+
+function DashboardContent() {
   useLocaleStore()
   const { newAlertCount, clearNewAlerts, isConnected, lastMessage } = useRealtimeAlerts()
   const [kpiOverrides, setKpiOverrides] = useState<Record<string, any>>({})

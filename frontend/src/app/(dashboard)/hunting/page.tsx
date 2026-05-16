@@ -129,10 +129,10 @@ function mapIocType(apiType: string): IocTypeDisplay {
 }
 
 const IOC_TYPE_CONFIG: Record<IocTypeDisplay, { color: string; bg: string; border: string; icon: typeof Globe }> = {
-  IP: { color: "text-cyan-700", bg: "bg-cyan-50", border: "border-cyan-200", icon: Globe },
-  域名: { color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-200", icon: Link2 },
-  Hash: { color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200", icon: Hash },
-  URL: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", icon: Zap },
+  IP: { color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", icon: Globe },
+  域名: { color: "text-indigo-600", bg: "bg-indigo-500/10", border: "border-indigo-500/20", icon: Link2 },
+  Hash: { color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: Hash },
+  URL: { color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", icon: Zap },
 }
 
 function ConfidenceBar({ value }: { value: number }) {
@@ -178,7 +178,7 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
           </Badge>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center justify-between text-xs text-zinc-600">
           <div className="flex items-center gap-1.5">
             <Clock className="size-3" />
             <span>{hypothesis.createdAt}</span>
@@ -190,7 +190,7 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 shrink-0">置信度</span>
+          <span className="text-xs text-zinc-500 shrink-0">置信度</span>
           <div className="flex-1">
             <ConfidenceBar value={hypothesis.confidence} />
           </div>
@@ -250,25 +250,25 @@ function IOCBatchQuery() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 border border-amber-200">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/10 border border-amber-500/20">
           <Brain className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="text-sm font-medium text-slate-800">IOC批量查询</h2>
-          <p className="text-xs text-slate-400">输入IP/域名/Hash/URL进行威胁情报关联查询</p>
+          <h2 className="text-sm font-medium text-zinc-200">IOC批量查询</h2>
+          <p className="text-xs text-zinc-600">输入IP/域名/Hash/URL进行威胁情报关联查询</p>
         </div>
       </div>
 
-      <Card className="border-slate-200 bg-white shadow-sm shadow-slate-200/30">
+      <Card className="border-white/[0.06] bg-[#131316] shadow-sm shadow-black/[0.08]">
         <CardContent className="p-4 space-y-3">
           <Textarea
             placeholder={"每行输入一个IOC指标，支持以下格式：\nIP: 185.220.101.34\n域名: evil-domain.xyz\nHash: a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5\nURL: https://cmd6.malware-c2.xyz/update"}
             value={iocInput}
             onChange={(e) => setIocInput(e.target.value)}
-            className="min-h-[120px] border-slate-200 bg-white text-slate-700 placeholder:text-slate-300 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="min-h-[120px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-zinc-500">
               {iocInput.trim() ? `已输入 ${iocInput.trim().split("\n").filter(Boolean).length} 条IOC` : "等待输入"}
             </span>
             <Button
@@ -293,8 +293,8 @@ function IOCBatchQuery() {
       </Card>
 
       {isQuerying && (
-        <div className="flex flex-col items-center justify-center py-8 text-slate-300">
-          <div className="size-6 mb-2 animate-spin rounded-full border-2 border-slate-200 border-t-cyan-500" />
+        <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
+          <div className="size-6 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
           <p className="text-xs">正在查询威胁情报...</p>
         </div>
       )}
@@ -306,7 +306,7 @@ function IOCBatchQuery() {
           <Button
             variant="outline"
             size="sm"
-            className="mt-2 border-red-200 bg-white text-red-500 hover:text-red-700 text-xs h-7"
+            className="mt-2 border-red-500/20 bg-[#131316] text-red-500 hover:text-red-700 text-xs h-7"
             onClick={handleQuery}
           >
             重试
@@ -318,15 +318,15 @@ function IOCBatchQuery() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">查询结果 ({results.length})</span>
+              <span className="text-xs text-zinc-600">查询结果 ({results.length})</span>
               {cacheInfo && (
                 <div className="flex items-center gap-1.5">
-                  <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-50 border-emerald-200 py-0 px-1.5">
+                  <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-500/10 border-emerald-500/20 py-0 px-1.5">
                     <Database className="size-2.5 mr-0.5" />
                     缓存命中: {cacheInfo.hits}
                   </Badge>
                   {cacheInfo.misses > 0 && (
-                    <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-50 border-amber-200 py-0 px-1.5">
+                    <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-500/20 py-0 px-1.5">
                       实时查询: {cacheInfo.misses}
                     </Badge>
                   )}
@@ -336,13 +336,13 @@ function IOCBatchQuery() {
             <Button
               variant="outline"
               size="sm"
-              className="border-slate-200 bg-white text-slate-500 hover:text-cyan-700 hover:border-cyan-200 text-xs h-7"
+              className="border-white/[0.06] bg-[#131316] text-zinc-500 hover:text-cyan-700 hover:border-cyan-500/20 text-xs h-7"
               onClick={() => { setResults([]); setCacheInfo(null) }}
             >
               清除结果
             </Button>
           </div>
-          <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/[0.10] scrollbar-track-transparent">
             {results.map((result, idx) => {
               const typeDisplay = mapIocType(result.ioc_type)
               const typeCfg = IOC_TYPE_CONFIG[typeDisplay]
@@ -352,22 +352,22 @@ function IOCBatchQuery() {
 
               return (
                 <Card key={`${result.ioc_value}-${idx}`} className={cn(
-                  "border-slate-200 bg-white hover:bg-slate-50 transition-colors shadow-sm shadow-slate-200/30",
-                  result.risk_level === "critical" && "border-red-200 bg-red-50/30",
-                  result.risk_level === "high" && "border-orange-200 bg-orange-50/20"
+                  "border-white/[0.06] bg-[#131316] hover:bg-white/[0.04] transition-colors shadow-sm shadow-black/[0.08]",
+                  result.risk_level === "critical" && "border-red-500/20 bg-red-500/10",
+                  result.risk_level === "high" && "border-orange-500/20 bg-orange-500/10"
                 )}>
                   <CardContent className="p-3 space-y-2.5">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <TypeIcon className={cn("size-3.5 shrink-0", typeCfg.color)} />
-                        <span className="text-xs font-mono text-slate-700 truncate">{result.ioc_value}</span>
+                        <span className="text-xs font-mono text-zinc-300 truncate">{result.ioc_value}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5", typeCfg.color, typeCfg.bg, typeCfg.border)}>
                           {typeDisplay}
                         </Badge>
                         {result.from_cache && (
-                          <Badge variant="outline" className="text-[10px] text-slate-400 bg-slate-50 border-slate-200 py-0 px-1.5">
+                          <Badge variant="outline" className="text-[10px] text-zinc-600 bg-white/[0.03] border-white/[0.06] py-0 px-1.5">
                             <Database className="size-2.5 mr-0.5" />
                             缓存
                           </Badge>
@@ -382,7 +382,7 @@ function IOCBatchQuery() {
                     {result.tags.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap">
                         {result.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-[10px] text-slate-500 bg-slate-50 border-slate-200 py-0 px-1.5">
+                          <Badge key={tag} variant="outline" className="text-[10px] text-zinc-500 bg-white/[0.03] border-white/[0.06] py-0 px-1.5">
                             {tag}
                           </Badge>
                         ))}
@@ -392,8 +392,8 @@ function IOCBatchQuery() {
                     {result.sources.length > 0 && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <Info className="size-3 text-slate-400 shrink-0" />
-                          <span className="text-[10px] text-slate-400">情报源 ({result.sources.length})</span>
+                          <Info className="size-3 text-zinc-600 shrink-0" />
+                          <span className="text-[10px] text-zinc-600">情报源 ({result.sources.length})</span>
                         </div>
                         <div className="space-y-0.5">
                           {result.sources.slice(0, 3).map((source) => (
@@ -404,26 +404,26 @@ function IOCBatchQuery() {
                                 ) : (
                                   <ShieldCheck className="size-2.5 text-emerald-500 shrink-0" />
                                 )}
-                                <span className="text-slate-500 truncate">{source.source_name}</span>
+                                <span className="text-zinc-500 truncate">{source.source_name}</span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 <span className={cn("font-mono", source.result.malicious ? "text-red-500" : "text-emerald-500")}>
                                   {source.result.score}
                                 </span>
-                                <span className="text-slate-300 truncate max-w-[80px] hidden sm:inline">
+                                <span className="text-zinc-700 truncate max-w-[80px] hidden sm:inline">
                                   {source.result.details}
                                 </span>
                               </div>
                             </div>
                           ))}
                           {result.sources.length > 3 && (
-                            <p className="text-[10px] text-slate-300">还有 {result.sources.length - 3} 个情报源...</p>
+                            <p className="text-[10px] text-zinc-700">还有 {result.sources.length - 3} 个情报源...</p>
                           )}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <div className="flex items-center justify-between text-[10px] text-zinc-600">
                       <div className="flex items-center gap-1">
                         <span>恶意源: {maliciousSources.length}/{result.sources.length}</span>
                       </div>
@@ -434,7 +434,7 @@ function IOCBatchQuery() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded-full bg-slate-100 overflow-hidden">
+                      <div className="flex-1 h-1 rounded-full bg-white/[0.05] overflow-hidden">
                         <div
                           className={cn("h-full rounded-full transition-colors", riskBarColor(result.risk_score))}
                           style={{ width: `${result.risk_score}%` }}
@@ -450,7 +450,7 @@ function IOCBatchQuery() {
       )}
 
       {!isQuerying && !error && results.length === 0 && iocInput.trim() && (
-        <div className="flex flex-col items-center justify-center py-8 text-slate-300">
+        <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
           <Search className="size-6 mb-2" />
           <p className="text-xs">输入IOC后点击批量查询</p>
         </div>
@@ -501,10 +501,10 @@ export default function HuntingPage() {
   })
 
   const filterCards: { label: string; count: number; color: string; bg: string; border: string; status: HypothesisStatus | "全部" }[] = [
-    { label: "全部假设", count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-50", border: "border-cyan-200", status: "全部" },
-    { label: "验证中", count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", status: "验证中" },
-    { label: "已确认", count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-50", border: "border-red-200", status: "已确认" },
-    { label: "已排除", count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", status: "已排除" },
+    { label: "全部假设", count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", status: "全部" },
+    { label: "验证中", count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", status: "验证中" },
+    { label: "已确认", count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", status: "已确认" },
+    { label: "已排除", count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20", status: "已排除" },
   ]
 
   const handleCreateHypothesis = async () => {
@@ -543,20 +543,20 @@ export default function HuntingPage() {
             className={cn(
               "cursor-pointer transition-colors border",
               activeFilter === card.status
-                ? cn(card.border, card.bg, "shadow-sm shadow-slate-200/50")
+                ? cn(card.border, card.bg, "shadow-sm shadow-black/[0.08]")
                 : softCardClass
             )}
             onClick={() => setActiveFilter(card.status)}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-slate-400")}>{card.label}</span>
+                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-zinc-600")}>{card.label}</span>
                 {card.status === "验证中" && <Clock className="size-4 text-amber-400" />}
                 {card.status === "已确认" && <AlertTriangle className="size-4 text-red-400" />}
                 {card.status === "已排除" && <CheckCircle2 className="size-4 text-emerald-400" />}
                 {card.status === "全部" && <Crosshair className="size-4 text-cyan-500" />}
               </div>
-              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-slate-600")}>{card.count}</p>
+              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-zinc-400")}>{card.count}</p>
             </CardContent>
           </Card>
         ))}

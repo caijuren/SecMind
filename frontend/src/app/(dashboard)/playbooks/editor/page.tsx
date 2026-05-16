@@ -345,30 +345,30 @@ function PlaybookEditorContent() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-white shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#131316] shrink-0">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-slate-500 hover:text-slate-600"
+            className="gap-1.5 text-zinc-500 hover:text-zinc-400"
             onClick={() => router.push("/workflows")}
           >
             <ArrowLeft className="h-4 w-4" />
             返回
           </Button>
-          <div className="h-4 w-px bg-slate-200" />
+          <div className="h-4 w-px bg-white/[0.06]" />
           <div className="flex items-center gap-2">
             <Workflow className="h-4 w-4 text-cyan-600" />
             <Input
               value={playbookName}
               onChange={(e) => setPlaybookName(e.target.value)}
-              className="h-7 w-48 text-sm font-semibold border-transparent bg-transparent hover:border-slate-200 focus:border-cyan-400/60 focus:bg-white px-1"
+              className="h-7 w-48 text-sm font-semibold border-transparent bg-transparent hover:border-white/[0.06] focus:border-cyan-400/60 focus:bg-white/[0.03] px-1 text-zinc-100"
             />
           </div>
           {playbookId && (
             <Badge
               variant="outline"
-              className="text-[10px] border-slate-200 text-slate-500"
+              className="text-[10px] border-white/[0.06] text-zinc-500"
             >
               ID: {playbookId}
             </Badge>
@@ -379,7 +379,7 @@ function PlaybookEditorContent() {
           {error && (
             <span className="text-xs text-red-500">{error}</span>
           )}
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-zinc-500">
             {graph.nodes.length} 个节点 · {graph.edges.length} 条连线
           </span>
           <Button
@@ -396,7 +396,7 @@ function PlaybookEditorContent() {
           </Button>
           <Button
             variant="outline"
-            className="gap-1.5 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+            className="gap-1.5 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
             disabled={testing || graph.nodes.length === 0}
             onClick={handleTestRun}
           >
@@ -414,27 +414,27 @@ function PlaybookEditorContent() {
         <div
           className={`flex items-center gap-3 px-4 py-2.5 border-b shrink-0 ${
             testResult.status === "success"
-              ? "bg-emerald-50/80 border-emerald-100"
+              ? "bg-emerald-500/10 border-emerald-500/20"
               : testResult.status === "error"
-                ? "bg-red-50/80 border-red-100"
-                : "bg-amber-50/80 border-amber-100"
+                ? "bg-red-500/10 border-red-500/20"
+                : "bg-amber-500/10 border-amber-500/20"
           }`}
         >
           {testResult.status === "success" ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
           ) : testResult.status === "error" ? (
-            <XCircle className="h-4 w-4 text-red-600 shrink-0" />
+            <XCircle className="h-4 w-4 text-red-400 shrink-0" />
           ) : (
-            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <p
               className={`text-xs font-medium ${
                 testResult.status === "success"
-                  ? "text-emerald-700"
+                  ? "text-emerald-300"
                   : testResult.status === "error"
-                    ? "text-red-700"
-                    : "text-amber-700"
+                    ? "text-red-300"
+                    : "text-amber-300"
               }`}
             >
               {testResult.message}
@@ -443,15 +443,15 @@ function PlaybookEditorContent() {
               <div className="mt-1 space-y-0.5">
                 {testResult.details.map((d, i) => (
                   <p
-                    key={i}
-                    className={`text-[11px] ${
-                      testResult.status === "success"
-                        ? "text-emerald-600/70"
-                        : testResult.status === "error"
-                          ? "text-red-600/70"
-                          : "text-amber-600/70"
-                    }`}
-                  >
+                      key={i}
+                      className={`text-[11px] ${
+                        testResult.status === "success"
+                          ? "text-emerald-400/70"
+                          : testResult.status === "error"
+                            ? "text-red-400/70"
+                            : "text-amber-400/70"
+                      }`}
+                    >
                     {d}
                   </p>
                 ))}
@@ -461,10 +461,10 @@ function PlaybookEditorContent() {
           <button
             className={`text-xs shrink-0 hover:underline ${
               testResult.status === "success"
-                ? "text-emerald-500"
+                ? "text-emerald-400"
                 : testResult.status === "error"
-                  ? "text-red-500"
-                  : "text-amber-500"
+                  ? "text-red-400"
+                  : "text-amber-400"
             }`}
             onClick={() => setTestResult(null)}
           >

@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import ReactECharts from "echarts-for-react"
 import { PageHeader } from "@/components/layout/page-header"
+import { PermissionGate } from "@/components/auth/PermissionGate"
 import { useLocaleStore } from "@/store/locale-store"
 import {
   Card,
@@ -510,6 +511,22 @@ function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
 // ==================== 主页面 ====================
 
 export default function ScreenPage() {
+  return (
+    <PermissionGate resource="dashboard_situation" action="read" fallback={
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
+          <p className="text-sm text-slate-500 mt-1">你没有查看态势大屏的权限</p>
+        </div>
+      </div>
+    }>
+      <ScreenContent />
+    </PermissionGate>
+  )
+}
+
+function ScreenContent() {
   useLocaleStore()
   const [timeRange, setTimeRange] = useState("today")
   const [summary, setSummary] = useState<OverviewSummary | null>(null)

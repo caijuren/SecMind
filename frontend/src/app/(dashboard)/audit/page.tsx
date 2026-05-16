@@ -143,9 +143,9 @@ export default function AuditPage() {
               style={{
                 background: isActive
                   ? `linear-gradient(135deg, ${config.color}15, ${config.color}08)`
-                  : "#ffffff",
-                borderColor: isActive ? `${config.color}40` : "#e2e8f0",
-                boxShadow: isActive ? "0 1px 3px rgba(15,23,42,0.08)" : "0 1px 2px rgba(15,23,42,0.04)",
+                  : "#131316",
+                borderColor: isActive ? `${config.color}40` : "rgba(255,255,255,0.06)",
+                boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "0 1px 2px rgba(0,0,0,0.2)",
               }}
               onClick={() => setActiveCategory(isActive ? "all" : key as FilterCategory)}
             >
@@ -162,15 +162,15 @@ export default function AuditPage() {
                       <Icon className="h-4.5 w-4.5" style={{ color: config.color }} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-600">{config.label}</p>
+                      <p className="text-sm font-medium text-zinc-400">{config.label}</p>
                       <p
                         className="text-xl font-bold font-mono"
                         style={{
-                          color: isActive ? config.color : "#0f172a",
+                          color: isActive ? config.color : "#e4e4e7",
                         }}
                       >
                         {config.count.toLocaleString()}
-                        <span className="text-xs font-normal text-slate-300 ml-1">条</span>
+                        <span className="text-xs font-normal text-zinc-600 ml-1">条</span>
                       </p>
                     </div>
                   </div>
@@ -213,10 +213,10 @@ export default function AuditPage() {
 
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
             <SelectTrigger className={`h-8 w-[130px] ${inputClass}`} aria-label="操作类型筛选">
-              <Filter className="h-3.5 w-3.5 mr-1 text-slate-400" />
+              <Filter className="h-3.5 w-3.5 mr-1 text-zinc-500" />
               <SelectValue placeholder="操作类型" />
             </SelectTrigger>
-            <SelectContent className="border-cyan-200 bg-white text-foreground">
+            <SelectContent className="border-cyan-500/25 bg-[#131316] text-foreground">
               <SelectItem value="all">全部类型</SelectItem>
               <SelectItem value="登录">登录</SelectItem>
               <SelectItem value="查询">查询</SelectItem>
@@ -238,7 +238,7 @@ export default function AuditPage() {
 
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v ?? "7d")}>
             <SelectTrigger className={`h-8 w-[120px] ${inputClass}`} aria-label="时间范围筛选">
-              <Clock className="h-3.5 w-3.5 mr-1 text-slate-400" />
+              <Clock className="h-3.5 w-3.5 mr-1 text-zinc-500" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-cyan-200 bg-white text-foreground">

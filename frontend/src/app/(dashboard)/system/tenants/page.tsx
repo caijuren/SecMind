@@ -906,7 +906,7 @@ export default function TenantsPage() {
                         </p>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-slate-600 font-mono text-xs">
+                    <td className="px-4 py-4 text-zinc-400 font-mono text-xs">
                       {tenant.slug}
                     </td>
                     <td className="px-4 py-4">
@@ -925,13 +925,13 @@ export default function TenantsPage() {
                         {statusLabelMap[tenant.status]}
                       </Badge>
                     </td>
-                    <td className="px-4 py-4 text-slate-600">
+                    <td className="px-4 py-4 text-zinc-400">
                       {tenant.owner_email}
                     </td>
-                    <td className="px-4 py-4 text-slate-600">
+                    <td className="px-4 py-4 text-zinc-400">
                       {tenant.max_users}
                     </td>
-                    <td className="px-4 py-4 text-slate-500">
+                    <td className="px-4 py-4 text-zinc-500">
                       {formatDateTime(tenant.expires_at)}
                     </td>
                   </tr>
@@ -940,12 +940,12 @@ export default function TenantsPage() {
             </table>
           </div>
           {!loading && filteredTenants.length === 0 && (
-            <div className="p-10 text-center text-slate-500">
+            <div className="p-10 text-center text-zinc-500">
               没有匹配的租户
             </div>
           )}
           {loading && (
-            <div className="p-10 text-center text-slate-500">加载中…</div>
+            <div className="p-10 text-center text-zinc-500">加载中…</div>
           )}
         </CardContent>
       </Card>

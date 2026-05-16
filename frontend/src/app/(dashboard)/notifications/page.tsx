@@ -62,25 +62,25 @@ interface NotificationChannel {
 }
 
 const LEVEL_CONFIG: Record<AlertLevel, { color: string; bg: string; border: string; label: string; hex: string }> = {
-  P0: { color: "text-red-600", bg: "bg-red-50", border: "border-red-200", label: "P0紧急", hex: "#dc2626" },
-  P1: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", label: "P1高危", hex: "#d97706" },
-  P2: { color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200", label: "P2中危", hex: "#ca8a04" },
-  P3: { color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200", label: "P3低危", hex: "#64748b" },
+  P0: { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/25", label: "P0紧急", hex: "#dc2626" },
+  P1: { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/25", label: "P1高危", hex: "#d97706" },
+  P2: { color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/25", label: "P2中危", hex: "#ca8a04" },
+  P3: { color: "text-zinc-400", bg: "bg-white/[0.03]", border: "border-white/[0.06]", label: "P3低危", hex: "#64748b" },
 }
 
 const SOURCE_CONFIG: Record<AlertSource, { icon: typeof Shield; color: string; bg: string }> = {
-  "防火墙": { icon: Shield, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  "IDS": { icon: Radio, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  "EDR": { icon: Monitor, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  "SIEM": { icon: Brain, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
-  "态势感知": { icon: Globe, color: "text-slate-600", bg: "bg-slate-100 border-slate-200" },
+  "防火墙": { icon: Shield, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
+  "IDS": { icon: Radio, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
+  "EDR": { icon: Monitor, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
+  "SIEM": { icon: Brain, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
+  "态势感知": { icon: Globe, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
 }
 
 const STATUS_CONFIG: Record<AlertStatus, { color: string; bg: string; border: string }> = {
-  "待处理": { color: "text-red-600", bg: "bg-red-50", border: "border-red-200" },
-  "处理中": { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200" },
-  "已确认": { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200" },
-  "已静默": { color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200" },
+  "待处理": { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/25" },
+  "处理中": { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/25" },
+  "已确认": { color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/25" },
+  "已静默": { color: "text-zinc-400", bg: "bg-white/[0.03]", border: "border-white/[0.06]" },
 }
 
 const LEVEL_COUNTS: Record<AlertLevel, number> = {
@@ -188,19 +188,19 @@ export default function NotificationsPage() {
               className={cn(
                 "cursor-pointer transition-colors duration-200",
                 isSelected
-                  ? cn(config.border, config.bg, "shadow-sm shadow-slate-200/50")
+                  ? cn(config.border, config.bg, "shadow-sm shadow-black/20")
                   : softCardClass
               )}
               onClick={() => handleLevelClick(level)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-medium", isSelected ? config.color : "text-slate-400")}>
+                  <span className={cn("text-xs font-medium", isSelected ? config.color : "text-zinc-500")}>
                     {config.label}
                   </span>
-                  <LevelIcon className={cn("size-4", isSelected ? config.color : "text-slate-300")} />
+                  <LevelIcon className={cn("size-4", isSelected ? config.color : "text-zinc-600")} />
                 </div>
-                <p className={cn("mt-1 text-2xl font-bold font-mono tabular-nums", isSelected ? config.color : "text-slate-900")}>
+                <p className={cn("mt-1 text-2xl font-bold font-mono tabular-nums", isSelected ? config.color : "text-zinc-100")}>
                   {LEVEL_COUNTS[level]}
                 </p>
               </CardContent>
@@ -211,7 +211,7 @@ export default function NotificationsPage() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-300" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
           <Input
             placeholder="搜索告警标题、描述或ID..."
             value={searchQuery}
@@ -252,7 +252,7 @@ export default function NotificationsPage() {
           <Button
             size="sm"
             variant="ghost"
-            className="text-slate-400 hover:text-cyan-600"
+            className="text-zinc-500 hover:text-cyan-400"
             onClick={() => {
               setSelectedLevel(null)
               setSourceFilter("all")
@@ -267,7 +267,7 @@ export default function NotificationsPage() {
 
       <div className="space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {filteredAlerts.length === 0 && (
-          <div className="flex items-center justify-center py-16 text-slate-300 text-sm">
+          <div className="flex items-center justify-center py-16 text-zinc-500 text-sm">
             没有匹配的告警记录
           </div>
         )}
@@ -280,17 +280,17 @@ export default function NotificationsPage() {
             <div
               key={alert.id}
               className={cn(
-                "rounded-lg border bg-white p-3.5 transition-colors shadow-sm shadow-slate-200/30",
+                "rounded-lg border bg-[#131316] p-3.5 transition-colors shadow-sm shadow-black/10",
                 alert.level === "P0" && "border-[#ef4444]/25",
                 alert.level === "P1" && "border-[#f97316]/20",
                 alert.level === "P2" && "border-[#eab308]/15",
-                alert.level === "P3" && "border-slate-200"
+                alert.level === "P3" && "border-white/[0.06]"
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono tabular-nums text-slate-500">{alert.time}</span>
+                    <span className="text-xs font-mono tabular-nums text-zinc-500">{alert.time}</span>
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold",
@@ -321,15 +321,15 @@ export default function NotificationsPage() {
                       {alert.status}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-slate-700 leading-snug">{alert.title}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{alert.description}</p>
+                  <p className="text-sm font-medium text-zinc-200 leading-snug">{alert.title}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{alert.description}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {alert.status !== "已确认" && (
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1"
+                      className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-1"
                       onClick={() => handleConfirm(alert.id)}
                       aria-label="确认告警"
                     >
@@ -341,7 +341,7 @@ export default function NotificationsPage() {
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-slate-500 hover:text-slate-700 hover:bg-slate-100 gap-1"
+                      className="text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06] gap-1"
                       onClick={() => handleMute(alert.id)}
                       aria-label="静默告警"
                     >
@@ -352,7 +352,7 @@ export default function NotificationsPage() {
                   <Button
                     size="xs"
                     variant="ghost"
-                    className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 gap-1"
+                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 gap-1"
                     aria-label="查看告警详情"
                   >
                     <Eye className="size-3" />
@@ -368,7 +368,7 @@ export default function NotificationsPage() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Wifi className="size-4 text-cyan-400" />
-          <span className="text-sm font-bold text-slate-700">通知渠道配置</span>
+          <span className="text-sm font-bold text-zinc-200">通知渠道配置</span>
         </div>
         <div className="grid grid-cols-4 gap-4">
           {channels.map((channel) => {
@@ -379,15 +379,15 @@ export default function NotificationsPage() {
                 className={cn(
                   "transition-colors",
                   channel.enabled
-                    ? cn(channel.bg, "border-slate-200")
+                    ? cn(channel.bg, "border-white/[0.06]")
                     : softCardClass
                 )}
               >
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <ChannelIcon className={cn("size-4", channel.enabled ? channel.color : "text-slate-300")} />
-                      <span className={cn("text-sm font-medium", channel.enabled ? "text-slate-700" : "text-slate-400")}>
+                      <ChannelIcon className={cn("size-4", channel.enabled ? channel.color : "text-zinc-600")} />
+                      <span className={cn("text-sm font-medium", channel.enabled ? "text-zinc-200" : "text-zinc-400")}>
                         {channel.name}
                       </span>
                     </div>
@@ -395,7 +395,7 @@ export default function NotificationsPage() {
                       onClick={() => toggleChannel(channel.id)}
                       className={cn(
                         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
-                        channel.enabled ? "bg-cyan-500/60" : "bg-white"
+                        channel.enabled ? "bg-cyan-500/60" : "bg-white/[0.1]"
                       )}
                       role="switch"
                       aria-checked={channel.enabled}
@@ -409,7 +409,7 @@ export default function NotificationsPage() {
                       />
                     </button>
                   </div>
-                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-slate-500" : "text-slate-300")}>
+                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-zinc-500" : "text-zinc-600")}>
                     {channel.summary}
                   </p>
                   <Badge
@@ -418,7 +418,7 @@ export default function NotificationsPage() {
                       "text-[10px]",
                       channel.enabled
                         ? "border-cyan-400/25 text-cyan-400/70"
-                        : "border-slate-200 text-slate-300"
+                        : "border-white/[0.08] text-zinc-600"
                     )}
                   >
                     {channel.enabled ? "已启用" : "未启用"}
