@@ -24,9 +24,7 @@ import {
   Activity,
   ToggleLeft,
   ToggleRight,
-  Filter,
   Save,
-  X,
   GripVertical,
   Bell,
   Shield,
@@ -38,8 +36,8 @@ import { api, formatDateTime } from "@/lib/api"
 import { PlaybookEditor, convertPlaybookToFlow } from "@/components/playbook-editor"
 import { PageHeader } from "@/components/layout/page-header"
 import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -57,7 +55,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { useLocaleStore } from "@/store/locale-store"
 
 type PlaybookStatus = "enabled" | "disabled"
 type NodeType = "trigger" | "condition" | "action" | "approval"
@@ -128,6 +125,19 @@ function mapApiPlaybook(raw: ApiPlaybook): Playbook {
   }
 }
 
+const DEMO_PLAYBOOKS: Playbook[] = [
+  { id: 'PB-001', name: '账号失陷自动处置', description: '检测到账号异常登录后自动冻结账户、重置密码、通知安全团队', trigger: 'AI研判置信度触发', steps: 6, executions: 342, lastExecution: '2026-05-18 09:32:15', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: 'AI告警触发', detail: '置信度>85%' }, { id: 'n2', type: 'action', label: '冻结账户', detail: 'AD账号停用' }, { id: 'n3', type: 'condition', label: '是否VIP', detail: '判断用户等级' }, { id: 'n4', type: 'approval', label: '安全主管审批', detail: 'VIP账号需审批' }, { id: 'n5', type: 'action', label: '重置密码', detail: '强制密码重置' }, { id: 'n6', type: 'action', label: '通知闭环', detail: '邮件+企微通知' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '完成' }, { from: 'n3', to: 'n4', label: '是-VIP' }, { from: 'n3', to: 'n5', label: '否-非VIP' }, { from: 'n4', to: 'n5', label: '审批' }, { from: 'n5', to: 'n6', label: '完成' }] },
+  { id: 'PB-002', name: '钓鱼邮件自动处置', description: '检测到高置信度钓鱼邮件后自动隔离、撤回、通知收件人', trigger: '特征匹配触发', steps: 5, executions: 856, lastExecution: '2026-05-18 10:05:42', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: '邮件规则匹配', detail: '钓鱼特征>80分' }, { id: 'n2', type: 'action', label: '隔离邮件', detail: '移入隔离区' }, { id: 'n3', type: 'action', label: '撤回已投递', detail: 'API撤回邮件' }, { id: 'n4', type: 'action', label: '通知收件人', detail: '发送安全提醒' }, { id: 'n5', type: 'action', label: '生成告警单', detail: '创建安全事件' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '完成' }, { from: 'n3', to: 'n4', label: '完成' }, { from: 'n4', to: 'n5', label: '完成' }] },
+  { id: 'PB-003', name: 'C2通信自动阻断', description: '检测到内网主机与已知C2通信后自动阻断网络连接并隔离主机', trigger: '阈值触发', steps: 4, executions: 167, lastExecution: '2026-05-18 08:15:33', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: 'C2通信检测', detail: '特征匹配' }, { id: 'n2', type: 'action', label: '防火墙阻断', detail: 'ACL策略下发' }, { id: 'n3', type: 'action', label: 'EDR隔离主机', detail: '网络隔离' }, { id: 'n4', type: 'action', label: '生成安全事件', detail: 'Automatically create incident' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '阻断完成' }, { from: 'n3', to: 'n4', label: '隔离完成' }] },
+  { id: 'PB-004', name: '暴力破解自动防御', description: '检测到暴力破解行为后自动封禁源IP、发送告警、更新防火墙规则', trigger: '阈值触发', steps: 4, executions: 523, lastExecution: '2026-05-18 07:48:11', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: '登录失败统计', detail: 'N次/分钟超阈值' }, { id: 'n2', type: 'action', label: '封禁源IP', detail: '防火墙Deny规则' }, { id: 'n3', type: 'condition', label: '是否为内部IP', detail: '判断来源' }, { id: 'n4', type: 'action', label: '告警通知', detail: '通知安全团队' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '封禁完成' }, { from: 'n3', to: 'n4', label: '完成' }] },
+  { id: 'PB-005', name: '数据外泄自动遏制', description: '检测到数据外泄行为后自动阻断外传通道、隔离终端、启动取证', trigger: '行为检测触发', steps: 5, executions: 89, lastExecution: '2026-05-17 22:10:05', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: 'DLP规则匹配', detail: '敏感数据外传' }, { id: 'n2', type: 'action', label: '阻断传输', detail: '中断网络连接' }, { id: 'n3', type: 'action', label: '隔离终端', detail: 'EDR隔离' }, { id: 'n4', type: 'action', label: '启动取证', detail: '内存镜像采集' }, { id: 'n5', type: 'action', label: '通知数据所有者', detail: '邮件通知' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '阻断完成' }, { from: 'n3', to: 'n4', label: '隔离完成' }, { from: 'n4', to: 'n5', label: '取证完成' }] },
+  { id: 'PB-006', name: 'WebShell自动清除', description: '检测到WebShell后自动删除文件、修复漏洞、审查访问日志', trigger: '特征匹配触发', steps: 4, executions: 89, lastExecution: '2026-05-17 18:33:28', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: 'WebShell检测', detail: '特征匹配' }, { id: 'n2', type: 'action', label: '删除文件', detail: '自动删除WebShell' }, { id: 'n3', type: 'action', label: '修复漏洞', detail: 'WAF规则更新' }, { id: 'n4', type: 'action', label: '审查日志', detail: '访问日志分析' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '删除完成' }, { from: 'n3', to: 'n4', label: '修复完成' }] },
+  { id: 'PB-007', name: '横向移动自动阻断', description: '检测到内网横向移动行为后自动隔离失陷主机、阻断通信、重置凭证', trigger: '行为检测触发', steps: 5, executions: 234, lastExecution: '2026-05-17 14:22:17', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: '横向移动检测', detail: 'PTH/WMI/PsExec' }, { id: 'n2', type: 'action', label: '隔离失陷主机', detail: 'EDR隔离' }, { id: 'n3', type: 'action', label: '阻断横向协议', detail: '火墙策略' }, { id: 'n4', type: 'action', label: '重置凭证', detail: '密码批量重置' }, { id: 'n5', type: 'action', label: '通知域管', detail: '通知管理员' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '隔离完成' }, { from: 'n3', to: 'n4', label: '阻断完成' }, { from: 'n4', to: 'n5', label: '重置完成' }] },
+  { id: 'PB-008', name: 'VPN异常登录处置', description: '检测到VPN异常登录后自动冻结会话、通知用户、启动调查流程', trigger: 'AI研判置信度触发', steps: 4, executions: 178, lastExecution: '2026-05-17 20:55:44', status: 'disabled', nodes: [{ id: 'n1', type: 'trigger', label: 'VPN异常检测', detail: '规则匹配' }, { id: 'n2', type: 'action', label: '冻结VPN会话', detail: '强制断开连接' }, { id: 'n3', type: 'action', label: '通知用户', detail: '发送验证邮件' }, { id: 'n4', type: 'action', label: '启动调查流程', detail: '创建工单' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '冻结完成' }, { from: 'n3', to: 'n4', label: '通知完成' }] },
+  { id: 'PB-009', name: '内部威胁监控处置', description: '监控内部用户异常行为，检测到违规后自动触发调查和取证流程', trigger: '行为检测触发', steps: 4, executions: 95, lastExecution: '2026-05-17 09:12:36', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: 'UEBA告警', detail: '行为基线偏离' }, { id: 'n2', type: 'condition', label: '风险评分评估', detail: '评分>70' }, { id: 'n3', type: 'action', label: '启动调查', detail: '创建调查工单' }, { id: 'n4', type: 'approval', label: '经理审批', detail: '需上级确认' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '高风险' }, { from: 'n3', to: 'n4', label: '调查启动' }] },
+  { id: 'PB-010', name: '权限提升自动遏制', description: '检测到异常权限提升后自动撤销授权、通知审批人、启动取证', trigger: 'AI研判置信度触发', steps: 4, executions: 156, lastExecution: '2026-05-17 11:30:52', status: 'enabled', nodes: [{ id: 'n1', type: 'trigger', label: '权限变更检测', detail: 'RBAC异常' }, { id: 'n2', type: 'action', label: '撤销授权', detail: '自动回滚权限' }, { id: 'n3', type: 'action', label: '通知审批人', detail: '安全主管通知' }, { id: 'n4', type: 'action', label: '启动取证', detail: '审计日志保存' }], edges: [{ from: 'n1', to: 'n2', label: '触发' }, { from: 'n2', to: 'n3', label: '撤销完成' }, { from: 'n3', to: 'n4', label: '通知完成' }] },
+]
+
 const executionHistory: ExecutionRecord[] = [
   { id: "EX-20260510-001", playbookName: "账号失陷自动处置", triggerTime: "2026-05-10 09:32:15", status: "success", duration: "12.3s" },
   { id: "EX-20260510-002", playbookName: "钓鱼邮件自动处置", triggerTime: "2026-05-10 10:05:42", status: "success", duration: "8.7s" },
@@ -189,13 +199,13 @@ const EXECUTION_STATUS_CONFIG: Record<ExecutionStatus, { color: string; icon: ty
 }
 
 export default function WorkflowsPage() {
-  const { t } = useLocaleStore()
   const router = useRouter()
   const [playbooks, setPlaybooks] = useState<Playbook[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [filterType, setFilterType] = useState<"all" | "enabled" | "disabled">("all")
+  const [deleteTarget, setDeleteTarget] = useState<{id: string, name: string} | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPlaybook, setSelectedPlaybook] = useState<Playbook | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -216,8 +226,8 @@ export default function WorkflowsPage() {
       const res = await api.get<ApiPlaybook[]>("/playbooks")
       setPlaybooks(res.data.map(mapApiPlaybook))
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "加载剧本列表失败"
-      setError(message)
+      console.warn("API unavailable, using demo data", err)
+      setPlaybooks(DEMO_PLAYBOOKS)
     } finally {
       setLoading(false)
     }
@@ -233,8 +243,8 @@ export default function WorkflowsPage() {
         if (!cancelled) setPlaybooks(res.data.map(mapApiPlaybook))
       } catch (err: unknown) {
         if (!cancelled) {
-          const message = err instanceof Error ? err.message : "加载剧本列表失败"
-          setError(message)
+          console.warn("API unavailable, using demo data", err)
+          setPlaybooks(DEMO_PLAYBOOKS)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -692,7 +702,7 @@ export default function WorkflowsPage() {
                         className="text-zinc-700 hover:text-red-500"
                         onClick={(e) => {
                           e.stopPropagation()
-                          deletePlaybook(playbook.id)
+                          setDeleteTarget({id: playbook.id, name: playbook.name})
                         }}
                       >
                         <Trash2 className="h-3 w-3" />
@@ -975,6 +985,20 @@ export default function WorkflowsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="删除剧本"
+        description={`确定要删除剧本 ${deleteTarget?.name} 吗？此操作不可撤销。`}
+        level="danger"
+        onConfirm={() => {
+          if (deleteTarget) {
+            deletePlaybook(deleteTarget.id)
+            setDeleteTarget(null)
+          }
+        }}
+      />
     </div>
   )
 }

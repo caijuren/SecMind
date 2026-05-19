@@ -13,19 +13,17 @@ import {
   Zap,
   ShieldAlert,
   Globe,
-  Clock,
   FileSearch,
   Link2,
   CheckCircle2,
   Sparkles,
-  MessageSquare,
   Hash,
   ArrowRight,
   Lightbulb,
   Database,
-  Network,
   UserCheck,
   History,
+  Network,
   Plus,
   Trash2,
 } from "lucide-react"
@@ -114,9 +112,9 @@ function TypingIndicator() {
 
 function EvidenceBadge({ direction }: { direction: EvidenceItem["direction"] }) {
   const config = {
-    supports: { color: "#22c55e", bg: "bg-emerald-50", border: "border-emerald-200", label: "支持" },
-    contradicts: { color: "#ef4444", bg: "bg-red-50", border: "border-red-200", label: "反对" },
-    neutral: { color: "#64748b", bg: "bg-slate-50", border: "border-slate-200", label: "中性" },
+    supports: { color: "#22c55e", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "支持" },
+    contradicts: { color: "#ef4444", bg: "bg-red-500/10", border: "border-red-500/20", label: "反对" },
+    neutral: { color: "#71717a", bg: "bg-[#09090b]", border: "border-white/6", label: "中性" },
   }
   const c = config[direction]
   return (
@@ -129,24 +127,24 @@ function EvidenceBadge({ direction }: { direction: EvidenceItem["direction"] }) 
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 overflow-hidden my-2">
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-amber-100/40 transition-colors">
-        <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-        <span className="text-xs font-medium text-amber-800">{toolCall.name}</span>
-        <span className="text-[10px] text-amber-600 ml-auto">{toolCall.duration}</span>
-        <ChevronDown className={cn("h-3 w-3 text-amber-400 transition-transform", expanded && "rotate-180")} />
+    <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] overflow-hidden my-2">
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-amber-500/10 transition-colors">
+        <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+        <span className="text-xs font-medium text-amber-300">{toolCall.name}</span>
+        <span className="text-[10px] text-amber-500 ml-auto">{toolCall.duration}</span>
+        <ChevronDown className={cn("h-3 w-3 text-amber-600 transition-transform", expanded && "rotate-180")} />
       </button>
       {expanded && (
-        <div className="px-3 pb-3 space-y-2 border-t border-amber-200/40 pt-2">
+        <div className="px-3 pb-3 space-y-2 border-t border-amber-500/20 pt-2">
           <div>
-            <p className="text-[10px] font-semibold text-amber-700 mb-1">输入参数</p>
-            <pre className="text-[11px] text-amber-800 bg-amber-100/50 rounded p-2 overflow-x-auto font-mono">
+            <p className="text-[10px] font-semibold text-amber-400 mb-1">输入参数</p>
+            <pre className="text-[11px] text-amber-200 bg-[#09090b] rounded p-2 overflow-x-auto font-mono">
               {JSON.stringify(toolCall.input, null, 2)}
             </pre>
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-amber-700 mb-1">返回结果</p>
-            <p className="text-[11px] text-amber-800 bg-white rounded p-2 border border-amber-200/50">{toolCall.output}</p>
+            <p className="text-[10px] font-semibold text-amber-400 mb-1">返回结果</p>
+            <p className="text-[11px] text-zinc-300 bg-[#131316] rounded p-2 border border-white/6">{toolCall.output}</p>
           </div>
         </div>
       )}
@@ -158,15 +156,15 @@ function ConfidenceBar({ before, after }: { before: number; after: number }) {
   const delta = after - before
   const direction = delta > 0 ? "up" : delta < 0 ? "down" : "same"
   return (
-    <div className="rounded-lg border border-cyan-200/60 bg-cyan-50/50 p-3 my-2">
+    <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/[0.06] p-3 my-2">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-cyan-800 flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-500" />
+        <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
           置信度更新
         </span>
         <span className={cn(
           "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold",
-          direction === "down" ? "bg-emerald-100 text-emerald-700" : direction === "up" ? "bg-red-100 text-red-700" : "bg-slate-100 text-slate-600"
+          direction === "down" ? "bg-emerald-500/15 text-emerald-400" : direction === "up" ? "bg-red-500/15 text-red-400" : "bg-white/5 text-zinc-400"
         )}>
           {direction === "down" ? "↓" : direction === "up" ? "↑" : "→"} {Math.abs(delta).toFixed(0)}%
         </span>
@@ -174,21 +172,21 @@ function ConfidenceBar({ before, after }: { before: number; after: number }) {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-cyan-600">调整前</span>
-            <span className="text-[10px] font-bold text-cyan-700">{before}%</span>
+            <span className="text-[10px] text-cyan-500">调整前</span>
+            <span className="text-[10px] font-bold text-cyan-300">{before}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-cyan-100 overflow-hidden">
-            <div className="h-full rounded-full bg-cyan-400 transition-all duration-500" style={{ width: `${before}%` }} />
+          <div className="h-1.5 w-full rounded-full bg-cyan-950 overflow-hidden">
+            <div className="h-full rounded-full bg-cyan-500/60 transition-all duration-500" style={{ width: `${before}%` }} />
           </div>
         </div>
-        <ArrowRight className="h-3.5 w-3.5 text-cyan-300 shrink-0" />
+        <ArrowRight className="h-3.5 w-3.5 text-cyan-700 shrink-0" />
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-cyan-600">调整后</span>
-            <span className="text-[10px] font-bold text-cyan-700">{after}%</span>
+            <span className="text-[10px] text-cyan-500">调整后</span>
+            <span className="text-[10px] font-bold text-cyan-300">{after}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-cyan-100 overflow-hidden">
-            <div className={cn("h-full rounded-full transition-all duration-500", direction === "down" ? "bg-emerald-400" : "bg-red-400")} style={{ width: `${after}%` }} />
+          <div className="h-1.5 w-full rounded-full bg-cyan-950 overflow-hidden">
+            <div className={cn("h-full rounded-full transition-all duration-500", direction === "down" ? "bg-emerald-500/60" : "bg-red-500/60")} style={{ width: `${after}%` }} />
           </div>
         </div>
       </div>
@@ -203,9 +201,9 @@ function SuggestionChips({ suggestions, onSelect }: { suggestions: string[]; onS
         <button
           key={s}
           onClick={() => onSelect(s)}
-          className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50/80 px-3 py-1 text-xs text-cyan-700 hover:bg-cyan-100 hover:border-cyan-300 transition-colors"
+          className="inline-flex items-center gap-1 rounded-full border border-cyan-500/20 bg-cyan-500/[0.06] px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:border-cyan-500/30 transition-colors"
         >
-          <Lightbulb className="h-3 w-3 text-cyan-500" />
+          <Lightbulb className="h-3 w-3 text-cyan-400" />
           {s}
         </button>
       ))}
@@ -222,10 +220,10 @@ function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatM
     return (
       <div className="flex justify-end animate-in fade-in slide-in-from-right-2 duration-300">
         <div className="max-w-[80%]">
-          <div className="bg-gradient-to-br from-cyan-500 to-teal-500 text-white rounded-2xl rounded-tr-md px-4 py-2.5 shadow-sm shadow-cyan-200/30">
+          <div className="bg-gradient-to-br from-cyan-500 to-teal-500 text-white rounded-2xl rounded-tr-md px-4 py-2.5 shadow-sm shadow-cyan-400/10">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
-          <p className="text-[10px] text-slate-400 text-right mt-1">
+          <p className="text-[10px] text-zinc-500 text-right mt-1">
             {new Date(message.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
@@ -236,28 +234,28 @@ function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatM
   return (
     <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/15 to-teal-500/10 border border-cyan-500/20">
-        <Brain className="h-4 w-4 text-cyan-600" />
+        <Brain className="h-4 w-4 text-cyan-400" />
       </div>
       <div className="max-w-[85%] space-y-2">
         <div className={cn(softCardClass, "px-4 py-3")}>
           {message.content && (
-            <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{message.content}</p>
+            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap">{message.content}</p>
           )}
 
           {message.evidence && message.evidence.length > 0 && (
             <div className="mt-3 space-y-1.5">
-              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide flex items-center gap-1">
                 <FileSearch className="h-3 w-3" /> 证据列表 ({message.evidence.length})
               </p>
               {message.evidence.map((ev) => (
-                <div key={ev.id} className="flex items-start gap-2 rounded-md bg-slate-50 border border-slate-200/60 px-3 py-2">
+                <div key={ev.id} className="flex items-start gap-2 rounded-md bg-[#09090b] border border-white/6 px-3 py-2">
                   <EvidenceBadge direction={ev.direction} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-mono text-cyan-600">{ev.source}</span>
-                      <span className="text-[10px] text-slate-400">{ev.timestamp}</span>
+                      <span className="text-[10px] font-mono text-cyan-400">{ev.source}</span>
+                      <span className="text-[10px] text-zinc-500">{ev.timestamp}</span>
                     </div>
-                    <p className="text-xs text-slate-600">{ev.detail}</p>
+                    <p className="text-xs text-zinc-400">{ev.detail}</p>
                   </div>
                 </div>
               ))}
@@ -276,16 +274,16 @@ function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatM
         )}
 
         <div className="flex items-center gap-2 pl-1">
-          <p className="text-[10px] text-slate-400">
+          <p className="text-[10px] text-zinc-500">
             {new Date(message.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
           </p>
-          <button onClick={() => onCopy(message.content)} className="text-slate-300 hover:text-slate-500 transition-colors p-0.5" title="复制">
+          <button onClick={() => onCopy(message.content)} className="text-zinc-500 hover:text-zinc-300 transition-colors p-0.5" title="复制">
             <Copy className="h-3 w-3" />
           </button>
-          <button className="text-slate-300 hover:text-emerald-500 transition-colors p-0.5" title="有帮助">
+          <button className="text-zinc-500 hover:text-emerald-400 transition-colors p-0.5" title="有帮助">
             <ThumbsUp className="h-3 w-3" />
           </button>
-          <button className="text-slate-300 hover:text-red-400 transition-colors p-0.5" title="无帮助">
+          <button className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="无帮助">
             <ThumbsDown className="h-3 w-3" />
           </button>
         </div>
@@ -499,7 +497,7 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
-  const [sessions, setSessions] = useState(MOCK_SESSIONS)
+  const [sessions] = useState(MOCK_SESSIONS)
   const [showSidebar, setShowSidebar] = useState(true)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -598,28 +596,28 @@ export default function AIChatPage() {
   return (
     <div className="flex h-[calc(100vh-5rem)] -m-6">
       {showSidebar && (
-        <div className="w-64 border-r border-slate-200/80 bg-white/60 backdrop-blur-sm flex flex-col shrink-0">
-          <div className="p-3 border-b border-slate-200/60">
-            <Button onClick={startNewChat} variant="outline" size="sm" className="w-full gap-1.5 border-cyan-200 text-cyan-700 hover:bg-cyan-50">
+        <div className="w-64 border-r border-white/6 bg-[#131316] flex flex-col shrink-0">
+          <div className="p-3 border-b border-white/6">
+            <Button onClick={startNewChat} variant="outline" size="sm" className="w-full gap-1.5 border-white/10 text-zinc-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/30 transition-all">
               <Plus className="h-3.5 w-3.5" />
               新建对话
             </Button>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-2 py-1.5">历史对话</p>
+          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">历史对话</p>
             {sessions.map((sess) => (
-              <button key={sess.id} className="w-full text-left rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 transition-colors group">
+              <button key={sess.id} className="w-full text-left rounded-lg px-3 py-2.5 text-sm text-zinc-400 hover:bg-white/5 hover:text-white transition-colors group">
                 <div className="flex items-center justify-between gap-1">
                   <span className="truncate font-medium">{sess.title}</span>
-                  <Trash2 className="h-3 w-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  <Trash2 className="h-3 w-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">{sess.time} · {sess.msgCount}条消息</p>
+                <p className="text-[10px] text-zinc-500 mt-0.5">{sess.time} · {sess.msgCount}条消息</p>
               </button>
             ))}
           </div>
-          <div className="p-3 border-t border-slate-200/60">
+          <div className="p-3 border-t border-white/6">
             <div className={cn(softCardClass, "p-3")}>
-              <p className="text-[10px] font-semibold text-slate-500 mb-2 flex items-center gap-1">
+              <p className="text-[10px] font-semibold text-zinc-500 mb-2 flex items-center gap-1">
                 <Database className="h-3 w-3" /> 数据范围
               </p>
               <div className="space-y-1.5">
@@ -630,8 +628,8 @@ export default function AIChatPage() {
                   { label: "审计日志", range: "近 90 天" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between text-[11px]">
-                    <span className="text-slate-500">{item.label}</span>
-                    <span className="font-mono text-cyan-600 text-[10px]">{item.range}</span>
+                    <span className="text-zinc-500">{item.label}</span>
+                    <span className="font-mono text-cyan-400 text-[10px]">{item.range}</span>
                   </div>
                 ))}
               </div>
@@ -641,31 +639,29 @@ export default function AIChatPage() {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="px-4 py-3 border-b border-slate-200/80 bg-white/75 backdrop-blur-sm flex items-center gap-3 shrink-0">
+        <div className="px-4 py-3 border-b border-white/6 bg-[#131316] flex items-center gap-3 shrink-0">
           <PageHeader
             icon={Brain}
-            title="AI 调查助手"
+            title="AI对话助手"
             subtitle={
               <span className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-600 px-2 py-0 text-[10px] font-medium border border-emerald-200">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 px-2 py-0 text-[10px] font-medium border border-emerald-500/20">
                   <CheckCircle2 className="h-2.5 w-2.5" />
                   引擎在线
                 </span>
-                <span className="text-slate-300">|</span>
-                <span>支持自然语言提问、IOC查询、攻击链分析</span>
+                <span className="text-zinc-600">|</span>
+                <span className="text-zinc-300">支持自然语言提问、IOC查询、攻击链分析</span>
               </span>
             }
             actions={
-              <>
                 <Button
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => setShowSidebar(!showSidebar)}
-                  className="text-slate-400 hover:text-slate-600"
+                  className="text-zinc-500 hover:text-zinc-300"
                 >
                   <ChevronRight className={cn("h-4 w-4 transition-transform", !showSidebar && "rotate-180")} />
                 </Button>
-              </>
             }
           />
         </div>
@@ -683,7 +679,7 @@ export default function AIChatPage() {
 
             {!isSending && messages.length <= 1 && (
               <div className="space-y-4 pt-4">
-                <p className="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+                <p className="text-xs font-semibold text-zinc-500 flex items-center gap-1.5">
                   <Zap className="h-3.5 w-3.5" /> 快捷提问
                 </p>
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
@@ -693,11 +689,11 @@ export default function AIChatPage() {
                       onClick={() => handleQuickQuestion(qq.query)}
                       className={cn(
                         softCardClass,
-                        "p-3 text-left hover:border-cyan-300 hover:bg-cyan-50/50 transition-all group"
+                        "p-3 text-left hover:border-cyan-500/30 hover:bg-cyan-500/[0.08] hover:-translate-y-0.5 transition-all group"
                       )}
                     >
-                      <qq.icon className="h-4 w-4 text-cyan-500 group-hover:text-cyan-600 mb-1.5" />
-                      <p className="text-xs font-medium text-slate-700">{qq.label}</p>
+                      <qq.icon className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300 mb-1.5" />
+                      <p className="text-xs font-medium text-zinc-200">{qq.label}</p>
                     </button>
                   ))}
                 </div>
@@ -708,7 +704,7 @@ export default function AIChatPage() {
           </div>
         </div>
 
-        <div className="border-t border-slate-200/80 bg-white/90 backdrop-blur-sm p-4 shrink-0">
+        <div className="border-t border-white/6 bg-[#131316] p-4 shrink-0">
           <div className="max-w-4xl mx-auto">
             <div className={cn(softCardClass, "flex items-end gap-3 p-2")}>
               <textarea
@@ -720,11 +716,11 @@ export default function AIChatPage() {
                 name="chat-message"
                 autoComplete="off"
                 rows={1}
-                className="flex-1 resize-none rounded-lg border-0 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0 max-h-32 min-h-[40px] py-2 px-2"
+                className="flex-1 resize-none rounded-lg border-0 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-0 max-h-32 min-h-[40px] py-2 px-2"
                 style={{ fieldSizing: "content" }}
               />
               {isSending ? (
-                <Button size="icon-sm" variant="ghost" className="text-slate-400 shrink-0">
+                <Button size="icon-sm" variant="ghost" className="text-zinc-500 shrink-0">
                   <Square className="h-4 w-4 fill-current" />
                 </Button>
               ) : (
@@ -732,22 +728,22 @@ export default function AIChatPage() {
                   size="icon-sm"
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="bg-cyan-600 text-white hover:bg-cyan-700 disabled:opacity-40 shrink-0"
+                  className="bg-cyan-500 text-white hover:bg-cyan-400 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 shrink-0 transition-all"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               )}
             </div>
             <div className="flex items-center justify-between mt-2 px-1">
-              <p className="text-[10px] text-slate-400">
+              <p className="text-[10px] text-zinc-500">
                 AI 回答基于当前安全数据，重要决策请人工复核
               </p>
               <div className="flex items-center gap-3">
-                <button className="text-[10px] text-slate-400 hover:text-cyan-600 transition-colors flex items-center gap-0.5">
+                <button className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors flex items-center gap-0.5">
                   <Hash className="h-3 w-3" />
                   关联案件
                 </button>
-                <button className="text-[10px] text-slate-400 hover:text-cyan-600 transition-colors flex items-center gap-0.5">
+                <button className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors flex items-center gap-0.5">
                   <Link2 className="h-3 w-3" />
                   附带附件
                 </button>

@@ -121,22 +121,22 @@ export function ThreatTicker({ threats }: ThreatTickerProps) {
   return (
     <div
       ref={containerRef}
-      className="flex items-center h-full overflow-hidden relative"
+      className="flex items-center h-full overflow-hidden relative rounded-xl"
       style={{
-        background: "linear-gradient(90deg, rgba(10,14,39,0.95) 0%, rgba(13,21,42,0.9) 50%, rgba(10,14,39,0.95) 100%)",
-        borderTop: "1px solid rgba(34,211,238,0.08)",
+        background: "linear-gradient(90deg, rgba(12,12,16,0.98) 0%, rgba(16,16,20,0.95) 50%, rgba(12,12,16,0.98) 100%)",
+        borderTop: "1px solid rgba(255,255,255,0.04)",
       }}
     >
       <div
-        className="flex items-center gap-1 px-3 py-1.5 shrink-0"
+        className="flex items-center gap-1.5 px-3 py-1.5 shrink-0"
         style={{
-          borderRight: "1px solid rgba(34,211,238,0.1)",
-          background: "rgba(34,211,238,0.06)",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+          background: "rgba(239,68,68,0.06)",
         }}
       >
         <span
           className="w-1.5 h-1.5 rounded-full animate-pulse"
-          style={{ backgroundColor: "#ef4444", boxShadow: "0 0 6px #ef444488" }}
+          style={{ backgroundColor: "#ef4444", boxShadow: "0 0 8px #ef444488" }}
         />
         <span
           className="text-[10px] font-bold tracking-wider"
@@ -160,15 +160,15 @@ export function ThreatTicker({ threats }: ThreatTickerProps) {
         </div>
 
         <div
-          className="absolute inset-y-0 left-0 w-8 pointer-events-none"
+          className="absolute inset-y-0 left-0 w-10 pointer-events-none"
           style={{
-            background: "linear-gradient(90deg, rgba(10,14,39,0.95) 0%, transparent 100%)",
+            background: "linear-gradient(90deg, rgba(12,12,16,0.98) 0%, transparent 100%)",
           }}
         />
         <div
-          className="absolute inset-y-0 right-0 w-8 pointer-events-none"
+          className="absolute inset-y-0 right-0 w-10 pointer-events-none"
           style={{
-            background: "linear-gradient(270deg, rgba(10,14,39,0.95) 0%, transparent 100%)",
+            background: "linear-gradient(270deg, rgba(12,12,16,0.98) 0%, transparent 100%)",
           }}
         />
       </div>

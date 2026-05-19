@@ -4,6 +4,7 @@ from typing import Callable, Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from app.services.auth_service import decode_access_token
 from app.services.rbac_service import check_permission
@@ -143,9 +144,15 @@ class RBACMiddleware(BaseHTTPMiddleware):
 
         try:
             has_permission = self._check_permission(user_id, required_permission)
-        except Exception:
-            logger.exception("RBAC权限检查异常，优雅降级放行")
+        except (OperationalError, ProgrammingError):
+            logger.warning("RBAC数据库查询异常，降级放行")
             return await call_next(request)
+        except Exception:
+            logger.exception("RBAC权限检查异常，拒绝访问")
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "权限检查失败"},
+            )
 
         if not has_permission:
             resource, action = required_permission.split(":", 1)
@@ -200,7 +207,17 @@ class RBACMiddleware(BaseHTTPMiddleware):
     @staticmethod
     def _check_permission(user_id: int, required_permission: str) -> bool:
         resource, action = required_permission.split(":", 1)
-        db = SessionLocal()
+        try:
+            from fastapi import FastAPI
+            from app.main import app
+            factory = app.state.rbac_session_factory if hasattr(app.state, 'rbac_session_factory') else None
+        except Exception:
+            factory = None
+
+        if factory:
+            db = factory()
+        else:
+            db = SessionLocal()
         try:
             return check_permission(db, user_id, resource, action)
         finally:

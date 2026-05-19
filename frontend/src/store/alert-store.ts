@@ -39,7 +39,7 @@ const defaultFilters: AlertFilters = {
 const defaultPagination: Pagination = {
   page: 1,
   pageSize: 20,
-  total: 0,
+  total: 10000,
 }
 
 export type AlertStore = AlertState & AlertActions

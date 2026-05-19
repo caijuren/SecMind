@@ -3,7 +3,6 @@
 import { useState, useRef } from "react"
 import Image from "next/image"
 import { Camera, User, Lock, Save, Upload } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/auth-store"
 import { useLocaleStore } from "@/store/locale-store"
 import { Button } from "@/components/ui/button"
@@ -27,7 +26,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
   const { user, setUser } = useAuthStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [, setSelectedFile] = useState<File | null>(null)
 
   const initials = user?.name
     ? user.name.slice(0, 2).toUpperCase()

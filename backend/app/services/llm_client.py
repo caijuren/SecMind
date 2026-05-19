@@ -63,13 +63,7 @@ class LLMClient:
         max_tokens: Optional[int] = None,
     ) -> str:
         import asyncio
-        loop = asyncio.new_event_loop()
-        try:
-            return loop.run_until_complete(
-                self.chat(messages=messages, temperature=temperature, max_tokens=max_tokens)
-            )
-        finally:
-            loop.close()
+        return asyncio.run(self.chat(messages=messages, temperature=temperature, max_tokens=max_tokens))
 
     def chat_json_sync(
         self,
@@ -77,11 +71,7 @@ class LLMClient:
         temperature: Optional[float] = None,
     ) -> dict:
         import asyncio
-        loop = asyncio.new_event_loop()
-        try:
-            return loop.run_until_complete(self.chat_json(messages=messages, temperature=temperature))
-        finally:
-            loop.close()
+        return asyncio.run(self.chat_json(messages=messages, temperature=temperature))
 
     async def close(self):
         pass

@@ -105,15 +105,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       setConnectionStatus("connecting")
     }
 
-    const baseUrl = url || `${getWebSocketBaseUrl()}/ws/notifications`
-    const separator = baseUrl.includes("?") ? "&" : "?"
-    const wsUrl = `${baseUrl}${separator}token=${encodeURIComponent(token)}`
+    const wsUrl = url || `${getWebSocketBaseUrl()}/ws/notifications`
 
     try {
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 
       ws.onopen = () => {
+        ws.send(JSON.stringify({ type: "auth", token }))
         setConnectionStatus("connected")
         reconnectCountRef.current = 0
         startHeartbeat()

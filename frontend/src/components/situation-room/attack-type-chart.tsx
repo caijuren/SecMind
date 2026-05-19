@@ -87,7 +87,7 @@ export function AttackTypeChart({ data }: AttackTypeChartProps) {
         </g>
       ))}
 
-      <circle cx={cx} cy={cy} r={innerR - 2} fill="#0a0e27" />
+      <circle cx={cx} cy={cy} r={innerR - 2} fill="#050508" />
       <text
         x={cx}
         y={cy - 8}

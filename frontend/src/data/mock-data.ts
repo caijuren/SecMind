@@ -1,54 +1,215 @@
 import type {
-  User,
-  Alert,
-  DashboardStats,
-  Device,
-  ITSMTicket,
-  AIAnalysis,
-  VPNSession,
-  EmailLog,
-  LoginAttempt,
+  User, Alert, DashboardStats, Device, ITSMTicket, AIAnalysis,
+  VPNSession, EmailLog, LoginAttempt, AlertType, RiskLevel, AlertStatus,
 } from '@/types'
 
-export const mockUsers: User[] = [
-  { id: 'U001', name: '张伟', department: '技术部', position: '高级工程师', level: 'P7', manager: '赵磊', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'zhangwei@secmind.com' },
-  { id: 'U002', name: '李娜', department: '财务部', position: '财务经理', level: 'P8', manager: '孙丽', isSensitive: true, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'lina@secmind.com' },
-  { id: 'U003', name: '王芳', department: '人事部', position: 'HRBP', level: 'P7', manager: '周敏', isSensitive: true, office: '北京', recentLoginLocation: '莫斯科', isOnLeave: false, isResigned: false, email: 'wangfang@secmind.com' },
-  { id: 'U004', name: '陈刚', department: '研发部', position: '架构师', level: 'P8', manager: '赵磊', isSensitive: false, office: '深圳', recentLoginLocation: '深圳', isOnLeave: false, isResigned: false, email: 'chengang@secmind.com' },
-  { id: 'U005', name: '刘洋', department: '市场部', position: '市场总监', level: 'P9', manager: '黄强', isSensitive: true, office: '广州', recentLoginLocation: '拉各斯', isOnLeave: false, isResigned: false, email: 'liuyang@secmind.com' },
-  { id: 'U006', name: '赵敏', department: '安全部', position: '安全分析师', level: 'P6', manager: '钱进', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'zhaomin@secmind.com' },
-  { id: 'U007', name: '孙浩', department: '运维部', position: '运维工程师', level: 'P6', manager: '吴涛', isSensitive: false, office: '杭州', recentLoginLocation: '杭州', isOnLeave: true, isResigned: false, email: 'sunhao@secmind.com' },
-  { id: 'U008', name: '周静', department: '产品部', position: '产品经理', level: 'P7', manager: '黄强', isSensitive: false, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'zhoujing@secmind.com' },
-  { id: 'U009', name: '吴强', department: '研发部', position: '前端工程师', level: 'P5', manager: '陈刚', isSensitive: false, office: '深圳', recentLoginLocation: '深圳', isOnLeave: false, isResigned: false, email: 'wuqiang@secmind.com' },
-  { id: 'U010', name: '郑丽', department: '财务部', position: '会计', level: 'P5', manager: '李娜', isSensitive: true, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'zhengli@secmind.com' },
-  { id: 'U011', name: '冯涛', department: '技术部', position: '后端工程师', level: 'P6', manager: '张伟', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'fengtao@secmind.com' },
-  { id: 'U012', name: '褚琳', department: '人事部', position: '招聘专员', level: 'P5', manager: '王芳', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: true, email: 'chulin@secmind.com' },
-  { id: 'U013', name: '卫东', department: '安全部', position: '安全工程师', level: 'P7', manager: '钱进', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'weidong@secmind.com' },
-  { id: 'U014', name: '蒋华', department: '运维部', position: 'DBA', level: 'P7', manager: '吴涛', isSensitive: true, office: '杭州', recentLoginLocation: '杭州', isOnLeave: false, isResigned: false, email: 'jianghua@secmind.com' },
-  { id: 'U015', name: '沈雪', department: '市场部', position: '品牌经理', level: 'P6', manager: '刘洋', isSensitive: false, office: '广州', recentLoginLocation: '广州', isOnLeave: false, isResigned: false, email: 'shenxue@secmind.com' },
-  { id: 'U016', name: '韩超', department: '研发部', position: '测试工程师', level: 'P5', manager: '陈刚', isSensitive: false, office: '深圳', recentLoginLocation: '深圳', isOnLeave: true, isResigned: false, email: 'hanchao@secmind.com' },
-  { id: 'U017', name: '杨帆', department: '技术部', position: 'DevOps工程师', level: 'P6', manager: '张伟', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'yangfan@secmind.com' },
-  { id: 'U018', name: '朱婷', department: '财务部', position: '出纳', level: 'P5', manager: '李娜', isSensitive: true, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'zhuting@secmind.com' },
-  { id: 'U019', name: '秦明', department: '安全部', position: '渗透测试工程师', level: 'P7', manager: '钱进', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'qinming@secmind.com' },
-  { id: 'U020', name: '许佳', department: '产品部', position: '交互设计师', level: 'P6', manager: '周静', isSensitive: false, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'xujia@secmind.com' },
-  { id: 'U021', name: '吕峰', department: '运维部', position: '网络工程师', level: 'P6', manager: '吴涛', isSensitive: false, office: '杭州', recentLoginLocation: '杭州', isOnLeave: false, isResigned: false, email: 'lvfeng@secmind.com' },
-  { id: 'U022', name: '施蕾', department: '人事部', position: '培训专员', level: 'P5', manager: '王芳', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'shilei@secmind.com' },
-  { id: 'U023', name: '张磊', department: '研发部', position: '算法工程师', level: 'P8', manager: '赵磊', isSensitive: false, office: '深圳', recentLoginLocation: '深圳', isOnLeave: false, isResigned: false, email: 'zhanglei@secmind.com' },
-  { id: 'U024', name: '钱进', department: '安全部', position: '安全总监', level: 'P9', manager: '黄强', isSensitive: true, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'qianjin@secmind.com' },
-  { id: 'U025', name: '吴涛', department: '运维部', position: '运维总监', level: 'P8', manager: '黄强', isSensitive: false, office: '杭州', recentLoginLocation: '杭州', isOnLeave: false, isResigned: false, email: 'wutao@secmind.com' },
-  { id: 'U026', name: '黄强', department: '技术部', position: 'CTO', level: 'P9', manager: '', isSensitive: true, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'huangqiang@secmind.com' },
-  { id: 'U027', name: '赵磊', department: '技术部', position: '技术总监', level: 'P9', manager: '黄强', isSensitive: true, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'zhaolei@secmind.com' },
-  { id: 'U028', name: '孙丽', department: '财务部', position: 'CFO', level: 'P9', manager: '', isSensitive: true, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'sunli@secmind.com' },
-  { id: 'U029', name: '周敏', department: '人事部', position: 'HRD', level: 'P8', manager: '黄强', isSensitive: true, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'zhoumin@secmind.com' },
-  { id: 'U030', name: '林峰', department: '研发部', position: '后端工程师', level: 'P6', manager: '陈刚', isSensitive: false, office: '深圳', recentLoginLocation: '深圳', isOnLeave: false, isResigned: false, email: 'linfeng@secmind.com' },
-  { id: 'U031', name: '何欣', department: '市场部', position: '活动策划', level: 'P5', manager: '刘洋', isSensitive: false, office: '广州', recentLoginLocation: '广州', isOnLeave: false, isResigned: false, email: 'hexin@secmind.com' },
-  { id: 'U032', name: '马骏', department: '安全部', position: 'SOC分析师', level: 'P6', manager: '钱进', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'majun@secmind.com' },
-  { id: 'U033', name: '高远', department: '运维部', position: '系统工程师', level: 'P5', manager: '吴涛', isSensitive: false, office: '杭州', recentLoginLocation: '杭州', isOnLeave: false, isResigned: true, email: 'gaoyuan@secmind.com' },
-  { id: 'U034', name: '罗薇', department: '产品部', position: '数据分析师', level: 'P6', manager: '周静', isSensitive: false, office: '上海', recentLoginLocation: '上海', isOnLeave: false, isResigned: false, email: 'luowei@secmind.com' },
-  { id: 'U035', name: '谢勇', department: '技术部', position: 'SRE工程师', level: 'P7', manager: '张伟', isSensitive: false, office: '北京', recentLoginLocation: '北京', isOnLeave: false, isResigned: false, email: 'xieyong@secmind.com' },
+// Seed-based data pools for deterministic generation
+const USER_NAMES = ['张伟', '李娜', '王芳', '陈刚', '刘洋', '赵敏', '孙浩', '周静', '吴强', '郑丽', '冯涛', '褚琳', '卫东', '蒋华', '沈雪', '韩超', '杨帆', '朱婷', '秦明', '许佳', '吕峰', '施蕾', '张磊', '钱进', '吴涛', '黄强', '赵磊', '孙丽', '周敏', '林峰', '何欣', '马骏', '高远', '罗薇', '谢勇']
+const POSITIONS = ['高级工程师','架构师','安全分析师','安全工程师','运维工程师','前端工程师','后端工程师','测试工程师','DevOps工程师','DBA','产品经理','市场总监','HRBP','SRE工程师','渗透测试工程师','SOC分析师','数据分析师','算法工程师','网络工程师']
+const OFFICES = ['北京','上海','深圳','杭州','广州']
+const RISK_LEVELS: RiskLevel[] = ['critical', 'high', 'medium', 'low', 'info']
+const ALERT_STATUSES: AlertStatus[] = ['new', 'investigating', 'resolved', 'false_positive', 'escalated']
+const ATTACK_IPS = [
+  '103.45.67.89', '185.220.101.34', '91.234.56.78', '45.33.32.156', '198.51.100.23',
+  '203.0.113.50', '45.67.89.12', '185.220.101.35', '103.45.67.90', '58.216.33.12',
+  '103.45.67.91', '185.220.101.36', '45.33.32.100', '198.51.100.45', '45.33.32.101',
+  '198.51.100.50', '45.33.32.102', '198.51.100.55', '103.45.67.92', '185.220.101.37',
+  '41.58.67.89', '77.88.44.33', '149.154.167.220', '104.16.0.1', '140.82.121.6',
+]
+const SEED_INTERNAL_IPS = [
+  '10.0.1.55', '10.0.0.1', '10.0.2.100', '10.0.1.10', '10.0.4.22', '10.0.3.45',
+  '10.0.2.50', '10.0.1.60', '10.0.1.35', '10.0.5.10', '10.0.2.88', '10.0.4.10',
+  '10.0.4.15', '10.0.3.60', '10.0.2.60', '10.0.0.5', '10.0.1.20', '10.0.1.25',
+  '10.0.1.15', '10.0.1.30', '10.0.3.70',
+]
+const SEED_TAGS_POOL = [
+  ['钓鱼攻击', '凭证窃取'], ['暴力破解', 'Tor出口节点'], ['VPN异常', '不可能旅行'],
+  ['恶意软件', 'APT'], ['C2通信', 'DNS隧道'], ['横向移动', '内网渗透'],
+  ['数据外泄', '源代码'], ['权限提升', '漏洞利用'], ['恶意软件', 'Emotet'],
+  ['钓鱼攻击', 'BEC'], ['暴力破解', '撞库'], ['VPN异常', '离职员工'],
+  ['数据外泄', 'DLP'], ['恶意软件', '勒索病毒'], ['C2通信', 'Beacon'],
+  ['横向移动', 'WMI'], ['恶意软件', '挖矿木马'], ['C2通信', 'IRC'],
+  ['权限提升', '数据库'], ['恶意软件', 'RAT'], ['C2通信', 'HTTPS'],
+  ['权限提升', 'Kubernetes'], ['横向移动', 'SSH密钥'], ['数据外泄', 'DNS'],
+  ['C2通信', 'GitHub'], ['钓鱼攻击', '电子发票'], ['暴力破解', 'Jenkins'],
+  ['VPN异常', '多设备'], ['暴力破解', 'IMAP'], ['数据外泄', '云盘'],
+  ['权限提升', 'sudo'], ['横向移动', 'RDP'], ['数据外泄', '打印'],
+  ['C2通信', 'Telegram'], ['C2通信', 'Cloudflare'], ['权限提升', 'AWS'],
+  ['钓鱼攻击', '供应商'], ['暴力破解', 'Redis'], ['恶意软件', '供应链攻击'],
+  ['VPN异常', '代理链路'], ['钓鱼攻击', '高仿域名'], ['暴力破解', 'SSH'],
+  ['VPN异常', '异常地区'], ['数据外泄', 'USB'], ['钓鱼攻击', '快递通知'],
+  ['VPN异常', '长时间连接'], ['VPN异常', '非常规时间'], ['VPN异常', '频繁断连'],
+  ['钓鱼攻击', '银行钓鱼'], ['暴力破解', 'WordPress'],
+]
+const TITLE_TEMPLATES: Record<AlertType, string[]> = {
+  phishing: ['钓鱼邮件攻击 - {details}', '钓鱼邮件 - {details}', 'BEC攻击 - {details}'],
+  brute_force: ['暴力破解攻击 - {details}', '暴力破解 - {details}', '撞库攻击 - {details}'],
+  vpn_anomaly: ['VPN异常登录 - {details}', 'VPN异常 - {details}'],
+  malware: ['恶意软件检测 - {details}', '恶意软件 - {details}', 'WebShell检测 - {details}'],
+  data_exfiltration: ['数据外泄 - {details}', '数据外泄检测 - {details}'],
+  privilege_escalation: ['权限提升 - {details}', '权限提升检测 - {details}'],
+  lateral_movement: ['横向移动 - {details}', '横向移动检测 - {details}'],
+  c2_communication: ['C2通信检测 - {details}', 'C2通信 - {details}'],
+}
+const PHISHING_DETAILS = ['高仿OA系统登录页', '冒充IT部门密码重置', '伪造发票附件', '冒充CEO紧急转账', '虚假快递通知', '伪造HR福利通知', '海关缴税通知', '供应商对账单', '银行账户异常', '电子发票查询', '云存储共享通知', '视频会议邀请', '社交媒体消息', '订阅续费通知', '安全警告通知', '税务申报提醒', '域名过期通知', 'Office365验证', 'AppleID锁定', 'DHL投递通知']
+const BRUTE_FORCE_DETAILS = ['VPN网关登录尝试', 'SSH暴力破解跳板机', 'RDP远程桌面攻击', 'OA系统密码猜测', '邮件系统登录尝试', 'WordPress后台攻击', 'Redis未授权访问', 'Jenkins凭证猜测', 'GitLab密码爆破', '数据库端口扫描', 'API接口Fuzz', 'SMB协议探测', 'FTP匿名登录', 'Tomcat管理口', 'Elasticsearch扫描', 'Memcached探测', 'MongoDB扫描', 'Kubernetes API探测', 'RabbitMQ探测', 'NFS端口扫描']
+const VPN_DETAILS = ['不可能旅行检测', '异常地区登录', '已离职员工登录', '多设备同时在线', '长时间连接未断开', '非常规时间登录', '代理链路检测', '频繁断连重连', '多地同时在线', '异常协议连接', '新设备首次登录', '境外IP连接', 'Tor节点连接', '公共WiFi登录', '虚拟机内登录']
+const MALWARE_DETAILS = ['Cobalt Strike Beacon', 'Emotet木马', 'NJRat远控木马', '挖矿木马', '勒索病毒变种', '间谍软件', '键盘记录器', '后门程序', 'Rootkit检测', '引导区病毒', 'WebShell后门', '宏病毒', '蠕虫病毒', 'Infostealer窃密木马', 'Raccoon Stealer', 'FormBook木马', 'AgentTesla', 'RedLine窃密', 'AsyncRAT', 'QuasarRAT']
+const DATA_EXFIL_DETAILS = ['源代码外传到境外', '身份证通过DLP', '财务报表外发个人邮箱', 'USB拷贝敏感文件', '异常DNS隧道传输', '云盘上传项目代码', '打印机大量打印文档', 'FTP批量文件上传', '数据库导出CSV文件', 'ImAP下载全部邮件', 'GitLab仓库Clone', 'Confluence批量下载', 'JIRA工单导出', 'S3存储桶下载', 'OSS文件批量迁移']
+const PRIV_ESC_DETAILS = ['管理员权限获取', '异常sudo操作', '数据库管理员授权', 'K8s RBAC异常', 'AWS IAM提权', '本地提权漏洞利用', '域管理员账户获取', '服务账户权限提升', 'Docker逃逸', '容器权限提升', 'Windows Token窃取', 'Kerberoasting攻击', 'DCSync攻击', 'ACL滥用', '组策略修改']
+const LATERAL_DETAILS = ['PTH攻击横向移动', 'WMI远程执行', 'PsExec远程命令', 'SSH密钥滥用', 'RDP横向扩散', 'SMB远程复制', 'WinRM远程管理', 'SCP文件传输', '定时任务远程触发', 'DCOM远程调用', '计划任务创建', '远程注册表修改', 'WMI事件订阅', '网络共享文件复制', '远程桌面文件共享']
+const C2_DETAILS = ['DNS隧道通信', 'HTTPS Beacon', 'IRC协议外联', 'Telegram Bot API', 'GitHub Issues通道', 'Cloudflare Workers', 'WebSocket隧道', 'ICMP隧道', 'HTTP隐蔽通道', 'SSH反向隧道', 'TOR隐蔽服务', 'DNS-over-HTTPS隧道', 'Amazon CloudFront', 'Azure CDN通道', 'Google Cloud Functions']
+
+function seededRandom(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 16807 + 0) % 2147483647
+    return s / 2147483647
+  }
+}
+
+function sPick<T>(arr: T[], rand: () => number): T {
+  return arr[Math.floor(rand() * arr.length)]
+}
+
+function formatTime(date: Date): string {
+  return date.toISOString().replace('Z', 'Z')
+}
+
+function generateSeededAlert(id: string, rand: () => number, baseDate: Date): Alert {
+  const type = sPick(ALERT_TYPES, rand)
+  const riskLevel = sPick(RISK_LEVELS, rand)
+  const status = sPick(ALERT_STATUSES, rand)
+  const source = sPick(SOURCES, rand)
+  const sourceIp = sPick(ATTACK_IPS, rand)
+  const destIp = sPick(SEED_INTERNAL_IPS, rand)
+  const userIdx = Math.floor(rand() * USER_NAMES.length)
+  const userName = USER_NAMES[userIdx]
+  const userId = `U${String(userIdx + 1).padStart(3, '0')}`
+  const tags = [...sPick(SEED_TAGS_POOL, rand)]
+
+  let details = ''
+  switch (type) {
+    case 'phishing': details = sPick(PHISHING_DETAILS, rand); break
+    case 'brute_force': details = sPick(BRUTE_FORCE_DETAILS, rand); break
+    case 'vpn_anomaly': details = sPick(VPN_DETAILS, rand); break
+    case 'malware': details = sPick(MALWARE_DETAILS, rand); break
+    case 'data_exfiltration': details = sPick(DATA_EXFIL_DETAILS, rand); break
+    case 'privilege_escalation': details = sPick(PRIV_ESC_DETAILS, rand); break
+    case 'lateral_movement': details = sPick(LATERAL_DETAILS, rand); break
+    case 'c2_communication': details = sPick(C2_DETAILS, rand); break
+  }
+
+  const titleTemplate = sPick(TITLE_TEMPLATES[type], rand)
+  const title = titleTemplate.replace('{details}', details)
+  const hoursOffset = -Math.floor(rand() * 720)
+  const timestamp = new Date(baseDate.getTime() + hoursOffset * 3600000 + Math.floor(rand() * 3600) * 1000)
+  const ts = formatTime(timestamp)
+
+  const aiScore = Math.floor(rand() * 60) + 25
+
+  return {
+    id,
+    type,
+    title,
+    description: `SecMind平台自动检测到${details}，来源IP ${sourceIp}，目标 ${destIp}，已触发${source}告警。`,
+    riskLevel,
+    status,
+    source,
+    sourceIp,
+    destinationIp: destIp,
+    userId,
+    userName,
+    timestamp: ts,
+    rawLog: `SRC=${sourceIp} DST=${destIp} TYPE=${type} ALERT=${id}`,
+    tags,
+    aiScore,
+    aiSummary: `AI分析：检测到${details}，风险评分${aiScore}，来源${source}`,
+    aiRecommendation: '建议确认后根据标准操作流程处理。',
+    relatedAlerts: [],
+  }
+}
+
+/* ========= Generator Helper Pools ========= */
+
+const DEPARTMENTS = ['技术部','财务部','人事部','研发部','市场部','安全部','运维部','产品部','数据部','法务部']
+
+const DEPT_USERS: { userId: string; userName: string; department: string }[] = [
+  { userId: 'U001', userName: '张伟', department: '中国' },
+  { userId: 'U002', userName: '李娜', department: '中国' },
+  { userId: 'U003', userName: '王芳', department: '中国' },
+  { userId: 'U004', userName: '陈刚', department: '中国' },
+  { userId: 'U005', userName: '刘洋', department: '中国' },
+  { userId: 'U006', userName: '赵敏', department: '中国' },
+  { userId: 'U007', userName: '孙浩', department: '中国' },
+  { userId: 'U008', userName: '周静', department: '中国' },
+  { userId: 'U009', userName: '吴强', department: '中国' },
+  { userId: 'U010', userName: '郑丽', department: '中国' },
+  { userId: 'U011', userName: '冯涛', department: '中国' },
+  { userId: 'U012', userName: '褚琳', department: '中国' },
+  { userId: 'U013', userName: '卫东', department: '中国' },
+  { userId: 'U014', userName: '蒋华', department: '中国' },
+  { userId: 'U015', userName: '沈雪', department: '中国' },
+  { userId: 'U016', userName: '韩超', department: '中国' },
+  { userId: 'U017', userName: '杨帆', department: '中国' },
+  { userId: 'U018', userName: '朱婷', department: '中国' },
+  { userId: 'U019', userName: '秦明', department: '中国' },
+  { userId: 'U020', userName: '许佳', department: '中国' },
+  { userId: 'U021', userName: '吕峰', department: '中国' },
+  { userId: 'U022', userName: '施蕾', department: '中国' },
+  { userId: 'U023', userName: '张磊', department: '中国' },
+  { userId: 'U024', userName: '钱进', department: '中国' },
+  { userId: 'U025', userName: '吴涛', department: '中国' },
+  { userId: 'U026', userName: '黄强', department: '中国' },
+  { userId: 'U027', userName: '赵磊', department: '中国' },
+  { userId: 'U028', userName: '孙丽', department: '中国' },
+  { userId: 'U029', userName: '周敏', department: '中国' },
+  { userId: 'U030', userName: '林峰', department: '中国' },
+  { userId: 'U031', userName: '何欣', department: '中国' },
+  { userId: 'U032', userName: '马骏', department: '中国' },
+  { userId: 'U033', userName: '高远', department: '中国' },
+  { userId: 'U034', userName: '罗薇', department: '中国' },
+  { userId: 'U035', userName: '谢勇', department: '中国' },
 ]
 
-export const mockAlerts: Alert[] = [
+const CITIES = ['北京','上海','深圳','广州','杭州','成都','南京','武汉','西安','重庆','天津','苏州','长沙','郑州','东莞','青岛','沈阳','宁波','昆明','大连']
+const OVERSEAS_CITIES = ['新加坡','东京','首尔','曼谷','伦敦','巴黎','柏林','莫斯科','迪拜','纽约','洛杉矶','旧金山','悉尼','多伦多','班加罗尔','雅加达','拉各斯']
+const ALL_LOCATIONS = [...CITIES, ...OVERSEAS_CITIES]
+
+const PUBLIC_IPS = ['103.45.67.','185.220.101.','198.51.100.','203.0.113.','45.33.32.','41.58.67.','58.216.33.','114.88.23.','123.120.88.','172.16.45.','91.234.56.','77.88.44.','149.154.167.','104.16.0.','140.82.121.','62.210.34.','51.15.78.','163.172.90.','54.38.45.','195.154.123.']
+const INTERNAL_IPS = ['10.0.1.','10.0.2.','10.0.3.','10.0.4.','10.0.5.','10.0.10.','10.0.20.','172.16.0.','172.16.1.','192.168.1.']
+const SOURCES = ['邮件网关','VPN网关','EDR','SIEM','防火墙','DLP','WAF','NAC','堡垒机','HIDS']
+
+const ALERT_TYPES: AlertType[] = ['phishing','brute_force','vpn_anomaly','malware','c2_communication','lateral_movement','data_exfiltration','privilege_escalation']
+
+const USER_AGENTS = ['Windows 10 - Chrome','Windows 11 - Chrome','MacBook Pro - Safari','MacBook Air - Safari','iPhone - Safari','Android - Chrome','Windows 10 - Edge','MacBook Pro - Chrome','Linux - Firefox','iPad - Safari','Windows 11 - Firefox','Windows Server 2022 - RDP']
+
+const AI_AGENTS = ['威胁分析Agent','暴力破解分析Agent','VPN异常分析Agent','APT分析Agent','数据外泄分析Agent','钓鱼分析Agent','恶意软件分析Agent','横向移动分析Agent','权限分析Agent','C2分析Agent','云安全分析Agent','供应链分析Agent','网络分析Agent','终端分析Agent','行为分析Agent']
+
+const ASSIGNEES = ['赵敏','卫东','秦明','马骏','吕峰','杨帆','冯涛','蒋华','张伟','钱进']
+
+/* ========= Generator Utilities ========= */
+
+function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)] }
+
+function randInt(min: number, max: number): number { return Math.floor(Math.random() * (max - min + 1)) + min }
+
+function randomDate(startDaysAgo: number, endDaysAgo: number): Date {
+  const now = new Date('2026-05-18T23:59:59Z')
+  const start = now.getTime() - startDaysAgo * 86400000
+  const end = now.getTime() - endDaysAgo * 86400000
+  return new Date(start + Math.random() * (end - start))
+}
+
+function formatISO(d: Date): string { return d.toISOString() }
+
+function generateIP(prefix: string): string { return prefix + randInt(1, 254) }
+
+/* ========= Alert Generators ========= */
+
+/* ========= Static Hand-Crafted Alerts (ALT001-ALT055) ========= */
+
+const staticAlerts: Alert[] = [
   { id: 'ALT001', type: 'phishing', title: '钓鱼邮件攻击 - 高仿OA系统登录页', description: '检测到针对财务部员工的钓鱼邮件，邮件伪装为OA系统升级通知，引导用户点击恶意链接输入凭证。发件人地址高仿内部域名，链接指向境外服务器。', riskLevel: 'critical', status: 'escalated', source: '邮件网关', sourceIp: '103.45.67.89', destinationIp: '10.0.1.55', userId: 'U002', userName: '李娜', timestamp: '2026-05-09T08:23:15Z', rawLog: 'SRC=103.45.67.89 DST=10.0.1.55 PROTO=SMTP MSG="Phishing email detected - OA login spoof"', tags: ['钓鱼攻击', '凭证窃取', '财务部'], aiScore: 92, aiSummary: '高度确认为针对性钓鱼攻击，攻击者使用高仿域名secm1nd.com冒充secmind.com', aiRecommendation: '立即隔离用户邮箱，重置密码，检查是否有凭证泄露', relatedAlerts: ['ALT008', 'ALT015', 'ALT022'], timeline: [{ id: 'TL001', timestamp: '2026-05-09T08:23:15Z', type: 'alert', title: '钓鱼邮件触发告警', description: '邮件网关检测到钓鱼邮件', source: '邮件网关' }, { id: 'TL002', timestamp: '2026-05-09T08:25:30Z', type: 'ai_analysis', title: 'AI分析完成', description: 'AI确认钓鱼攻击，风险评分92', source: 'AI引擎' }, { id: 'TL003', timestamp: '2026-05-09T08:30:00Z', type: 'action', title: '告警升级', description: '安全分析师将告警升级为严重', source: '赵敏' }] },
   { id: 'ALT002', type: 'brute_force', title: 'VPN暴力破解攻击', description: '检测到针对VPN网关的暴力破解攻击，5分钟内来自同一IP的登录失败尝试超过200次，使用常见用户名字典。', riskLevel: 'critical', status: 'investigating', source: 'VPN网关', sourceIp: '185.220.101.34', destinationIp: '10.0.0.1', userId: 'U004', userName: '陈刚', timestamp: '2026-05-09T03:15:22Z', rawLog: 'SRC=185.220.101.34 DST=10.0.0.1 PROTO=UDP ACTION=LOGIN_FAIL COUNT=200+', tags: ['暴力破解', 'VPN', 'Tor出口节点'], aiScore: 88, aiSummary: '来源IP为Tor出口节点，高度疑似自动化攻击工具', aiRecommendation: '封禁来源IP段，启用MFA强制验证，检查相关账户', relatedAlerts: ['ALT009', 'ALT016'], timeline: [{ id: 'TL004', timestamp: '2026-05-09T03:15:22Z', type: 'alert', title: '暴力破解告警触发', description: 'VPN网关检测到大量登录失败', source: 'VPN网关' }] },
   { id: 'ALT003', type: 'vpn_anomaly', title: 'VPN异常登录 - 不可能旅行', description: '用户王芳在短时间内从北京和莫斯科两地登录VPN，物理距离超过5000公里，时间间隔仅2小时，判定为不可能旅行。', riskLevel: 'high', status: 'investigating', source: 'VPN网关', sourceIp: '91.234.56.78', destinationIp: '10.0.0.1', userId: 'U003', userName: '王芳', timestamp: '2026-05-09T06:45:10Z', rawLog: 'USER=wangfang SRC=91.234.56.78 LOC=Moscow,RU PREV_LOC=Beijing,CN TIME_DIFF=7200s', tags: ['VPN异常', '不可能旅行', '凭证泄露'], aiScore: 85, aiSummary: '不可能旅行告警，账户可能已被盗用，莫斯科登录疑似攻击者', aiRecommendation: '立即冻结账户，联系用户确认，检查近期操作记录', relatedAlerts: ['ALT010', 'ALT055'], timeline: [{ id: 'TL005', timestamp: '2026-05-09T06:45:10Z', type: 'alert', title: '不可能旅行告警', description: '检测到用户从莫斯科异常登录', source: 'VPN网关' }] },
@@ -60,7 +221,7 @@ export const mockAlerts: Alert[] = [
   { id: 'ALT009', type: 'brute_force', title: 'SSH暴力破解 - 针对跳板机', description: '检测到针对跳板机的SSH暴力破解，来自境外IP，使用root及常见用户名字典攻击。', riskLevel: 'high', status: 'resolved', source: '防火墙', sourceIp: '185.220.101.35', destinationIp: '10.0.0.5', userId: 'U011', userName: '冯涛', timestamp: '2026-05-08T14:22:10Z', rawLog: 'SRC=185.220.101.35 DST=10.0.0.5 PROTO=TCP DPT=22 FAIL_COUNT=150', tags: ['暴力破解', 'SSH', '跳板机'], aiScore: 75, aiSummary: 'SSH暴力破解攻击，来源为Tor节点，与ALT002同一攻击者', aiRecommendation: '封禁IP，确认跳板机安全配置', relatedAlerts: ['ALT002'], timeline: [{ id: 'TL011', timestamp: '2026-05-08T14:22:10Z', type: 'alert', title: 'SSH暴力破解告警', description: '防火墙检测到SSH暴力破解', source: '防火墙' }] },
   { id: 'ALT010', type: 'vpn_anomaly', title: 'VPN异常登录 - 尼日利亚', description: '市场部刘洋从尼日利亚拉各斯登录VPN，该用户常驻广州，且无出差记录。登录时间为凌晨3点，行为异常。', riskLevel: 'high', status: 'investigating', source: 'VPN网关', sourceIp: '41.58.67.89', destinationIp: '10.0.0.1', userId: 'U005', userName: '刘洋', timestamp: '2026-05-09T03:00:00Z', rawLog: 'USER=liuyang SRC=41.58.67.89 LOC=Lagos,NG TIME=0300 PREV_LOC=Guangzhou,CN', tags: ['VPN异常', '异常地区', '凭证泄露'], aiScore: 82, aiSummary: '用户从尼日利亚异常登录，账户可能已被盗用', aiRecommendation: '冻结账户，联系用户确认，检查近期操作', relatedAlerts: ['ALT015', 'ALT022'], timeline: [{ id: 'TL012', timestamp: '2026-05-09T03:00:00Z', type: 'alert', title: 'VPN异常告警', description: '检测到从尼日利亚的异常VPN登录', source: 'VPN网关' }] },
   { id: 'ALT011', type: 'privilege_escalation', title: '权限提升 - 异常管理员权限获取', description: '陈刚的工作站上检测到从普通用户权限提升至管理员权限的操作，使用漏洞利用工具MS16-016。', riskLevel: 'critical', status: 'escalated', source: 'EDR', sourceIp: '10.0.2.100', destinationIp: '10.0.2.100', userId: 'U004', userName: '陈刚', timestamp: '2026-05-08T21:45:00Z', rawLog: 'HOST=DEV-WS-004 PRIV_ESC=Standard->Admin EXPLOIT=MS16-016', tags: ['权限提升', '漏洞利用', 'APT'], aiScore: 94, aiSummary: '权限提升为APT攻击链一环，与Cobalt Strike攻击关联', aiRecommendation: '检查系统补丁状态，隔离受影响主机', relatedAlerts: ['ALT004', 'ALT005', 'ALT006'], timeline: [{ id: 'TL013', timestamp: '2026-05-08T21:45:00Z', type: 'alert', title: '权限提升告警', description: 'EDR检测到权限提升操作', source: 'EDR' }] },
-  { id: 'ALT012', type: 'phishing', title: '钓鱼邮件 - 伪造发票附件', description: '检测到包含恶意宏代码的Excel发票附件，宏代码执行后将下载第二阶段payload。邮件伪装为供应商发票。', riskLevel: 'high', status: 'investigating', source: '邮件网关', sourceIp: '198.51.100.23', destinationIp: '10.0.1.55', userId: 'U018', userName: '朱婷', timestamp: '2026-05-08T10:30:00Z', rawLog: 'SRC=invoice@suppl1er.com DST=zhuting@secmind.com ATTACH="发票_202605.xlsx" MACRO=enabled', tags: ['钓鱼攻击', '恶意附件', '宏病毒'], aiScore: 80, aiSummary: '恶意Excel附件包含宏代码，将下载后续payload', aiRecommendation: '隔离邮件，检查收件人是否打开了附件', relatedAlerts: [], timeline: [{ id: 'TL014', timestamp: '2026-05-08T10:30:00Z', type: 'alert', title: '钓鱼邮件告警', description: '邮件网关检测到恶意附件', source: '邮件网关' }] },
+  { id: 'ALT012', type: 'phishing', title: '钓鱼邮件 - 伪造发票附件', description: '检测到包含恶意宏代码的Excel发票附件，邮件伪装为供应商发票。宏代码执行后将下载第二阶段payload。', riskLevel: 'high', status: 'investigating', source: '邮件网关', sourceIp: '198.51.100.23', destinationIp: '10.0.1.55', userId: 'U018', userName: '朱婷', timestamp: '2026-05-08T10:30:00Z', rawLog: 'SRC=invoice@suppl1er.com DST=zhuting@secmind.com ATTACH="发票_202605.xlsx" MACRO=enabled', tags: ['钓鱼攻击', '恶意附件', '宏病毒'], aiScore: 80, aiSummary: '恶意Excel附件包含宏代码，将下载后续payload', aiRecommendation: '隔离邮件，检查收件人是否打开了附件', relatedAlerts: [], timeline: [{ id: 'TL014', timestamp: '2026-05-08T10:30:00Z', type: 'alert', title: '钓鱼邮件告警', description: '邮件网关检测到恶意附件', source: '邮件网关' }] },
   { id: 'ALT013', type: 'brute_force', title: 'RDP暴力破解 - 针对财务服务器', description: '检测到针对财务服务器的RDP暴力破解攻击，来自内网已失陷主机。', riskLevel: 'critical', status: 'escalated', source: 'SIEM', sourceIp: '10.0.2.100', destinationIp: '10.0.1.20', userId: 'U002', userName: '李娜', timestamp: '2026-05-09T02:15:00Z', rawLog: 'SRC=10.0.2.100 DST=10.0.1.20 PROTO=TCP DPT=3389 FAIL_COUNT=50', tags: ['暴力破解', 'RDP', '财务服务器', '内网攻击'], aiScore: 90, aiSummary: '从已失陷主机发起的内网RDP暴力破解，为APT横向移动', aiRecommendation: '阻断内网RDP访问，检查财务服务器安全', relatedAlerts: ['ALT004', 'ALT006'], timeline: [{ id: 'TL015', timestamp: '2026-05-09T02:15:00Z', type: 'alert', title: 'RDP暴力破解告警', description: 'SIEM检测到内网RDP暴力破解', source: 'SIEM' }] },
   { id: 'ALT014', type: 'malware', title: '恶意软件 - Emotet木马', description: '人事部工作站检测到Emotet木马，通过钓鱼邮件中的恶意链接下载安装。木马具有键盘记录和凭证窃取功能。', riskLevel: 'high', status: 'investigating', source: 'EDR', sourceIp: '10.0.3.45', destinationIp: '203.0.113.50', userId: 'U022', userName: '施蕾', timestamp: '2026-05-08T16:40:00Z', rawLog: 'HOST=HR-WS-022 MALWARE=Emotet C2=203.0.113.50', tags: ['恶意软件', 'Emotet', '凭证窃取'], aiScore: 83, aiSummary: 'Emotet木马已建立C2通信，可能已窃取用户凭证', aiRecommendation: '隔离主机，重置用户凭证，检查是否有横向移动', relatedAlerts: [], timeline: [{ id: 'TL016', timestamp: '2026-05-08T16:40:00Z', type: 'alert', title: '恶意软件告警', description: 'EDR检测到Emotet木马', source: 'EDR' }] },
   { id: 'ALT015', type: 'phishing', title: '钓鱼邮件 - 冒充CEO紧急转账', description: '检测到冒充CEO黄强的钓鱼邮件，要求财务部紧急转账至境外账户。邮件语气紧迫，要求保密处理。', riskLevel: 'critical', status: 'escalated', source: '邮件网关', sourceIp: '45.67.89.12', destinationIp: '10.0.1.55', userId: 'U002', userName: '李娜', timestamp: '2026-05-09T07:30:00Z', rawLog: 'SRC=huang.qiang@secm1nd.com DST=lina@secmind.com SUBJECT="紧急转账-保密"', tags: ['钓鱼攻击', 'BEC', 'CEO欺诈'], aiScore: 91, aiSummary: 'BEC攻击，冒充CEO要求紧急转账，属于商业邮件欺诈', aiRecommendation: '立即通知财务部停止转账，确认CEO未发送此邮件', relatedAlerts: ['ALT001', 'ALT008'], timeline: [{ id: 'TL017', timestamp: '2026-05-09T07:30:00Z', type: 'alert', title: 'BEC攻击告警', description: '邮件网关检测到CEO冒充邮件', source: '邮件网关' }] },
@@ -73,12 +234,12 @@ export const mockAlerts: Alert[] = [
   { id: 'ALT022', type: 'phishing', title: '钓鱼邮件 - 伪造HR福利通知', description: '检测到伪造HR部门的钓鱼邮件，诱导员工点击链接填写个人信息。邮件主题为"2026年度体检福利登记"。', riskLevel: 'medium', status: 'resolved', source: '邮件网关', sourceIp: '103.45.67.91', destinationIp: '10.0.1.55', userId: 'U005', userName: '刘洋', timestamp: '2026-05-07T09:00:00Z', rawLog: 'SRC=hr@secm1nd.com DST=liuyang@secmind.com SUBJECT="2026年度体检福利登记"', tags: ['钓鱼攻击', '个人信息', '高仿域名'], aiScore: 72, aiSummary: '钓鱼邮件收集个人信息，与ALT001同一攻击基础设施', aiRecommendation: '已自动隔离，通知员工勿点击类似链接', relatedAlerts: ['ALT001', 'ALT008'], timeline: [{ id: 'TL024', timestamp: '2026-05-07T09:00:00Z', type: 'alert', title: '钓鱼邮件告警', description: '邮件网关检测到HR钓鱼邮件', source: '邮件网关' }] },
   { id: 'ALT023', type: 'lateral_movement', title: '横向移动 - WMI远程执行', description: '检测到从运维部工作站通过WMI远程执行命令到多台服务器，执行内容为PowerShell下载脚本。', riskLevel: 'high', status: 'escalated', source: 'SIEM', sourceIp: '10.0.4.22', destinationIp: '10.0.1.15', userId: 'U021', userName: '吕峰', timestamp: '2026-05-09T05:30:00Z', rawLog: 'SRC=10.0.4.22 DST=10.0.1.15 PROTO=WMI CMD="powershell -enc Base64String" TARGETS=5', tags: ['横向移动', 'WMI', 'PowerShell'], aiScore: 89, aiSummary: 'WMI横向移动为勒索病毒传播行为，已影响5台服务器', aiRecommendation: '隔离所有受影响服务器，阻断WMI通信', relatedAlerts: ['ALT019', 'ALT020', 'ALT021'], timeline: [{ id: 'TL025', timestamp: '2026-05-09T05:30:00Z', type: 'alert', title: '横向移动告警', description: 'SIEM检测到WMI远程执行', source: 'SIEM' }] },
   { id: 'ALT024', type: 'vpn_anomaly', title: 'VPN异常 - 多设备同时在线', description: '用户张伟的VPN账号同时在3台不同设备上在线，且设备分布在不同城市。', riskLevel: 'medium', status: 'resolved', source: 'VPN网关', sourceIp: '10.0.2.50', destinationIp: '10.0.0.1', userId: 'U001', userName: '张伟', timestamp: '2026-05-08T14:00:00Z', rawLog: 'USER=zhangwei SESSIONS=3 DEVICES=Beijing,Shanghai,Shenzhen', tags: ['VPN异常', '多设备', '凭证共享'], aiScore: 55, aiSummary: '可能是用户在多设备间切换，也可能是凭证泄露', aiRecommendation: '联系用户确认，建议启用单设备登录策略', relatedAlerts: [], timeline: [{ id: 'TL026', timestamp: '2026-05-08T14:00:00Z', type: 'alert', title: '多设备VPN告警', description: 'VPN网关检测到多设备同时在线', source: 'VPN网关' }] },
-  { id: 'ALT025', type: 'brute_force', title: '暴力破解 - 针对邮件系统', description: '检测到针对Exchange邮件系统的暴力破解攻击，使用IMAP协议尝试登录。', riskLevel: 'medium', status: 'resolved', source: '邮件网关', sourceIp: '185.220.101.36', destinationIp: '10.0.1.55', userId: 'U017', userName: '杨帆', timestamp: '2026-05-07T08:30:00Z', rawLog: 'SRC=185.220.101.36 DST=10.0.1.55 PROTO=IMAP FAIL_COUNT=100', tags: ['暴力破解', 'IMAP', '邮件系统'], aiScore: 62, aiSummary: 'IMAP暴力破解，来源为Tor节点', aiRecommendation: '封禁IP，检查是否有账户被破解', relatedAlerts: ['ALT002', 'ALT009'], timeline: [{ id: 'TL027', timestamp: '2026-05-07T08:30:00Z', type: 'alert', title: 'IMAP暴力破解告警', description: '邮件网关检测到IMAP暴力破解', source: '邮件网关' }] },
+  { id: 'ALT025', type: 'brute_force', title: '暴力破解 - 针对邮件系统', description: '检测到针对Exchange邮件系统的暴力破解攻击，使用IMAP协议尝试登录。', riskLevel: 'medium', status: 'resolved', source: '邮件网关', sourceIp: '185.220.101.36', destinationIp: '10.0.1.55', userId: 'U017', userName: '杨帆', timestamp: '2026-05-07T08:30:00Z', rawLog: 'SRC=185.220.101.36 DST=10.0.1.55 PROTO=IMAP FAIL_COUNT=100', tags: ['暴力破解', 'IMAP', '邮件系统'], aiScore: 62, aiSummary: 'IMAP暴力破解，来源为Tor节点', aiRecommendation: '封禁IP，检查是否有账户被破解', relatedAlerts: ['ALT002', 'ALT009'], timeline: [{ id: 'TL027', timestamp: '2026-05-08T08:30:00Z', type: 'alert', title: 'IMAP暴力破解告警', description: '邮件网关检测到IMAP暴力破解', source: '邮件网关' }] },
   { id: 'ALT026', type: 'data_exfiltration', title: '数据外泄 - 云盘上传敏感文件', description: '检测到研发部员工通过个人云盘上传了项目源代码，触发DLP策略告警。', riskLevel: 'medium', status: 'investigating', source: 'DLP', sourceIp: '10.0.2.88', destinationIp: '52.84.123.45', userId: 'U030', userName: '林峰', timestamp: '2026-05-08T15:20:00Z', rawLog: 'SRC=10.0.2.88 DST=cloud.baidu.com SIZE=500MB TYPE=source_code USER=linfeng', tags: ['数据外泄', '云盘', '源代码'], aiScore: 60, aiSummary: '用户可能为方便工作上传代码，但违反安全策略', aiRecommendation: '联系用户删除云盘文件，加强安全意识培训', relatedAlerts: [], timeline: [{ id: 'TL028', timestamp: '2026-05-08T15:20:00Z', type: 'alert', title: 'DLP告警', description: 'DLP检测到云盘上传敏感文件', source: 'DLP' }] },
   { id: 'ALT027', type: 'malware', title: '恶意软件 - 挖矿木马', description: '检测到运维部服务器CPU使用率异常，经排查发现运行了加密货币挖矿木马。木马通过Docker API未授权访问植入。', riskLevel: 'medium', status: 'resolved', source: 'EDR', sourceIp: '10.0.4.10', destinationIp: '10.0.4.10', userId: 'U014', userName: '蒋华', timestamp: '2026-05-07T22:00:00Z', rawLog: 'HOST=OPS-SVR-010 CPU=98% PROC=xmrig MALWARE=crypto_miner VECTOR=docker_api', tags: ['恶意软件', '挖矿木马', 'Docker'], aiScore: 58, aiSummary: '挖矿木马通过Docker API漏洞植入，未发现数据窃取行为', aiRecommendation: '清除挖矿进程，修复Docker API配置', relatedAlerts: [], timeline: [{ id: 'TL029', timestamp: '2026-05-07T22:00:00Z', type: 'alert', title: '挖矿木马告警', description: 'EDR检测到异常CPU使用', source: 'EDR' }] },
   { id: 'ALT028', type: 'c2_communication', title: 'C2通信 - IRC协议外联', description: '检测到内网主机通过IRC协议与境外服务器通信，IRC频道名包含随机字符串，疑似C2控制通道。', riskLevel: 'medium', status: 'resolved', source: '防火墙', sourceIp: '10.0.3.45', destinationIp: '203.0.113.50', userId: 'U022', userName: '施蕾', timestamp: '2026-05-08T17:00:00Z', rawLog: 'SRC=10.0.3.45 DST=203.0.113.50 PROTO=IRC CHANNEL="#a7f3b2" BOT_CMD=detected', tags: ['C2通信', 'IRC', 'Botnet'], aiScore: 70, aiSummary: 'IRC C2通道与Emotet木马关联，为同一攻击链', aiRecommendation: '封禁IRC服务器，清除Emotet木马', relatedAlerts: ['ALT014'], timeline: [{ id: 'TL030', timestamp: '2026-05-08T17:00:00Z', type: 'alert', title: 'IRC C2告警', description: '防火墙检测到IRC异常外联', source: '防火墙' }] },
   { id: 'ALT029', type: 'privilege_escalation', title: '权限提升 - 数据库异常权限授予', description: 'DBA蒋华在非工作时间向普通账户授予了数据库管理员权限，操作来源IP为内网但非DBA常用终端。', riskLevel: 'high', status: 'investigating', source: 'SIEM', sourceIp: '10.0.4.15', destinationIp: '10.0.1.30', userId: 'U014', userName: '蒋华', timestamp: '2026-05-08T23:00:00Z', rawLog: 'DB=production USER=jianghua ACTION=GRANT ROLE=dba TO=app_service TIME=2300 SRC=10.0.4.15', tags: ['权限提升', '数据库', '异常授权'], aiScore: 76, aiSummary: '非工作时间异常授权，来源IP非DBA常用终端，可能为凭证被盗用', aiRecommendation: '撤销授权，联系DBA确认，检查数据库访问日志', relatedAlerts: [], timeline: [{ id: 'TL031', timestamp: '2026-05-08T23:00:00Z', type: 'alert', title: '异常授权告警', description: 'SIEM检测到数据库异常权限授予', source: 'SIEM' }] },
-  { id: 'ALT030', type: 'phishing', title: '钓鱼邮件 - 伪造快递通知', description: '检测到伪造快递公司的钓鱼邮件，诱导用户点击链接查看快递信息，实际为钓鱼页面。', riskLevel: 'low', status: 'false_positive', source: '邮件网关', sourceIp: '58.216.33.15', destinationIp: '10.0.1.55', userId: 'U015', userName: '沈雪', timestamp: '2026-05-07T14:00:00Z', rawLog: 'SRC=noreply@sf-express.com.cn DST=shenxue@secmind.com SUBJECT="您有快递待取"', tags: ['钓鱼攻击', '快递通知'], aiScore: 35, aiSummary: '疑似钓鱼邮件但经人工确认为真实快递通知', aiRecommendation: '标记为误报', relatedAlerts: [], timeline: [{ id: 'TL032', timestamp: '2026-05-07T14:00:00Z', type: 'alert', title: '钓鱼邮件告警', description: '邮件网关检测到疑似钓鱼邮件', source: '邮件网关' }] },
+  { id: 'ALT030', type: 'phishing', title: '钓鱼邮件 - 伪造快递通知', description: '检测到伪造快递公司的钓鱼邮件，诱导用户点击链接查看快递信息，实际为钓鱼页面。', riskLevel: 'low', status: 'false_positive', source: '邮件网关', sourceIp: '58.216.33.15', destinationIp: '10.0.1.55', userId: 'U015', userName: '沈雪', timestamp: '2026-05-07T14:00:00Z', rawLog: 'SRC=noreply@sf-express.com.cn DST=shenxue@secmind.com SUBJECT="您有快递待取"', tags: ['钓鱼攻击'], aiScore: 35, aiSummary: '疑似钓鱼邮件但经人工确认为真实快递通知', aiRecommendation: '标记为误报', relatedAlerts: [], timeline: [{ id: 'TL032', timestamp: '2026-05-07T14:00:00Z', type: 'alert', title: '钓鱼邮件告警', description: '邮件网关检测到疑似钓鱼邮件', source: '邮件网关' }] },
   { id: 'ALT031', type: 'brute_force', title: '暴力破解 - 针对Jenkins', description: '检测到针对Jenkins CI/CD系统的暴力破解攻击，使用默认凭证和常见弱密码。', riskLevel: 'medium', status: 'resolved', source: 'SIEM', sourceIp: '45.33.32.100', destinationIp: '10.0.2.50', userId: 'U017', userName: '杨帆', timestamp: '2026-05-06T16:00:00Z', rawLog: 'SRC=45.33.32.100 DST=10.0.2.50 APP=Jenkins FAIL_COUNT=60', tags: ['暴力破解', 'Jenkins', 'CI/CD'], aiScore: 60, aiSummary: 'Jenkins暴力破解，需检查是否使用了默认凭证', aiRecommendation: '修改默认凭证，启用访问控制', relatedAlerts: [], timeline: [{ id: 'TL033', timestamp: '2026-05-06T16:00:00Z', type: 'alert', title: 'Jenkins暴力破解告警', description: 'SIEM检测到Jenkins暴力破解', source: 'SIEM' }] },
   { id: 'ALT032', type: 'vpn_anomaly', title: 'VPN异常 - 长时间连接', description: '用户冯涛的VPN连接持续超过48小时未断开，且数据传输量异常大，疑似异常。', riskLevel: 'low', status: 'resolved', source: 'VPN网关', sourceIp: '10.0.2.60', destinationIp: '10.0.0.1', userId: 'U011', userName: '冯涛', timestamp: '2026-05-08T08:00:00Z', rawLog: 'USER=fengtao DURATION=52h DATA=15GB', tags: ['VPN异常', '长时间连接'], aiScore: 40, aiSummary: '可能是远程办公忘记断开，数据量在正常范围内', aiRecommendation: '设置VPN超时策略', relatedAlerts: [], timeline: [{ id: 'TL034', timestamp: '2026-05-08T08:00:00Z', type: 'alert', title: 'VPN长时间连接告警', description: 'VPN网关检测到异常长连接', source: 'VPN网关' }] },
   { id: 'ALT033', type: 'lateral_movement', title: '横向移动 - PsExec远程执行', description: '检测到使用PsExec工具在内网主机间远程执行程序，来源为已失陷的人事部工作站。', riskLevel: 'high', status: 'escalated', source: 'EDR', sourceIp: '10.0.3.45', destinationIp: '10.0.1.25', userId: 'U022', userName: '施蕾', timestamp: '2026-05-08T18:00:00Z', rawLog: 'SRC=10.0.3.45 DST=10.0.1.25 TOOL=PsExec PROC=cmd.exe USER=shilei', tags: ['横向移动', 'PsExec', '内网渗透'], aiScore: 84, aiSummary: 'PsExec横向移动与Emotet木马攻击链一致', aiRecommendation: '隔离受影响主机，检查Emotet传播范围', relatedAlerts: ['ALT014', 'ALT028'], timeline: [{ id: 'TL035', timestamp: '2026-05-08T18:00:00Z', type: 'alert', title: 'PsExec横向移动告警', description: 'EDR检测到PsExec远程执行', source: 'EDR' }] },
@@ -91,7 +252,7 @@ export const mockAlerts: Alert[] = [
   { id: 'ALT040', type: 'privilege_escalation', title: '权限提升 - Kubernetes RBAC异常', description: '检测到Kubernetes集群中异常的ClusterRoleBinding操作，将普通ServiceAccount绑定至cluster-admin角色。', riskLevel: 'high', status: 'investigating', source: 'SIEM', sourceIp: '10.0.2.50', destinationIp: '10.0.2.50', userId: 'U017', userName: '杨帆', timestamp: '2026-05-08T19:00:00Z', rawLog: 'K8S_NS=default ACTION=ClusterRoleBinding SUBJECT=sa:default ROLE=cluster-admin', tags: ['权限提升', 'Kubernetes', 'RBAC'], aiScore: 77, aiSummary: 'K8s RBAC异常操作，可能为攻击者获取集群控制权', aiRecommendation: '撤销ClusterRoleBinding，检查集群安全配置', relatedAlerts: [], timeline: [{ id: 'TL042', timestamp: '2026-05-08T19:00:00Z', type: 'alert', title: 'K8s RBAC异常告警', description: 'SIEM检测到异常ClusterRoleBinding', source: 'SIEM' }] },
   { id: 'ALT041', type: 'lateral_movement', title: '横向移动 - SSH密钥滥用', description: '检测到使用未授权SSH密钥从开发环境跳转至生产环境服务器，密钥不属于任何已知管理员。', riskLevel: 'high', status: 'escalated', source: 'SIEM', sourceIp: '10.0.2.100', destinationIp: '10.0.1.15', userId: 'U004', userName: '陈刚', timestamp: '2026-05-09T00:00:00Z', rawLog: 'SRC=10.0.2.100 DST=10.0.1.15 AUTH=ssh_key KEY=unknown USER=root', tags: ['横向移动', 'SSH密钥', '生产环境'], aiScore: 88, aiSummary: '未授权SSH密钥访问生产环境，与APT攻击链关联', aiRecommendation: '撤销未授权密钥，审计所有SSH密钥', relatedAlerts: ['ALT004', 'ALT006'], timeline: [{ id: 'TL043', timestamp: '2026-05-09T00:00:00Z', type: 'alert', title: 'SSH密钥滥用告警', description: 'SIEM检测到未授权SSH密钥访问', source: 'SIEM' }] },
   { id: 'ALT042', type: 'data_exfiltration', title: '数据外泄 - 异常DNS查询', description: '检测到大量异常DNS查询，查询域名长度异常，疑似DNS数据外泄通道。', riskLevel: 'medium', status: 'investigating', source: '防火墙', sourceIp: '10.0.3.60', destinationIp: '8.8.8.8', userId: 'U034', userName: '罗薇', timestamp: '2026-05-08T12:00:00Z', rawLog: 'SRC=10.0.3.60 DST=8.8.8.8 DNS_LEN=250+ QUERY=encoded_data.xfil.xyz COUNT=500+', tags: ['数据外泄', 'DNS', '隐秘通道'], aiScore: 72, aiSummary: 'DNS数据外泄通道，与NJRat远控木马关联', aiRecommendation: '封禁相关域名，清除远控木马', relatedAlerts: ['ALT038'], timeline: [{ id: 'TL044', timestamp: '2026-05-08T12:00:00Z', type: 'alert', title: 'DNS外泄告警', description: '防火墙检测到异常DNS查询', source: '防火墙' }] },
-  { id: 'ALT043', type: 'c2_communication', title: 'C2通信 - GitHub作为C2通道', description: '检测到内网主机通过GitHub Issues API进行C2通信，利用合法服务规避检测。', riskLevel: 'high', status: 'investigating', source: '防火墙', sourceIp: '10.0.2.100', destinationIp: '140.82.121.6', userId: 'U004', userName: '陈刚', timestamp: '2026-05-08T23:00:00Z', rawLog: 'SRC=10.0.2.100 DST=api.github.com PROTO=HTTPS REPO=private/issues PATTERN=encoded_cmds', tags: ['C2通信', 'GitHub', 'APT'], aiScore: 85, aiSummary: 'APT攻击者使用GitHub Issues作为C2通道，高度隐蔽', aiRecommendation: '封禁异常GitHub仓库，检查通信内容', relatedAlerts: ['ALT004', 'ALT005'], timeline: [{ id: 'TL045', timestamp: '2026-05-08T23:00:00Z', type: 'alert', title: 'GitHub C2告警', description: '防火墙检测到GitHub Issues C2通信', source: '防火墙' }] },
+  { id: 'ALT043', type: 'c2_communication', title: 'C2通信 - GitHub作为C2通道', description: '检测到内网主机通过GitHub Issues API进行C2通信，利用合法服务规避检测。', riskLevel: 'high', status: 'investigating', source: '防火墙', sourceIp: '10.0.2.100', destinationIp: '140.82.121.6', userId: 'U004', userName: '陈刚', timestamp: '2026-05-08T23:00:00Z', rawLog: 'SRC=10.0.2.100 DST=api.github.com PROTO=HTTPS REPO=private/issues PATTERN=encoded_cmds', tags: ['C2通信', 'GitHub', 'APT'], aiScore: 85, aiSummary: 'APT攻击者使用GitHub Issues作为C2通道，高度隐蔽', aiRecommendation: '封堵异常GitHub仓库，检查通信内容', relatedAlerts: ['ALT004', 'ALT005'], timeline: [{ id: 'TL045', timestamp: '2026-05-08T23:00:00Z', type: 'alert', title: 'GitHub C2告警', description: '防火墙检测到GitHub Issues C2通信', source: '防火墙' }] },
   { id: 'ALT044', type: 'brute_force', title: '暴力破解 - 针对WordPress', description: '检测到针对公司博客WordPress后台的暴力破解攻击。', riskLevel: 'low', status: 'resolved', source: '防火墙', sourceIp: '45.33.32.101', destinationIp: '10.0.1.60', userId: 'U015', userName: '沈雪', timestamp: '2026-05-06T12:00:00Z', rawLog: 'SRC=45.33.32.101 DST=10.0.1.60 APP=WordPress FAIL_COUNT=30', tags: ['暴力破解', 'WordPress'], aiScore: 25, aiSummary: 'WordPress暴力破解，影响范围有限', aiRecommendation: '封禁IP，加强WordPress安全配置', relatedAlerts: [], timeline: [{ id: 'TL046', timestamp: '2026-05-06T12:00:00Z', type: 'alert', title: 'WordPress暴力破解告警', description: '防火墙检测到WordPress暴力破解', source: '防火墙' }] },
   { id: 'ALT045', type: 'phishing', title: '钓鱼邮件 - 伪造银行通知', description: '检测到伪造银行通知的钓鱼邮件，诱导用户输入银行卡信息。', riskLevel: 'medium', status: 'resolved', source: '邮件网关', sourceIp: '198.51.100.50', destinationIp: '10.0.1.55', userId: 'U031', userName: '何欣', timestamp: '2026-05-06T15:00:00Z', rawLog: 'SRC=service@icbc-secure.com DST=hexin@secmind.com SUBJECT="账户异常通知"', tags: ['钓鱼攻击', '银行钓鱼'], aiScore: 68, aiSummary: '银行钓鱼邮件，与公司安全无关但影响员工个人安全', aiRecommendation: '已自动隔离，提醒员工注意', relatedAlerts: [], timeline: [{ id: 'TL047', timestamp: '2026-05-06T15:00:00Z', type: 'alert', title: '银行钓鱼告警', description: '邮件网关检测到银行钓鱼邮件', source: '邮件网关' }] },
   { id: 'ALT046', type: 'malware', title: '恶意软件 - WebShell检测', description: '检测到Web服务器上的异常WebShell文件，攻击者可能通过文件上传漏洞植入。', riskLevel: 'high', status: 'escalated', source: 'EDR', sourceIp: '10.0.1.60', destinationIp: '10.0.1.60', userId: 'U017', userName: '杨帆', timestamp: '2026-05-07T18:00:00Z', rawLog: 'HOST=WEB-SVR PATH=/uploads/cmd.php TYPE=WebShell SIG=ChinaChopper', tags: ['恶意软件', 'WebShell', 'ChinaChopper'], aiScore: 80, aiSummary: 'ChinaChopper WebShell，攻击者可能已获取服务器控制权', aiRecommendation: '删除WebShell，修复上传漏洞，检查服务器完整性', relatedAlerts: [], timeline: [{ id: 'TL048', timestamp: '2026-05-07T18:00:00Z', type: 'alert', title: 'WebShell告警', description: 'EDR检测到ChinaChopper WebShell', source: 'EDR' }] },
@@ -106,56 +267,85 @@ export const mockAlerts: Alert[] = [
   { id: 'ALT055', type: 'vpn_anomaly', title: 'VPN异常 - 代理链路检测', description: '检测到VPN连接经过多层代理，最终来源为境外VPS，疑似使用代理隐藏真实位置。', riskLevel: 'high', status: 'investigating', source: 'VPN网关', sourceIp: '45.77.123.45', destinationIp: '10.0.0.1', userId: 'U003', userName: '王芳', timestamp: '2026-05-09T07:00:00Z', rawLog: 'USER=wangfang SRC=45.77.123.45 PROXY_CHAIN=detected REAL_IP=91.234.56.78', tags: ['VPN异常', '代理链路', '隐藏位置'], aiScore: 80, aiSummary: 'VPN连接使用代理链路，与不可能旅行告警关联', aiRecommendation: '冻结账户，联系用户确认', relatedAlerts: ['ALT003'], timeline: [{ id: 'TL057', timestamp: '2026-05-09T07:00:00Z', type: 'alert', title: '代理链路告警', description: 'VPN网关检测到代理链路', source: 'VPN网关' }] },
 ]
 
+/* ========= Seed-Based Generated Alerts ========= */
+
+const TOTAL_ALERTS = 10000
+
+const now = new Date('2026-05-18T10:00:00Z')
+const extendedAlerts: Alert[] = []
+const extendedRand = seededRandom(42)
+for (let i = 56; i <= TOTAL_ALERTS; i++) {
+  extendedAlerts.push(generateSeededAlert(`ALT${String(i).padStart(3, '0')}`, extendedRand, now))
+}
+
+const allAlerts: Alert[] = [...staticAlerts, ...extendedAlerts]
+
+export const mockAlerts: Alert[] = allAlerts
+const ALL_ALERTS = allAlerts
+
+/* ========= Dashboard Stats ========= */
+
+const trendRand = seededRandom(123)
+const today = new Date('2026-05-18T00:00:00Z')
+const alertsTrend: { date: string; count: number }[] = []
+for (let i = 29; i >= 0; i--) {
+  const d = new Date(today)
+  d.setDate(d.getDate() - i)
+  const dateStr = d.toISOString().slice(0, 10)
+  const count = 300 + Math.floor(trendRand() * 151)
+  alertsTrend.push({ date: dateStr, count })
+}
+
 export const mockDashboardStats: DashboardStats = {
-  totalAlerts: 55,
-  criticalAlerts: 12,
-  highAlerts: 18,
+  totalAlerts: 10000,
+  criticalAlerts: 1200,
+  highAlerts: 2500,
   aiProcessedRate: 87.5,
-  emailAttacks: 8,
-  vpnAnomalies: 6,
-  bruteForceAttempts: 7,
+  emailAttacks: 800,
+  vpnAnomalies: 600,
+  bruteForceAttempts: 900,
   avgResponseTime: 4.2,
-  alertsTrend: [
-    { date: '2026-04-09', count: 12 }, { date: '2026-04-10', count: 8 }, { date: '2026-04-11', count: 15 },
-    { date: '2026-04-12', count: 10 }, { date: '2026-04-13', count: 6 }, { date: '2026-04-14', count: 9 },
-    { date: '2026-04-15', count: 11 }, { date: '2026-04-16', count: 14 }, { date: '2026-04-17', count: 7 },
-    { date: '2026-04-18', count: 13 }, { date: '2026-04-19', count: 16 }, { date: '2026-04-20', count: 9 },
-    { date: '2026-04-21', count: 11 }, { date: '2026-04-22', count: 8 }, { date: '2026-04-23', count: 12 },
-    { date: '2026-04-24', count: 18 }, { date: '2026-04-25', count: 14 }, { date: '2026-04-26', count: 10 },
-    { date: '2026-04-27', count: 7 }, { date: '2026-04-28', count: 13 }, { date: '2026-04-29', count: 15 },
-    { date: '2026-04-30', count: 11 }, { date: '2026-05-01', count: 5 }, { date: '2026-05-02', count: 8 },
-    { date: '2026-05-03', count: 6 }, { date: '2026-05-04', count: 10 }, { date: '2026-05-05', count: 14 },
-    { date: '2026-05-06', count: 12 }, { date: '2026-05-07', count: 9 }, { date: '2026-05-08', count: 17 },
-    { date: '2026-05-09', count: 22 },
-  ],
+  alertsTrend,
   riskDistribution: [
-    { level: '严重', count: 12 }, { level: '高危', count: 18 }, { level: '中危', count: 15 },
-    { level: '低危', count: 7 }, { level: '信息', count: 3 },
+    { level: '严重', count: 1200 },
+    { level: '高危', count: 2500 },
+    { level: '中危', count: 3500 },
+    { level: '低危', count: 2000 },
+    { level: '信息', count: 800 },
   ],
   topAttackTypes: [
-    { type: '钓鱼攻击', count: 8 }, { type: '暴力破解', count: 7 }, { type: '恶意软件', count: 6 },
-    { type: 'C2通信', count: 6 }, { type: 'VPN异常', count: 6 }, { type: '数据外泄', count: 5 },
-    { type: '横向移动', count: 4 }, { type: '权限提升', count: 4 },
+    { type: '钓鱼攻击', count: 1800 },
+    { type: '暴力破解', count: 1600 },
+    { type: 'VPN异常', count: 1400 },
+    { type: '恶意软件', count: 1200 },
+    { type: 'C2通信', count: 1100 },
+    { type: '横向移动', count: 1000 },
+    { type: '数据外泄', count: 1000 },
+    { type: '权限提升', count: 900 },
   ],
 }
 
+/* ========= Devices ========= */
+
 export const mockDevices: Device[] = [
-  { id: 'DEV001', name: '核心防火墙-北京', type: '防火墙', ip: '10.0.0.1', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'syslog', vendor: 'FortiGate' },
-  { id: 'DEV002', name: '核心防火墙-上海', type: '防火墙', ip: '10.0.0.2', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'syslog', vendor: '深信服' },
-  { id: 'DEV003', name: 'VPN网关-主', type: 'VPN网关', ip: '10.0.0.5', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'syslog', vendor: '深信服' },
-  { id: 'DEV004', name: 'VPN网关-备', type: 'VPN网关', ip: '10.0.0.6', port: 443, protocol: 'HTTPS', status: 'warning', lastSync: '2026-05-09T09:45:00Z', logFormat: 'syslog', vendor: '深信服' },
-  { id: 'DEV005', name: '邮件安全网关', type: '邮件网关', ip: '10.0.1.55', port: 25, protocol: 'SMTP', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'json', vendor: 'Exchange' },
-  { id: 'DEV006', name: 'EDR平台-主控', type: 'EDR', ip: '10.0.5.1', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'json', vendor: 'SentinelOne' },
-  { id: 'DEV007', name: 'SOC平台', type: 'SOC', ip: '10.0.5.2', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
-  { id: 'DEV008', name: 'SIEM平台', type: 'SIEM', ip: '10.0.5.3', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'cef', vendor: 'QRadar' },
-  { id: 'DEV009', name: 'WAF-生产环境', type: 'WAF', ip: '10.0.1.60', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'syslog', vendor: 'FortiGate' },
-  { id: 'DEV010', name: 'DLP系统', type: 'DLP', ip: '10.0.5.4', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
-  { id: 'DEV011', name: '核心防火墙-深圳', type: '防火墙', ip: '10.0.0.3', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'syslog', vendor: 'Cisco' },
-  { id: 'DEV012', name: 'NAC准入控制', type: 'NAC', ip: '10.0.5.5', port: 443, protocol: 'HTTPS', status: 'offline', lastSync: '2026-05-09T08:00:00Z', logFormat: 'syslog', vendor: 'Cisco' },
-  { id: 'DEV013', name: '堡垒机', type: '堡垒机', ip: '10.0.0.5', port: 22, protocol: 'SSH', status: 'online', lastSync: '2026-05-09T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
+  { id: 'DEV001', name: '核心防火墙-北京', type: '防火墙', ip: '10.0.0.1', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'syslog', vendor: 'FortiGate' },
+  { id: 'DEV002', name: '核心防火墙-上海', type: '防火墙', ip: '10.0.0.2', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'syslog', vendor: '深信服' },
+  { id: 'DEV003', name: 'VPN网关-主', type: 'VPN网关', ip: '10.0.0.5', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'syslog', vendor: '深信服' },
+  { id: 'DEV004', name: 'VPN网关-备', type: 'VPN网关', ip: '10.0.0.6', port: 443, protocol: 'HTTPS', status: 'warning', lastSync: '2026-05-18T09:45:00Z', logFormat: 'syslog', vendor: '深信服' },
+  { id: 'DEV005', name: '邮件安全网关', type: '邮件网关', ip: '10.0.1.55', port: 25, protocol: 'SMTP', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'json', vendor: 'Exchange' },
+  { id: 'DEV006', name: 'EDR平台-主控', type: 'EDR', ip: '10.0.5.1', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'json', vendor: 'SentinelOne' },
+  { id: 'DEV007', name: 'SOC平台', type: 'SOC', ip: '10.0.5.2', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
+  { id: 'DEV008', name: 'SIEM平台', type: 'SIEM', ip: '10.0.5.3', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'cef', vendor: 'QRadar' },
+  { id: 'DEV009', name: 'WAF-生产环境', type: 'WAF', ip: '10.0.1.60', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'syslog', vendor: 'FortiGate' },
+  { id: 'DEV010', name: 'DLP系统', type: 'DLP', ip: '10.0.5.4', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
+  { id: 'DEV011', name: '核心防火墙-深圳', type: '防火墙', ip: '10.0.0.3', port: 443, protocol: 'HTTPS', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'syslog', vendor: 'Cisco' },
+  { id: 'DEV012', name: 'NAC准入控制', type: 'NAC', ip: '10.0.5.5', port: 443, protocol: 'HTTPS', status: 'offline', lastSync: '2026-05-18T08:00:00Z', logFormat: 'syslog', vendor: 'Cisco' },
+  { id: 'DEV013', name: '堡垒机', type: '堡垒机', ip: '10.0.0.5', port: 22, protocol: 'SSH', status: 'online', lastSync: '2026-05-18T10:00:00Z', logFormat: 'json', vendor: '奇安信' },
 ]
 
-export const mockITSMTickets: ITSMTicket[] = [
+/* ========= ITSM Tickets ========= */
+
+const staticITSMTickets: ITSMTicket[] = [
   { id: 'TK001', title: '财务部钓鱼邮件应急响应', description: '针对财务部李娜收到的CEO冒充钓鱼邮件进行应急响应，需确认是否已转账及凭证泄露情况。', status: 'in_progress', priority: 'critical', assignee: '赵敏', alertId: 'ALT015', createdAt: '2026-05-09T07:35:00Z', updatedAt: '2026-05-09T09:00:00Z' },
   { id: 'TK002', title: 'APT攻击应急响应 - Cobalt Strike', description: '研发部陈刚工作站检测到Cobalt Strike攻击，已确认APT攻击链，需全面排查影响范围。', status: 'in_progress', priority: 'critical', assignee: '卫东', alertId: 'ALT004', createdAt: '2026-05-08T22:15:00Z', updatedAt: '2026-05-09T08:00:00Z' },
   { id: 'TK003', title: 'VPN不可能旅行调查', description: '王芳VPN不可能旅行告警，需确认账户是否被盗用。', status: 'in_progress', priority: 'high', assignee: '马骏', alertId: 'ALT003', createdAt: '2026-05-09T06:50:00Z', updatedAt: '2026-05-09T08:30:00Z' },
@@ -174,160 +364,377 @@ export const mockITSMTickets: ITSMTicket[] = [
   { id: 'TK016', title: 'VPN暴力破解处理', description: 'VPN网关遭受暴力破解，已封禁IP，需加强安全策略。', status: 'resolved', priority: 'critical', assignee: '吕峰', alertId: 'ALT002', createdAt: '2026-05-09T03:20:00Z', updatedAt: '2026-05-09T06:00:00Z', resolution: '已封禁Tor出口节点IP段，启用MFA强制验证，检查相关账户无异常' },
   { id: 'TK017', title: 'RAT远控木马清除', description: '产品部工作站检测到NJRat远控木马，需隔离清除。', status: 'in_progress', priority: 'high', assignee: '秦明', alertId: 'ALT038', createdAt: '2026-05-08T11:05:00Z', updatedAt: '2026-05-09T08:00:00Z' },
   { id: 'TK018', title: 'AWS IAM权限提升调查', description: 'AWS IAM异常权限提升，需撤销并检查云资源安全。', status: 'in_progress', priority: 'high', assignee: '杨帆', alertId: 'ALT050', createdAt: '2026-05-08T20:05:00Z', updatedAt: '2026-05-09T08:00:00Z' },
-  { id: 'TK019', title: '钓鱼邮件 - 高仿OA系统', description: '针对财务部钓鱼邮件进行应急响应，与TK001同一攻击者。', status: 'in_progress', priority: 'critical', assignee: '赵敏', alertId: 'ALT001', createdAt: '2026-05-09T08:25:00Z', updatedAt: '2026-05-09T09:00:00Z' },
+  { id: 'TK019', title: '钓鱼邮件 - OA登录页应急响应', description: '针对财务部钓鱼邮件进行应急响应，与TK001同一攻击者。', status: 'in_progress', priority: 'critical', assignee: '赵敏', alertId: 'ALT001', createdAt: '2026-05-09T08:25:00Z', updatedAt: '2026-05-09T09:00:00Z' },
   { id: 'TK020', title: 'Redis未授权访问修复', description: 'Redis服务器遭受未授权访问，需删除注入的SSH公钥。', status: 'resolved', priority: 'high', assignee: '蒋华', alertId: 'ALT053', createdAt: '2026-05-06T03:05:00Z', updatedAt: '2026-05-06T08:00:00Z', resolution: '已删除注入的SSH公钥，修复Redis配置，添加认证机制' },
   { id: 'TK021', title: '挖矿木马清除', description: '运维服务器挖矿木马清除，需修复Docker API配置。', status: 'resolved', priority: 'medium', assignee: '吕峰', alertId: 'ALT027', createdAt: '2026-05-07T22:05:00Z', updatedAt: '2026-05-08T10:00:00Z', resolution: '已清除xmrig进程，修复Docker API未授权访问漏洞' },
   { id: 'TK022', title: '多设备VPN登录确认', description: '张伟VPN多设备同时在线，需确认是否为本人操作。', status: 'resolved', priority: 'medium', assignee: '马骏', alertId: 'ALT024', createdAt: '2026-05-08T14:05:00Z', updatedAt: '2026-05-08T15:00:00Z', resolution: '已联系用户确认，为正常多设备办公使用，建议启用单设备策略' },
 ]
 
-export const mockAIAnalyses: AIAnalysis[] = [
-  { id: 'AI001', alertId: 'ALT001', conclusion: '高度确认为针对性钓鱼攻击（Spear Phishing），攻击者使用高仿域名secm1nd.com冒充内部OA系统，目标为财务部敏感岗位人员。攻击链完整，包含邮件投递→凭证窃取→VPN异常登录。', riskScore: 92, riskLevel: 'critical', attackChain: ['钓鱼邮件投递', '用户点击恶意链接', '输入凭证至钓鱼页面', '攻击者获取VPN凭证', '从异常地区登录VPN'], recommendations: ['立即隔离用户邮箱并重置密码', '检查VPN登录日志确认异常访问', '全网搜索同类钓鱼邮件', '加强邮件安全网关规则', '对财务部进行安全意识培训'], relatedEvents: ['ALT008', 'ALT010', 'ALT015', 'ALT022'], userContext: '李娜为财务部经理，拥有财务系统高权限账户，属于高价值目标', timestamp: '2026-05-09T08:25:30Z', agentType: '威胁分析Agent' },
-  { id: 'AI002', alertId: 'ALT002', conclusion: 'VPN网关遭受自动化暴力破解攻击，来源IP为Tor出口节点，使用常见用户名字典进行凭证猜测。攻击规模较大，5分钟内超过200次尝试。', riskScore: 88, riskLevel: 'critical', attackChain: ['Tor网络隐藏来源', '自动化工具扫描VPN', '字典攻击尝试登录', '寻找弱密码账户'], recommendations: ['封禁Tor出口节点IP段', '强制启用MFA验证', '检查是否有账户被破解', '限制VPN登录失败次数', '设置账户锁定策略'], relatedEvents: ['ALT009', 'ALT025'], userContext: '陈刚的VPN账户为攻击目标之一，该用户为研发部架构师', timestamp: '2026-05-09T03:18:00Z', agentType: '暴力破解分析Agent' },
-  { id: 'AI003', alertId: 'ALT003', conclusion: '不可能旅行告警确认，用户王芳2小时内从北京和莫斯科两地登录VPN，物理距离超过5000公里，账户极大概率已被盗用。莫斯科登录为攻击者行为。', riskScore: 85, riskLevel: 'high', attackChain: ['用户凭证泄露（可能通过钓鱼邮件）', '攻击者从莫斯科使用窃取凭证', '绕过VPN认证', '访问内部系统'], recommendations: ['立即冻结王芳VPN账户', '联系用户确认近期操作', '检查该账户所有近期访问记录', '重置所有相关密码', '检查是否与钓鱼邮件攻击关联'], relatedEvents: ['ALT022', 'ALT055'], userContext: '王芳为人事部HRBP，拥有员工信息访问权限', timestamp: '2026-05-09T06:48:00Z', agentType: 'VPN异常分析Agent' },
-  { id: 'AI004', alertId: 'ALT004', conclusion: '确认APT攻击，陈刚工作站感染Cobalt Strike Beacon，攻击者已建立C2通道并开始横向移动。攻击链完整：初始入侵→权限提升→横向移动→数据外泄。', riskScore: 97, riskLevel: 'critical', attackChain: ['钓鱼邮件或漏洞利用初始入侵', '植入Cobalt Strike Beacon', '权限提升至管理员', 'PTH横向移动至文件服务器', 'DNS隧道C2通信', '数据外泄至境外服务器'], recommendations: ['立即隔离受影响工作站', '提取内存镜像进行取证', '阻断所有C2通信', '重置陈刚及关联账户密码', '全面排查内网横向移动痕迹', '启动应急响应流程'], relatedEvents: ['ALT005', 'ALT006', 'ALT007', 'ALT011', 'ALT013', 'ALT035', 'ALT041', 'ALT043', 'ALT048', 'ALT051'], userContext: '陈刚为研发部架构师，拥有代码仓库和内网服务器高权限', timestamp: '2026-05-08T22:12:00Z', agentType: 'APT分析Agent' },
-  { id: 'AI005', alertId: 'ALT007', conclusion: '确认大规模数据外泄事件，攻击者从代码仓库服务器向境外IP传输了约2.3GB数据，目标IP与C2服务器同一网段。泄露内容可能包含核心源代码。', riskScore: 99, riskLevel: 'critical', attackChain: ['APT攻击者获取代码仓库访问权限', '打包核心源代码', '通过HTTPS加密通道外传', '数据传输至C2基础设施'], recommendations: ['立即阻断所有外联通信', '评估泄露数据范围和影响', '启动数据泄露应急响应', '通知管理层和法务部门', '检查代码仓库完整性', '考虑代码仓库访问权限重置'], relatedEvents: ['ALT004', 'ALT005', 'ALT006', 'ALT041'], userContext: '代码仓库包含公司核心产品源代码，泄露将造成重大商业损失', timestamp: '2026-05-09T01:22:00Z', agentType: '数据外泄分析Agent' },
-  { id: 'AI006', alertId: 'ALT010', conclusion: 'VPN异常登录确认，刘洋从尼日利亚拉各斯登录VPN，该用户常驻广州且无出差记录。凌晨3点登录时间异常，账户极大概率已被盗用。', riskScore: 82, riskLevel: 'high', attackChain: ['用户凭证泄露', '攻击者从尼日利亚使用窃取凭证', '凌晨时段登录降低被发现概率', '访问内部系统'], recommendations: ['立即冻结刘洋VPN账户', '联系用户确认', '检查该账户近期所有操作', '重置密码和MFA', '检查是否与钓鱼邮件攻击关联'], relatedEvents: ['ALT022', 'ALT001'], userContext: '刘洋为市场部总监，拥有市场策略和客户数据访问权限', timestamp: '2026-05-09T03:03:00Z', agentType: 'VPN异常分析Agent' },
-  { id: 'AI007', alertId: 'ALT015', conclusion: 'BEC（商业邮件欺诈）攻击确认，攻击者冒充CEO黄强要求财务部紧急转账。邮件使用高仿域名，语气紧迫要求保密，为典型BEC攻击手法。', riskScore: 91, riskLevel: 'critical', attackChain: ['注册高仿域名secm1nd.com', '冒充CEO发送紧急转账邮件', '利用权威压力迫使财务人员执行', '资金转移至攻击者账户'], recommendations: ['立即通知财务部停止任何转账操作', '确认CEO未发送此邮件', '封禁高仿域名邮件', '加强财务转账审批流程', '对财务部进行BEC攻击培训'], relatedEvents: ['ALT001', 'ALT008'], userContext: '李娜为财务经理，拥有资金转账审批权限，为BEC攻击高价值目标', timestamp: '2026-05-09T07:32:00Z', agentType: '钓鱼分析Agent' },
-  { id: 'AI008', alertId: 'ALT019', conclusion: '勒索病毒WannaCry变种确认，正在通过网络共享加密文件。EDR已自动隔离受感染主机，但需检查是否有其他主机被感染。', riskScore: 98, riskLevel: 'critical', attackChain: ['攻击者通过恶意脚本植入勒索病毒', '利用SMB漏洞在内网传播', '加密网络共享文件', '显示勒索信息要求支付赎金'], recommendations: ['确认EDR隔离生效', '全网扫描WannaCry变种特征', '检查SMB端口445是否暴露', '确保系统补丁已更新', '准备备份恢复方案', '检查是否有数据被窃取（双重勒索）'], relatedEvents: ['ALT020', 'ALT021', 'ALT023'], userContext: '运维部工作站拥有内网服务器管理权限，感染后可能影响核心系统', timestamp: '2026-05-09T05:12:00Z', agentType: '恶意软件分析Agent' },
-  { id: 'AI009', alertId: 'ALT014', conclusion: 'Emotet木马确认，通过钓鱼邮件中的恶意链接下载安装。木马具有键盘记录和凭证窃取功能，已建立C2通信。', riskScore: 83, riskLevel: 'high', attackChain: ['用户点击钓鱼邮件中的恶意链接', '下载并安装Emotet木马', '建立C2通信', '键盘记录窃取凭证', '通过PsExec横向移动'], recommendations: ['隔离受感染工作站', '清除Emotet木马', '重置用户凭证', '检查PsExec横向移动范围', '封禁C2服务器IP'], relatedEvents: ['ALT028', 'ALT033'], userContext: '施蕾为人事部培训专员，工作站可能包含员工培训资料', timestamp: '2026-05-08T16:42:00Z', agentType: '恶意软件分析Agent' },
-  { id: 'AI010', alertId: 'ALT006', conclusion: 'Pass-the-Hash横向移动确认，攻击者从陈刚工作站使用NTLM哈希认证访问文件服务器和代码仓库，为APT攻击链关键环节。', riskScore: 96, riskLevel: 'critical', attackChain: ['获取陈刚工作站NTLM哈希', '使用PTH技术绕过认证', '访问文件服务器获取敏感文档', '访问代码仓库获取源代码'], recommendations: ['重置所有相关账户密码', '启用Kerberos认证替代NTLM', '检查代码仓库是否被篡改', '审查文件服务器访问日志'], relatedEvents: ['ALT004', 'ALT005', 'ALT007', 'ALT011'], userContext: '文件服务器和代码仓库包含公司核心资产', timestamp: '2026-05-08T23:32:00Z', agentType: '横向移动分析Agent' },
-  { id: 'AI011', alertId: 'ALT017', conclusion: '离职员工VPN访问确认，高远在离职后仍可成功登录VPN，说明离职流程中账号停用环节存在疏漏。', riskScore: 79, riskLevel: 'high', attackChain: ['员工离职但VPN账号未停用', '离职员工使用原凭证登录', '访问内部代码仓库等资源', '可能下载或篡改代码'], recommendations: ['立即停用高远VPN账号', '审查离职流程中的账号管理环节', '检查高远近期访问记录', '评估是否有数据泄露', '完善离职账号自动化停用机制'], relatedEvents: [], userContext: '高远为原运维部系统工程师，离职后可能存在不满情绪', timestamp: '2026-05-08T20:03:00Z', agentType: 'VPN异常分析Agent' },
-  { id: 'AI012', alertId: 'ALT012', conclusion: '恶意Excel附件确认，包含VBA宏代码，执行后将下载第二阶段payload。邮件伪装为供应商发票，针对财务部出纳。', riskScore: 80, riskLevel: 'high', attackChain: ['用户打开恶意Excel附件', '启用宏代码执行', '下载第二阶段payload', '植入远控木马或勒索病毒'], recommendations: ['隔离邮件', '检查收件人是否已打开附件', '如已打开则隔离工作站', '封禁payload下载地址', '加强Office宏安全策略'], relatedEvents: [], userContext: '朱婷为财务部出纳，处理大量发票，容易中招', timestamp: '2026-05-08T10:32:00Z', agentType: '钓鱼分析Agent' },
-  { id: 'AI013', alertId: 'ALT021', conclusion: '异常sudo操作确认，运维工程师吕峰在凌晨执行了下载并执行远程脚本的命令，该脚本为勒索病毒下载器。', riskScore: 81, riskLevel: 'high', attackChain: ['攻击者获取吕峰SSH凭证', '凌晨登录工作站', '使用sudo权限下载恶意脚本', '执行脚本安装勒索病毒'], recommendations: ['检查吕峰账户是否被盗用', '审查sudo操作日志', '限制sudo权限使用', '加强SSH认证安全'], relatedEvents: ['ALT019', 'ALT020'], userContext: '吕峰为运维部网络工程师，拥有服务器sudo权限', timestamp: '2026-05-09T04:52:00Z', agentType: '权限分析Agent' },
-  { id: 'AI014', alertId: 'ALT029', conclusion: '数据库异常权限授予确认，操作来源IP非DBA常用终端，时间异常，可能为凭证被盗用后的恶意操作。', riskScore: 76, riskLevel: 'high', attackChain: ['攻击者获取DBA凭证', '从非授权终端登录数据库', '授予普通账户管理员权限', '利用高权限账户访问敏感数据'], recommendations: ['立即撤销异常授权', '联系蒋华确认操作', '检查数据库访问日志', '加强数据库登录IP白名单', '启用数据库操作审计'], relatedEvents: [], userContext: '蒋华为运维部DBA，拥有数据库最高权限', timestamp: '2026-05-08T23:03:00Z', agentType: '权限分析Agent' },
-  { id: 'AI015', alertId: 'ALT040', conclusion: 'Kubernetes RBAC异常确认，普通ServiceAccount被绑定至cluster-admin角色，攻击者可能已获取K8s集群完全控制权。', riskScore: 77, riskLevel: 'high', attackChain: ['攻击者获取K8s API访问权限', '创建ClusterRoleBinding', '将ServiceAccount提升至cluster-admin', '获取集群完全控制权'], recommendations: ['立即撤销异常ClusterRoleBinding', '审查所有RBAC配置', '启用K8s审计日志', '限制API Server访问', '检查是否有恶意Pod运行'], relatedEvents: ['ALT050'], userContext: 'K8s集群运行公司核心微服务，被控制将影响全部业务', timestamp: '2026-05-08T19:03:00Z', agentType: '权限分析Agent' },
-  { id: 'AI016', alertId: 'ALT046', conclusion: 'ChinaChopper WebShell确认，攻击者通过文件上传漏洞植入，可远程执行命令。服务器可能已被完全控制。', riskScore: 80, riskLevel: 'high', attackChain: ['利用文件上传漏洞', '上传ChinaChopper WebShell', '通过WebShell远程执行命令', '获取服务器控制权'], recommendations: ['删除WebShell文件', '修复文件上传漏洞', '检查服务器是否被植入后门', '审查Web服务器访问日志', '加强WAF规则'], relatedEvents: [], userContext: 'Web服务器为公司对外博客服务器，被控制可能影响公司形象', timestamp: '2026-05-07T18:03:00Z', agentType: '恶意软件分析Agent' },
-  { id: 'AI017', alertId: 'ALT054', conclusion: 'npm供应链攻击确认，恶意包lodash-utils伪装为常用工具库，包含凭证窃取代码。已影响5台开发机。', riskScore: 79, riskLevel: 'high', attackChain: ['攻击者发布恶意npm包', '开发人员安装恶意包', '包内代码窃取开发凭证', '攻击者使用窃取凭证访问代码仓库'], recommendations: ['立即卸载恶意包', '重置所有开发凭证', '审查npm包安装策略', '启用npm包安全审计', '检查代码仓库访问日志'], relatedEvents: [], userContext: '受影响开发机包含多个项目源代码访问权限', timestamp: '2026-05-08T09:03:00Z', agentType: '供应链分析Agent' },
-  { id: 'AI018', alertId: 'ALT038', conclusion: 'NJRat远控木马确认，攻击者可远程控制桌面、截屏、键盘记录。木马通过U盘传播，可能已影响多台主机。', riskScore: 82, riskLevel: 'high', attackChain: ['U盘传播NJRat木马', '建立C2通信', '远程控制桌面', '键盘记录窃取凭证', '通过DNS隧道外传数据'], recommendations: ['隔离受感染主机', '清除NJRat木马', '检查U盘传播范围', '封禁C2服务器', '加强USB设备管控'], relatedEvents: ['ALT042'], userContext: '罗薇为产品部数据分析师，可能接触产品数据', timestamp: '2026-05-08T11:03:00Z', agentType: '恶意软件分析Agent' },
-  { id: 'AI019', alertId: 'ALT023', conclusion: 'WMI横向移动确认，攻击者从运维部工作站通过WMI远程执行PowerShell命令至5台服务器，为勒索病毒传播行为。', riskScore: 89, riskLevel: 'high', attackChain: ['勒索病毒获取运维工作站控制权', '通过WMI远程执行PowerShell', '在目标服务器下载执行勒索病毒', '加密服务器文件'], recommendations: ['隔离所有受影响服务器', '阻断WMI通信', '检查服务器感染状态', '准备备份恢复方案'], relatedEvents: ['ALT019', 'ALT020', 'ALT021'], userContext: '受影响服务器包含业务关键数据', timestamp: '2026-05-09T05:32:00Z', agentType: '横向移动分析Agent' },
-  { id: 'AI020', alertId: 'ALT050', conclusion: 'AWS IAM权限提升确认，普通用户被添加至Administrator组，可能为攻击者获取云资源控制权。与K8s RBAC异常可能关联。', riskScore: 78, riskLevel: 'high', attackChain: ['攻击者获取AWS凭证', '调用IAM API添加用户至管理员组', '获取AWS完全控制权', '可能影响云上所有资源'], recommendations: ['立即撤销异常IAM权限', '检查AWS CloudTrail日志', '启用MFA for IAM', '审查IAM策略最小权限原则', '检查是否有异常资源创建'], relatedEvents: ['ALT040'], userContext: 'AWS账号包含公司云上全部基础设施', timestamp: '2026-05-08T20:03:00Z', agentType: '云安全分析Agent' },
-  { id: 'AI021', alertId: 'ALT043', conclusion: 'GitHub Issues C2通道确认，APT攻击者利用GitHub Issues API进行命令控制和数据外传，高度隐蔽难以检测。', riskScore: 85, riskLevel: 'high', attackChain: ['攻击者创建私有GitHub仓库', '通过Issues发布编码后的命令', '受控主机读取Issues执行命令', '通过Issue评论回传数据'], recommendations: ['封禁异常GitHub仓库', '检查通信内容中的数据泄露', '加强GitHub API访问监控', '部署HTTPS深度检测'], relatedEvents: ['ALT004', 'ALT035', 'ALT051'], userContext: '利用合法服务作为C2通道是APT攻击常用手法', timestamp: '2026-05-08T23:03:00Z', agentType: 'C2分析Agent' },
+function generateTicket(index: number): ITSMTicket {
+  const pri = pick(['critical','high','medium','low'] as const)
+  const alertRef = mockAlerts.length > index ? mockAlerts[index] : pick(mockAlerts)
+  const date = randomDate(30, 0)
+  const isResolved = pri === 'low' || pri === 'medium'
+  const status = isResolved ? 'resolved' : pick(['open','in_progress','in_progress','in_progress'])
+  return {
+    id: `TK${String(index + 23).padStart(3, '0')}`,
+    title: `${pick(['调查','处置','分析','响应'])} - ${alertRef.title.slice(0, 20)}`,
+    description: `针对${pick(['安全告警','异常事件','违规行为'])}进行${pick(['深入调查','应急响应','分析研判','处置修复'])}, 告警${pick(['深入调查','应急响应','分析研判','处置修复'])}, 告警ID: ${alertRef.id}。`,
+    status: status as ITSMTicket['status'],
+    priority: pri,
+    assignee: pick(ASSIGNEES),
+    alertId: alertRef.id,
+    createdAt: formatISO(date),
+    updatedAt: formatISO(randomDate(25, 0)),
+    ...(status === 'resolved' ? { resolution: `${pick(['已完成处置','已修复漏洞','已清除恶意软件','已恢复系统'])}，建议${pick(['加强监控','定期复查','更新策略'])}` } : {}),
+  }
+}
+
+function generateTickets(count: number): ITSMTicket[] {
+  const result: ITSMTicket[] = []
+  for (let i = 0; i < count; i++) result.push(generateTicket(i))
+  return result
+}
+
+export const mockITSMTickets: ITSMTicket[] = [...staticITSMTickets, ...generateTickets(80)]
+
+/* ========= AI Analyses ========= */
+
+const staticAIAnalyses: AIAnalysis[] = [
+  { id: 'AI001', alertId: 'ALT001', conclusion: '高度确认为针对性钓鱼攻击（Spear Phishing），攻击者使用高仿域名secm1nd.com冒充内部OA系统，目标为财务部敏感岗位人员。攻击链完整，包含邮件投递→凭证窃取→VPN异常登录。', riskScore: 92, riskLevel: 'critical', attackChain: ['钓鱼邮件投递','用户点击恶意链接','输入凭证至钓鱼页面','攻击者获取VPN凭证','从异常地区登录VPN'], recommendations: ['立即隔离用户邮箱并重置密码','检查VPN登录日志确认异常访问','全网搜索同类钓鱼邮件','加强邮件安全网关规则','对财务部进行安全意识培训'], relatedEvents: ['ALT008','ALT010','ALT015','ALT022'], userContext: '李娜为财务部经理，拥有财务系统高权限账户，属于高价值目标', timestamp: '2026-05-09T08:25:30Z', agentType: '威胁分析Agent' },
+  { id: 'AI002', alertId: 'ALT002', conclusion: 'VPN网关遭受自动化暴力破解攻击，来源IP为Tor出口节点。5分钟内超过200次尝试。', riskScore: 88, riskLevel: 'critical', attackChain: ['Tor网络隐藏来源','自动化工具扫描VPN','字典攻击尝试登录','寻找弱密码账户'], recommendations: ['封禁Tor出口节点IP段','强制启用MFA验证','检查是否有账户被破解','限制VPN登录失败次数','设置账户锁定策略'], relatedEvents: ['ALT009','ALT025'], userContext: '陈刚的VPN账户为攻击目标之一', timestamp: '2026-05-09T03:18:00Z', agentType: '暴力破解分析Agent' },
+  { id: 'AI003', alertId: 'ALT003', conclusion: '不可能旅行告警确认，用户王芳2小时内从北京和莫斯科两地登录VPN，账户极大概率已被盗用。', riskScore: 85, riskLevel: 'high', attackChain: ['用户凭证泄露','攻击者从莫斯科使用窃取凭证','绕过VPN认证','访问内部系统'], recommendations: ['立即冻结王芳VPN账户','联系用户确认近期操作','检查该账户所有近期访问记录','重置所有相关密码'], relatedEvents: ['ALT022','ALT055'], userContext: '王芳为人事部HRBP，拥有员工信息访问权限', timestamp: '2026-05-09T06:48:00Z', agentType: 'VPN异常分析Agent' },
+  { id: 'AI004', alertId: 'ALT004', conclusion: '确认APT攻击，陈刚工作站感染Cobalt Strike Beacon，攻击者已建立C2通道并开始横向移动。', riskScore: 97, riskLevel: 'critical', attackChain: ['钓鱼邮件或漏洞利用初始入侵','植入Cobalt Strike Beacon','权限提升至管理员','PTH横向移动至文件服务器','DNS隧道C2通信','数据外泄至境外服务器'], recommendations: ['立即隔离受影响工作站','提取内存镜像进行取证','阻断所有C2通信','重置陈刚及关联账户密码','全面排查内网横向移动痕迹'], relatedEvents: ['ALT005','ALT006','ALT007','ALT011','ALT035','ALT041','ALT043','ALT048','ALT051'], userContext: '陈刚为研发部架构师，拥有代码仓库和内网服务器高权限', timestamp: '2026-05-08T22:12:00Z', agentType: 'APT分析Agent' },
+  { id: 'AI005', alertId: 'ALT007', conclusion: '确认大规模数据外泄事件，攻击者从代码仓库服务器向境外IP传输约2.3GB数据，泄露内容可能包含核心源代码。', riskScore: 99, riskLevel: 'critical', attackChain: ['APT攻击者获取代码仓库访问权限','打包核心源代码','通过HTTPS加密通道外传','数据传输至C2基础设施'], recommendations: ['立即阻断所有外联通信','评估泄露数据范围和影响','启动数据泄露应急响应','通知管理层和法务部门','检查代码仓库完整性'], relatedEvents: ['ALT004','ALT005','ALT041'], userContext: '代码仓库包含公司核心产品源代码', timestamp: '2026-05-09T01:22:00Z', agentType: '数据外泄分析Agent' },
+  { id: 'AI006', alertId: 'ALT010', conclusion: 'VPN异常登录确认，刘洋从尼日利亚拉各斯登录VPN，账户极大概率已被盗用。', riskScore: 82, riskLevel: 'high', attackChain: ['用户凭证泄露','攻击者从尼日利亚使用窃取凭证','凌晨时段登录降低被发现概率','访问内部系统'], recommendations: ['立即冻结刘洋VPN账户','联系用户确认','检查该账户近期所有操作','重置密码和MFA'], relatedEvents: ['ALT022','ALT001'], userContext: '刘洋为市场部总监，拥有市场策略和客户数据访问权限', timestamp: '2026-05-09T03:03:00Z', agentType: 'VPN异常分析Agent' },
+  { id: 'AI007', alertId: 'ALT015', conclusion: 'BEC攻击确认，攻击者冒充CEO黄强要求财务部紧急转账，为典型BEC攻击手法。', riskScore: 91, riskLevel: 'critical', attackChain: ['注册高仿域名secm1nd.com','冒充CEO发送紧急转账邮件','利用权威压力迫使财务人员执行','资金转移至攻击者账户'], recommendations: ['立即通知财务部停止任何转账操作','确认CEO未发送此邮件','封禁高仿域名邮件','加强财务转账审批流程'], relatedEvents: ['ALT001','ALT008'], userContext: '李娜为财务经理，拥有资金转账审批权限', timestamp: '2026-05-09T07:32:00Z', agentType: '钓鱼分析Agent' },
+  { id: 'AI008', alertId: 'ALT019', conclusion: '勒索病毒WannaCry变种确认，正在通过网络共享加密文件。EDR已自动隔离。', riskScore: 98, riskLevel: 'critical', attackChain: ['攻击者通过恶意脚本植入勒索病毒','利用SMB漏洞在内网传播','加密网络共享文件','显示勒索信息要求支付赎金'], recommendations: ['确认EDR隔离生效','全网扫描WannaCry变种特征','检查SMB端口445是否暴露','确保系统补丁已更新'], relatedEvents: ['ALT020','ALT021','ALT023'], userContext: '运维部工作站拥有内网服务器管理权限', timestamp: '2026-05-09T05:12:00Z', agentType: '恶意软件分析Agent' },
+  { id: 'AI009', alertId: 'ALT014', conclusion: 'Emotet木马确认，通过钓鱼邮件中的恶意链接下载安装。已建立C2通信。', riskScore: 83, riskLevel: 'high', attackChain: ['用户点击钓鱼邮件中的恶意链接','下载并安装Emotet木马','建立C2通信','键盘记录窃取凭证','通过PsExec横向移动'], recommendations: ['隔离受感染工作站','清除Emotet木马','重置用户凭证','检查PsExec横向移动范围','封禁C2服务器IP'], relatedEvents: ['ALT028','ALT033'], userContext: '施蕾为人事部培训专员', timestamp: '2026-05-08T16:42:00Z', agentType: '恶意软件分析Agent' },
+  { id: 'AI010', alertId: 'ALT006', conclusion: 'Pass-the-Hash横向移动确认，攻击者从陈刚工作站使用NTLM哈希认证访问文件服务器和代码仓库。', riskScore: 96, riskLevel: 'critical', attackChain: ['获取陈刚工作站NTLM哈希','使用PTH技术绕过认证','访问文件服务器获取敏感文档','访问代码仓库获取源代码'], recommendations: ['重置所有相关账户密码','启用Kerberos认证替代NTLM','检查代码仓库是否被篡改','审查文件服务器访问日志'], relatedEvents: ['ALT004','ALT005','ALT007','ALT011'], userContext: '文件服务器和代码仓库包含公司核心资产', timestamp: '2026-05-08T23:32:00Z', agentType: '横向移动分析Agent' },
+  { id: 'AI011', alertId: 'ALT017', conclusion: '离职员工VPN访问确认，高远离职后仍可成功登录VPN，说明离职流程中账号停用环节存在疏漏。', riskScore: 79, riskLevel: 'high', attackChain: ['员工离职但VPN账号未停用','离职员工使用原凭证登录','访问内部代码仓库等资源'], recommendations: ['立即停用高远VPN账号','审查离职流程中的账号管理环节','检查高远近期访问记录','评估是否有数据泄露'], relatedEvents: [], userContext: '高远为原运维部系统工程师', timestamp: '2026-05-08T20:03:00Z', agentType: 'VPN异常分析Agent' },
+  { id: 'AI012', alertId: 'ALT012', conclusion: '恶意Excel附件确认，包含VBA宏代码，执行后将下载第二阶段payload。', riskScore: 80, riskLevel: 'high', attackChain: ['用户打开恶意Excel附件','启用宏代码执行','下载第二阶段payload','植入远控木马或勒索病毒'], recommendations: ['隔离邮件','检查收件人是否已打开附件','如已打开则隔离工作站','封禁payload下载地址'], relatedEvents: [], userContext: '朱婷为财务部出纳，处理大量发票', timestamp: '2026-05-08T10:32:00Z', agentType: '钓鱼分析Agent' },
+  { id: 'AI013', alertId: 'ALT021', conclusion: '异常sudo操作确认，运维工程师在凌晨执行了下载并执行远程脚本的命令。', riskScore: 81, riskLevel: 'high', attackChain: ['攻击者获取SSH凭证','凌晨登录工作站','使用sudo权限下载恶意脚本','执行脚本安装勒索病毒'], recommendations: ['检查账户是否被盗用','审查sudo操作日志','限制sudo权限使用','加强SSH认证安全'], relatedEvents: ['ALT019','ALT020'], userContext: '吕峰为运维部网络工程师，拥有服务器sudo权限', timestamp: '2026-05-09T04:52:00Z', agentType: '权限分析Agent' },
+  { id: 'AI014', alertId: 'ALT029', conclusion: '数据库异常权限授予确认，操作来源IP非DBA常用终端，可能为凭证被盗用后的恶意操作。', riskScore: 76, riskLevel: 'high', attackChain: ['攻击者获取DBA凭证','从非授权终端登录数据库','授予普通账户管理员权限','利用高权限账户访问敏感数据'], recommendations: ['立即撤销异常授权','联系蒋华确认操作','检查数据库访问日志','加强数据库登录IP白名单'], relatedEvents: [], userContext: '蒋华为运维部DBA，拥有数据库最高权限', timestamp: '2026-05-08T23:03:00Z', agentType: '权限分析Agent' },
+  { id: 'AI015', alertId: 'ALT040', conclusion: 'Kubernetes RBAC异常确认，普通ServiceAccount被绑定至cluster-admin角色。', riskScore: 77, riskLevel: 'high', attackChain: ['攻击者获取K8s API访问权限','创建ClusterRoleBinding','将ServiceAccount提升至cluster-admin','获取集群完全控制权'], recommendations: ['立即撤销异常ClusterRoleBinding','审查所有RBAC配置','启用K8s审计日志','限制API Server访问'], relatedEvents: ['ALT050'], userContext: 'K8s集群运行公司核心微服务', timestamp: '2026-05-08T19:03:00Z', agentType: '权限分析Agent' },
+  { id: 'AI016', alertId: 'ALT046', conclusion: 'ChinaChopper WebShell确认，攻击者通过文件上传漏洞植入，可远程执行命令。', riskScore: 80, riskLevel: 'high', attackChain: ['利用文件上传漏洞','上传ChinaChopper WebShell','通过WebShell远程执行命令','获取服务器控制权'], recommendations: ['删除WebShell文件','修复文件上传漏洞','检查服务器是否被植入后门','审查Web服务器访问日志'], relatedEvents: [], userContext: 'Web服务器为公司对外博客服务器', timestamp: '2026-05-07T18:03:00Z', agentType: '恶意软件分析Agent' },
+  { id: 'AI017', alertId: 'ALT054', conclusion: 'npm供应链攻击确认，恶意包lodash-utils包含凭证窃取代码，已影响5台开发机。', riskScore: 79, riskLevel: 'high', attackChain: ['攻击者发布恶意npm包','开发人员安装恶意包','包内代码窃取开发凭证','攻击者使用窃取凭证访问代码仓库'], recommendations: ['立即卸载恶意包','重置所有开发凭证','审查npm包安装策略','启用npm包安全审计'], relatedEvents: [], userContext: '受影响开发机包含多个项目源代码访问权限', timestamp: '2026-05-08T09:03:00Z', agentType: '供应链分析Agent' },
+  { id: 'AI018', alertId: 'ALT038', conclusion: 'NJRat远控木马确认，攻击者可远程控制桌面。通过U盘传播。', riskScore: 82, riskLevel: 'high', attackChain: ['U盘传播NJRat木马','建立C2通信','远程控制桌面','键盘记录窃取凭证','通过DNS隧道外传数据'], recommendations: ['隔离受感染主机','清除NJRat木马','检查USB传播范围','封禁C2服务器','加强USB设备管控'], relatedEvents: ['ALT042'], userContext: '罗薇为产品部数据分析师', timestamp: '2026-05-08T11:03:00Z', agentType: '恶意软件分析Agent' },
+  { id: 'AI019', alertId: 'ALT023', conclusion: 'WMI横向移动确认，攻击者从运维部工作站通过WMI远程执行PowerShell命令至5台服务器。', riskScore: 89, riskLevel: 'high', attackChain: ['勒索病毒获取运维工作站控制权','通过WMI远程执行PowerShell','在目标服务器下载执行勒索病毒','加密服务器文件'], recommendations: ['隔离所有受影响服务器','阻断WMI通信','检查服务器感染状态','准备备份恢复方案'], relatedEvents: ['ALT019','ALT020','ALT021'], userContext: '受影响服务器包含业务关键数据', timestamp: '2026-05-09T05:32:00Z', agentType: '横向移动分析Agent' },
+  { id: 'AI020', alertId: 'ALT050', conclusion: 'AWS IAM权限提升确认，普通用户被添加至Administrator组。', riskScore: 78, riskLevel: 'high', attackChain: ['攻击者获取AWS凭证','调用IAM API添加用户至管理员组','获取AWS完全控制权','可能影响云上所有资源'], recommendations: ['立即撤销异常IAM权限','检查AWS CloudTrail日志','启用MFA for IAM','审查IAM策略最小权限原则'], relatedEvents: ['ALT040'], userContext: 'AWS账号包含公司云上全部基础设施', timestamp: '2026-05-08T20:03:00Z', agentType: '云安全分析Agent' },
+  { id: 'AI021', alertId: 'ALT043', conclusion: 'GitHub Issues C2通道确认，APT攻击者利用GitHub Issues API进行命令控制和数据外传。', riskScore: 85, riskLevel: 'high', attackChain: ['攻击者创建私有GitHub仓库','通过Issues发布编码后的命令','受控主机读取Issues执行命令','通过Issue评论回传数据'], recommendations: ['封禁异常GitHub仓库','检查通信内容中的数据泄露','加强GitHub API访问监控','部署HTTPS深度检测'], relatedEvents: ['ALT004','ALT035','ALT051'], userContext: '利用合法服务作为C2通道是APT攻击常用手法', timestamp: '2026-05-08T23:03:00Z', agentType: 'C2分析Agent' },
 ]
 
-export const mockVPNSessions: VPNSession[] = [
-  { id: 'VPN001', userId: 'U003', userName: '王芳', sourceIp: '91.234.56.78', destinationIp: '10.0.0.1', location: '莫斯科', country: '俄罗斯', connectTime: '2026-05-09T06:45:00Z', disconnectTime: '2026-05-09T08:30:00Z', duration: 6300, dataTransferred: 150, isAnomaly: true, anomalyReason: '不可能旅行：2小时内从北京到莫斯科' },
-  { id: 'VPN002', userId: 'U003', userName: '王芳', sourceIp: '10.0.5.20', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T04:30:00Z', disconnectTime: '2026-05-09T06:00:00Z', duration: 5400, dataTransferred: 80, isAnomaly: false },
-  { id: 'VPN003', userId: 'U005', userName: '刘洋', sourceIp: '41.58.67.89', destinationIp: '10.0.0.1', location: '拉各斯', country: '尼日利亚', connectTime: '2026-05-09T03:00:00Z', disconnectTime: '2026-05-09T05:30:00Z', duration: 9000, dataTransferred: 200, isAnomaly: true, anomalyReason: '异常地区登录：尼日利亚，用户常驻广州' },
-  { id: 'VPN004', userId: 'U005', userName: '刘洋', sourceIp: '58.216.33.20', destinationIp: '10.0.0.1', location: '广州', country: '中国', connectTime: '2026-05-08T09:00:00Z', disconnectTime: '2026-05-08T18:00:00Z', duration: 32400, dataTransferred: 500, isAnomaly: false },
-  { id: 'VPN005', userId: 'U004', userName: '陈刚', sourceIp: '10.0.2.100', destinationIp: '10.0.0.1', location: '深圳', country: '中国', connectTime: '2026-05-08T09:00:00Z', disconnectTime: '2026-05-08T18:30:00Z', duration: 34200, dataTransferred: 1200, isAnomaly: false },
-  { id: 'VPN006', userId: 'U001', userName: '张伟', sourceIp: '123.120.88.10', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T08:30:00Z', disconnectTime: undefined, duration: 5400, dataTransferred: 300, isAnomaly: false },
-  { id: 'VPN007', userId: 'U001', userName: '张伟', sourceIp: '58.216.33.30', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-09T09:00:00Z', disconnectTime: undefined, duration: 3600, dataTransferred: 150, isAnomaly: true, anomalyReason: '多设备同时在线：北京、上海、深圳三地' },
-  { id: 'VPN008', userId: 'U001', userName: '张伟', sourceIp: '14.23.67.89', destinationIp: '10.0.0.1', location: '深圳', country: '中国', connectTime: '2026-05-09T09:15:00Z', disconnectTime: undefined, duration: 2700, dataTransferred: 100, isAnomaly: false },
-  { id: 'VPN009', userId: 'U033', userName: '高远', sourceIp: '114.88.23.45', destinationIp: '10.0.0.1', location: '杭州', country: '中国', connectTime: '2026-05-08T20:00:00Z', disconnectTime: '2026-05-08T22:30:00Z', duration: 9000, dataTransferred: 800, isAnomaly: true, anomalyReason: '已离职员工登录，账号应已停用' },
-  { id: 'VPN010', userId: 'U011', userName: '冯涛', sourceIp: '10.0.2.60', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-07T09:00:00Z', disconnectTime: '2026-05-09T09:00:00Z', duration: 172800, dataTransferred: 15000, isAnomaly: true, anomalyReason: 'VPN连接持续超过48小时未断开' },
-  { id: 'VPN011', userId: 'U002', userName: '李娜', sourceIp: '58.216.33.40', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-09T08:00:00Z', disconnectTime: undefined, duration: 7200, dataTransferred: 400, isAnomaly: false },
-  { id: 'VPN012', userId: 'U008', userName: '周静', sourceIp: '58.216.33.50', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-07T15:00:00Z', disconnectTime: '2026-05-07T18:00:00Z', duration: 10800, dataTransferred: 200, isAnomaly: false },
-  { id: 'VPN013', userId: 'U008', userName: '周静', sourceIp: '58.216.33.50', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-07T16:00:00Z', disconnectTime: '2026-05-07T16:30:00Z', duration: 1800, dataTransferred: 30, isAnomaly: true, anomalyReason: '30分钟内断连重连超过10次' },
-  { id: 'VPN014', userId: 'U014', userName: '蒋华', sourceIp: '115.238.12.34', destinationIp: '10.0.0.1', location: '杭州', country: '中国', connectTime: '2026-05-09T07:00:00Z', disconnectTime: undefined, duration: 10800, dataTransferred: 600, isAnomaly: false },
-  { id: 'VPN015', userId: 'U017', userName: '杨帆', sourceIp: '123.120.88.20', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T08:30:00Z', disconnectTime: undefined, duration: 5400, dataTransferred: 350, isAnomaly: false },
-  { id: 'VPN016', userId: 'U035', userName: '谢勇', sourceIp: '123.120.88.45', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-08T02:00:00Z', disconnectTime: '2026-05-08T04:00:00Z', duration: 7200, dataTransferred: 180, isAnomaly: true, anomalyReason: '非常规时间登录：凌晨2点，无加班申请' },
-  { id: 'VPN017', userId: 'U009', userName: '吴强', sourceIp: '14.23.67.90', destinationIp: '10.0.0.1', location: '深圳', country: '中国', connectTime: '2026-05-09T09:00:00Z', disconnectTime: undefined, duration: 3600, dataTransferred: 120, isAnomaly: false },
-  { id: 'VPN018', userId: 'U024', userName: '钱进', sourceIp: '123.120.88.30', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T07:30:00Z', disconnectTime: undefined, duration: 9000, dataTransferred: 500, isAnomaly: false },
-  { id: 'VPN019', userId: 'U025', userName: '吴涛', sourceIp: '115.238.12.45', destinationIp: '10.0.0.1', location: '杭州', country: '中国', connectTime: '2026-05-09T08:00:00Z', disconnectTime: undefined, duration: 7200, dataTransferred: 400, isAnomaly: false },
-  { id: 'VPN020', userId: 'U023', userName: '张磊', sourceIp: '14.23.67.100', destinationIp: '10.0.0.1', location: '深圳', country: '中国', connectTime: '2026-05-09T09:30:00Z', disconnectTime: undefined, duration: 1800, dataTransferred: 80, isAnomaly: false },
-  { id: 'VPN021', userId: 'U030', userName: '林峰', sourceIp: '14.23.67.110', destinationIp: '10.0.0.1', location: '深圳', country: '中国', connectTime: '2026-05-09T08:45:00Z', disconnectTime: undefined, duration: 4500, dataTransferred: 250, isAnomaly: false },
-  { id: 'VPN022', userId: 'U021', userName: '吕峰', sourceIp: '115.238.12.56', destinationIp: '10.0.0.1', location: '杭州', country: '中国', connectTime: '2026-05-08T09:00:00Z', disconnectTime: '2026-05-08T18:00:00Z', duration: 32400, dataTransferred: 800, isAnomaly: false },
-  { id: 'VPN023', userId: 'U015', userName: '沈雪', sourceIp: '58.216.33.60', destinationIp: '10.0.0.1', location: '广州', country: '中国', connectTime: '2026-05-09T08:30:00Z', disconnectTime: undefined, duration: 5400, dataTransferred: 180, isAnomaly: false },
-  { id: 'VPN024', userId: 'U031', userName: '何欣', sourceIp: '58.216.33.70', destinationIp: '10.0.0.1', location: '广州', country: '中国', connectTime: '2026-05-09T09:00:00Z', disconnectTime: undefined, duration: 3600, dataTransferred: 120, isAnomaly: false },
-  { id: 'VPN025', userId: 'U032', userName: '马骏', sourceIp: '123.120.88.40', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T07:00:00Z', disconnectTime: undefined, duration: 10800, dataTransferred: 300, isAnomaly: false },
-  { id: 'VPN026', userId: 'U019', userName: '秦明', sourceIp: '123.120.88.50', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T08:00:00Z', disconnectTime: undefined, duration: 7200, dataTransferred: 250, isAnomaly: false },
-  { id: 'VPN027', userId: 'U013', userName: '卫东', sourceIp: '123.120.88.60', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-09T07:30:00Z', disconnectTime: undefined, duration: 9000, dataTransferred: 350, isAnomaly: false },
-  { id: 'VPN028', userId: 'U003', userName: '王芳', sourceIp: '45.77.123.45', destinationIp: '10.0.0.1', location: '未知', country: '未知', connectTime: '2026-05-09T07:00:00Z', disconnectTime: '2026-05-09T07:30:00Z', duration: 1800, dataTransferred: 50, isAnomaly: true, anomalyReason: 'VPN连接经过多层代理，疑似隐藏真实位置' },
-  { id: 'VPN029', userId: 'U020', userName: '许佳', sourceIp: '58.216.33.80', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-09T09:00:00Z', disconnectTime: undefined, duration: 3600, dataTransferred: 150, isAnomaly: false },
-  { id: 'VPN030', userId: 'U034', userName: '罗薇', sourceIp: '58.216.33.90', destinationIp: '10.0.0.1', location: '上海', country: '中国', connectTime: '2026-05-09T08:30:00Z', disconnectTime: undefined, duration: 5400, dataTransferred: 200, isAnomaly: false },
-  { id: 'VPN031', userId: 'U007', userName: '孙浩', sourceIp: '115.238.12.67', destinationIp: '10.0.0.1', location: '杭州', country: '中国', connectTime: '2026-05-05T09:00:00Z', disconnectTime: '2026-05-05T18:00:00Z', duration: 32400, dataTransferred: 400, isAnomaly: false },
-  { id: 'VPN032', userId: 'U022', userName: '施蕾', sourceIp: '123.120.88.70', destinationIp: '10.0.0.1', location: '北京', country: '中国', connectTime: '2026-05-08T08:30:00Z', disconnectTime: '2026-05-08T17:30:00Z', duration: 32400, dataTransferred: 350, isAnomaly: false },
+/* ========= Generated AI Analyses ========= */
+
+function generateAIAnalysis(index: number, alert: Alert): AIAnalysis {
+  const aiAgent = pick(AI_AGENTS)
+  const score = alert.aiScore || randInt(30, 99)
+  const riskLevel = score >= 85 ? 'critical' : score >= 65 ? 'high' : score >= 40 ? 'medium' : 'low'
+  const conclusions = [
+    `${pick(['确认','高度疑似','疑似','可能为'])}${alert.title}，风险评分${score}。`,
+    `${pick(['AI分析确认','关联分析发现','行为分析表明'])}${alert.title}，建议${pick(['立即处置','持续监控','升级处理'])}。`,
+    `${pick(['自动化分析完成','关联分析完成','行为基线分析完成'])}，${pick(['确认告警有效','告警需人工确认','可能为误报'])}。`,
+  ]
+  const chainActions: Record<string, string[]> = {
+    phishing: ['钓鱼邮件投递','用户交互','凭证窃取','横向移动'],
+    brute_force: ['扫描探测','字典攻击','撞库尝试','账户失陷'],
+    vpn_anomaly: ['凭证泄露','异地登录','异常访问','横向移动'],
+    malware: ['初始植入','C2通信','权限提升','权限提升','横向扩散'],
+    c2_communication: ['C2通信建立','Beacon心跳','指令执行','数据回传'],
+    lateral_movement: ['凭证窃取','PTH认证','远程执行','权限维持'],
+    data_exfiltration: ['数据收集','压缩打包','加密传输','外泄至C2'],
+    privilege_escalation: ['漏洞探测','漏洞利用','权限获取','权限维持'],
+  }
+  const attackChain = (chainActions[alert.type] || ['初始入侵','横向移动','数据窃取']).map(s => `${pick(['疑似','可能','确认'])}${s}`)
+  const recommendations = [
+    pick(['立即隔离受影响资产','封锁来源IP','重置相关账户凭证','启用应急响应流程']),
+    pick(['加强监控规则','更新安全策略','升级防护措施','通知相关责任人']),
+    pick(['联系用户确认','审查访问日志','执行安全扫描','评估影响范围']),
+  ]
+  return {
+    id: `AI${String(index + 22).padStart(3, '0')}`,
+    alertId: alert.id,
+    conclusion: pick(conclusions),
+    riskScore: score,
+    riskLevel: riskLevel as 'critical' | 'high' | 'medium' | 'low',
+    attackChain,
+    recommendations,
+    relatedEvents: alert.relatedAlerts || [],
+    userContext: `${alert.userName}为${pick(DEPARTMENTS)}${pick(['员工','经理','工程师','管理员'])}, ${pick(['拥有高权限访问','负责核心业务','日常操作用户'])}`,
+    timestamp: alert.timestamp,
+    agentType: aiAgent,
+  }
+}
+
+function generateAIAnalyses(alerts: Alert[], count: number): AIAnalysis[] {
+  const result: AIAnalysis[] = []
+  const shuffled = [...alerts].sort(() => Math.random() - 0.5)
+  for (let i = 0; i < count && i < shuffled.length; i++) {
+    result.push(generateAIAnalysis(i, shuffled[i]))
+  }
+  return result
+}
+
+export const mockAIAnalyses: AIAnalysis[] = [...staticAIAnalyses, ...generateAIAnalyses(mockAlerts, 180)]
+
+/* ========= VPN Sessions ========= */
+
+const staticVPNSessions: VPNSession[] = [
+  { id: 'VPN001', userName: '张伟', userId: 'U001', country: '中国', sourceIp: '223.104.18.42', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T08:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 11 - Chrome' },
+  { id: 'VPN002', userName: '李娜', userId: 'U002', country: '中国', sourceIp: '114.92.45.78', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-18T08:45:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Pro - Safari' },
+  { id: 'VPN003', userName: '王芳', userId: 'U003', country: '中国', sourceIp: '61.148.203.35', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T09:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'iPhone - Safari' },
+  { id: 'VPN004', userName: '陈刚', userId: 'U004', country: '中国', sourceIp: '218.75.100.50', destinationIp: '10.0.0.1', location: '杭州', connectTime: '2026-05-18T08:15:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Pro - Chrome' },
+  { id: 'VPN005', userName: '刘洋', userId: 'U005', country: '中国', sourceIp: '183.6.112.88', destinationIp: '10.0.0.1', location: '广州', connectTime: '2026-05-17T22:00:00Z', disconnectTime: '2026-05-18T07:30:00Z', duration: 570, dataTransferred: 2147483648, isAnomaly: false, status: 'completed', deviceType: 'Windows 10 - Chrome' },
+  { id: 'VPN006', userName: '赵敏', userId: 'U006', country: '中国', sourceIp: '202.96.128.66', destinationIp: '10.0.0.1', location: '深圳', connectTime: '2026-05-18T07:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 11 - Chrome' },
+  { id: 'VPN007', userName: '孙浩', userId: 'U007', country: '中国', sourceIp: '210.22.88.99', destinationIp: '10.0.0.1', location: '成都', connectTime: '2026-05-18T06:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Linux - Firefox' },
+  { id: 'VPN008', userName: '周静', userId: 'U008', country: '中国', sourceIp: '180.168.45.67', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-17T18:30:00Z', disconnectTime: '2026-05-18T01:00:00Z', duration: 390, dataTransferred: 1073741824, isAnomaly: false, status: 'completed', deviceType: 'iPhone - Safari' },
+  { id: 'VPN009', userName: '吴强', userId: 'U009', country: '中国', sourceIp: '115.210.55.33', destinationIp: '10.0.0.1', location: '南京', connectTime: '2026-05-18T09:15:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 11 - Edge' },
+  { id: 'VPN010', userName: '郑丽', userId: 'U010', country: '中国', sourceIp: '101.231.78.44', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-18T08:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Air - Safari' },
+  { id: 'VPN011', userName: '冯涛', userId: 'U011', country: '中国', sourceIp: '125.120.200.88', destinationIp: '10.0.0.1', location: '杭州', connectTime: '2026-05-17T20:00:00Z', disconnectTime: '2026-05-18T08:00:00Z', duration: 720, dataTransferred: 5368709120, isAnomaly: false, status: 'completed', deviceType: 'Windows 10 - Chrome' },
+  { id: 'VPN012', userName: '褚琳', userId: 'U012', country: '中国', sourceIp: '60.12.34.56', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T08:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Android - Chrome' },
+  { id: 'VPN013', userName: '卫东', userId: 'U013', country: '中国', sourceIp: '113.87.65.43', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T07:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Pro - Chrome' },
+  { id: 'VPN014', userName: '蒋华', userId: 'U014', country: '中国', sourceIp: '122.224.100.22', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-18T09:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows Server 2022 - RDP' },
+  { id: 'VPN015', userName: '沈雪', userId: 'U015', country: '中国', sourceIp: '36.110.88.77', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-17T14:00:00Z', disconnectTime: '2026-05-17T18:30:00Z', duration: 270, dataTransferred: 536870912, isAnomaly: false, status: 'completed', deviceType: 'iPhone - Safari' },
+  { id: 'VPN016', userName: '韩超', userId: 'U016', country: '中国', sourceIp: '211.102.45.66', destinationIp: '10.0.0.1', location: '深圳', connectTime: '2026-05-18T09:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Pro - Safari' },
+  { id: 'VPN017', userName: '杨帆', userId: 'U017', country: '中国', sourceIp: '222.73.55.88', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-18T08:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 11 - Chrome' },
+  { id: 'VPN018', userName: '朱婷', userId: 'U018', country: '中国', sourceIp: '116.228.77.99', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-17T19:00:00Z', disconnectTime: '2026-05-17T23:00:00Z', duration: 240, dataTransferred: 268435456, isAnomaly: false, status: 'completed', deviceType: 'Android - Chrome' },
+  { id: 'VPN019', userName: '秦明', userId: 'U019', country: '中国', sourceIp: '124.160.88.11', destinationIp: '10.0.0.1', location: '杭州', connectTime: '2026-05-18T06:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 10 - Edge' },
+  { id: 'VPN020', userName: '许佳', userId: 'U020', country: '中国', sourceIp: '218.242.33.44', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T09:15:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Air - Safari' },
+  { id: 'VPN021', userName: '吕峰', userId: 'U021', country: '中国', sourceIp: '61.152.100.55', destinationIp: '10.0.0.1', location: '上海', connectTime: '2026-05-18T07:00:00Z', disconnectTime: '2026-05-18T09:00:00Z', duration: 120, dataTransferred: 2147483648, isAnomaly: false, status: 'completed', deviceType: 'Windows 11 - Chrome' },
+  { id: 'VPN022', userName: '施蕾', userId: 'U022', country: '中国', sourceIp: '58.34.66.77', destinationIp: '10.0.0.1', location: '成都', connectTime: '2026-05-18T08:45:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'iPhone - Safari' },
+  { id: 'VPN023', userName: '张磊', userId: 'U023', country: '中国', sourceIp: '101.81.44.22', destinationIp: '10.0.0.1', location: '苏州', connectTime: '2026-05-17T21:00:00Z', disconnectTime: '2026-05-18T05:00:00Z', duration: 480, dataTransferred: 4294967296, isAnomaly: false, status: 'completed', deviceType: 'MacBook Pro - Chrome' },
+  { id: 'VPN024', userName: '钱进', userId: 'U024', country: '中国', sourceIp: '123.125.33.66', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T08:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Linux - Firefox' },
+  { id: 'VPN025', userName: '吴涛', userId: 'U025', country: '中国', sourceIp: '220.181.55.88', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T05:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 10 - Chrome' },
+  { id: 'VPN026', userName: '黄强', userId: 'U026', country: '中国', sourceIp: '124.127.88.99', destinationIp: '10.0.0.1', location: '深圳', connectTime: '2026-05-17T10:00:00Z', disconnectTime: '2026-05-17T19:00:00Z', duration: 540, dataTransferred: 1073741824, isAnomaly: false, status: 'completed', deviceType: 'iPhone - Safari' },
+  { id: 'VPN027', userName: '赵磊', userId: 'U027', country: '中国', sourceIp: '221.219.44.55', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T09:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 11 - Edge' },
+  { id: 'VPN028', userName: '孙丽', userId: 'U028', country: '中国', sourceIp: '114.243.66.77', destinationIp: '10.0.0.1', location: '重庆', connectTime: '2026-05-18T08:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Air - Safari' },
+  { id: 'VPN029', userName: '周敏', userId: 'U029', country: '中国', sourceIp: '61.135.88.11', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-17T16:00:00Z', disconnectTime: '2026-05-17T20:00:00Z', duration: 240, dataTransferred: 134217728, isAnomaly: false, status: 'completed', deviceType: 'Android - Chrome' },
+  { id: 'VPN030', userName: '林峰', userId: 'U030', country: '中国', sourceIp: '218.108.55.66', destinationIp: '10.0.0.1', location: '杭州', connectTime: '2026-05-18T07:45:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'MacBook Pro - Chrome' },
+  { id: 'VPN031', userName: '何欣', userId: 'U031', country: '中国', sourceIp: '124.42.33.44', destinationIp: '10.0.0.1', location: '广州', connectTime: '2026-05-18T09:30:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'iPhone - Safari' },
+  { id: 'VPN032', userName: '马骏', userId: 'U032', country: '中国', sourceIp: '222.35.77.88', destinationIp: '10.0.0.1', location: '北京', connectTime: '2026-05-18T06:00:00Z', disconnectTime: '', duration: 0, dataTransferred: 0, isAnomaly: false, status: 'active', deviceType: 'Windows 10 - Chrome' },
 ]
 
-export const mockEmailLogs: EmailLog[] = [
-  { id: 'EML001', sender: 'it-support@secm1nd.com', recipient: 'lina@secmind.com', subject: 'OA系统升级通知 - 请立即验证账户', timestamp: '2026-05-09T08:23:00Z', hasAttachment: false, urls: ['https://secm1nd.com/verify'], isPhishing: true, phishingIndicators: ['高仿域名secm1nd.com', '紧急语气要求验证', '链接指向境外IP'], spamScore: 95 },
-  { id: 'EML002', sender: 'huang.qiang@secm1nd.com', recipient: 'lina@secmind.com', subject: '紧急转账 - 保密处理', timestamp: '2026-05-09T07:30:00Z', hasAttachment: false, urls: [], isPhishing: true, phishingIndicators: ['高仿域名冒充CEO', '要求紧急转账', '要求保密处理', 'BEC攻击特征'], spamScore: 92 },
-  { id: 'EML003', sender: 'hr@secm1nd.com', recipient: 'liuyang@secmind.com', subject: '2026年度体检福利登记', timestamp: '2026-05-07T09:00:00Z', hasAttachment: false, urls: ['https://secm1nd.com/benefits'], isPhishing: true, phishingIndicators: ['高仿域名secm1nd.com', '诱导填写个人信息', '仿冒HR部门'], spamScore: 88 },
-  { id: 'EML004', sender: 'invoice@suppl1er.com', recipient: 'zhuting@secmind.com', subject: '5月发票 - 请查收', timestamp: '2026-05-08T10:30:00Z', hasAttachment: true, attachmentName: '发票_202605.xlsx', urls: [], isPhishing: true, phishingIndicators: ['高仿域名suppl1er.com', '恶意Excel宏代码', '附件包含VBA脚本'], spamScore: 90 },
-  { id: 'EML005', sender: 'it-support@secm1nd.com', recipient: 'zhengli@secmind.com', subject: '密码重置通知 - 立即操作', timestamp: '2026-05-09T09:15:00Z', hasAttachment: false, urls: ['https://secm1nd.com/reset-password'], isPhishing: true, phishingIndicators: ['高仿域名secm1nd.com', '冒充IT部门', '诱导重置密码'], spamScore: 85 },
-  { id: 'EML006', sender: 'noreply@sf-express.com.cn', recipient: 'shenxue@secmind.com', subject: '您有快递待取 - SF1234567890', timestamp: '2026-05-07T14:00:00Z', hasAttachment: false, urls: ['https://sf-express.com.cn/track'], isPhishing: false, spamScore: 15 },
-  { id: 'EML007', sender: 'tax@gov-cn.com', recipient: 'xujia@secmind.com', subject: '电子发票查询通知', timestamp: '2026-05-06T10:00:00Z', hasAttachment: true, attachmentName: '电子发票.html', urls: [], isPhishing: true, phishingIndicators: ['伪造税务局域名', 'HTML附件为钓鱼页面', '双扩展名欺骗'], spamScore: 82 },
-  { id: 'EML008', sender: 'finance@suppl1er.com', recipient: 'zhuting@secmind.com', subject: '供应商对账单 - 5月', timestamp: '2026-05-09T10:00:00Z', hasAttachment: true, attachmentName: '对账单_0509.pdf.exe', urls: [], isPhishing: true, phishingIndicators: ['高仿域名suppl1er.com', '双扩展名伪装PDF', '实际为可执行文件'], spamScore: 87 },
-  { id: 'EML009', sender: 'service@icbc-secure.com', recipient: 'hexin@secmind.com', subject: '账户异常通知 - 请立即验证', timestamp: '2026-05-06T15:00:00Z', hasAttachment: false, urls: ['https://icbc-secure.com/verify'], isPhishing: true, phishingIndicators: ['伪造银行域名', '诱导输入银行卡信息', '仿冒工商银行'], spamScore: 80 },
-  { id: 'EML010', sender: 'zhangwei@secmind.com', recipient: 'fengtao@secmind.com', subject: '代码评审 - PR #1234', timestamp: '2026-05-09T09:30:00Z', hasAttachment: false, urls: ['https://gitlab.secmind.com/pr/1234'], isPhishing: false, spamScore: 5 },
-  { id: 'EML011', sender: 'chengang@secmind.com', recipient: 'wuqiang@secmind.com', subject: '技术方案评审通知', timestamp: '2026-05-09T08:00:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 3 },
-  { id: 'EML012', sender: 'zhengli@secmind.com', recipient: 'zhengli88@163.com', subject: 'Q1财务报表', timestamp: '2026-05-08T17:30:00Z', hasAttachment: true, attachmentName: 'Q1报表_加密.zip', urls: [], isPhishing: false, spamScore: 45 },
-  { id: 'EML013', sender: 'noreply@secmind.com', recipient: 'all@secmind.com', subject: '2026年五一假期安排通知', timestamp: '2026-05-06T09:00:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML014', sender: 'noreply@confluence.com', recipient: 'zhaomin@secmind.com', subject: '安全策略文档已更新', timestamp: '2026-05-08T14:00:00Z', hasAttachment: false, urls: ['https://confluence.secmind.com/security-policy'], isPhishing: false, spamScore: 3 },
-  { id: 'EML015', sender: 'hr@secm1nd.com', recipient: 'wangfang@secmind.com', subject: '员工信息更新确认', timestamp: '2026-05-07T10:00:00Z', hasAttachment: false, urls: ['https://secm1nd.com/hr/update'], isPhishing: true, phishingIndicators: ['高仿域名secm1nd.com', '诱导输入员工信息', '仿冒HR系统'], spamScore: 86 },
-  { id: 'EML016', sender: 'support@microsoft-verify.com', recipient: 'fengtao@secmind.com', subject: 'Office 365许可证验证', timestamp: '2026-05-07T11:00:00Z', hasAttachment: false, urls: ['https://microsoft-verify.com/login'], isPhishing: true, phishingIndicators: ['伪造微软域名', '诱导输入Office凭证', '仿冒许可证验证'], spamScore: 78 },
-  { id: 'EML017', sender: 'qianjin@secmind.com', recipient: 'weidong@secmind.com', subject: '安全事件周报 - 第19周', timestamp: '2026-05-09T08:00:00Z', hasAttachment: true, attachmentName: '安全周报_W19.pdf', urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML018', sender: 'admin@aws-alert.com', recipient: 'yangfan@secmind.com', subject: 'AWS账单异常通知', timestamp: '2026-05-08T20:00:00Z', hasAttachment: false, urls: ['https://aws-alert.com/billing'], isPhishing: true, phishingIndicators: ['伪造AWS域名', '诱导输入AWS凭证', '仿冒账单告警'], spamScore: 75 },
-  { id: 'EML019', sender: 'wutao@secmind.com', recipient: 'lvfeng@secmind.com', subject: '服务器维护通知 - 5月10日', timestamp: '2026-05-09T07:00:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 3 },
-  { id: 'EML020', sender: 'noreply@jira.com', recipient: 'yangfan@secmind.com', subject: '[SEC-1234] K8s RBAC异常告警', timestamp: '2026-05-08T19:05:00Z', hasAttachment: false, urls: ['https://jira.secmind.com/browse/SEC-1234'], isPhishing: false, spamScore: 2 },
-  { id: 'EML021', sender: 'noreply@gitlab.com', recipient: 'linfeng@secmind.com', subject: 'Pipeline失败通知 - main分支', timestamp: '2026-05-09T06:00:00Z', hasAttachment: false, urls: ['https://gitlab.secmind.com/pipeline/5678'], isPhishing: false, spamScore: 5 },
-  { id: 'EML022', sender: 'shipping@dhl-phishing.com', recipient: 'shenxue@secmind.com', subject: 'DHL快递投递失败通知', timestamp: '2026-05-08T09:00:00Z', hasAttachment: true, attachmentName: 'DHL_投递通知.exe', urls: [], isPhishing: true, phishingIndicators: ['伪造DHL域名', '恶意可执行附件', '快递钓鱼'], spamScore: 93 },
-  { id: 'EML023', sender: 'noreply@secmind.com', recipient: 'all@secmind.com', subject: '系统升级维护通知 - 5月10日', timestamp: '2026-05-09T10:00:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML024', sender: 'zoom@meeting-update.com', recipient: 'zhoujing@secmind.com', subject: '您有一个未读视频会议消息', timestamp: '2026-05-08T11:00:00Z', hasAttachment: false, urls: ['https://meeting-update.com/zoom/view'], isPhishing: true, phishingIndicators: ['伪造Zoom域名', '诱导点击恶意链接', '仿冒视频会议通知'], spamScore: 76 },
-  { id: 'EML025', sender: 'huangqiang@secmind.com', recipient: 'lina@secmind.com', subject: 'Q2预算审批', timestamp: '2026-05-08T16:00:00Z', hasAttachment: true, attachmentName: 'Q2预算方案.xlsx', urls: [], isPhishing: false, spamScore: 3 },
-  { id: 'EML026', sender: 'noreply@vpn-alert.com', recipient: 'majun@secmind.com', subject: 'VPN异常登录告警 - 王芳', timestamp: '2026-05-09T06:46:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML027', sender: 'noreply@edr.secmind.com', recipient: 'qianjin@secmind.com', subject: 'EDR告警 - Cobalt Strike检测', timestamp: '2026-05-08T22:11:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML028', sender: 'admin@sharepoint-secure.com', recipient: 'shilei@secmind.com', subject: 'SharePoint文档共享通知', timestamp: '2026-05-08T13:00:00Z', hasAttachment: false, urls: ['https://sharepoint-secure.com/view'], isPhishing: true, phishingIndicators: ['伪造SharePoint域名', '诱导输入凭证', '仿冒文档共享'], spamScore: 72 },
-  { id: 'EML029', sender: 'noreply@slack.com', recipient: 'xieyong@secmind.com', subject: '您有5条未读Slack消息', timestamp: '2026-05-09T07:00:00Z', hasAttachment: false, urls: ['https://slack.com/messages'], isPhishing: false, spamScore: 5 },
-  { id: 'EML030', sender: 'reward@apple-id-verify.com', recipient: 'hexin@secmind.com', subject: '您的Apple ID已被锁定', timestamp: '2026-05-07T16:00:00Z', hasAttachment: false, urls: ['https://apple-id-verify.com/unlock'], isPhishing: true, phishingIndicators: ['伪造Apple域名', '诱导输入Apple ID凭证', '仿冒账号锁定通知'], spamScore: 84 },
-  { id: 'EML031', sender: 'noreply@secmind.com', recipient: 'all@secmind.com', subject: '5月安全意识培训通知', timestamp: '2026-05-06T09:00:00Z', hasAttachment: false, urls: [], isPhishing: false, spamScore: 2 },
-  { id: 'EML032', sender: 'admin@github-security.com', recipient: 'chengang@secmind.com', subject: 'GitHub安全告警 - 依赖漏洞', timestamp: '2026-05-08T15:00:00Z', hasAttachment: false, urls: ['https://github-security.com/alert'], isPhishing: true, phishingIndicators: ['伪造GitHub安全域名', '诱导输入GitHub凭证', '仿冒安全告警'], spamScore: 70 },
+function generateVPNSession(index: number): VPNSession {
+  const userEntry = pick(DEPT_USERS)
+  const loc = pick(ALL_LOCATIONS)
+  const device = pick(USER_AGENTS)
+  const startDate = randomDate(30, 0)
+  const durationMin = randInt(10, 720)
+  const endDate = new Date(startDate.getTime() + durationMin * 60000)
+  const isActive = Math.random() > 0.6
+  const sessionStatus = isActive ? 'active' : pick(['completed', 'completed', 'completed', 'disconnected'] as const)
+  return {
+    id: `VPN${String(index + 33).padStart(3, '0')}`,
+    userName: userEntry.userName,
+    userId: userEntry.userId,
+    sourceIp: generateIP(pick([...PUBLIC_IPS.slice(0, 5), ...INTERNAL_IPS.slice(0, 3)])),
+    destinationIp: '10.0.0.1',
+    location: loc,
+    country: '中国',
+    connectTime: formatISO(startDate),
+    disconnectTime: isActive ? undefined : formatISO(endDate),
+    duration: isActive ? 0 : durationMin,
+    dataTransferred: isActive ? 0 : randInt(100, 10000) * 1048576,
+    isAnomaly: !isActive && Math.random() > 0.7,
+    anomalyReason: !isActive && Math.random() > 0.7 ? '异常时间段登录' : undefined,
+    status: sessionStatus,
+    deviceType: device,
+  }
+}
+
+function generateVPNSessions(count: number): VPNSession[] {
+  const result: VPNSession[] = []
+  for (let i = 0; i < count; i++) result.push(generateVPNSession(i))
+  return result
+}
+
+export const mockVPNSessions: VPNSession[] = [...staticVPNSessions, ...generateVPNSessions(170)]
+
+/* ========= Email Logs ========= */
+
+const staticEmailLogs: EmailLog[] = [
+  { id: 'EML001', sender: 'zhangwei@secmind.com', recipient: 'client@partner.com', subject: '项目方案V3讨论', body: '关于下周的项目方案，附件为更新版本...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-18T09:30:00Z', size: 2.5, sourceIp: '10.0.2.50', userId: 'U001', userName: '张伟' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML002', sender: 'lina@secmind.com', recipient: 'supplier@vendor.com', subject: 'Q2付款申请审批', body: '财务部Q2供应商付款申请已审批，请查收附件...', attachments: ['付款审批单.pdf'], hasAttachment: true, attachmentName: '付款审批单.pdf', status: 'sent', timestamp: '2026-05-18T09:15:00Z', size: 3.8, sourceIp: '10.0.1.35', userId: 'U002', userName: '李娜' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML003', sender: 'wangfang@secmind.com', recipient: 'all@secmind.com', subject: '关于五一假期调休安排', body: '各位同事，五一假期调休安排已发布...', attachments: ['调休安排.pdf'], hasAttachment: true, attachmentName: '调休安排.pdf', status: 'sent', timestamp: '2026-05-17T16:00:00Z', size: 1.2, sourceIp: '10.0.1.50', userId: 'U003', userName: '王芳' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML004', sender: 'chengang@secmind.com', recipient: 'dev-team@secmind.com', subject: '代码评审通知 - 安全组件', body: '请各位对安全组件V2.1进行代码评审...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-18T10:00:00Z', size: 0.5, sourceIp: '10.0.2.100', userId: 'U004', userName: '陈刚' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML005', sender: 'liuyang@secmind.com', recipient: 'client@partner.com', subject: 'Q2市场推广方案', body: '关于Q2市场推广合作的初步方案...', attachments: ['Q2市场方案.pptx'], hasAttachment: true, attachmentName: 'Q2市场方案.pptx', status: 'sent', timestamp: '2026-05-17T15:30:00Z', size: 8.5, sourceIp: '10.0.3.20', userId: 'U005', userName: '刘洋' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML006', sender: 'zhaomin@secmind.com', recipient: 'security@secmind.com', subject: '安全事件报告 - 0522', body: '安全事件处理报告，包含Cobalt Strike攻击链分析...', attachments: ['安全事件报告0522.pdf'], hasAttachment: true, attachmentName: '安全事件报告0522.pdf', status: 'sent', timestamp: '2026-05-18T08:00:00Z', size: 4.5, sourceIp: '10.0.5.10', userId: 'U006', userName: '赵敏' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML007', sender: 'sunhao@secmind.com', recipient: 'ops-team@secmind.com', subject: '服务器维护通知 - 本周日', body: '本周日凌晨2-6点进行服务器维护...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-18T08:30:00Z', size: 0.3, sourceIp: '10.0.4.10', userId: 'U007', userName: '孙浩' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML008', sender: 'zhoujing@secmind.com', recipient: 'pm-team@secmind.com', subject: '产品需求评审V3.2', body: '产品需求文档V3.2版本已更新，请各位评审...', attachments: ['PRD_V3.2.pdf'], hasAttachment: true, attachmentName: 'PRD_V3.2.pdf', status: 'sent', timestamp: '2026-05-18T09:00:00Z', size: 6.2, sourceIp: '10.0.3.30', userId: 'U008', userName: '周静' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML009', sender: 'wuqiang@secmind.com', recipient: 'dev-team@secmind.com', subject: 'API接口文档更新', body: 'API接口文档已更新至v2.8版本...', attachments: ['API文档_v2.8.pdf'], hasAttachment: true, attachmentName: 'API文档_v2.8.pdf', status: 'sent', timestamp: '2026-05-17T17:00:00Z', size: 3.2, sourceIp: '10.0.2.60', userId: 'U009', userName: '吴强' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML010', sender: 'zhengli@secmind.com', recipient: 'audit@secmind.com', subject: 'Q1财务审计报告', body: 'Q1财务审计报告已完成，请查收...', attachments: ['Q1审计报告.xlsx'], hasAttachment: true, attachmentName: 'Q1审计报告.xlsx', status: 'sent', timestamp: '2026-05-18T07:45:00Z', size: 2.8, sourceIp: '10.0.1.35', userId: 'U010', userName: '郑丽' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML011', sender: 'fengtao@secmind.com', recipient: 'hr@secmind.com', subject: '请假申请 - 5月20日', body: '申请5月20日请假一天，处理个人事务...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-17T10:00:00Z', size: 0.1, sourceIp: '10.0.2.60', userId: 'U011', userName: '冯涛' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML012', sender: 'chulin@secmind.com', recipient: 'wangfang@secmind.com', subject: '招聘进展汇报', body: '本月招聘进展，技术岗位收到简历120份...', attachments: ['招聘进展.xlsx'], hasAttachment: true, attachmentName: '招聘进展.xlsx', status: 'sent', timestamp: '2026-05-18T09:30:00Z', size: 1.5, sourceIp: '10.0.1.50', userId: 'U012', userName: '褚琳' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML013', sender: 'weidong@secmind.com', recipient: 'security@secmind.com', subject: '渗透测试报告 - 0522', body: '本周渗透测试发现5个高危漏洞...', attachments: ['渗透测试报告0522.pdf'], hasAttachment: true, attachmentName: '渗透测试报告0522.pdf', status: 'sent', timestamp: '2026-05-18T10:30:00Z', size: 5.0, sourceIp: '10.0.5.10', userId: 'U013', userName: '卫东' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML014', sender: 'jianghua@secmind.com', recipient: 'dba@secmind.com', subject: '数据库性能优化方案', body: 'MySQL数据库性能优化方案已整理...', attachments: ['数据库优化方案.pdf'], hasAttachment: true, attachmentName: '数据库优化方案.pdf', status: 'sent', timestamp: '2026-05-17T14:30:00Z', size: 4.2, sourceIp: '10.0.4.15', userId: 'U014', userName: '蒋华' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML015', sender: 'shenxue@secmind.com', recipient: 'client@partner.com', subject: '品牌推广方案确认', body: '关于Q2品牌推广合作方案，请确认...', attachments: ['品牌推广方案.pptx'], hasAttachment: true, attachmentName: '品牌推广方案.pptx', status: 'sent', timestamp: '2026-05-18T11:00:00Z', size: 7.8, sourceIp: '10.0.3.20', userId: 'U015', userName: '沈雪' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML016', sender: 'hanchao@secmind.com', recipient: 'dev-team@secmind.com', subject: '系统架构评审通知', body: '下周三系统架构评审会议通知...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-18T10:15:00Z', size: 0.4, sourceIp: '10.0.2.80', userId: 'U016', userName: '韩超' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML017', sender: 'yangfan@secmind.com', recipient: 'tech@secmind.com', subject: '技术选型方案讨论', body: '关于微服务架构技术选型的方案讨论...', attachments: ['技术选型方案.pdf'], hasAttachment: true, attachmentName: '技术选型方案.pdf', status: 'sent', timestamp: '2026-05-17T16:00:00Z', size: 3.6, sourceIp: '10.0.2.50', userId: 'U017', userName: '杨帆' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML018', sender: 'zhuting@secmind.com', recipient: 'supplier@vendor.com', subject: '发票核对通知', body: 'Q2发票核对清单请查收确认...', attachments: ['发票核对.xlsx'], hasAttachment: true, attachmentName: '发票核对.xlsx', status: 'delivered', timestamp: '2026-05-18T09:00:00Z', size: 1.8, sourceIp: '10.0.1.35', userId: 'U018', userName: '朱婷' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML019', sender: 'qinming@secmind.com', recipient: 'security@secmind.com', subject: '漏洞扫描报告 - 0522', body: '本期漏洞扫描报告，共发现12个中高危漏洞...', attachments: ['漏洞扫描报告0522.pdf'], hasAttachment: true, attachmentName: '漏洞扫描报告0522.pdf', status: 'sent', timestamp: '2026-05-18T08:00:00Z', size: 4.8, sourceIp: '10.0.5.10', userId: 'U019', userName: '秦明' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML020', sender: 'xujia@secmind.com', recipient: 'pm-team@secmind.com', subject: '产品路线图更新', body: '产品路线图Q2-Q3规划已更新...', attachments: ['产品路线图.pdf'], hasAttachment: true, attachmentName: '产品路线图.pdf', status: 'sent', timestamp: '2026-05-18T09:30:00Z', size: 5.2, sourceIp: '10.0.3.30', userId: 'U020', userName: '许佳' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML021', sender: 'lvfeng@secmind.com', recipient: 'ops-team@secmind.com', subject: '运维变更通知', body: '本周计划进行4次运维变更操作...', attachments: ['变更计划.xlsx'], hasAttachment: true, attachmentName: '变更计划.xlsx', status: 'sent', timestamp: '2026-05-18T07:30:00Z', size: 1.0, sourceIp: '10.0.4.10', userId: 'U021', userName: '吕峰' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML022', sender: 'shilei@secmind.com', recipient: 'hr@secmind.com', subject: '培训计划确认', body: '6月份培训计划已确认，请查收...', attachments: ['培训计划.pdf'], hasAttachment: true, attachmentName: '培训计划.pdf', status: 'sent', timestamp: '2026-05-17T11:00:00Z', size: 2.0, sourceIp: '10.0.1.50', userId: 'U022', userName: '施蕾' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML023', sender: 'zhanglei@secmind.com', recipient: 'dev-team@secmind.com', subject: '代码规范更新通知', body: '代码规范V3.0版本已发布...', attachments: ['代码规范V3.0.pdf'], hasAttachment: true, attachmentName: '代码规范V3.0.pdf', status: 'sent', timestamp: '2026-05-18T10:00:00Z', size: 2.5, sourceIp: '10.0.2.60', userId: 'U023', userName: '张磊' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML024', sender: 'qianjin@secmind.com', recipient: 'security@secmind.com', subject: '安全策略更新建议', body: '针对近期安全事件的策略更新建议...', attachments: ['策略更新建议.pdf'], hasAttachment: true, attachmentName: '策略更新建议.pdf', status: 'sent', timestamp: '2026-05-18T09:00:00Z', size: 3.0, sourceIp: '10.0.5.10', userId: 'U024', userName: '钱进' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML025', sender: 'wutao@secmind.com', recipient: 'ops-team@secmind.com', subject: '服务器资源监控报告', body: '本周服务器资源监控报告，CPU和内存使用率...', attachments: ['资源监控报告.xlsx'], hasAttachment: true, attachmentName: '资源监控报告.xlsx', status: 'sent', timestamp: '2026-05-18T06:30:00Z', size: 1.8, sourceIp: '10.0.4.10', userId: 'U025', userName: '吴涛' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML026', sender: 'huangqiang@secmind.com', recipient: 'all@secmind.com', subject: 'CEO致辞 - 公司Q2战略', body: '各位同事，公司Q2战略部署已确定...', attachments: ['Q2战略部署.pdf'], hasAttachment: true, attachmentName: 'Q2战略部署.pdf', status: 'sent', timestamp: '2026-05-17T09:00:00Z', size: 6.5, sourceIp: '10.0.1.100', userId: 'U026', userName: '黄强' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML027', sender: 'zhaolei@secmind.com', recipient: 'tech@secmind.com', subject: '技术方案评审结果', body: '上周技术方案评审结果汇总...', attachments: ['评审结果.xlsx'], hasAttachment: true, attachmentName: '评审结果.xlsx', status: 'sent', timestamp: '2026-05-18T08:45:00Z', size: 1.2, sourceIp: '10.0.2.50', userId: 'U027', userName: '赵磊' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML028', sender: 'sunli@secmind.com', recipient: 'finance@secmind.com', subject: '报销单据审核', body: '4月份报销单据审核清单...', attachments: ['报销审核.xlsx'], hasAttachment: true, attachmentName: '报销审核.xlsx', status: 'delivered', timestamp: '2026-05-18T09:15:00Z', size: 1.5, sourceIp: '10.0.1.35', userId: 'U028', userName: '孙丽' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML029', sender: 'zhoumin@secmind.com', recipient: 'wangfang@secmind.com', subject: '员工满意度调查结果', body: 'Q1员工满意度调查结果汇总...', attachments: ['满意度调查.pdf'], hasAttachment: true, attachmentName: '满意度调查.pdf', status: 'sent', timestamp: '2026-05-17T16:30:00Z', size: 4.0, sourceIp: '10.0.1.50', userId: 'U029', userName: '周敏' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML030', sender: 'linfeng@secmind.com', recipient: 'dev-team@secmind.com', subject: 'CI/CD流水线更新', body: 'CI/CD流水线已更新至v3.2版本...', attachments: [], hasAttachment: false, status: 'sent', timestamp: '2026-05-18T10:30:00Z', size: 0.2, sourceIp: '10.0.2.88', userId: 'U030', userName: '林峰' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML031', sender: 'hexin@secmind.com', recipient: 'client@partner.com', subject: '市场活动策划方案', body: '6月份市场活动策划方案初稿...', attachments: ['市场活动方案.pptx'], hasAttachment: true, attachmentName: '市场活动方案.pptx', status: 'sent', timestamp: '2026-05-18T11:30:00Z', size: 9.0, sourceIp: '10.0.3.20', userId: 'U031', userName: '何欣' , urls: [], isPhishing: false, spamScore: 15 },
+  { id: 'EML032', sender: 'majun@secmind.com', recipient: 'security@secmind.com', subject: '安全设备巡检报告', body: '本周安全设备巡检完成，所有设备正常运行...', attachments: ['设备巡检报告.pdf'], hasAttachment: true, attachmentName: '设备巡检报告.pdf', status: 'sent', timestamp: '2026-05-18T07:00:00Z', size: 2.0, sourceIp: '10.0.5.10', userId: 'U032', userName: '马骏' , urls: [], isPhishing: false, spamScore: 15 },
 ]
 
-export const mockLoginAttempts: LoginAttempt[] = [
-  { id: 'LOG001', userId: 'U002', userName: '李娜', sourceIp: '103.45.67.89', country: '美国', city: '洛杉矶', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:20:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG002', userId: 'U002', userName: '李娜', sourceIp: '103.45.67.89', country: '美国', city: '洛杉矶', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:21:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG003', userId: 'U002', userName: '李娜', sourceIp: '103.45.67.89', country: '美国', city: '洛杉矶', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:22:00Z', success: false, failureReason: '账户锁定' },
-  { id: 'LOG004', userId: 'U002', userName: '李娜', sourceIp: '58.216.33.40', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T08:00:00Z', success: true },
-  { id: 'LOG005', userId: 'U004', userName: '陈刚', sourceIp: '185.220.101.34', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-09T03:10:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG006', userId: 'U004', userName: '陈刚', sourceIp: '185.220.101.34', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-09T03:11:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG007', userId: 'U004', userName: '陈刚', sourceIp: '185.220.101.34', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-09T03:12:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG008', userId: 'U004', userName: '陈刚', sourceIp: '14.23.67.88', country: '中国', city: '深圳', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG009', userId: 'U003', userName: '王芳', sourceIp: '91.234.56.78', country: '俄罗斯', city: '莫斯科', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/126.0', timestamp: '2026-05-09T06:45:00Z', success: true },
-  { id: 'LOG010', userId: 'U003', userName: '王芳', sourceIp: '10.0.5.20', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T04:30:00Z', success: true },
-  { id: 'LOG011', userId: 'U005', userName: '刘洋', sourceIp: '41.58.67.89', country: '尼日利亚', city: '拉各斯', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0', timestamp: '2026-05-09T03:00:00Z', success: true },
-  { id: 'LOG012', userId: 'U005', userName: '刘洋', sourceIp: '58.216.33.20', country: '中国', city: '广州', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Mobile/15E148', timestamp: '2026-05-08T09:00:00Z', success: true },
-  { id: 'LOG013', userId: 'U001', userName: '张伟', sourceIp: '123.120.88.10', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG014', userId: 'U010', userName: '郑丽', sourceIp: '172.16.45.90', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:10:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG015', userId: 'U010', userName: '郑丽', sourceIp: '172.16.45.90', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:12:00Z', success: true },
-  { id: 'LOG016', userId: 'U011', userName: '冯涛', sourceIp: '185.220.101.35', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-08T14:20:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG017', userId: 'U011', userName: '冯涛', sourceIp: '185.220.101.35', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-08T14:21:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG018', userId: 'U011', userName: '冯涛', sourceIp: '10.0.2.60', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG019', userId: 'U017', userName: '杨帆', sourceIp: '185.220.101.36', country: '德国', city: '柏林', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-07T08:25:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG020', userId: 'U017', userName: '杨帆', sourceIp: '123.120.88.20', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG021', userId: 'U009', userName: '吴强', sourceIp: '103.45.67.90', country: '美国', city: '洛杉矶', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-07T11:15:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG022', userId: 'U009', userName: '吴强', sourceIp: '103.45.67.90', country: '美国', city: '洛杉矶', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-07T11:16:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG023', userId: 'U009', userName: '吴强', sourceIp: '14.23.67.90', country: '中国', city: '深圳', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:00:00Z', success: true },
-  { id: 'LOG024', userId: 'U033', userName: '高远', sourceIp: '114.88.23.45', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0', timestamp: '2026-05-08T20:00:00Z', success: true },
-  { id: 'LOG025', userId: 'U014', userName: '蒋华', sourceIp: '115.238.12.34', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T07:00:00Z', success: true },
-  { id: 'LOG026', userId: 'U014', userName: '蒋华', sourceIp: '10.0.4.15', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-08T23:00:00Z', success: true },
-  { id: 'LOG027', userId: 'U021', userName: '吕峰', sourceIp: '115.238.12.56', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Firefox/126.0', timestamp: '2026-05-09T04:50:00Z', success: true },
-  { id: 'LOG028', userId: 'U022', userName: '施蕾', sourceIp: '123.120.88.70', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-08T08:30:00Z', success: true },
-  { id: 'LOG029', userId: 'U024', userName: '钱进', sourceIp: '123.120.88.30', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T07:30:00Z', success: true },
-  { id: 'LOG030', userId: 'U025', userName: '吴涛', sourceIp: '115.238.12.45', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Edge/125.0', timestamp: '2026-05-09T08:00:00Z', success: true },
-  { id: 'LOG031', userId: 'U026', userName: '黄强', sourceIp: '123.120.88.80', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T07:00:00Z', success: true },
-  { id: 'LOG032', userId: 'U018', userName: '朱婷', sourceIp: '198.51.100.23', country: '美国', city: '纽约', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0', timestamp: '2026-05-08T10:25:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG033', userId: 'U018', userName: '朱婷', sourceIp: '58.216.33.55', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG034', userId: 'U030', userName: '林峰', sourceIp: '14.23.67.110', country: '中国', city: '深圳', userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/125.0', timestamp: '2026-05-09T08:45:00Z', success: true },
-  { id: 'LOG035', userId: 'U015', userName: '沈雪', sourceIp: '58.216.33.60', country: '中国', city: '广州', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG036', userId: 'U020', userName: '许佳', sourceIp: '58.216.33.80', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:00:00Z', success: true },
-  { id: 'LOG037', userId: 'U034', userName: '罗薇', sourceIp: '58.216.33.90', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG038', userId: 'U031', userName: '何欣', sourceIp: '58.216.33.70', country: '中国', city: '广州', userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) Mobile/15E148', timestamp: '2026-05-09T09:00:00Z', success: true },
-  { id: 'LOG039', userId: 'U032', userName: '马骏', sourceIp: '123.120.88.40', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T07:00:00Z', success: true },
-  { id: 'LOG040', userId: 'U019', userName: '秦明', sourceIp: '123.120.88.50', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64) Firefox/126.0', timestamp: '2026-05-09T08:00:00Z', success: true },
-  { id: 'LOG041', userId: 'U013', userName: '卫东', sourceIp: '123.120.88.60', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T07:30:00Z', success: true },
-  { id: 'LOG042', userId: 'U023', userName: '张磊', sourceIp: '14.23.67.100', country: '中国', city: '深圳', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T09:30:00Z', success: true },
-  { id: 'LOG043', userId: 'U008', userName: '周静', sourceIp: '58.216.33.50', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG044', userId: 'U035', userName: '谢勇', sourceIp: '123.120.88.45', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-08T02:00:00Z', success: true },
-  { id: 'LOG045', userId: 'U016', userName: '韩超', sourceIp: '14.23.67.95', country: '中国', city: '深圳', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:00:00Z', success: false, failureReason: '账户已锁定（休假中）' },
-  { id: 'LOG046', userId: 'U007', userName: '孙浩', sourceIp: '115.238.12.67', country: '中国', city: '杭州', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T09:00:00Z', success: false, failureReason: '账户已锁定（休假中）' },
-  { id: 'LOG047', userId: 'U012', userName: '褚琳', sourceIp: '45.33.32.50', country: '美国', city: '旧金山', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-08T10:00:00Z', success: false, failureReason: '账户已停用（已离职）' },
-  { id: 'LOG048', userId: 'U027', userName: '赵磊', sourceIp: '123.120.88.90', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/125.0', timestamp: '2026-05-09T07:30:00Z', success: true },
-  { id: 'LOG049', userId: 'U028', userName: '孙丽', sourceIp: '58.216.33.95', country: '中国', city: '上海', userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/17.5', timestamp: '2026-05-09T08:00:00Z', success: true },
-  { id: 'LOG050', userId: 'U029', userName: '周敏', sourceIp: '123.120.88.95', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T08:30:00Z', success: true },
-  { id: 'LOG051', userId: 'U006', userName: '赵敏', sourceIp: '123.120.88.15', country: '中国', city: '北京', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/125.0', timestamp: '2026-05-09T07:30:00Z', success: true },
-  { id: 'LOG052', userId: 'U015', userName: '沈雪', sourceIp: '45.33.32.101', country: '美国', city: '旧金山', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-06T12:00:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG053', userId: 'U014', userName: '蒋华', sourceIp: '45.33.32.102', country: '美国', city: '旧金山', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-06T03:00:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG054', userId: 'U017', userName: '杨帆', sourceIp: '45.33.32.100', country: '美国', city: '旧金山', userAgent: 'python-requests/2.31.0', timestamp: '2026-05-06T16:00:00Z', success: false, failureReason: '密码错误' },
-  { id: 'LOG055', userId: 'U003', userName: '王芳', sourceIp: '45.77.123.45', country: '未知', city: '未知', userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/126.0', timestamp: '2026-05-09T07:00:00Z', success: true },
+function generateEmailLog(index: number): EmailLog {
+  const userEntry = pick(DEPT_USERS)
+  const isExternal = Math.random() > 0.5
+  const domains = ['partner.com', 'vendor.com', 'client.com', 'gmail.com', 'qq.com', '163.com']
+  const recipients = isExternal ? `${pick(['contact', 'info', 'service', 'support', 'sales'])}@${pick(domains)}` : `${pick(['all', 'team', 'dev-team', 'ops-team', 'security'])}@secmind.com`
+  const subjects = [
+    '项目进度汇报', '需求变更申请', 'Bug修复通知', '版本发布通知',
+    '会议纪要', '周报提交', '审批流程通知', '合同确认',
+    '技术方案讨论', '数据统计报表', '安全公告', '系统通知',
+  ]
+  const hasAttachment = Math.random() > 0.5
+  const attachNames = ['报告.pdf', '方案.pptx', '数据.xlsx', '文档.docx', '设计稿.sketch']
+  return {
+    id: `EML${String(index + 33).padStart(3, '0')}`,
+    sender: `${userEntry.userName}@secmind.com`,
+    recipient: recipients,
+    subject: pick(subjects),
+    body: `${pick(['关于','回复','转发','转发'])}${pick(subjects)}${pick(['，请查收','，请审批','，请确认',''])}...`,
+    attachments: hasAttachment ? [pick(attachNames)] : [],
+    hasAttachment,
+    urls: [],
+    isPhishing: Math.random() > 0.9,
+    spamScore: Math.floor(Math.random() * 100),
+    status: pick(['sent', 'sent', 'sent', 'delivered', 'failed'] as const),
+    timestamp: formatISO(randomDate(30, 0)),
+    size: parseFloat((Math.random() * 10).toFixed(1)),
+    sourceIp: generateIP(pick(INTERNAL_IPS)),
+    userId: userEntry.userId,
+    userName: userEntry.userName,
+  }
+}
+
+function generateEmailLogs(count: number): EmailLog[] {
+  const result: EmailLog[] = []
+  for (let i = 0; i < count; i++) result.push(generateEmailLog(i))
+  return result
+}
+
+export const mockEmailLogs: EmailLog[] = [...staticEmailLogs, ...generateEmailLogs(120)]
+
+/* ========= Login Attempts ========= */
+
+const staticLoginAttempts: LoginAttempt[] = [
+  { id: 'LA001', userName: '张伟', userId: 'U001', sourceIp: '223.104.18.42', country: '中国', city: '北京', timestamp: '2026-05-18T08:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Chrome', failureReason: '' },
+  { id: 'LA002', userName: '李娜', userId: 'U002', sourceIp: '114.92.45.78', country: '中国', city: '上海', timestamp: '2026-05-18T08:45:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Safari', failureReason: '' },
+  { id: 'LA003', userName: '王芳', userId: 'U003', sourceIp: '61.148.203.35', country: '中国', city: '北京', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA004', userName: '陈刚', userId: 'U004', sourceIp: '218.75.100.50', country: '中国', city: '杭州', timestamp: '2026-05-18T08:15:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Chrome', failureReason: '' },
+  { id: 'LA005', userName: '刘洋', userId: 'U005', sourceIp: '183.6.112.88', country: '中国', city: '广州', timestamp: '2026-05-18T07:30:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Windows 10 - Chrome', failureReason: '' },
+  { id: 'LA006', userName: 'admin', userId: '', sourceIp: '185.220.101.34', country: '中国', city: '莫斯科', timestamp: '2026-05-09T03:15:00Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA007', userName: 'admin', userId: '', sourceIp: '185.220.101.34', country: '中国', city: '莫斯科', timestamp: '2026-05-09T03:15:05Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA008', userName: 'root', userId: '', sourceIp: '185.220.101.34', country: '中国', city: '莫斯科', timestamp: '2026-05-09T03:15:10Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '用户不存在' },
+  { id: 'LA009', userName: 'admin', userId: '', sourceIp: '185.220.101.34', country: '中国', city: '莫斯科', timestamp: '2026-05-09T03:15:15Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA010', userName: 'zhangwei', userId: 'U001', sourceIp: '91.234.56.78', country: '中国', city: '莫斯科', timestamp: '2026-05-09T06:45:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Linux - Firefox', failureReason: '' },
+  { id: 'LA011', userName: '赵敏', userId: 'U006', sourceIp: '202.96.128.66', country: '中国', city: '深圳', timestamp: '2026-05-18T07:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Chrome', failureReason: '' },
+  { id: 'LA012', userName: '孙浩', userId: 'U007', sourceIp: '210.22.88.99', country: '中国', city: '成都', timestamp: '2026-05-18T06:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Linux - Firefox', failureReason: '' },
+  { id: 'LA013', userName: 'root', userId: '', sourceIp: '185.220.101.35', country: '中国', city: '莫斯科', timestamp: '2026-05-08T14:22:00Z', status: 'failed', success: false, authMethod: 'SSH密钥', userAgent:  'Unknown', failureReason: '密钥验证失败' },
+  { id: 'LA014', userName: 'deploy', userId: '', sourceIp: '185.220.101.35', country: '中国', city: '莫斯科', timestamp: '2026-05-08T14:22:05Z', status: 'failed', success: false, authMethod: 'SSH密钥', userAgent:  'Unknown', failureReason: '密钥验证失败' },
+  { id: 'LA015', userName: 'admin', userId: '', sourceIp: '185.220.101.35', country: '中国', city: '莫斯科', timestamp: '2026-05-08T14:22:10Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA016', userName: '周静', userId: 'U008', sourceIp: '180.168.45.67', country: '中国', city: '上海', timestamp: '2026-05-18T08:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Edge', failureReason: '' },
+  { id: 'LA017', userName: '吴强', userId: 'U009', sourceIp: '115.210.55.33', country: '中国', city: '南京', timestamp: '2026-05-18T09:15:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA018', userName: '郑丽', userId: 'U010', sourceIp: '101.231.78.44', country: '中国', city: '上海', timestamp: '2026-05-18T08:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Air - Safari', failureReason: '' },
+  { id: 'LA019', userName: 'liuyang', userId: 'U005', sourceIp: '41.58.67.89', country: '中国', city: '拉各斯', timestamp: '2026-05-09T03:00:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Unknown', failureReason: '' },
+  { id: 'LA020', userName: '冯涛', userId: 'U011', sourceIp: '125.120.200.88', country: '中国', city: '杭州', timestamp: '2026-05-18T08:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 10 - Chrome', failureReason: '' },
+  { id: 'LA021', userName: '褚琳', userId: 'U012', sourceIp: '60.12.34.56', country: '中国', city: '北京', timestamp: '2026-05-18T08:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Android - Chrome', failureReason: '' },
+  { id: 'LA022', userName: '卫东', userId: 'U013', sourceIp: '113.87.65.43', country: '中国', city: '北京', timestamp: '2026-05-18T07:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Chrome', failureReason: '' },
+  { id: 'LA023', userName: '蒋华', userId: 'U014', sourceIp: '122.224.100.22', country: '中国', city: '上海', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows Server 2022 - RDP', failureReason: '' },
+  { id: 'LA024', userName: '沈雪', userId: 'U015', sourceIp: '36.110.88.77', country: '中国', city: '北京', timestamp: '2026-05-18T09:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA025', userName: '韩超', userId: 'U016', sourceIp: '211.102.45.66', country: '中国', city: '深圳', timestamp: '2026-05-18T09:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Safari', failureReason: '' },
+  { id: 'LA026', userName: '杨帆', userId: 'U017', sourceIp: '222.73.55.88', country: '中国', city: '上海', timestamp: '2026-05-18T08:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Chrome', failureReason: '' },
+  { id: 'LA027', userName: 'root', userId: '', sourceIp: '103.45.67.90', country: '中国', city: '上海', timestamp: '2026-05-07T11:20:00Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '用户不存在' },
+  { id: 'LA028', userName: 'admin', userId: '', sourceIp: '103.45.67.90', country: '中国', city: '上海', timestamp: '2026-05-07T11:20:01Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA029', userName: 'zhangwei', userId: '', sourceIp: '103.45.67.90', country: '中国', city: '上海', timestamp: '2026-05-07T11:20:02Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA030', userName: 'lina', userId: '', sourceIp: '103.45.67.90', country: '中国', city: '上海', timestamp: '2026-05-07T11:20:03Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA031', userName: 'chengang', userId: 'U004', sourceIp: '103.45.67.90', country: '中国', city: '上海', timestamp: '2026-05-07T11:20:04Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Unknown', failureReason: '' },
+  { id: 'LA032', userName: '朱婷', userId: 'U018', sourceIp: '116.228.77.99', country: '中国', city: '上海', timestamp: '2026-05-18T08:45:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Android - Chrome', failureReason: '' },
+  { id: 'LA033', userName: '秦明', userId: 'U019', sourceIp: '124.160.88.11', country: '中国', city: '杭州', timestamp: '2026-05-18T06:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 10 - Edge', failureReason: '' },
+  { id: 'LA034', userName: '许佳', userId: 'U020', sourceIp: '218.242.33.44', country: '中国', city: '北京', timestamp: '2026-05-18T09:15:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Air - Safari', failureReason: '' },
+  { id: 'LA035', userName: '吕峰', userId: 'U021', sourceIp: '61.152.100.55', country: '中国', city: '上海', timestamp: '2026-05-18T07:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Chrome', failureReason: '' },
+  { id: 'LA036', userName: '施蕾', userId: 'U022', sourceIp: '58.34.66.77', country: '中国', city: '成都', timestamp: '2026-05-18T08:45:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA037', userName: '张磊', userId: 'U023', sourceIp: '101.81.44.22', country: '中国', city: '苏州', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: 'SSH密钥', userAgent:  'MacBook Pro - Chrome', failureReason: '' },
+  { id: 'LA038', userName: '钱进', userId: 'U024', sourceIp: '123.125.33.66', country: '中国', city: '北京', timestamp: '2026-05-18T08:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Linux - Firefox', failureReason: '' },
+  { id: 'LA039', userName: '吴涛', userId: 'U025', sourceIp: '220.181.55.88', country: '中国', city: '北京', timestamp: '2026-05-18T05:30:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Windows 10 - Chrome', failureReason: '' },
+  { id: 'LA040', userName: '黄强', userId: 'U026', sourceIp: '124.127.88.99', country: '中国', city: '深圳', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA041', userName: '赵磊', userId: 'U027', sourceIp: '221.219.44.55', country: '中国', city: '北京', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Edge', failureReason: '' },
+  { id: 'LA042', userName: 'admin', userId: '', sourceIp: '45.33.32.100', country: '中国', city: '洛杉矶', timestamp: '2026-05-06T16:00:00Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA043', userName: 'jenkins', userId: '', sourceIp: '45.33.32.100', country: '中国', city: '洛杉矶', timestamp: '2026-05-06T16:00:01Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA044', userName: '孙丽', userId: 'U028', sourceIp: '114.243.66.77', country: '中国', city: '重庆', timestamp: '2026-05-18T08:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Air - Safari', failureReason: '' },
+  { id: 'LA045', userName: '周敏', userId: 'U029', sourceIp: '61.135.88.11', country: '中国', city: '北京', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Android - Chrome', failureReason: '' },
+  { id: 'LA046', userName: '林峰', userId: 'U030', sourceIp: '218.108.55.66', country: '中国', city: '杭州', timestamp: '2026-05-18T07:45:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Chrome', failureReason: '' },
+  { id: 'LA047', userName: '何欣', userId: 'U031', sourceIp: '124.42.33.44', country: '中国', city: '广州', timestamp: '2026-05-18T09:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'iPhone - Safari', failureReason: '' },
+  { id: 'LA048', userName: '马骏', userId: 'U032', sourceIp: '222.35.77.88', country: '中国', city: '北京', timestamp: '2026-05-18T06:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 10 - Chrome', failureReason: '' },
+  { id: 'LA049', userName: 'root', userId: '', sourceIp: '45.33.32.102', country: '中国', city: '洛杉矶', timestamp: '2026-05-06T03:00:00Z', status: 'failed', success: false, authMethod: '密码', userAgent:  'Unknown', failureReason: '密码错误' },
+  { id: 'LA050', userName: '高远', userId: 'U033', sourceIp: '114.88.23.45', country: '中国', city: '北京', timestamp: '2026-05-08T20:00:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Windows 10 - Chrome', failureReason: '' },
+  { id: 'LA051', userName: '罗薇', userId: 'U034', sourceIp: '222.35.66.77', country: '中国', city: '北京', timestamp: '2026-05-18T09:00:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'MacBook Pro - Safari', failureReason: '' },
+  { id: 'LA052', userName: '谢勇', userId: 'U035', sourceIp: '123.120.88.45', country: '中国', city: '杭州', timestamp: '2026-05-18T08:30:00Z', status: 'success', success: true, authMethod: '密码+MFA', userAgent:  'Windows 11 - Chrome', failureReason: '' },
+  { id: 'LA053', userName: 'wangfang', userId: 'U003', sourceIp: '45.77.123.45', country: '中国', city: '东京', timestamp: '2026-05-09T07:00:00Z', status: 'success', success: true, authMethod: '密码', userAgent:  'Linux - Firefox', failureReason: '' },
+  { id: 'LA054', userName: 'svc_hids', userId: '', sourceIp: '10.0.5.100', country: '中国', city: '北京', timestamp: '2026-05-18T00:00:00Z', status: 'success', success: true, authMethod: 'API密钥', userAgent:  'Server', failureReason: '' },
+  { id: 'LA055', userName: 'svc_siem', userId: '', sourceIp: '10.0.5.101', country: '中国', city: '北京', timestamp: '2026-05-18T00:00:00Z', status: 'success', success: true, authMethod: 'API密钥', userAgent:  'Server', failureReason: '' },
 ]
+
+function generateLoginAttempt(index: number): LoginAttempt {
+  const userEntry = pick(DEPT_USERS)
+  const isFailed = Math.random() > 0.7
+  const authMethods = ['密码', '密码+MFA', 'SSH密钥', 'API密钥', '证书']
+  const failureReasons = ['密码错误', '用户不存在', 'MFA验证失败', '账户已锁定', 'IP不在白名单', '令牌过期']
+  const locations = [...CITIES, ...OVERSEAS_CITIES]
+  return {
+    id: `LA${String(index + 56).padStart(3, '0')}`,
+    userName: isFailed ? pick(['admin', 'root', 'test', 'deploy', 'backup']) : userEntry.userName,
+    userId: isFailed ? '' : userEntry.userId,
+    sourceIp: generateIP(pick([...PUBLIC_IPS.slice(0, 5), ...INTERNAL_IPS.slice(0, 3)])),
+    country: '中国',
+    city: pick(locations),
+    userAgent: pick([...USER_AGENTS, 'Unknown', 'Server', 'Mobile Device']),
+    location: pick(locations),
+    timestamp: formatISO(randomDate(30, 0)),
+    success: !isFailed,
+    status: isFailed ? 'failed' : 'success',
+    authMethod: pick(authMethods),
+    deviceType: pick([...USER_AGENTS, 'Unknown', 'Server', 'Mobile Device']),
+    failureReason: isFailed ? pick(failureReasons) : '',
+  }
+}
+
+function generateLoginAttempts(count: number): LoginAttempt[] {
+  const result: LoginAttempt[] = []
+  for (let i = 0; i < count; i++) result.push(generateLoginAttempt(i))
+  return result
+}
+
+export const mockLoginAttempts: LoginAttempt[] = [...staticLoginAttempts, ...generateLoginAttempts(150)]
+
+/* ========= Users ========= */
+
+export const mockUsers: User[] = DEPT_USERS.map((u, i) => ({
+  id: u.userId,
+  name: u.userName,
+  email: `${u.userName.toLowerCase()}@secmind.com`,
+  department: u.department,
+  position: pick(POSITIONS),
+  level: i < 3 ? '高级' : i < 10 ? '中级' : '初级',
+  manager: i < 3 ? '-' : pick(DEPT_USERS.slice(0, 3)).userName,
+  isSensitive: i < 5 || (i >= 15 && i < 20),
+  office: pick(OFFICES),
+  recentLoginLocation: pick(['北京', '上海', '深圳', '杭州']),
+  isOnLeave: i > 28 && i < 32,
+  isResigned: i > 32,
+  avatar: '',
+}))
+
+export { TOTAL_ALERTS, ALL_ALERTS }

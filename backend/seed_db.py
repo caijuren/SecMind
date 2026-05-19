@@ -12,6 +12,10 @@ from app.services.auth_service import get_password_hash
 Base.metadata.create_all(bind=engine)
 db = SessionLocal()
 
+ADMIN_HASH = get_password_hash("admin123")
+USER_HASH = get_password_hash("secmind123")
+VIEWER_HASH = get_password_hash("viewer123")
+
 def seed_users():
     users = [
         User(
@@ -28,8 +32,7 @@ def seed_users():
             is_resigned=False,
             email="zhangwei@secmind.com",
             phone="13800010011",
-            hashed_password=get_password_hash("admin123"),
-            role="admin",
+            hashed_password=ADMIN_HASH,
             status="active",
             last_login=datetime.now(),
         ),
@@ -47,8 +50,7 @@ def seed_users():
             is_resigned=False,
             email="lina@secmind.com",
             phone="13800010012",
-            hashed_password=get_password_hash("secmind123"),
-            role="user",
+            hashed_password=USER_HASH,
             status="active",
             last_login=datetime.now() - timedelta(days=1),
         ),
@@ -66,8 +68,7 @@ def seed_users():
             is_resigned=False,
             email="wangqiang@secmind.com",
             phone="13800010013",
-            hashed_password=get_password_hash("secmind123"),
-            role="user",
+            hashed_password=USER_HASH,
             status="active",
             last_login=datetime.now() - timedelta(hours=8),
         ),
@@ -85,8 +86,7 @@ def seed_users():
             is_resigned=False,
             email="liuyang@secmind.com",
             phone="13800010014",
-            hashed_password=get_password_hash("secmind123"),
-            role="user",
+            hashed_password=USER_HASH,
             status="disabled",
             last_login=datetime.now() - timedelta(days=3),
         ),
@@ -104,8 +104,7 @@ def seed_users():
             is_resigned=False,
             email="chenjing@secmind.com",
             phone="13800010015",
-            hashed_password=get_password_hash("secmind123"),
-            role="user",
+            hashed_password=USER_HASH,
             status="active",
             last_login=datetime.now() - timedelta(hours=20),
         ),
@@ -123,8 +122,7 @@ def seed_users():
             is_resigned=False,
             email="zhaolei@secmind.com",
             phone="13800010016",
-            hashed_password=get_password_hash("secmind123"),
-            role="analyst",
+            hashed_password=USER_HASH,
             status="active",
             last_login=datetime.now() - timedelta(hours=2),
         ),
@@ -142,8 +140,7 @@ def seed_users():
             is_resigned=True,
             email="sunyue@secmind.com",
             phone="13800010017",
-            hashed_password=get_password_hash("viewer123"),
-            role="user",
+            hashed_password=VIEWER_HASH,
             status="disabled",
             last_login=datetime.now() - timedelta(days=15),
         ),
@@ -161,8 +158,7 @@ def seed_users():
             is_resigned=False,
             email="zhouming@secmind.com",
             phone="13800010018",
-            hashed_password=get_password_hash("admin123"),
-            role="admin",
+            hashed_password=ADMIN_HASH,
             status="active",
             last_login=datetime.now() - timedelta(minutes=35),
         ),
@@ -180,8 +176,7 @@ def seed_users():
             is_resigned=False,
             email="admin@secmind.com",
             phone="13800019999",
-            hashed_password=get_password_hash("admin123"),
-            role="admin",
+            hashed_password=ADMIN_HASH,
             status="active",
             last_login=datetime.now(),
         ),

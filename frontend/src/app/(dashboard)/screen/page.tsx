@@ -19,6 +19,7 @@ import {
 import ReactECharts from "echarts-for-react"
 import { PageHeader } from "@/components/layout/page-header"
 import { PermissionGate } from "@/components/auth/PermissionGate"
+import { useAuthStore } from "@/store/auth-store"
 import { useLocaleStore } from "@/store/locale-store"
 import {
   Card,
@@ -272,63 +273,6 @@ function getPieChartOption(attackTypes: AttackType[]) {
   }
 }
 
-/** 柱状图 - 渐变+圆角 */
-function getBarChartOption(hourlyAlerts: HourlyAlert[]) {
-  const hours = hourlyAlerts.map(h => `${String(h.hour).padStart(2, "0")}:00`)
-  const values = hourlyAlerts.map(h => h.count)
-  
-  return {
-    backgroundColor: "transparent",
-    tooltip: {
-      trigger: "axis",
-      backgroundColor: "#ffffff",
-      borderColor: "#e4e4e7",
-      borderWidth: 1,
-      borderRadius: RADIUS.md.replace('rounded-', ''),
-      padding: [12, 16],
-      textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-      axisPointer: { type: "shadow", shadowStyle: { color: "rgba(8,145,178,0.06)" } },
-    },
-    grid: { top: 30, right: 30, bottom: 50, left: 60, containLabel: true },
-    xAxis: {
-      type: "category",
-      data: hours,
-      axisLine: { lineStyle: { color: "#e4e4e7", width: 1 } },
-      axisTick: { show: false },
-      axisLabel: { color: "#a1a1aa", fontSize: 11, interval: 3, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-    },
-    yAxis: {
-      type: "value",
-      axisLine: { show: false },
-      axisTick: { show: false },
-      axisLabel: { color: "#a1a1aa", fontSize: 12, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
-    },
-    series: [{
-      type: "bar",
-      barWidth: "55%",
-      data: values.map(val => ({
-        value: val,
-        itemStyle: {
-          color: {
-            type: "linear", x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [{ offset: 0, color: "#0891b2" }, { offset: 1, color: "#67e8f9" }]
-          },
-          borderRadius: [4, 4, 0, 0],
-        },
-      })),
-      emphasis: {
-        itemStyle: {
-          color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "#0e7490" }, { offset: 1, color: "#22d3ee" }] },
-          shadowBlur: 16,
-          shadowColor: "rgba(8,145,178,0.25)",
-          shadowOffsetY: 4,
-        },
-      },
-    }],
-  }
-}
-
 /** 地图 - 散点图替代（无需GeoJSON） */
 function getMapOption(regions: ThreatRegion[]) {
   const mapData = regions
@@ -397,7 +341,7 @@ function DashboardKPICard({ item }: { item: KPIItem }) {
             >
               <Icon className="size-5" style={{ color: item.color }} />
             </div>
-            <span className={String(TYPOGRAPHY.caption) + " text-slate-500 uppercase tracking-wide font-medium"}>
+            <span className={String(TYPOGRAPHY.caption) + " text-zinc-500 uppercase tracking-wide font-medium"}>
               {item.label}
             </span>
           </div>
@@ -413,7 +357,7 @@ function DashboardKPICard({ item }: { item: KPIItem }) {
           )}
         </div>
 
-        <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-slate-900">
+        <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-white">
           {item.value}
         </div>
         
@@ -430,13 +374,13 @@ function AlertListItem({ alert }: { alert: AlertItem }) {
   return (
     <div className={cn(
       "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-150",
-      "hover:bg-slate-50 border border-transparent hover:border-slate-200"
+      "hover:bg-[#09090b] border border-transparent hover:border-white/6"
     )}>
       <span className={String(TYPOGRAPHY.caption) + "font-mono text-slate-400 w-20 shrink-0 tabular-nums"}>
         {alert.time}
       </span>
       
-      <span className={String(TYPOGRAPHY.body) + "text-slate-500 w-14 shrink-0 font-medium"}>
+      <span className={String(TYPOGRAPHY.body) + "text-zinc-500 w-14 shrink-0 font-medium"}>
         {alert.source}
       </span>
       
@@ -447,7 +391,7 @@ function AlertListItem({ alert }: { alert: AlertItem }) {
         {SEVERITY_LABEL[alert.level] ?? alert.level}
       </span>
       
-      <span className={String(TYPOGRAPHY.body) + "text-slate-700 truncate flex-1 ml-1"}>
+      <span className={String(TYPOGRAPHY.body) + "text-zinc-200 truncate flex-1 ml-1"}>
         {alert.message}
       </span>
     </div>
@@ -472,10 +416,10 @@ function TeamMemberCard({ member }: { member: typeof teamStats[number] }) {
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className={String(TYPOGRAPHY.body) + "text-slate-800 font-medium truncate"}>
+          <div className={String(TYPOGRAPHY.body) + "text-zinc-100 font-medium truncate"}>
             {member.name}
           </div>
-          <div className={String(TYPOGRAPHY.caption) + "text-slate-500 mt-0.5"}>
+          <div className={String(TYPOGRAPHY.caption) + "text-zinc-500 mt-0.5"}>
             {member.cases}件 · {member.accuracy}
           </div>
         </div>
@@ -490,7 +434,7 @@ function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className={String(TYPOGRAPHY.body) + "text-slate-700 w-24 truncate font-medium"}>
+      <span className={String(TYPOGRAPHY.body) + "text-zinc-200 w-24 truncate font-medium"}>
         {item.name}
       </span>
       
@@ -511,13 +455,14 @@ function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
 // ==================== 主页面 ====================
 
 export default function ScreenPage() {
+  const { t } = useLocaleStore()
   return (
     <PermissionGate resource="dashboard_situation" action="read" fallback={
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
-          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
-          <p className="text-sm text-slate-500 mt-1">你没有查看态势大屏的权限</p>
+          <ShieldAlert className="mx-auto size-12 text-zinc-500 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-300">{t("situation.noPermission")}</h2>
+          <p className="text-sm text-zinc-500 mt-1">{t("situation.noPermissionDesc")}</p>
         </div>
       </div>
     }>
@@ -527,7 +472,8 @@ export default function ScreenPage() {
 }
 
 function ScreenContent() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [timeRange, setTimeRange] = useState("today")
   const [summary, setSummary] = useState<OverviewSummary | null>(null)
   const [hourlyAlerts, setHourlyAlerts] = useState<HourlyAlert[]>([])
@@ -540,6 +486,46 @@ function ScreenContent() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
+      if (isDemo) {
+        setSummary({
+          total_alerts_today: 1284,
+          total_devices: 156,
+          online_devices: 152,
+          device_online_rate: 0.973,
+          mttd_minutes: 4.2,
+          mttr_minutes: 18.7,
+          ai_accuracy: 0.956,
+          auto_response_rate: 0.685,
+        })
+        setHourlyAlerts([
+          { hour: 8, count: 42 }, { hour: 9, count: 78 }, { hour: 10, count: 156 },
+          { hour: 11, count: 89 }, { hour: 12, count: 45 }, { hour: 13, count: 67 },
+          { hour: 14, count: 234 }, { hour: 15, count: 178 }, { hour: 16, count: 123 },
+          { hour: 17, count: 56 }, { hour: 18, count: 34 },
+        ])
+        setAttackTypes([
+          { type: "暴力破解", count: 28, trend: "+12%" },
+          { type: "钓鱼攻击", count: 22, trend: "+8%" },
+          { type: "恶意软件", count: 18, trend: "-3%" },
+          { type: "权限提升", count: 15, trend: "+25%" },
+          { type: "数据泄露", count: 12, trend: "+5%" },
+          { type: "网络扫描", count: 8, trend: "-10%" },
+        ])
+        setRegions([
+          { region: "华北", attacks: 324, top_type: "暴力破解" },
+          { region: "华东", attacks: 278, top_type: "钓鱼攻击" },
+          { region: "华南", attacks: 156, top_type: "恶意软件" },
+          { region: "西南", attacks: 89, top_type: "网络扫描" },
+          { region: "海外", attacks: 437, top_type: "暴力破解" },
+        ])
+        setRealtimeEvents([
+          { id: 1, type: "EDR", severity: "critical", source: "EDR", message: "PowerShell编码执行行为检测", timestamp: new Date().toISOString() },
+          { id: 2, type: "VPN", severity: "critical", source: "VPN", message: "境外IP异常登录触发不可能旅行检测", timestamp: new Date(Date.now() - 5000).toISOString() },
+          { id: 3, type: "Email", severity: "high", source: "Email", message: "高仿DHL钓鱼邮件拦截", timestamp: new Date(Date.now() - 10000).toISOString() },
+        ])
+        setLastUpdated(new Date())
+        return
+      }
       const [overviewRes, threatMapRes, realtimeRes] = await Promise.all([
         api.get("/situation/overview"),
         api.get("/situation/threat-map"),
@@ -583,18 +569,18 @@ function ScreenContent() {
     <div className="space-y-6">
       <PageHeader
         icon={Activity}
-        title="安全运营态势大屏"
-        subtitle="SecMind Security Operations Center - Real-time Threat Monitoring"
+        title={t("situation.title")}
+        subtitle={t("situation.subtitle")}
         actions={
           <div className="flex items-center gap-3">
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v ?? "today")}>
-              <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="时间范围">
-                <SelectValue placeholder="时间范围" />
+              <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label={t("dashboard.timeRange")}>
+                <SelectValue placeholder={t("dashboard.timeRange")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="today">今天</SelectItem>
-                <SelectItem value="week">本周</SelectItem>
-                <SelectItem value="month">本月</SelectItem>
+                <SelectItem value="today">{t("time.today")}</SelectItem>
+                <SelectItem value="week">{t("time.thisWeek")}</SelectItem>
+                <SelectItem value="month">{t("time.thisMonth")}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -603,17 +589,17 @@ function ScreenContent() {
               disabled={loading}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold",
-                "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+                "border border-white/6 bg-[#131316] text-zinc-200 hover:bg-[#09090b]",
                 "transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
               <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
-              刷新数据
+              {t("situation.refreshData")}
             </button>
             
             <Badge variant="outline" className={cn("gap-1.5 px-3 py-1.5", "border-emerald-200 text-emerald-700")}>
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              实时监控中
+              {t("situation.liveMonitoring")}
             </Badge>
           </div>
         }
@@ -631,7 +617,7 @@ function ScreenContent() {
             <CardContent className="p-5 h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
                 <Globe className="size-5 text-primary" />
-                <h2 className={String(TYPOGRAPHY.h2)}>全国威胁分布</h2>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.threatMap")}</h2>
               </div>
               
               <div className="flex-1 min-h-[350px]">
@@ -646,7 +632,7 @@ function ScreenContent() {
             <CardContent className="p-5 h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="size-5 text-primary" />
-                <h2 className={String(TYPOGRAPHY.h2)}>24小时攻击趋势</h2>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.attackTrend")}</h2>
               </div>
               
               <div className="flex-1 min-h-[350px]">
@@ -661,7 +647,7 @@ function ScreenContent() {
             <CardContent className="p-5 h-full flex flex-col">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldAlert className="size-5 text-primary" />
-                <h2 className={String(TYPOGRAPHY.h2)}>威胁类型分布</h2>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.threatTypeDistribution")}</h2>
               </div>
               
               <div className="flex-1 min-h-[350px]">
@@ -685,11 +671,11 @@ function ScreenContent() {
                     </span>
                   </div>
                   <Eye className="size-5 text-primary" />
-                  <h2 className={String(TYPOGRAPHY.h2)}>实时告警流</h2>
+                  <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.realtimeAlertFeed")}</h2>
                 </div>
                 
                 <Badge variant="outline" className={cn("border-red-200 text-red-600", TYPOGRAPHY.caption)}>
-                  最近 {Math.min(realtimeAlerts.length, 8)} 条
+                  {t("situation.recentAlerts")} {Math.min(realtimeAlerts.length, 8)} {t("common.items")}
                 </Badge>
               </div>
               
@@ -717,7 +703,7 @@ function ScreenContent() {
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="size-5 text-primary" />
-                <h2 className={String(TYPOGRAPHY.h2)}>团队在线状态</h2>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.teamOnlineStatus")}</h2>
               </div>
               
               <div className="space-y-2">
@@ -732,7 +718,7 @@ function ScreenContent() {
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-4">
                 <Activity className="size-5 text-primary" />
-                <h2 className={String(TYPOGRAPHY.h2)}>系统健康状态</h2>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("situation.systemHealth")}</h2>
               </div>
               
               <div className="space-y-3">
@@ -750,23 +736,22 @@ function ScreenContent() {
         CARD.base
       )}>
         <div className="flex items-center gap-6">
-          <span className={String(TYPOGRAPHY.caption) + "text-slate-500"}>
-            SecMind AI SOC Platform v2.0 | 刷新间隔: 30s
+<span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>
+            SecMind AI SOC Platform v2.0 | {t("situation.refreshInterval")}: 30s
           </span>
           {lastUpdated && (
-            <span className={String(TYPOGRAPHY.caption) + "text-slate-400"}>
-              上次更新: {lastUpdated.toLocaleTimeString("zh-CN", { hour12: false })}
+            <span className={String(TYPOGRAPHY.caption) + "text-zinc-600"}>
+              {t("situation.lastUpdate")}: {lastUpdated.toLocaleTimeString("zh-CN", { hour12: false })}
             </span>
           )}
         </div>
-        
-        <div className="flex items-center gap-6">
-          <span className={String(TYPOGRAPHY.caption) + "text-slate-500 flex items-center gap-1.5"}>
-            <CheckCircle2 className="size-3.5 text-emerald-500 animate-pulse" />
-            系统正常
-          </span>
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className={cn("gap-1.5 px-3 py-1.5", "border-emerald-200 text-emerald-700")}>
+            <CheckCircle2 className="size-3" />
+            {t("situation.systemNormal")}
+          </Badge>
           
-          <span className={String(TYPOGRAPHY.caption) + "text-slate-500"}>
+          <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>
             内存: 62% | CPU: 34% | 磁盘: 51%
           </span>
           

@@ -6,93 +6,38 @@ const isDev = process.env.NODE_ENV === "development"
 function devLog(...args: unknown[]) { if (isDev) console.log(...args) }
 function devWarn(...args: unknown[]) { if (isDev) console.warn(...args) }
 function devError(...args: unknown[]) { if (isDev) console.error(...args) }
+
 import {
   Brain,
-  Activity,
   Shield,
   Zap,
-  Eye,
-  Lock,
-  Globe,
   Server,
   Database,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   ArrowRight,
   Cpu,
   Network,
-  FileText,
   User,
-  Search,
   Target,
   Layers,
   Sparkles,
   Radio,
-  Terminal,
+  FileText,
+  Activity,
+  Lock,
+  Globe,
+  Eye,
+  Search,
   Bug,
   Key,
-  Download,
-  Upload,
-  Wifi,
-  ShieldAlert,
   Code2,
+  ShieldAlert,
+  Upload,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/page-header"
 
 // ==================== 统一设计令牌（Design Tokens）====================
-
-/** 颜色系统 - 基于Tailwind语义色 */
-const COLORS = {
-  // 严重等级
-  critical: {
-    bg: "bg-red-50 dark:bg-red-950/20",
-    border: "border-red-200 dark:border-red-800",
-    text: "text-red-700 dark:text-red-300",
-    solid: "bg-red-600 dark:bg-red-500",
-    light: "bg-red-100 dark:bg-red-900/30",
-  },
-  high: {
-    bg: "bg-orange-50 dark:bg-orange-950/20",
-    border: "border-orange-200 dark:border-orange-800",
-    text: "text-orange-700 dark:text-orange-300",
-    solid: "bg-orange-600 dark:bg-orange-500",
-    light: "bg-orange-100 dark:bg-orange-900/30",
-  },
-  medium: {
-    bg: "bg-yellow-50 dark:bg-yellow-950/20",
-    border: "border-yellow-200 dark:border-yellow-800",
-    text: "text-yellow-700 dark:text-yellow-300",
-    solid: "bg-yellow-600 dark:bg-yellow-500",
-    light: "bg-yellow-100 dark:bg-yellow-900/30",
-  },
-  low: {
-    bg: "bg-emerald-50 dark:bg-emerald-950/20",
-    border: "border-emerald-200 dark:border-emerald-800",
-    text: "text-emerald-700 dark:text-emerald-300",
-    solid: "bg-emerald-600 dark:bg-emerald-500",
-    light: "bg-emerald-100 dark:bg-emerald-900/30",
-  },
-  
-  // Agent角色色 - 使用cyan作为AI模块品牌色（符合admin-ui-guidelines）
-  agent: {
-    soc: { color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-100 dark:bg-sky-900/30", solid: "bg-sky-500" },
-    identity: { color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-100 dark:bg-cyan-900/30", solid: "bg-cyan-500" },
-    threat: { color: "text-red-600 dark:text-red-400", bg: "bg-red-100 dark:bg-red-900/30", solid: "bg-red-500" },
-    ueba: { color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-900/30", solid: "bg-amber-500" },
-    forensics: { color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-100 dark:bg-cyan-900/30", solid: "bg-cyan-500" },
-    reasoning: { color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-100 dark:bg-cyan-900/30", solid: "bg-cyan-500" },
-    conclusion: { color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-900/30", solid: "bg-emerald-500" },
-  },
-
-  // 状态色
-  status: {
-    working: "animate-pulse",
-    complete: "",
-    waiting: "opacity-60",
-  }
-}
 
 /** 字体层次 - 4级系统 */
 const TYPOGRAPHY = {
@@ -120,33 +65,6 @@ const RADIUS = {
   md: "rounded-lg",   // 8px
   lg: "rounded-xl",   // 12px
   xl: "rounded-2xl",  // 16px
-}
-
-/** 卡片基础样式 */
-const CARD_BASE = `${RADIUS.lg} border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors duration-200`
-
-/** 获取严重等级样式 */
-function getSeverityStyles(severity: string) {
-  const map: Record<string, typeof COLORS.critical> = {
-    critical: COLORS.critical,
-    high: COLORS.high,
-    medium: COLORS.medium,
-    low: COLORS.low,
-  }
-  return map[severity] || COLORS.medium
-}
-
-/** 获取Agent颜色 */
-function getAgentColor(agentName: string) {
-  const name = agentName.toLowerCase()
-  if (name.includes("soc")) return COLORS.agent.soc
-  if (name.includes("identity") || name.includes("user") || name.includes("ad")) return COLORS.agent.identity
-  if (name.includes("threat") || name.includes("intel")) return COLORS.agent.threat
-  if (name.includes("ueba") || name.includes("behavior")) return COLORS.agent.ueba
-  if (name.includes("forensic") || name.includes("log") || name.includes("mail") || name.includes("edr") || name.includes("network")) return COLORS.agent.forensics
-  if (name.includes("reasoning")) return COLORS.agent.reasoning
-  if (name.includes("conclusion")) return COLORS.agent.conclusion
-  return COLORS.agent.soc  // 默认
 }
 
 // ==================== 数据类型定义 ====================
@@ -228,7 +146,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件1: 钓鱼邮件攻击 =====
   {
     id: "evt-001",
-    eventId: "ALT-2026-0511-001",
+    eventId: "ALT001",
     title: "高仿OA系统钓鱼邮件攻击",
     source: "邮件网关",
     sourceIcon: FileText,
@@ -295,7 +213,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件2: VPN异地登录 =====
   {
     id: "evt-002",
-    eventId: "ALT-2026-0511-002",
+    eventId: "ALT002",
     title: "VPN异常地理位置登录",
     source: "VPN网关",
     sourceIcon: Lock,
@@ -362,7 +280,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件3: SSH暴力破解 =====
   {
     id: "evt-003",
-    eventId: "ALT-2026-0511-003",
+    eventId: "ALT003",
     title: "SSH暴力破解攻击检测",
     source: "WAF防火墙",
     sourceIcon: Globe,
@@ -422,7 +340,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件4: DLP数据外泄 =====
   {
     id: "evt-004",
-    eventId: "ALT-2026-0511-004",
+    eventId: "ALT004",
     title: "敏感数据批量外传检测",
     source: "DLP系统",
     sourceIcon: Eye,
@@ -484,7 +402,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件5: 恶意软件C2通信 =====
   {
     id: "evt-005",
-    eventId: "ALT-2026-0511-005",
+    eventId: "ALT005",
     title: "Cobalt Beacon C2通信检测",
     source: "EDR终端",
     sourceIcon: Shield,
@@ -551,7 +469,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件6: 横向移动RDP =====
   {
     id: "evt-006",
-    eventId: "ALT-2026-0511-006",
+    eventId: "ALT006",
     title: "异常RDP横向移动检测",
     source: "SIEM平台",
     sourceIcon: Database,
@@ -612,7 +530,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件7: 权限提升检测 =====
   {
     id: "evt-007",
-    eventId: "ALT-2026-0511-007",
+    eventId: "ALT007",
     title: "Windows权限提升攻击检测",
     source: "EDR终端",
     sourceIcon: Shield,
@@ -672,7 +590,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件8: DNS隧道检测 =====
   {
     id: "evt-008",
-    eventId: "ALT-2026-0511-008",
+    eventId: "ALT008",
     title: "DNS隧道数据外传检测",
     source: "SIEM平台",
     sourceIcon: Database,
@@ -733,7 +651,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件9: 凭证转储 =====
   {
     id: "evt-009",
-    eventId: "ALT-2026-0511-009",
+    eventId: "ALT009",
     title: "LSASS内存凭证转储检测",
     source: "EDR终端",
     sourceIcon: Shield,
@@ -795,7 +713,7 @@ const securityEvents: SecurityEvent[] = [
   // ===== 事件10: 供应链攻击 =====
   {
     id: "evt-010",
-    eventId: "ALT-2026-0511-010",
+    eventId: "ALT010",
     title: "第三方软件更新供应链攻击",
     source: "EDR终端",
     sourceIcon: Shield,
@@ -928,8 +846,8 @@ function DataSourceCard({ source, index }: { source: DataSource; index: number }
       <div className={`
         relative ${RADIUS.md} border p-2 transition-colors duration-200 cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50
         ${source.status === "active"
-          ? `border-current/20 bg-white dark:bg-slate-800 hover:border-current/40`
-          : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50"}
+          ? `border-current/20 bg-[#131316] dark:bg-slate-800 hover:border-current/40`
+          : "border-white/6 dark:border-slate-700 bg-[#09090b] dark:bg-slate-900/50"}
       `} style={{ color: source.color }}>
         <div className="flex items-center gap-2">
           <div className={`flex size-6 items-center justify-center ${RADIUS.sm} transition-[transform] duration-300 ${
@@ -937,7 +855,7 @@ function DataSourceCard({ source, index }: { source: DataSource; index: number }
           }`} style={{ color: source.color }}>
             <Icon className="size-3" aria-hidden="true" />
           </div>
-          <span className={String(TYPOGRAPHY.micro) + " font-medium text-slate-700 dark:text-slate-300 truncate"}>{source.name}</span>
+          <span className={String(TYPOGRAPHY.micro) + " font-medium text-zinc-200 dark:text-slate-300 truncate"}>{source.name}</span>
           <span className="text-[10px] font-mono text-slate-400 tabular-nums ml-auto">{source.eventCount.toLocaleString()}</span>
           <AnimatedPulse active={source.status === "active"} />
         </div>
@@ -958,7 +876,7 @@ function AgentCard({ agent, dynamicStatus }: { agent: AIAgent; dynamicStatus?: '
   const statusStyles = {
     thinking: { bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-700 dark:text-blue-300" },
     analyzing: { bg: "bg-cyan-50 dark:bg-cyan-900/20", text: "text-cyan-700 dark:text-cyan-300" },
-    waiting: { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-400" },
+    waiting: { bg: "bg-slate-100 dark:bg-slate-800", text: "text-zinc-400 dark:text-slate-400" },
     complete: { bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-700 dark:text-emerald-300" },
   }
 
@@ -972,7 +890,7 @@ function AgentCard({ agent, dynamicStatus }: { agent: AIAgent; dynamicStatus?: '
   const currentStyle = statusStyles[effectiveStatus]
 
   return (
-    <div className={`group relative overflow-hidden ${RADIUS.lg} border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2.5 transition-colors duration-200 hover:border-slate-300 dark:hover:border-slate-600`} role="article" aria-label={`${agent.name}: ${statusText[effectiveStatus]}`}>
+    <div className={`group relative overflow-hidden ${RADIUS.lg} border border-white/6 dark:border-slate-700 bg-[#131316] dark:bg-slate-800 p-2.5 transition-colors duration-200 hover:border-slate-300 dark:hover:border-slate-600`} role="article" aria-label={`${agent.name}: ${statusText[effectiveStatus]}`}>
       <div className={`flex items-center gap-2.5`}>
         <div className={`relative flex size-8 shrink-0 items-center justify-center ${RADIUS.md} transition-[transform] duration-200 group-hover:scale-105`} style={{ backgroundColor: `${agent.color}10` }}>
           <Icon className="size-4 transition-transform duration-200" style={{ color: agent.color }} aria-hidden="true" />
@@ -987,7 +905,7 @@ function AgentCard({ agent, dynamicStatus }: { agent: AIAgent; dynamicStatus?: '
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <span className={String(TYPOGRAPHY.micro) + " font-semibold text-slate-800 truncate"}>{agent.name}</span>
+            <span className={String(TYPOGRAPHY.micro) + " font-semibold text-zinc-100 truncate"}>{agent.name}</span>
             <span className={`${TYPOGRAPHY.micro} font-medium px-1.5 py-0.5 rounded-full ${currentStyle.bg} ${currentStyle.text} shrink-0`}>
               {statusText[effectiveStatus]}
             </span>
@@ -1038,14 +956,12 @@ function EvidenceCard({ evidence, delay }: { evidence: Evidence; delay: number }
 
   if (!visible) return null
 
-  // 使用设计令牌的颜色系统
-  const severityStyle = getSeverityStyles(evidence.riskLevel)
   const color = evidence.riskLevel === "critical" ? "#ef4444" :
                 evidence.riskLevel === "high" ? "#f97316" :
                 evidence.riskLevel === "medium" ? "#eab308" : "#22c55e"
 
   return (
-    <div className={`group relative overflow-hidden ${RADIUS.lg} border-2 p-3 bg-white dark:bg-slate-800 animate-slideInLeft`} style={{ borderColor: `${color}40`, animationDelay: `${delay}ms` }} role="article" aria-label={`证据: ${evidence.type}, 风险等级: ${evidence.riskLevel}`}>
+    <div className={`group relative overflow-hidden ${RADIUS.lg} border-2 p-3 bg-[#131316] dark:bg-slate-800 animate-slideInLeft`} style={{ borderColor: `${color}40`, animationDelay: `${delay}ms` }} role="article" aria-label={`证据: ${evidence.type}, 风险等级: ${evidence.riskLevel}`}>
       <div className="absolute top-0 left-0 w-full h-1" style={{ backgroundColor: color }} aria-hidden="true" />
 
       <div className={`flex items-start gap-${SPACING.sm} mb-2`}>
@@ -1054,7 +970,7 @@ function EvidenceCard({ evidence, delay }: { evidence: Evidence; delay: number }
         </div>
         <div className="flex-1">
           <div className="flex items-center justify-between">
-            <span className={String(TYPOGRAPHY.caption) + " font-bold text-slate-700"}>{evidence.type}</span>
+            <span className={String(TYPOGRAPHY.caption) + " font-bold text-zinc-200"}>{evidence.type}</span>
             <span
               className={`${TYPOGRAPHY.micro} font-bold px-1.5 py-0.5 rounded text-white uppercase`}
               style={{ backgroundColor: color }}
@@ -1065,22 +981,22 @@ function EvidenceCard({ evidence, delay }: { evidence: Evidence; delay: number }
         </div>
       </div>
 
-      <p className={String(TYPOGRAPHY.micro) + " font-semibold text-slate-800 mb-2"}>{evidence.content}</p>
+      <p className={String(TYPOGRAPHY.micro) + " font-semibold text-zinc-100 mb-2"}>{evidence.content}</p>
 
       {evidence.details && (
         <div className={`space-y-1 mb-2`}>
           {evidence.details.map((detail, i) => (
             <div key={i} className={`flex items-center justify-between ${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")}`}>
-              <span className="text-slate-500">{detail.label}</span>
-              <span className="font-medium text-slate-700">{detail.value}</span>
+              <span className="text-zinc-500">{detail.label}</span>
+              <span className="font-medium text-zinc-200">{detail.value}</span>
             </div>
           ))}
         </div>
       )}
 
-      <div className={`flex items-center gap-1 pt-2 border-t border-slate-100 dark:border-slate-700`}>
+      <div className={`flex items-center gap-1 pt-2 border-t border-white/4 dark:border-slate-700`}>
         <Server className="size-2.5 text-slate-400" aria-hidden="true" />
-        <span className={String(TYPOGRAPHY.micro) + " text-slate-500"}>{evidence.source}</span>
+        <span className={String(TYPOGRAPHY.micro) + " text-zinc-500"}>{evidence.source}</span>
       </div>
 
       <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true">
@@ -1109,7 +1025,7 @@ function CorrelationFlow({ links }: { links: CorrelationLink[] }) {
 
   return (
     <div className="mt-3 space-y-2">
-      <div className={`flex items-center gap-2 ${TYPOGRAPHY.micro} font-semibold text-slate-600`}>
+      <div className={`flex items-center gap-2 ${TYPOGRAPHY.micro} font-semibold text-zinc-400`}>
         <Network className="size-3.5" aria-hidden="true" />
         攻击链关联分析
       </div>
@@ -1127,15 +1043,15 @@ function CorrelationFlow({ links }: { links: CorrelationLink[] }) {
           role="listitem"
           aria-label={`${link.from} → ${link.to}: ${link.description}`}
         >
-          <div className={`${RADIUS.md} border border-slate-200 bg-white flex-1 px-3 py-2 text-center`}>
-            <span className={String(TYPOGRAPHY.body) + " font-medium text-slate-700"}>{link.from}</span>
+          <div className={`${RADIUS.md} border border-white/6 bg-[#131316] flex-1 px-3 py-2 text-center`}>
+            <span className={String(TYPOGRAPHY.body) + " font-medium text-zinc-200"}>{link.from}</span>
             <p className={`${TYPOGRAPHY.micro} text-slate-400 mt-0.5`}>{link.description}</p>
           </div>
 
           <ArrowRight className="size-4 text-cyan-500 shrink-0" aria-hidden="true" />
 
-          <div className={`${RADIUS.md} border border-slate-200 bg-white flex-1 px-3 py-2 text-center`}>
-            <span className={String(TYPOGRAPHY.body) + "font-medium text-slate-700"}>{link.to}</span>
+          <div className={`${RADIUS.md} border border-white/6 bg-[#131316] flex-1 px-3 py-2 text-center`}>
+            <span className={String(TYPOGRAPHY.body) + "font-medium text-zinc-200"}>{link.to}</span>
           </div>
         </div>
         )
@@ -1177,7 +1093,6 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
   })
 
   // 防止重复启动分析的标志
-  const hasStartedAnalysis = useRef(false)
 
   // 真实事件数据（从API获取）
   const [realEvents, setRealEvents] = useState<SecurityEvent[]>([])
@@ -1433,11 +1348,11 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
           </div>
 
           <div>
-            <h3 className={String(TYPOGRAPHY.h2) + " text-slate-800"}>AI研判完成</h3>
-            <p className={`${TYPOGRAPHY.body} text-slate-500 mt-1`}>{currentEvent.title}</p>
+            <h3 className={String(TYPOGRAPHY.h2) + " text-zinc-100"}>AI研判完成</h3>
+            <p className={`${TYPOGRAPHY.body} text-zinc-500 mt-1`}>{currentEvent.title}</p>
           </div>
 
-          <div className={`flex items-center justify-center gap-4 ${TYPOGRAPHY.caption} text-slate-600`}>
+          <div className={`flex items-center justify-center gap-4 ${TYPOGRAPHY.caption} text-zinc-400`}>
             <span className={`px-2 py-1 ${RADIUS.md} bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200`}>
               置信度: <strong className="text-emerald-700">{currentEvent.conclusion.confidence}%</strong>
             </span>
@@ -1447,18 +1362,18 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
           </div>
         </div>
 
-        <div className={`w-full max-w-lg space-y-${SPACING.md} pt-4 border-t border-slate-200 dark:border-slate-700`}>
-          <div className={`flex items-center gap-2 ${TYPOGRAPHY.body} text-slate-600`}>
+        <div className={`w-full max-w-lg space-y-${SPACING.md} pt-4 border-t border-white/6 dark:border-slate-700`}>
+          <div className={`flex items-center gap-2 ${TYPOGRAPHY.body} text-zinc-400`}>
             <Radio className="size-4 text-blue-600 animate-pulse" aria-hidden="true" />
             <span className="font-medium">检测到新的安全告警</span>
           </div>
 
-          <div className={`flex items-center gap-3 p-3.5 ${RADIUS.xl} bg-white dark:bg-slate-800 border border-slate-200 hover:border-blue-300 transition-colors cursor-pointer`} role="button" tabIndex={0} aria-label={`下一个事件: ${nextEvent.title}`}>
+          <div className={`flex items-center gap-3 p-3.5 ${RADIUS.xl} bg-[#131316] dark:bg-slate-800 border border-white/6 hover:border-blue-300 transition-colors cursor-pointer`} role="button" tabIndex={0} aria-label={`下一个事件: ${nextEvent.title}`}>
             <div className={`flex size-9 items-center justify-center ${RADIUS.lg} shrink-0`} style={{ backgroundColor: `${nextEvent.sourceColor}12` }}>
               <NextIcon className="size-4.5" style={{ color: nextEvent.sourceColor }} aria-hidden="true" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className={`${TYPOGRAPHY.micro} font-semibold text-slate-800 truncate`}>{nextEvent.title}</div>
+              <div className={`${TYPOGRAPHY.micro} font-semibold text-zinc-100 truncate`}>{nextEvent.title}</div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span
                   className={`${TYPOGRAPHY.micro} px-1.5 py-0.5 rounded text-white font-medium`}
@@ -1466,7 +1381,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 >
                   {nextEvent.severity.toUpperCase()}
                 </span>
-                <span className={`${TYPOGRAPHY.micro} text-slate-500`}>来源: {nextEvent.source}</span>
+                <span className={`${TYPOGRAPHY.micro} text-zinc-500`}>来源: {nextEvent.source}</span>
               </div>
             </div>
             <ArrowRight className="size-4 text-slate-400 shrink-0" aria-hidden="true" />
@@ -1497,8 +1412,8 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
         {useRealData ? (
           <div className="text-center space-y-4 max-w-md">
             <Database className="size-16 text-slate-300 mx-auto" />
-            <p className="text-lg font-semibold text-slate-700">暂无安全事件</p>
-            <p className="text-sm text-slate-500">
+            <p className="text-lg font-semibold text-zinc-200">暂无安全事件</p>
+            <p className="text-sm text-zinc-500">
               {apiError ? (
                 <>连接失败: <strong className="text-red-600">{apiError}</strong></>
               ) : isLoadingEvents ? (
@@ -1541,7 +1456,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
     <div ref={containerRef} className="h-full overflow-y-auto px-3 pt-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent scroll-smooth">
       <div className="space-y-3 pb-4">
         {/* 事件标题卡片 */}
-        <div className={`${RADIUS.lg} border-2 p-4 bg-white dark:bg-slate-800`} style={{ borderColor: `${currentEvent.sourceColor}30` }}>
+        <div className={`${RADIUS.lg} border-2 p-4 bg-[#131316] dark:bg-slate-800`} style={{ borderColor: `${currentEvent.sourceColor}30` }}>
           <div className={`flex items-start gap-${SPACING.md}`}>
             <div className={`flex size-12 items-center justify-center ${RADIUS.lg} shrink-0`} style={{ backgroundColor: `${currentEvent.sourceColor}15` }}>
               <currentEvent.sourceIcon className="size-6" style={{ color: currentEvent.sourceColor }} aria-hidden="true" />
@@ -1564,10 +1479,10 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 <span className={`font-mono ${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")} text-slate-400`}>{currentEvent.eventId}</span>
               </div>
 
-              <h3 className={String(TYPOGRAPHY.h3) + " text-slate-900 mb-1"}>{currentEvent.title}</h3>
-              <p className={String(TYPOGRAPHY.body) + " text-slate-600"}>{currentEvent.description}</p>
+              <h3 className={String(TYPOGRAPHY.h3) + " text-white mb-1"}>{currentEvent.title}</h3>
+              <p className={String(TYPOGRAPHY.body) + " text-zinc-400"}>{currentEvent.description}</p>
 
-              <div className={`flex items-center gap-${SPACING.md} mt-2 ${TYPOGRAPHY.micro} text-slate-500`}>
+              <div className={`flex items-center gap-${SPACING.md} mt-2 ${TYPOGRAPHY.micro} text-zinc-500`}>
                 <span className="flex items-center gap-1">
                   <Radio className="size-3" style={{ color: currentEvent.sourceColor }} aria-hidden="true" />
                   来源: {currentEvent.source}
@@ -1623,8 +1538,8 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
               className={`
                 relative group ${RADIUS.lg} border p-3.5 transition-[shadow,transform,border-color] duration-700
                 ${isLast
-                  ? "border-current/30 bg-white dark:bg-slate-800 shadow-md scale-[1.01]"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"}
+                  ? "border-current/30 bg-[#131316] dark:bg-slate-800 shadow-md scale-[1.01]"
+                  : "border-white/6 dark:border-slate-700 bg-[#131316] dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"}
               `}
               style={{ color: isLast ? step.agentColor : undefined }}
               role="article"
@@ -1680,7 +1595,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                     </div>
                   </div>
 
-                  <p className={`${TYPOGRAPHY.body} leading-relaxed ${isLast ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                  <p className={`${TYPOGRAPHY.body} leading-relaxed ${isLast ? 'font-bold text-white' : 'font-medium text-zinc-200'}`}>
                     {step.isTyping && isLast ? (
                       <TypewriterText text={step.message} speed={40} />
                     ) : (
@@ -1693,7 +1608,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                       {step.result.map((result, i) => (
                         <div
                           key={i}
-                          className={`${TYPOGRAPHY.micro} text-slate-600 flex items-start gap-1.5`}
+                          className={`${TYPOGRAPHY.micro} text-zinc-400 flex items-start gap-1.5`}
                         >
                           <span style={{ color: step.agentColor }}>•</span>
                           <span>{result}</span>
@@ -1726,44 +1641,44 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
             <CorrelationFlow links={currentEvent.correlationLinks} />
 
             {/* Conclusion */}
-            <div className={`mt-4 ${RADIUS.lg} border-2 border-red-200/60 bg-white dark:bg-slate-800 p-4 animate-fadeInUp`} style={{ animationDelay: "1500ms" }}>
+            <div className={`mt-4 ${RADIUS.lg} border-2 border-red-200/60 bg-[#131316] dark:bg-slate-800 p-4 animate-fadeInUp`} style={{ animationDelay: "1500ms" }}>
               <div className={`flex items-start gap-${SPACING.md} mb-3`}>
                 <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-gradient-to-br from-red-500 to-orange-500`}>
                   <Zap className="size-5 text-white" aria-hidden="true" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className={String(TYPOGRAPHY.h3) + " text-slate-800"}>AI 最终结论</h3>
+                    <h3 className={String(TYPOGRAPHY.h3) + " text-zinc-100"}>AI 最终结论</h3>
                     <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 border border-red-200">
                       <Sparkles className="size-3 text-red-600" aria-hidden="true" />
                       <span className={`${TYPOGRAPHY.micro} font-bold text-red-700`}>置信度 {currentEvent.conclusion.confidence}%</span>
                     </div>
                   </div>
-                  <p className={String(TYPOGRAPHY.body) + " font-semibold text-slate-900"}>{currentEvent.conclusion.event}</p>
+                  <p className={String(TYPOGRAPHY.body) + " font-semibold text-white"}>{currentEvent.conclusion.event}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className={`${RADIUS.md} bg-slate-50 dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-700`}>
-                  <div className={`${TYPOGRAPHY.micro} text-slate-500 mb-1`}>风险评分</div>
+                <div className={`${RADIUS.md} bg-[#09090b] dark:bg-slate-900 p-2.5 border border-white/6 dark:border-slate-700`}>
+                  <div className={`${TYPOGRAPHY.micro} text-zinc-500 mb-1`}>风险评分</div>
                   <div className="flex items-end gap-1">
                     <span className="text-2xl font-black text-red-600">{currentEvent.conclusion.riskScore}</span>
                     <span className={`${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")} text-slate-400 mb-1`}>/100</span>
                   </div>
                 </div>
-                <div className={`${RADIUS.md} bg-slate-50 dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-700`}>
-                  <div className={`${TYPOGRAPHY.micro} text-slate-500 mb-1`}>攻击阶段</div>
-                  <div className={`${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")} font-semibold text-slate-700 leading-tight`}>{currentEvent.conclusion.attackPhase}</div>
+                <div className={`${RADIUS.md} bg-[#09090b] dark:bg-slate-900 p-2.5 border border-white/6 dark:border-slate-700`}>
+                  <div className={`${TYPOGRAPHY.micro} text-zinc-500 mb-1`}>攻击阶段</div>
+                  <div className={`${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")} font-semibold text-zinc-200 leading-tight`}>{currentEvent.conclusion.attackPhase}</div>
                 </div>
               </div>
 
               <div>
-                <div className={`${TYPOGRAPHY.micro} text-slate-500 mb-2`}>AI 建议措施</div>
+                <div className={`${TYPOGRAPHY.micro} text-zinc-500 mb-2`}>AI 建议措施</div>
                 <div className={`space-y-${SPACING.xs}`}>
                   {currentEvent.conclusion.recommendations.map((rec, i) => (
                     <div key={i} className={`flex items-center gap-2 ${TYPOGRAPHY.caption.replace("text-xs", "text-[10px]")}`}>
                       <CheckCircle2 className="size-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
-                      <span className="text-slate-700">{rec}</span>
+                      <span className="text-zinc-200">{rec}</span>
                     </div>
                   ))}
                 </div>
@@ -1785,7 +1700,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 />
               ))}
             </div>
-            <span className={`${TYPOGRAPHY.micro} text-slate-500 italic`}>AI 正在深度分析中...</span>
+            <span className={`${TYPOGRAPHY.micro} text-zinc-500 italic`}>AI 正在深度分析中...</span>
           </div>
         )}
 
@@ -1800,7 +1715,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 </div>
                 <div>
                   <p className="text-xl font-bold text-cyan-700">正在连接AI分析引擎...</p>
-                  <p className="text-sm text-slate-500 mt-1">从后端获取真实安全事件</p>
+                  <p className="text-sm text-zinc-500 mt-1">从后端获取真实安全事件</p>
                   <div className="flex justify-center mt-3">
                     <div className="w-8 h-8 border-4 border-cyan-200 border-t-cyan-600 rounded-full animate-spin"></div>
                   </div>
@@ -1816,8 +1731,8 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 </div>
                 <div>
                   <p className="text-lg font-bold text-red-700">连接失败</p>
-                  <p className="text-sm text-slate-600 mt-1">{apiError}</p>
-                  <p className="text-xs text-slate-500 mt-2">请检查后端服务是否启动，或切换到演示模式</p>
+                  <p className="text-sm text-zinc-400 mt-1">{apiError}</p>
+                  <p className="text-xs text-zinc-500 mt-2">请检查后端服务是否启动，或切换到演示模式</p>
                 </div>
                 
                 <div className="flex gap-3 justify-center pt-2">
@@ -1829,7 +1744,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                   </button>
                   <button
                     onClick={onToggleMode}
-                    className="px-4 py-2 bg-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-300 transition-colors"
+                    className="px-4 py-2 bg-slate-200 text-zinc-200 text-sm font-medium rounded-lg hover:bg-slate-300 transition-colors"
                   >
                     切换到演示模式
                   </button>
@@ -1842,8 +1757,8 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
               <div className="text-center space-y-4">
                 <Database className="size-16 text-slate-300 mx-auto" />
                 <div>
-                  <p className="text-lg font-bold text-slate-700">暂无安全事件</p>
-                  <p className="text-sm text-slate-500">API返回空数据或没有待分析的事件</p>
+                  <p className="text-lg font-bold text-zinc-200">暂无安全事件</p>
+                  <p className="text-sm text-zinc-500">API返回空数据或没有待分析的事件</p>
                 </div>
                 <button
                   onClick={generateSampleEvents}
@@ -1862,7 +1777,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                 </div>
                 <div className="text-center space-y-3">
                   <p className="text-xl font-bold text-cyan-700">AI 引擎已启动</p>
-                  <p className="text-sm text-slate-500">正在接收安全事件数据...</p>
+                  <p className="text-sm text-zinc-500">正在接收安全事件数据...</p>
                   
                   <div className="flex items-center justify-center gap-3 pt-4">
                     <div className="flex flex-col items-center gap-1">
@@ -1884,7 +1799,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
                   <p className="text-xs text-slate-400 pt-2">首条消息将在 1 秒内出现...</p>
                   
                   {/* Mode switch button in initial state - 使用纯色背景，移除渐变 */}
-                  <div className="pt-4 border-t border-slate-200 w-full max-w-sm">
+                  <div className="pt-4 border-t border-white/6 w-full max-w-sm">
                     <button
                       onClick={onToggleMode}
                       className="w-full px-4 py-2.5 bg-cyan-50 border border-cyan-200 rounded-lg text-[11px] font-medium text-cyan-700 hover:bg-cyan-100 transition-colors"
@@ -1945,8 +1860,8 @@ export default function AIAnalysisPage() {
               onClick={toggleMode}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-primary/50 ${
                 useRealData
-                  ? 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700'
-                  : 'bg-cyan-50 border-cyan-200 hover:bg-cyan-100 text-cyan-700'
+                  ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/15 text-emerald-400'
+                  : 'bg-cyan-500/10 border-cyan-500/30 hover:bg-cyan-500/15 text-cyan-400'
               }`}
               aria-label={`切换到${useRealData ? '演示模式' : '真实数据模式'}`}
             >
@@ -1957,7 +1872,7 @@ export default function AIAnalysisPage() {
             {/* 时间显示 */}
             <time
               dateTime={now.toISOString()}
-              className={String(TYPOGRAPHY.caption) + " font-mono bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md"}
+              className={String(TYPOGRAPHY.caption) + " font-mono bg-[#09090b] border border-white/6 px-2.5 py-1 rounded-md"}
               suppressHydrationWarning
             >
               {timeStr}
@@ -1969,13 +1884,13 @@ export default function AIAnalysisPage() {
       {/* Main Content Grid - 左右固定，中间滚动，一屏放下 */}
       <div className="grid grid-cols-12 gap-4" style={{ height: 'calc(100vh - 140px)' }}>
         {/* Left Panel - 数据输入流 (固定高度) */}
-        <div className={`col-span-2 ${RADIUS.xl} border border-slate-200/60 bg-white dark:bg-slate-800 shadow-sm overflow-hidden flex flex-col h-full`}>
-          <div className={`px-${SPACING.lg} py-${SPACING.md} border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 shrink-0`}>
+        <div className={`col-span-2 ${RADIUS.xl} border border-white/6 bg-[#131316] shadow-sm overflow-hidden flex flex-col h-full`}>
+          <div className={`px-${SPACING.lg} py-${SPACING.md} border-b border-white/6 bg-[#09090b] shrink-0`}>
             <div className="flex items-center gap-2">
               <Network className="size-4 text-blue-600" aria-hidden="true" />
-              <h2 className={String(TYPOGRAPHY.h3) + " text-slate-800"}>数据输入流</h2>
+              <h2 className={String(TYPOGRAPHY.h3) + " text-zinc-100"}>数据输入流</h2>
             </div>
-            <p className={`${TYPOGRAPHY.micro} text-slate-500 mt-0.5`}>AI正在消费的安全数据源</p>
+            <p className={`${TYPOGRAPHY.micro} text-zinc-500 mt-0.5`}>AI正在消费的安全数据源</p>
           </div>
 
           <div className={`flex-1 overflow-y-auto p-${SPACING.md} gap-${SPACING.sm} scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent grid`}>
@@ -1984,31 +1899,31 @@ export default function AIAnalysisPage() {
             ))}
           </div>
 
-          <div className={`px-${SPACING.lg} py-${SPACING.sm} border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900`}>
-            <div className={`flex items-center justify-between ${TYPOGRAPHY.micro} text-slate-600`}>
-              <span>活跃数据源: <strong className="text-blue-600">6/8</strong></span>
-              <span>总事件数: <strong className="text-slate-800">5,694</strong></span>
+          <div className={`px-${SPACING.lg} py-${SPACING.sm} border-t border-white/6 bg-[#09090b]`}>
+            <div className={`flex items-center justify-between ${TYPOGRAPHY.micro} text-zinc-400`}>
+              <span>活跃数据源: <strong className="text-blue-400">6/8</strong></span>
+              <span>总事件数: <strong className="text-zinc-100">5,694</strong></span>
             </div>
           </div>
         </div>
 
         {/* Center Panel - AI Reasoning Stream (可滚动) - 使用cyan作为AI模块品牌色 */}
-        <div className={`col-span-7 ${RADIUS.xl} border border-cyan-200 dark:border-cyan-800 bg-white dark:bg-slate-800 shadow-sm overflow-hidden flex flex-col h-full`}>
-          <div className={`px-${SPACING.xl} py-${SPACING.md} border-b border-cyan-200 dark:border-cyan-800 bg-slate-50 dark:bg-slate-900`}>
+        <div className={`col-span-7 ${RADIUS.xl} border border-cyan-800 bg-[#131316] shadow-sm overflow-hidden flex flex-col h-full`}>
+          <div className={`px-${SPACING.xl} py-${SPACING.md} border-b border-cyan-800 bg-[#09090b]`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`flex items-center justify-center size-8 ${RADIUS.lg} bg-cyan-100 dark:bg-cyan-900/30`}>
-                  <Brain className="size-4 text-cyan-600 dark:text-cyan-400" aria-hidden="true" />
+                <div className={`flex items-center justify-center size-8 ${RADIUS.lg} bg-cyan-500/10`}>
+                  <Brain className="size-4 text-cyan-400" aria-hidden="true" />
                 </div>
                 <div>
-                  <h2 className={String(TYPOGRAPHY.h3) + " text-slate-800"}>AI 分析结果</h2>
-                  <p className={`${TYPOGRAPHY.micro} text-slate-500 mt-0.5`}>展示AI如何理解、分析和判断安全事件</p>
+                  <h2 className={String(TYPOGRAPHY.h3) + " text-zinc-100"}>AI 分析结果</h2>
+                  <p className={`${TYPOGRAPHY.micro} text-zinc-500 mt-0.5`}>展示AI如何理解、分析和判断安全事件</p>
                 </div>
               </div>
 
-              <div className={`flex items-center gap-2 px-3 py-1.5 ${RADIUS.md} bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 ml-4`}>
-                <Radio className="size-3 text-emerald-600 animate-pulse" aria-hidden="true" />
-                <span className={`${TYPOGRAPHY.micro} font-bold text-emerald-700 whitespace-nowrap`}>实时监控中</span>
+              <div className={`flex items-center gap-2 px-3 py-1.5 ${RADIUS.md} bg-emerald-500/10 border border-emerald-500/30 ml-4`}>
+                <Radio className="size-3 text-emerald-400 animate-pulse" aria-hidden="true" />
+                <span className={`${TYPOGRAPHY.micro} font-bold text-emerald-400 whitespace-nowrap`}>实时监控中</span>
               </div>
             </div>
           </div>
@@ -2023,13 +1938,13 @@ export default function AIAnalysisPage() {
         </div>
 
         {/* Right Panel - AI Agent Status (固定高度) */}
-        <div className={`col-span-3 ${RADIUS.xl} border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden flex flex-col h-full`}>
-          <div className={`px-${SPACING.lg} py-${SPACING.md} border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900`}>
+        <div className={`col-span-3 ${RADIUS.xl} border border-white/6 bg-[#131316] shadow-sm overflow-hidden flex flex-col h-full`}>
+          <div className={`px-${SPACING.lg} py-${SPACING.md} border-b border-white/6 bg-[#09090b]`}>
             <div className="flex items-center gap-2">
               <Cpu className="size-4 text-cyan-600" aria-hidden="true" />
-              <h2 className={String(TYPOGRAPHY.h3) + " text-slate-800"}>AI Agent 协作</h2>
+              <h2 className={String(TYPOGRAPHY.h3) + " text-zinc-100"}>AI Agent 协作</h2>
             </div>
-            <p className={`${TYPOGRAPHY.micro} text-slate-500 mt-0.5`}>多智能体协同分析状态</p>
+            <p className={`${TYPOGRAPHY.micro} text-zinc-500 mt-0.5`}>多智能体协同分析状态</p>
           </div>
 
           <div className={`flex-1 overflow-y-auto p-${SPACING.md} gap-${SPACING.sm} scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent grid`}>
@@ -2038,35 +1953,35 @@ export default function AIAnalysisPage() {
             ))}
           </div>
 
-          <div className={`px-${SPACING.lg} py-${SPACING.sm} border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 space-y-${SPACING.xs}`}>
+          <div className={`px-${SPACING.lg} py-${SPACING.sm} border-t border-white/6 bg-[#09090b] space-y-${SPACING.xs}`}>
             <div className={`flex items-center justify-between ${TYPOGRAPHY.micro}`}>
-              <span className="text-slate-600">Agent总数</span>
-              <span className="font-bold text-cyan-600">7个</span>
+              <span className="text-zinc-400">Agent总数</span>
+              <span className="font-bold text-cyan-400">7个</span>
             </div>
             <div className={`flex items-center justify-between ${TYPOGRAPHY.micro}`}>
-              <span className="text-slate-600">协作模式</span>
-              <span className="font-bold text-emerald-600">流水线式</span>
+              <span className="text-zinc-400">协作模式</span>
+              <span className="font-bold text-emerald-400">流水线式</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Bottom Status Bar */}
-      <div className={`shrink-0 px-4 py-2 ${RADIUS.lg} bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-between ${TYPOGRAPHY.micro} text-slate-600`}>
+      <div className={`shrink-0 px-4 py-2 ${RADIUS.lg} bg-[#09090b] border border-white/6 flex items-center justify-between ${TYPOGRAPHY.micro} text-zinc-400`}>
         <div className="flex items-center gap-4">
-          <span className="font-medium text-slate-800">SecMind AI Security Platform v2.0</span>
-          <span aria-hidden="true">|</span>
+          <span className="font-medium text-zinc-100">SecMind AI Security Platform v2.0</span>
+          <span aria-hidden="true" className="text-zinc-700">|</span>
           <span>刷新间隔: 30s</span>
         </div>
 
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="size-3 text-emerald-500 animate-pulse" aria-hidden="true" />
+            <CheckCircle2 className="size-3 text-emerald-500" aria-hidden="true" />
             系统正常
           </span>
-          <span>内存: 62%</span>
-          <span>CPU: 34%</span>
-          <span>磁盘: 51%</span>
+          <span className="text-zinc-600">内存: 62%</span>
+          <span className="text-zinc-600">CPU: 34%</span>
+          <span className="text-zinc-600">磁盘: 51%</span>
         </div>
       </div>
     </div>

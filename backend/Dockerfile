@@ -1,18 +1,29 @@
-FROM python:3.11-slim
-
-ARG APP_VERSION
-ENV APP_VERSION=${APP_VERSION}
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-COPY . .
+FROM python:3.11-slim
 
-RUN if [ -n "$APP_VERSION" ]; then \
-      echo "$APP_VERSION" > VERSION; \
-    fi
+WORKDIR /app
+
+ARG APP_VERSION
+ENV APP_VERSION=${APP_VERSION:-0.0.0}
+ENV PYTHONPATH=/app
+
+RUN groupadd -r secmind && useradd -r -g secmind -d /app -s /sbin/nologin secmind
+
+COPY --from=builder /root/.local /usr/local
+COPY app/ ./app/
+
+RUN chown -R secmind:secmind /app
+
+USER secmind
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 EXPOSE 8000
 

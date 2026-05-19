@@ -89,6 +89,4 @@ def create_new_routing(body: RoutingCreate, db: Session = Depends(get_db)):
 @router.post("/route", response_model=RouteResponse)
 def route_task(body: RouteRequest, db: Session = Depends(get_db)):
     result = route_request(db, body.task_type, body.input_text, body.max_tokens)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
     return result

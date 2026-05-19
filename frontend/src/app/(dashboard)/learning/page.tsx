@@ -6,7 +6,6 @@ import {
   Brain,
   Sparkles,
   CheckCircle2,
-  XCircle,
   ArrowRight,
   ArrowUpRight,
   TrendingUp,
@@ -25,12 +24,11 @@ import {
   ThumbsDown,
   MessageSquare,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useLocaleStore } from "@/store/locale-store"
 import { PageHeader } from "@/components/layout/page-header"
 import { pageCardClass, softCardClass } from "@/lib/admin-ui"
+import { EmptyState } from "@/components/common/state-components"
 import ReactEChartsCore from "echarts-for-react/lib/core"
 import * as echarts from "echarts/core"
 import { LineChart as ELineChart, BarChart as EBarChart } from "echarts/charts"
@@ -1032,15 +1030,15 @@ function KnowledgeFeedbackTab() {
         className={`${pageCardClass} p-6`}
       >
         <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="h-4 w-4 text-cyan-600" />
+          <Sparkles className="h-4 w-4 text-cyan-400" />
           <h3 className="text-sm font-semibold text-zinc-200">{t("learning.feedbackFlow")}</h3>
         </div>
         <div className="flex items-center justify-center gap-4 py-6">
           <div
             className="flex flex-col items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-6 py-4"
           >
-            <Shield className="h-6 w-6 text-amber-600" />
-            <span className="text-xs font-medium text-amber-700">{t("learning.humanConfirmAttack")}</span>
+            <Shield className="h-6 w-6 text-amber-400" />
+            <span className="text-xs font-medium text-amber-400">{t("learning.humanConfirmAttack")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="h-px w-8 bg-white/[0.06]" />
@@ -1050,8 +1048,8 @@ function KnowledgeFeedbackTab() {
           <div
             className="flex flex-col items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-6 py-4"
           >
-            <Brain className="h-6 w-6 text-cyan-600" />
-            <span className="text-xs font-medium text-cyan-700">{t("learning.aiUpdateWeight")}</span>
+            <Brain className="h-6 w-6 text-cyan-400" />
+            <span className="text-xs font-medium text-cyan-400">{t("learning.aiUpdateWeight")}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="h-px w-8 bg-white/[0.06]" />
@@ -1097,7 +1095,7 @@ function KnowledgeFeedbackTab() {
             </div>
             <div>
               <p className="text-xs text-zinc-600">{t("learning.falsePositiveReduction")}</p>
-              <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
+              <p className="text-2xl font-bold tabular-nums text-amber-400">-68%</p>
             </div>
           </div>
         </div>
@@ -1115,7 +1113,7 @@ function KnowledgeFeedbackTab() {
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-bold text-cyan-700">{item.caseId}</span>
+                <span className="font-mono text-xs font-bold text-cyan-400">{item.caseId}</span>
                 <span
                   className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
                   style={{
@@ -1153,8 +1151,6 @@ function FeedbackLearningTab() {
     return mockFeedbackLearning.filter((i) => i.type === filter)
   }, [filter])
 
-  const confirmedCount = mockFeedbackLearning.filter((i) => i.type === "confirmed").length
-  const disputedCount = mockFeedbackLearning.filter((i) => i.type === "disputed").length
   const totalFeedbackCount = 178
   const totalThumbsUp = 158
   const totalThumbsDown = 20
@@ -1175,8 +1171,8 @@ function FeedbackLearningTab() {
               <BarChart3 className="h-5 w-5 text-cyan-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("common.all")}</p>
-              <p className="text-2xl font-bold tabular-nums text-cyan-700">{totalFeedbackCount}</p>
+              <p className="text-xs text-zinc-400">{t("common.all")}</p>
+              <p className="text-2xl font-bold tabular-nums text-cyan-400">{totalFeedbackCount}</p>
             </div>
           </div>
         </div>
@@ -1193,8 +1189,8 @@ function FeedbackLearningTab() {
               <ThumbsUp className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.thumbsUpCases")}</p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-600">{totalThumbsUp}</p>
+              <p className="text-xs text-zinc-400">{t("learning.thumbsUpCases")}</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-400">{totalThumbsUp}</p>
             </div>
           </div>
         </div>
@@ -1211,8 +1207,8 @@ function FeedbackLearningTab() {
               <ThumbsDown className="h-5 w-5 text-red-400" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.thumbsDownCases")}</p>
-              <p className="text-2xl font-bold tabular-nums text-red-600">{totalThumbsDown}</p>
+              <p className="text-xs text-zinc-400">{t("learning.thumbsDownCases")}</p>
+              <p className="text-2xl font-bold tabular-nums text-red-400">{totalThumbsDown}</p>
             </div>
           </div>
         </div>
@@ -1292,6 +1288,9 @@ function FeedbackLearningTab() {
             </div>
           )
         })}
+        {filtered.length === 0 && (
+          <EmptyState title="暂无反馈记录" description="当前筛选条件下没有匹配的反馈学习记录" />
+        )}
       </div>
     </div>
   )
@@ -1326,7 +1325,7 @@ function ReasoningCorrectionTab() {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 block">
                     {t("learning.weightAdjustment")}
                   </span>
                   <div className="flex items-center gap-3">
@@ -1351,7 +1350,7 @@ function ReasoningCorrectionTab() {
                   </div>
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 block">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 block">
                     {t("learning.beforeAfter")}
                   </span>
                   <ConfidenceDelta before={correction.beforeConfidence} after={correction.afterConfidence} />
@@ -1385,9 +1384,6 @@ function ReasoningCorrectionTab() {
 function AiGrowthTab() {
   const { t } = useLocaleStore()
 
-  const maxAccuracy = Math.max(...ACCURACY_DATA.map((d) => d.value))
-  const minFP = Math.min(...FALSE_POSITIVE_DATA.map((d) => d.value))
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1397,8 +1393,8 @@ function AiGrowthTab() {
               <Target className="h-5 w-5 text-cyan-600" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.currentAccuracy")}</p>
-              <p className="text-2xl font-bold tabular-nums text-cyan-600">91.3%</p>
+              <p className="text-xs text-zinc-400">{t("learning.currentAccuracy")}</p>
+              <p className="text-2xl font-bold tabular-nums text-cyan-400">91.3%</p>
             </div>
           </div>
         </div>
@@ -1408,8 +1404,8 @@ function AiGrowthTab() {
               <Activity className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.monthlyLearningCount")}</p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-600">347</p>
+              <p className="text-xs text-zinc-400">{t("learning.monthlyLearningCount")}</p>
+              <p className="text-2xl font-bold tabular-nums text-emerald-400">347</p>
             </div>
           </div>
         </div>
@@ -1419,7 +1415,7 @@ function AiGrowthTab() {
               <TrendingUp className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.falsePositiveDecline")}</p>
+              <p className="text-xs text-zinc-400">{t("learning.falsePositiveDecline")}</p>
               <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
             </div>
           </div>
@@ -1430,7 +1426,7 @@ function AiGrowthTab() {
               <Shield className="h-5 w-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{t("learning.coveredAttackTypes")}</p>
+              <p className="text-xs text-zinc-400">{t("learning.coveredAttackTypes")}</p>
               <p className="text-2xl font-bold tabular-nums text-purple-600">24</p>
             </div>
           </div>
@@ -1659,7 +1655,7 @@ export default function LearningPage() {
         title={t("learning.title")}
         actions={
           <Link
-            className="inline-flex items-center gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700 h-9 px-4 py-2 rounded-md text-sm font-medium"
+            className="inline-flex items-center gap-1.5 bg-cyan-500 text-white hover:bg-cyan-400 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors"
             href="/signals?from=learning"
           >
             <Radio className="h-4 w-4" />

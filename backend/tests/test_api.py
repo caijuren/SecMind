@@ -8,6 +8,7 @@ from app.main import app
 from app.database import Base, get_db
 from app.models import User, Alert
 from app.services.auth_service import get_password_hash
+from app.services.rbac_service import seed_rbac, assign_user_roles, get_role_by_name
 
 TEST_DB_URL = "sqlite:///./test_secmind.db"
 
@@ -32,6 +33,22 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
+app.state.rbac_session_factory = TestSessionLocal
+
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    app.state.limiter = Limiter(key_func=get_remote_address, enabled=False)
+    app.state.limiter.enabled = False
+except Exception:
+    pass
+
+try:
+    from app.routers.auth import limiter as auth_limiter
+    auth_limiter.enabled = False
+except Exception:
+    pass
+
 client = TestClient(app)
 
 
@@ -47,11 +64,13 @@ def clean_db():
 
 
 def _create_test_user(db):
+    app.state.rbac_session_factory = TestSessionLocal
+    app.dependency_overrides[get_db] = override_get_db
+    seed_rbac(db)
     user = User(
         name="测试用户",
         email="test@secmind.com",
         hashed_password=get_password_hash("test123456"),
-        role="admin",
         status="active",
         department="技术部",
         position="工程师",
@@ -63,6 +82,9 @@ def _create_test_user(db):
     db.add(user)
     db.commit()
     db.refresh(user)
+    admin_role = get_role_by_name(db, "admin")
+    if admin_role:
+        assign_user_roles(db, user.id, [admin_role.id])
     return user
 
 
@@ -243,3 +265,8 @@ class TestHealthCheck:
         resp = client.get("/health")
         assert resp.status_code == 200
         assert resp.json()["status"] == "healthy"
+
+
+# Cleanup test database
+import atexit
+atexit.register(lambda: os.path.exists("./test_secmind.db") and os.remove("./test_secmind.db"))

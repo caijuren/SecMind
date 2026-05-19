@@ -9,7 +9,6 @@ import {
   Shield,
   Radio,
   Inbox,
-  Sparkles,
   Brain,
   Zap,
   Crosshair,

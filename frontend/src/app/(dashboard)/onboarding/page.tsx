@@ -44,9 +44,9 @@ const PLANS = [
     description: "体验核心功能，快速上手",
     features: ["5个用户", "100条告警/天", "基础AI分析", "社区支持"],
     icon: Sparkles,
-    iconBg: "bg-slate-50",
-    iconColor: "text-slate-600",
-    borderColor: "border-slate-200",
+    iconBg: "bg-[#09090b]",
+    iconColor: "text-zinc-400",
+    borderColor: "border-white/6",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
   },
@@ -60,7 +60,7 @@ const PLANS = [
     icon: Zap,
     iconBg: "bg-cyan-50",
     iconColor: "text-cyan-700",
-    borderColor: "border-slate-200",
+    borderColor: "border-white/6",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
     recommended: true,
@@ -75,7 +75,7 @@ const PLANS = [
     icon: Lock,
     iconBg: "bg-amber-50",
     iconColor: "text-amber-700",
-    borderColor: "border-slate-200",
+    borderColor: "border-white/6",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
   },
@@ -98,7 +98,7 @@ const STEPS = [
 ]
 
 export default function OnboardingPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const router = useRouter()
 
   const [currentStep, setCurrentStep] = useState(0)
@@ -166,8 +166,8 @@ export default function OnboardingPage() {
     <div className="space-y-6 max-w-4xl">
       <PageHeader
         icon={Shield}
-        title="初始配置"
-        subtitle="完成以下步骤，开始使用 SecMind"
+        title={t("onboarding.title")}
+        subtitle={t("onboarding.subtitle")}
       />
 
       <div className="flex items-center gap-2 px-1">
@@ -184,7 +184,7 @@ export default function OnboardingPage() {
                     ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200/60"
                     : isCompleted
                       ? "bg-emerald-50 text-emerald-700"
-                      : "bg-slate-50 text-slate-500"
+                      : "bg-[#09090b] text-zinc-500"
                 )}
               >
                 {isCompleted ? (
@@ -215,9 +215,9 @@ export default function OnboardingPage() {
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
               <Sparkles className="size-7 text-cyan-700" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-slate-900")}>欢迎来到 SecMind</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-slate-500 mt-2")}>
-              选择适合您团队的方案，所有付费方案均提供14天免费试用
+            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.welcomeToSecmind")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+              {t("onboarding.welcomeDesc")}
             </p>
           </div>
 
@@ -232,14 +232,14 @@ export default function OnboardingPage() {
                     "cursor-pointer transition-all hover:-translate-y-0.5 relative",
                     isSelected
                       ? `${plan.selectedBorder} ${plan.selectedBg} ring-1 shadow-md`
-                      : `${plan.borderColor} bg-white shadow-sm hover:shadow-md`
+                      : `${plan.borderColor} bg-[#131316] shadow-sm hover:shadow-md`
                   )}
                   onClick={() => setSelectedPlan(plan.id)}
                 >
                   {plan.recommended && (
                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
                       <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-2 py-0 text-[10px] font-semibold shadow-sm">
-                        推荐
+                        {t("onboarding.recommended")}
                       </Badge>
                     </div>
                   )}
@@ -249,25 +249,25 @@ export default function OnboardingPage() {
                         <PlanIcon className={`size-4.5 ${plan.iconColor}`} />
                       </div>
                       <div>
-                        <h3 className={cn(TYPOGRAPHY.h3, "text-slate-900")}>{plan.name}</h3>
-                        <p className={cn(TYPOGRAPHY.micro, "text-slate-500")}>{plan.description}</p>
+                        <h3 className={cn(TYPOGRAPHY.h3, "text-white")}>{plan.name}</h3>
+                        <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>{plan.description}</p>
                       </div>
                     </div>
 
                     <div className="flex items-baseline gap-1 mb-4">
-                      <span className={cn(TYPOGRAPHY.h1, "font-bold", isSelected ? "text-cyan-700" : "text-slate-900")}>
+                      <span className={cn(TYPOGRAPHY.h1, "font-bold", isSelected ? "text-cyan-700" : "text-white")}>
                         {plan.price}
                       </span>
                       {plan.period && (
-                        <span className={cn(TYPOGRAPHY.caption, "text-slate-500")}>{plan.period}</span>
+                        <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>{plan.period}</span>
                       )}
                     </div>
 
                     <ul className="space-y-2">
                       {plan.features.map((f) => (
                         <li key={f} className="flex items-center gap-2">
-                          <CheckCircle2 className={cn("size-3.5 shrink-0", isSelected ? "text-cyan-500" : "text-slate-500")} />
-                          <span className={cn(TYPOGRAPHY.caption, "text-slate-600")}>{f}</span>
+                          <CheckCircle2 className={cn("size-3.5 shrink-0", isSelected ? "text-cyan-500" : "text-zinc-500")} />
+                          <span className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>{f}</span>
                         </li>
                       ))}
                     </ul>
@@ -276,7 +276,7 @@ export default function OnboardingPage() {
                       <div className="mt-4 pt-3 border-t border-cyan-200/60">
                         <div className="flex items-center justify-center gap-1.5 text-cyan-700">
                           <CheckCircle2 className="size-3.5" />
-                          <span className={cn(TYPOGRAPHY.caption, "font-medium")}>已选择</span>
+                          <span className={cn(TYPOGRAPHY.caption, "font-medium")}>{t("onboarding.selected")}</span>
                         </div>
                       </div>
                     )}
@@ -294,9 +294,9 @@ export default function OnboardingPage() {
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
               <Radio className="size-7 text-cyan-700" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-slate-900")}>配置安全源</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-slate-500 mt-2")}>
-              选择您当前使用的安全设备和系统，SecMind 将自动接入数据
+            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.configureSecuritySourcesTitle")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+              {t("onboarding.configureSecuritySourcesDesc")}
             </p>
           </div>
 
@@ -311,20 +311,20 @@ export default function OnboardingPage() {
                     "cursor-pointer transition-all",
                     isSelected
                       ? "border-cyan-400 bg-cyan-50/50 ring-1 ring-cyan-200/60 shadow-sm"
-                      : "border-slate-200 bg-white hover:shadow-sm"
+                      : "border-white/6 bg-[#131316] hover:shadow-sm"
                   )}
                   onClick={() => toggleSource(source.id)}
                 >
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className={cn(
                       "flex size-10 items-center justify-center rounded-lg",
-                      isSelected ? "bg-cyan-100" : "bg-slate-50"
+                      isSelected ? "bg-cyan-100" : "bg-[#09090b]"
                     )}>
-                      <SourceIcon className={cn("size-5", isSelected ? "text-cyan-700" : "text-slate-500")} />
+                      <SourceIcon className={cn("size-5", isSelected ? "text-cyan-700" : "text-zinc-500")} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className={cn(TYPOGRAPHY.h3, "text-slate-900")}>{source.name}</h4>
-                      <p className={cn(TYPOGRAPHY.micro, "text-slate-500")}>{source.description}</p>
+                      <h4 className={cn(TYPOGRAPHY.h3, "text-white")}>{source.name}</h4>
+                      <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>{source.description}</p>
                     </div>
                     {isSelected && (
                       <CheckCircle2 className="size-5 text-cyan-500 shrink-0" />
@@ -336,7 +336,7 @@ export default function OnboardingPage() {
           </div>
 
           {selectedSources.length > 0 && (
-            <p className={cn(TYPOGRAPHY.caption, "text-slate-500 text-center")}>
+            <p className={cn(TYPOGRAPHY.caption, "text-zinc-500 text-center")}>
               已选择 {selectedSources.length} 个安全源，可在后续随时调整
             </p>
           )}
@@ -349,9 +349,9 @@ export default function OnboardingPage() {
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
               <Users className="size-7 text-cyan-700" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-slate-900")}>邀请团队成员</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-slate-500 mt-2")}>
-              邀请同事加入您的安全团队，协作更高效
+            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.inviteTeamTitle")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+              {t("onboarding.inviteTeamDesc")}
             </p>
           </div>
 
@@ -360,7 +360,7 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
                     <Input
                       value={inviteInput}
                       onChange={(e) => setInviteInput(e.target.value)}
@@ -370,7 +370,7 @@ export default function OnboardingPage() {
                           addInviteEmail()
                         }
                       }}
-                      placeholder="输入邮箱地址，按回车添加"
+                      placeholder={t("onboarding.enterEmailPlaceholder")}
                       className={`pl-9 ${inputClass}`}
                     />
                   </div>
@@ -381,14 +381,14 @@ export default function OnboardingPage() {
                     className="gap-1 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
                   >
                     <Plus className="size-3.5" />
-                    添加
+                    {t("onboarding.add")}
                   </Button>
                 </div>
 
                 {inviteEmails.length > 0 && (
                   <div className="space-y-2">
-                    <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>
-                      已添加 {inviteEmails.length} 位成员
+                    <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>
+                      {t("common.added")} {inviteEmails.length} {t("onboarding.membersAdded")}
                     </Label>
                     <div className="flex flex-wrap gap-2">
                       {inviteEmails.map((email) => (
@@ -408,8 +408,8 @@ export default function OnboardingPage() {
                 )}
 
                 {inviteEmails.length === 0 && (
-                  <p className={cn(TYPOGRAPHY.caption, "text-slate-500 text-center py-4")}>
-                    可以跳过此步骤，稍后在团队管理中邀请
+                  <p className={cn(TYPOGRAPHY.caption, "text-zinc-500 text-center py-4")}>
+                    {t("onboarding.canSkipLater")}
                   </p>
                 )}
               </div>
@@ -424,9 +424,9 @@ export default function OnboardingPage() {
             <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50 ring-1 ring-emerald-200/50 mx-auto mb-4">
               <CheckCircle2 className="size-8 text-emerald-600" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-slate-900")}>配置完成</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-slate-500 mt-2 max-w-md mx-auto")}>
-              您已完成初始配置，SecMind 已准备就绪
+            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.setupComplete")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2 max-w-md mx-auto")}>
+              {t("onboarding.setupCompleteDesc")}
             </p>
           </div>
 
@@ -434,27 +434,27 @@ export default function OnboardingPage() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>选择套餐</span>
+                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.planLabel")}</span>
                   <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
                     {PLANS.find((p) => p.id === selectedPlan)?.name ?? selectedPlan}
                   </Badge>
                 </div>
                 <div className="h-px bg-slate-200" />
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>安全源</span>
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-900 font-medium")}>
+                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.securitySourcesLabel")}</span>
+                  <span className={cn(TYPOGRAPHY.body, "text-white font-medium")}>
                     {selectedSources.length > 0
-                      ? `${selectedSources.length} 个已选择`
-                      : "暂未配置"}
+                      ? `${selectedSources.length} ${t("common.items")}${t("onboarding.selected")}`
+                      : t("onboarding.notConfigured")}
                   </span>
                 </div>
                 <div className="h-px bg-slate-200" />
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>团队成员</span>
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-900 font-medium")}>
+                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.teamMembersLabel")}</span>
+                  <span className={cn(TYPOGRAPHY.body, "text-white font-medium")}>
                     {inviteEmails.length > 0
-                      ? `${inviteEmails.length} 人已邀请`
-                      : "暂未邀请"}
+                      ? `${inviteEmails.length} ${t("onboarding.invited")}`
+                      : t("onboarding.notInvited")}
                   </span>
                 </div>
               </div>
@@ -463,22 +463,22 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-4 border-t border-slate-200/80">
+      <div className="flex items-center justify-between pt-4 border-t border-white/6/80">
         {!isFirst ? (
           <Button
             variant="ghost"
             onClick={handlePrev}
-            className="text-slate-500 hover:text-slate-700 gap-1"
+            className="text-zinc-500 hover:text-zinc-200 gap-1"
           >
             <ChevronLeft className="size-4" />
-            上一步
+            {t("onboarding.previousStep")}
           </Button>
         ) : (
           <div />
         )}
 
         <div className="flex items-center gap-3">
-          <span className={cn(TYPOGRAPHY.micro, "text-slate-500")}>
+          <span className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>
             {currentStep + 1} / {STEPS.length}
           </span>
           <Button
@@ -489,16 +489,16 @@ export default function OnboardingPage() {
             {submitting ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                提交中...
+                {t("onboarding.submitting")}
               </>
             ) : isLast ? (
               <>
                 <CheckCircle2 className="size-4" />
-                开始使用
+                {t("onboarding.getStarted")}
               </>
             ) : (
               <>
-                下一步
+                {t("onboarding.nextStep")}
                 <ChevronRight className="size-4" />
               </>
             )}

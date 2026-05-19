@@ -1,0 +1,259 @@
+"use client"
+
+import Link from "next/link"
+import {
+  Shield,
+  Sparkles,
+  Brain,
+  Crosshair,
+  Eye,
+  Link2,
+  Zap,
+  ArrowRight,
+  ChevronRight,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AnimateIn } from "@/components/common/animate-in"
+
+const features = [
+  {
+    icon: Brain,
+    title: "AI 智能推理",
+    desc: "大语言模型驱动，自动分析安全信号，推理攻击意图，识别真正威胁",
+    color: "blue",
+  },
+  {
+    icon: Crosshair,
+    title: "攻击研判引擎",
+    desc: "基于 MITRE ATT&CK 框架，自动构建攻击假设，映射完整攻击链",
+    color: "red",
+  },
+  {
+    icon: Eye,
+    title: "自主调查",
+    desc: "AI 自主完成深度调查，生成攻击链与推理结论，分析师仅需复核",
+    color: "amber",
+  },
+  {
+    icon: Link2,
+    title: "证据链构建",
+    desc: "跨数据源自动关联，构建完整攻击证据链，研判有据可依",
+    color: "teal",
+  },
+  {
+    icon: Shield,
+    title: "案件研判闭环",
+    desc: "从调查到案件到处置的完整闭环，确保每个威胁都可追溯可响应",
+    color: "violet",
+  },
+  {
+    icon: Zap,
+    title: "AI 自动处置",
+    desc: "基于置信度的自动处置策略，从研判到响应分钟级闭环",
+    color: "emerald",
+  },
+]
+
+const stats = [
+  { value: "99%", label: "告警降噪率" },
+  { value: "85%", label: "自动化处置率" },
+  { value: "10x", label: "运营效率提升" },
+  { value: "24/7", label: "AI 持续监控" },
+]
+
+const steps = [
+  {
+    step: "01",
+    title: "信号接入",
+    desc: "无缝对接 EDR、VPN、防火墙、邮件网关等安全设备，实时接收告警信号",
+  },
+  {
+    step: "02",
+    title: "AI 预处理",
+    desc: "自动去噪、聚合、上下文补全，将海量告警转化为可操作情报",
+  },
+  {
+    step: "03",
+    title: "智能调查",
+    desc: "AI 自动进行多源关联分析，还原攻击链，生成研判结论",
+  },
+  {
+    step: "04",
+    title: "自动处置",
+    desc: "高置信度动作自动执行，低置信度动作人工审批，平衡效率与安全",
+  },
+]
+
+export default function DocsPage() {
+  return (
+    <>
+      <div className="pt-32 pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <AnimateIn>
+            <div className="text-center max-w-3xl mx-auto mb-20">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-400 mb-6">
+                <Sparkles className="size-4" />
+                AI 驱动的智能安全运营平台
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tighter leading-tight mb-6">
+                <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-violet-400 bg-clip-text text-transparent">
+                  SecMind
+                </span>
+                <br />
+                <span className="text-zinc-200">让安全运营更智能</span>
+              </h1>
+              <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed mb-10 max-w-2xl mx-auto">
+                将大语言模型与安全运营深度融合，实现从威胁检测、AI 调查到自动处置的全链路智能化，
+                让安全分析师从繁重的告警中解放出来，专注于真正的威胁。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_28px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_34px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] w-full sm:w-auto"
+                  >
+                    免费试用
+                    <ArrowRight className="size-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/docs/guide">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-xl border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-zinc-100 w-full sm:w-auto"
+                  >
+                    查看使用文档
+                    <ChevronRight className="size-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </AnimateIn>
+
+          <AnimateIn delay={100}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="text-center p-6 rounded-xl border border-white/6 bg-[#131316] shadow-[0_10px_22px_rgba(0,0,0,0.3)] hover:shadow-[0_14px_28px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <div className="text-3xl sm:text-4xl font-bold tabular-nums bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-zinc-500">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </AnimateIn>
+
+          <AnimateIn delay={200}>
+            <div className="mb-20">
+              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
+                <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+                  六大核心能力
+                </span>
+              </h2>
+              <p className="text-zinc-400 text-center max-w-2xl mx-auto mb-12">
+                SecMind 平台提供完整的安全运营智能化解决方案，覆盖从检测到响应的全流程
+              </p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {features.map((feature) => {
+                  const colorMap: Record<string, string> = {
+                    blue: "from-blue-500/20 to-blue-500/5 border-blue-500/20",
+                    red: "from-red-500/20 to-red-500/5 border-red-500/20",
+                    amber: "from-amber-500/20 to-amber-500/5 border-amber-500/20",
+                    teal: "from-teal-500/20 to-teal-500/5 border-teal-500/20",
+                    violet: "from-violet-500/20 to-violet-500/5 border-violet-500/20",
+                    emerald: "from-emerald-500/20 to-emerald-500/5 border-emerald-500/20",
+                  }
+                  const iconColorMap: Record<string, string> = {
+                    blue: "text-blue-400",
+                    red: "text-red-400",
+                    amber: "text-amber-400",
+                    teal: "text-teal-400",
+                    violet: "text-violet-400",
+                    emerald: "text-emerald-400",
+                  }
+                  return (
+                    <div
+                      key={feature.title}
+                      className={`p-6 rounded-xl border bg-gradient-to-br ${colorMap[feature.color]} shadow-[0_10px_22px_rgba(0,0,0,0.2)] group hover:scale-[1.02] hover:shadow-[0_16px_30px_rgba(59,130,246,0.12)] transition-all duration-200`}
+                    >
+                      <div className={`inline-flex p-3 rounded-lg bg-white/5 mb-4 ${iconColorMap[feature.color]}`}>
+                        <feature.icon className="size-6" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-zinc-200 mb-2">{feature.title}</h3>
+                      <p className="text-sm text-zinc-400 leading-relaxed">{feature.desc}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </AnimateIn>
+
+          <AnimateIn delay={300}>
+            <div className="mb-20">
+              <h2 className="text-2xl sm:text-3xl font-bold text-center mb-4">
+                <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+                  如何工作
+                </span>
+              </h2>
+              <p className="text-zinc-400 text-center max-w-2xl mx-auto mb-12">
+                简单四步，实现智能化安全运营
+              </p>
+              <div className="grid md:grid-cols-4 gap-6">
+                {steps.map((step, index) => (
+                  <div key={step.step} className="relative">
+                    <div className="p-6 rounded-xl border border-white/6 bg-[#131316] h-full shadow-[0_10px_22px_rgba(0,0,0,0.2)]">
+                      <div className="text-4xl font-bold bg-gradient-to-r from-blue-400/30 to-violet-400/30 bg-clip-text text-transparent mb-4">
+                        {step.step}
+                      </div>
+                      <h3 className="text-lg font-semibold text-zinc-200 mb-2">{step.title}</h3>
+                      <p className="text-sm text-zinc-400 leading-relaxed">{step.desc}</p>
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2">
+                        <ArrowRight className="size-5 text-blue-400/30" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </AnimateIn>
+
+          <AnimateIn delay={400}>
+            <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-transparent to-violet-500/10 p-8 sm:p-12 text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-zinc-200 mb-4">
+                准备好体验 AI 驱动的安全运营了吗？
+              </h2>
+              <p className="text-zinc-400 mb-8 max-w-xl mx-auto">
+                立即开始免费试用，让 SecMind 成为您安全团队的智能助手
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/login">
+                  <Button
+                    size="lg"
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_28px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_34px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] w-full sm:w-auto"
+                  >
+                    立即开始
+                    <ArrowRight className="size-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/pricing">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="rounded-xl border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-zinc-100 w-full sm:w-auto"
+                  >
+                    查看定价
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </AnimateIn>
+        </div>
+      </div>
+    </>
+  )
+}

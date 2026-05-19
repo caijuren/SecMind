@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import {
-  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   ChevronRight,
@@ -104,41 +103,169 @@ interface ReportData {
 }
 
 const severityConfig: Record<string, { label: string; className: string }> = {
-  critical: { label: "严重", className: "border-red-200 bg-red-50 text-red-700" },
-  high: { label: "高", className: "border-orange-200 bg-orange-50 text-orange-700" },
-  medium: { label: "中", className: "border-yellow-200 bg-yellow-50 text-yellow-700" },
-  low: { label: "低", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  critical: { label: "严重", className: "border-red-500/20 bg-red-500/10 text-red-400" },
+  high: { label: "高", className: "border-orange-500/20 bg-orange-500/10 text-orange-400" },
+  medium: { label: "中", className: "border-yellow-500/20 bg-yellow-500/10 text-yellow-400" },
+  low: { label: "低", className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" },
 }
 
 const severityColorMap: Record<string, string> = {
-  critical: "bg-red-50 text-red-700",
-  high: "bg-amber-50 text-amber-700",
-  medium: "bg-cyan-50 text-cyan-700",
-  low: "bg-emerald-50 text-emerald-700",
-  violet: "bg-violet-50 text-violet-700",
-  blue: "bg-blue-50 text-blue-700",
-  cyan: "bg-cyan-50 text-cyan-700",
-  emerald: "bg-emerald-50 text-emerald-700",
+  critical: "bg-red-500/10 text-red-400",
+  high: "bg-amber-500/10 text-amber-400",
+  medium: "bg-cyan-500/15 text-cyan-300",
+  low: "bg-emerald-500/10 text-emerald-300",
+  violet: "bg-violet-500/10 text-violet-300",
+  blue: "bg-blue-500/10 text-blue-300",
+  cyan: "bg-cyan-500/15 text-cyan-300",
+  emerald: "bg-emerald-500/10 text-emerald-300",
 }
 
 const statusConfig: Record<string, { label: string; className: string; dotClass: string }> = {
-  compliant: { label: "合规", className: "border-emerald-200 bg-emerald-50 text-emerald-700", dotClass: "bg-emerald-500" },
-  partially_compliant: { label: "部分合规", className: "border-amber-200 bg-amber-50 text-amber-700", dotClass: "bg-amber-500" },
-  non_compliant: { label: "不合规", className: "border-red-200 bg-red-50 text-red-700", dotClass: "bg-red-500" },
-  not_assessed: { label: "未评估", className: "border-slate-200 bg-slate-50 text-slate-500", dotClass: "bg-slate-400" },
+  compliant: { label: "合规", className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300", dotClass: "bg-emerald-500" },
+  partially_compliant: { label: "部分合规", className: "border-amber-500/20 bg-amber-500/10 text-amber-400", dotClass: "bg-amber-500" },
+  non_compliant: { label: "不合规", className: "border-red-500/20 bg-red-500/10 text-red-400", dotClass: "bg-red-500" },
+  not_assessed: { label: "未评估", className: "border-white/6 bg-[#09090b] text-zinc-500", dotClass: "bg-zinc-500" },
 }
 
 const assessmentStatusConfig: Record<string, { label: string; className: string }> = {
-  draft: { label: "草稿", className: "border-slate-200 bg-slate-50 text-slate-600" },
-  in_progress: { label: "进行中", className: "border-blue-200 bg-blue-50 text-blue-700" },
-  completed: { label: "已完成", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  draft: { label: "草稿", className: "border-white/6 bg-[#09090b] text-zinc-400" },
+  in_progress: { label: "进行中", className: "border-blue-500/20 bg-blue-500/10 text-blue-300" },
+  completed: { label: "已完成", className: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300" },
 }
 
+const MOCK_CONTROLS_DB20: ControlItem[] = [
+  { id: 101, framework_id: 1, control_id: "DB20-AC-01", title: "身份鉴别", description: "应对登录的用户进行身份标识和鉴别，身份标识具有唯一性", category: "访问控制", severity: "critical", mapping: "ISO 27001 A.9.2.1" },
+  { id: 102, framework_id: 1, control_id: "DB20-AC-02", title: "访问控制策略", description: "应制定访问控制策略，规定用户访问资源的权限", category: "访问控制", severity: "critical", mapping: "ISO 27001 A.9.1.1" },
+  { id: 103, framework_id: 1, control_id: "DB20-AC-03", title: "特权账户管理", description: "应对特权账户进行限制和监控", category: "访问控制", severity: "high", mapping: "ISO 27001 A.9.2.3" },
+  { id: 104, framework_id: 1, control_id: "DB20-AC-04", title: "远程访问控制", description: "应采用加密机制保证远程访问安全", category: "访问控制", severity: "high", mapping: "ISO 27001 A.6.2.1" },
+  { id: 105, framework_id: 1, control_id: "DB20-AU-01", title: "安全审计", description: "应启用安全审计功能，覆盖到每个用户", category: "安全审计", severity: "critical", mapping: "ISO 27001 A.12.4.1" },
+  { id: 106, framework_id: 1, control_id: "DB20-AU-02", title: "审计日志保护", description: "应保护审计日志，避免非预期的修改和删除", category: "安全审计", severity: "high", mapping: "ISO 27001 A.12.4.2" },
+  { id: 107, framework_id: 1, control_id: "DB20-AU-03", title: "审计记录时间戳", description: "审计记录应包含准确的时间戳", category: "安全审计", severity: "medium", mapping: "ISO 27001 A.12.4.3" },
+  { id: 108, framework_id: 1, control_id: "DB20-DP-01", title: "数据加密", description: "应采用密码技术保证数据在传输和存储过程中的保密性", category: "数据保护", severity: "critical", mapping: "ISO 27001 A.10.1.1" },
+  { id: 109, framework_id: 1, control_id: "DB20-DP-02", title: "数据备份", description: "应提供数据本地备份与恢复功能", category: "数据保护", severity: "high", mapping: "ISO 27001 A.12.3.1" },
+  { id: 110, framework_id: 1, control_id: "DB20-DP-03", title: "数据脱敏", description: "应对敏感数据进行脱敏处理", category: "数据保护", severity: "medium", mapping: "ISO 27001 A.11.2.7" },
+  { id: 111, framework_id: 1, control_id: "DB20-SM-01", title: "安全监控", description: "应建立安全监控机制，实时检测安全事件", category: "安全监控", severity: "critical", mapping: "ISO 27001 A.12.6.1" },
+  { id: 112, framework_id: 1, control_id: "DB20-SM-02", title: "漏洞管理", description: "应定期进行漏洞扫描和风险评估", category: "安全监控", severity: "high", mapping: "ISO 27001 A.12.6.1" },
+  { id: 113, framework_id: 1, control_id: "DB20-IR-01", title: "应急响应", description: "应建立安全事件应急响应机制", category: "事件响应", severity: "critical", mapping: "ISO 27001 A.16.1.1" },
+  { id: 114, framework_id: 1, control_id: "DB20-IR-02", title: "事件报告", description: "应规定安全事件报告流程和时限", category: "事件响应", severity: "high", mapping: "ISO 27001 A.16.1.2" },
+  { id: 115, framework_id: 1, control_id: "DB20-CM-01", title: "配置管理", description: "应建立安全配置基线并定期检查", category: "配置管理", severity: "medium", mapping: "ISO 27001 A.12.1.2" },
+  { id: 116, framework_id: 1, control_id: "DB20-CM-02", title: "变更管理", description: "所有系统变更应经过审批和记录", category: "配置管理", severity: "medium", mapping: "ISO 27001 A.12.1.2" },
+]
+
+const MOCK_CONTROLS_ISO: ControlItem[] = [
+  { id: 201, framework_id: 2, control_id: "ISO-A.5.1.1", title: "信息安全方针", description: "管理层应批准和发布信息安全方针", category: "安全策略", severity: "high", mapping: "等保2.0 安全管理制度" },
+  { id: 202, framework_id: 2, control_id: "ISO-A.6.1.1", title: "信息安全组织", description: "应建立信息安全管理组织架构", category: "安全组织", severity: "high", mapping: "等保2.0 安全管理机构" },
+  { id: 203, framework_id: 2, control_id: "ISO-A.8.1.1", title: "资产清单", description: "应识别并维护信息资产清单", category: "资产管理", severity: "medium", mapping: "等保2.0 资产管理" },
+  { id: 204, framework_id: 2, control_id: "ISO-A.8.2.1", title: "信息分类", description: "信息应根据法律要求、价值、关键性和敏感性进行分类", category: "资产管理", severity: "medium", mapping: "等保2.0 数据分类" },
+  { id: 205, framework_id: 2, control_id: "ISO-A.9.1.1", title: "访问控制策略", description: "应实施访问控制策略以支持业务和安全要求", category: "访问控制", severity: "critical", mapping: "等保2.0 访问控制" },
+  { id: 206, framework_id: 2, control_id: "ISO-A.9.2.1", title: "用户注册与注销", description: "应实施正式的用户注册和注销流程", category: "访问控制", severity: "high", mapping: "等保2.0 身份鉴别" },
+  { id: 207, framework_id: 2, control_id: "ISO-A.10.1.1", title: "密码控制策略", description: "应制定使用密码控制的策略", category: "密码学", severity: "critical", mapping: "等保2.0 数据加密" },
+  { id: 208, framework_id: 2, control_id: "ISO-A.12.1.1", title: "操作规程", description: "操作规程应文档化并对需要的用户可用", category: "运行安全", severity: "medium", mapping: "等保2.0 运维管理" },
+  { id: 209, framework_id: 2, control_id: "ISO-A.12.2.1", title: "恶意软件防护", description: "应实施恶意软件检测、预防和恢复控制", category: "运行安全", severity: "critical", mapping: "等保2.0 恶意代码防范" },
+  { id: 210, framework_id: 2, control_id: "ISO-A.12.3.1", title: "信息备份", description: "应按照商定的策略定期备份和测试", category: "运行安全", severity: "high", mapping: "等保2.0 数据备份" },
+  { id: 211, framework_id: 2, control_id: "ISO-A.12.4.1", title: "事件日志", description: "应记录用户活动、异常和信息安全事件日志", category: "运行安全", severity: "high", mapping: "等保2.0 安全审计" },
+  { id: 212, framework_id: 2, control_id: "ISO-A.13.1.1", title: "网络安全控制", description: "应管理和控制网络以保护系统和应用中的信息", category: "通信安全", severity: "critical", mapping: "等保2.0 网络安全" },
+  { id: 213, framework_id: 2, control_id: "ISO-A.13.2.1", title: "信息传输策略", description: "应有正式的信息传输策略和程序", category: "通信安全", severity: "medium", mapping: "等保2.0 数据传输" },
+  { id: 214, framework_id: 2, control_id: "ISO-A.16.1.1", title: "事件响应职责", description: "应建立管理职责和程序以快速响应安全事件", category: "事件管理", severity: "critical", mapping: "等保2.0 应急响应" },
+  { id: 215, framework_id: 2, control_id: "ISO-A.17.1.1", title: "业务连续性规划", description: "应确定业务连续性的信息安全要求", category: "业务连续性", severity: "high", mapping: "等保2.0 灾难恢复" },
+  { id: 216, framework_id: 2, control_id: "ISO-A.18.1.1", title: "适用法规识别", description: "应识别适用的法律法规和合同要求", category: "合规性", severity: "high", mapping: "等保2.0 合规性" },
+]
+
+const MOCK_FRAMEWORKS: FrameworkItem[] = [
+  {
+    id: 1,
+    name: "信息安全技术 网络安全等级保护基本要求",
+    code: "GB/T 22239-2019",
+    description: "等保2.0国家标准，规定了不同安全保护等级的基本安全要求",
+    version: "2.0",
+    categories: ["访问控制", "安全审计", "数据保护", "安全监控", "事件响应", "配置管理"],
+    controls_count: 16,
+  },
+  {
+    id: 2,
+    name: "ISO/IEC 27001:2022 信息安全管理体系",
+    code: "ISO 27001:2022",
+    description: "国际信息安全管理体系标准，提供建立、实施、维护和持续改进ISMS的要求",
+    version: "2022",
+    categories: ["安全策略", "安全组织", "资产管理", "访问控制", "密码学", "运行安全", "通信安全", "事件管理", "业务连续性", "合规性"],
+    controls_count: 16,
+  },
+  {
+    id: 3,
+    name: "网络安全法合规要求",
+    code: "CSL-2017",
+    description: "中华人民共和国网络安全法规定的网络运营者安全保护义务",
+    version: "1.0",
+    categories: ["网络安全", "数据安全", "个人信息保护", "应急响应", "安全审计"],
+    controls_count: 10,
+  },
+]
+
+const MOCK_CONTROLS_BY_FRAMEWORK: Record<number, ControlItem[]> = {
+  1: MOCK_CONTROLS_DB20,
+  2: MOCK_CONTROLS_ISO,
+  3: [
+    { id: 301, framework_id: 3, control_id: "CSL-NW-01", title: "网络安全等级保护", description: "应按照网络安全等级保护制度要求履行安全保护义务", category: "网络安全", severity: "critical", mapping: "等保2.0" },
+    { id: 302, framework_id: 3, control_id: "CSL-NW-02", title: "网络实名制", description: "应要求用户提供真实身份信息", category: "网络安全", severity: "high", mapping: "" },
+    { id: 303, framework_id: 3, control_id: "CSL-DS-01", title: "数据分类保护", description: "应对数据实行分类分级保护", category: "数据安全", severity: "critical", mapping: "ISO A.8.2.1" },
+    { id: 304, framework_id: 3, control_id: "CSL-DS-02", title: "数据出境评估", description: "向境外提供数据应进行安全评估", category: "数据安全", severity: "critical", mapping: "" },
+    { id: 305, framework_id: 3, control_id: "CSL-PI-01", title: "个人信息保护", description: "收集和使用个人信息应遵循合法、正当、必要原则", category: "个人信息保护", severity: "critical", mapping: "GDPR" },
+    { id: 306, framework_id: 3, control_id: "CSL-PI-02", title: "用户知情同意", description: "收集个人信息应获得用户明示同意", category: "个人信息保护", severity: "high", mapping: "GDPR Art.7" },
+    { id: 307, framework_id: 3, control_id: "CSL-IR-01", title: "安全事件报告", description: "发生安全事件应立即采取补救措施并报告", category: "应急响应", severity: "critical", mapping: "ISO A.16" },
+    { id: 308, framework_id: 3, control_id: "CSL-IR-02", title: "应急预案", description: "应制定网络安全事件应急预案", category: "应急响应", severity: "high", mapping: "ISO A.17" },
+    { id: 309, framework_id: 3, control_id: "CSL-AU-01", title: "日志留存", description: "应按照规定留存网络日志不少于6个月", category: "安全审计", severity: "high", mapping: "ISO A.12.4" },
+    { id: 310, framework_id: 3, control_id: "CSL-AU-02", title: "安全审计制度", description: "应建立安全审计制度并进行定期审计", category: "安全审计", severity: "medium", mapping: "ISO A.18.2" },
+  ],
+}
+
+const MOCK_ASSESSMENTS: AssessmentItem[] = [
+  {
+    id: 1,
+    framework_id: 1,
+    name: "2025年度等保2.0评估",
+    assessor: "张伟",
+    status: "completed",
+    overall_score: 87,
+    created_at: new Date(Date.now() - 2592000000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+  {
+    id: 2,
+    framework_id: 2,
+    name: "ISO 27001年度合规审查",
+    assessor: "李娜",
+    status: "completed",
+    overall_score: 92,
+    created_at: new Date(Date.now() - 5184000000).toISOString(),
+    updated_at: new Date(Date.now() - 1728000000).toISOString(),
+  },
+  {
+    id: 3,
+    framework_id: 3,
+    name: "网络安全法季度自查",
+    assessor: "王芳",
+    status: "in_progress",
+    overall_score: 65,
+    created_at: new Date(Date.now() - 1209600000).toISOString(),
+    updated_at: new Date(Date.now() - 604800000).toISOString(),
+  },
+  {
+    id: 4,
+    framework_id: 1,
+    name: "2025上半年等保差距分析",
+    assessor: "陈强",
+    status: "draft",
+    overall_score: null,
+    created_at: new Date(Date.now() - 172800000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+  },
+]
+
 function getGrade(score: number): { grade: string; color: string } {
-  if (score >= 90) return { grade: "A", color: "text-emerald-600" }
-  if (score >= 75) return { grade: "B", color: "text-blue-600" }
-  if (score >= 60) return { grade: "C", color: "text-amber-600" }
-  return { grade: "D", color: "text-red-600" }
+  if (score >= 90) return { grade: "A", color: "text-emerald-400" }
+  if (score >= 75) return { grade: "B", color: "text-blue-400" }
+  if (score >= 60) return { grade: "C", color: "text-amber-400" }
+  return { grade: "D", color: "text-red-400" }
 }
 
 function CircularProgress({ value, size = 120, strokeWidth = 10 }: { value: number; size?: number; strokeWidth?: number }) {
@@ -164,8 +291,8 @@ function CircularProgress({ value, size = 120, strokeWidth = 10 }: { value: numb
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-slate-900">{Math.round(value)}</span>
-        <span className="text-[11px] text-slate-500">分</span>
+        <span className="text-2xl font-bold text-white">{Math.round(value)}</span>
+        <span className="text-[11px] text-zinc-500">分</span>
       </div>
     </div>
   )
@@ -204,10 +331,10 @@ function CreateAssessmentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/6 bg-[#131316] text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>创建评估</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             选择合规框架并创建新的合规评估任务。
           </DialogDescription>
         </DialogHeader>
@@ -311,10 +438,10 @@ function ResultEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/6 bg-[#131316] text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>更新评估结果</DialogTitle>
-          <DialogDescription className="text-slate-500">
+          <DialogDescription className="text-zinc-500">
             {result?.control ? `${result.control.control_id} - ${result.control.title}` : ""}
           </DialogDescription>
         </DialogHeader>
@@ -378,7 +505,7 @@ function ResultEditDialog({
 type ViewMode = "frameworks" | "controls" | "assessment-results" | "report"
 
 export default function CompliancePage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
 
   const [frameworks, setFrameworks] = useState<FrameworkItem[]>([])
   const [assessments, setAssessments] = useState<AssessmentItem[]>([])
@@ -407,18 +534,18 @@ export default function CompliancePage() {
   const loadFrameworks = useCallback(async () => {
     try {
       const res = await api.get("/compliance/frameworks")
-      setFrameworks(res.data)
+      setFrameworks(res.data.length > 0 ? res.data : MOCK_FRAMEWORKS)
     } catch {
-      setFrameworks([])
+      setFrameworks(MOCK_FRAMEWORKS)
     }
   }, [])
 
   const loadAssessments = useCallback(async () => {
     try {
       const res = await api.get("/compliance/assessments")
-      setAssessments(res.data)
+      setAssessments(res.data.length > 0 ? res.data : MOCK_ASSESSMENTS)
     } catch {
-      setAssessments([])
+      setAssessments(MOCK_ASSESSMENTS)
     }
   }, [])
 
@@ -460,15 +587,15 @@ export default function CompliancePage() {
     setSeverityFilter("")
     try {
       const res = await api.get(`/compliance/frameworks/${fw.id}/controls`)
-      setControls(res.data)
+      setControls(res.data.length > 0 ? res.data : (MOCK_CONTROLS_BY_FRAMEWORK[fw.id] || []))
     } catch {
-      setControls([])
+      setControls(MOCK_CONTROLS_BY_FRAMEWORK[fw.id] || [])
     } finally {
       setControlsLoading(false)
     }
   }
 
-  async function handleStartAssessment(fw: FrameworkItem) {
+  async function handleStartAssessment() {
     setCreateDialogOpen(true)
   }
 
@@ -587,28 +714,28 @@ export default function CompliancePage() {
     <div className="space-y-5">
       <PageHeader
         icon={ShieldCheck}
-        title="合规管理"
+        title={t("compliance.title")}
         subtitle={
           viewMode === "controls" && selectedFramework ? (
             <span className="flex items-center gap-1">
-              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-600 transition-colors">合规框架</Link>
+              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-400 transition-colors">{t("compliance.frameworks")}</Link>
               <ChevronRight className="size-3.5" />
               {selectedFramework.name}
             </span>
           ) : viewMode === "assessment-results" && selectedAssessment ? (
             <span className="flex items-center gap-1">
-              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-600 transition-colors">合规框架</Link>
+              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-400 transition-colors">{t("compliance.frameworks")}</Link>
               <ChevronRight className="size-3.5" />
               {selectedAssessment.name}
             </span>
           ) : viewMode === "report" ? (
             <span className="flex items-center gap-1">
-              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-600 transition-colors">合规框架</Link>
+              <Link href="/system/compliance" onClick={goBack} className="hover:text-cyan-400 transition-colors">{t("compliance.frameworks")}</Link>
               <ChevronRight className="size-3.5" />
-              合规报告
+              {t("compliance.complianceReport")}
             </span>
           ) : (
-            <span>合规框架管理与评估报告</span>
+            <span>{t("compliance.subtitle")}</span>
           )
         }
         actions={
@@ -637,7 +764,7 @@ export default function CompliancePage() {
       />
 
       {seedMessage && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-700">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
           <CheckCircle2 className="size-4" />
           {seedMessage}
         </div>
@@ -656,9 +783,9 @@ export default function CompliancePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className={`text-xs ${subtleTextClass}`}>{item.label}</p>
-                    <p className="mt-1 text-2xl font-semibold text-slate-900">{item.value}</p>
+                    <p className="mt-1 text-2xl font-semibold text-white">{item.value}</p>
                   </div>
-                  <span className={`rounded-lg ${severityColorMap[item.color] ?? "bg-slate-50 text-slate-700"} p-2`}>
+                  <span className={`rounded-lg ${severityColorMap[item.color] ?? "bg-[#09090b] text-zinc-200"} p-2`}>
                     <item.icon className="size-4" />
                   </span>
                 </div>
@@ -680,9 +807,9 @@ export default function CompliancePage() {
 
             <TabsContent value="frameworks" className="mt-4 space-y-4">
               {loading ? (
-                <div className="p-10 text-center text-slate-500">加载中...</div>
+                <div className="p-10 text-center text-zinc-500">加载中...</div>
               ) : frameworks.length === 0 ? (
-                <div className="p-10 text-center text-slate-500">
+                <div className="p-10 text-center text-zinc-500">
                   暂无框架数据，请先点击「初始化数据」
                 </div>
               ) : (
@@ -691,15 +818,15 @@ export default function CompliancePage() {
                     <Card key={fw.id} className={CARD.elevated}>
                       <CardContent className="p-5 space-y-4">
                         <div className="flex items-start gap-3">
-                          <div className={`flex size-10 shrink-0 items-center justify-center ${RADIUS.lg} bg-cyan-50 text-cyan-700`}>
+                          <div className={`flex size-10 shrink-0 items-center justify-center ${RADIUS.lg} bg-cyan-500/15 text-cyan-300`}>
                             <Shield className="size-5" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900 truncate">{fw.name}</span>
+                              <span className="text-sm font-semibold text-white truncate">{fw.name}</span>
                             </div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] text-cyan-700 font-mono">
+                              <code className="rounded bg-zinc-500/15 px-1.5 py-0.5 text-[11px] text-cyan-300 font-mono">
                                 {fw.code}
                               </code>
                               <span className={`text-[11px] ${subtleTextClass}`}>v{fw.version}</span>
@@ -712,14 +839,14 @@ export default function CompliancePage() {
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
                             <span className={`text-xs ${subtleTextClass}`}>控制项</span>
-                            <span className="text-sm font-semibold text-slate-900">{fw.controls_count}</span>
+                            <span className="text-sm font-semibold text-white">{fw.controls_count}</span>
                           </div>
                           <div className="flex flex-wrap gap-1">
                             {(fw.categories || []).slice(0, 3).map((cat) => (
                               <Badge
                                 key={cat}
                                 variant="outline"
-                                className="border-slate-200 bg-slate-50 text-slate-600 text-[11px]"
+                                className="border-white/6 bg-[#09090b] text-zinc-400 text-[11px]"
                               >
                                 {cat}
                               </Badge>
@@ -727,7 +854,7 @@ export default function CompliancePage() {
                             {(fw.categories || []).length > 3 && (
                               <Badge
                                 variant="outline"
-                                className="border-slate-200 bg-slate-50 text-slate-500 text-[11px]"
+                                className="border-white/6 bg-[#09090b] text-zinc-500 text-[11px]"
                               >
                                 +{fw.categories.length - 3}
                               </Badge>
@@ -749,7 +876,7 @@ export default function CompliancePage() {
                             className="flex-1 gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
                             onClick={() => {
                               setSelectedFramework(fw)
-                              handleStartAssessment(fw)
+                              handleStartAssessment()
                             }}
                           >
                             <FileCheck className="size-3.5" />
@@ -766,7 +893,7 @@ export default function CompliancePage() {
             <TabsContent value="assessments" className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
                   <Input
                     aria-label="搜索评估名称"
                     value={searchQuery}
@@ -785,9 +912,9 @@ export default function CompliancePage() {
               </div>
 
               {loading ? (
-                <div className="p-10 text-center text-slate-500">加载中...</div>
+                <div className="p-10 text-center text-zinc-500">加载中...</div>
               ) : assessments.length === 0 ? (
-                <div className="p-10 text-center text-slate-500">
+                <div className="p-10 text-center text-zinc-500">
                   暂无评估数据，请先创建评估任务
                 </div>
               ) : (
@@ -805,15 +932,15 @@ export default function CompliancePage() {
                           <CardContent className="p-0">
                             <button
                               type="button"
-                              className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-slate-50/50 transition-colors"
+                              className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-[#09090b]/50 transition-colors"
                               onClick={() => handleViewAssessment(assessment)}
                             >
-                              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                              <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-300">
                                 <FileCheck className="size-5" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-semibold text-slate-900">{assessment.name}</span>
+                                  <span className="text-sm font-semibold text-white">{assessment.name}</span>
                                   <Badge variant="outline" className={statusCfg.className}>
                                     {statusCfg.label}
                                   </Badge>
@@ -827,10 +954,10 @@ export default function CompliancePage() {
                                 {assessment.overall_score !== null && (
                                   <div className="text-right">
                                     <p className={`text-xs ${subtleTextClass}`}>得分</p>
-                                    <p className="text-sm font-semibold text-slate-900">{assessment.overall_score}</p>
+                                    <p className="text-sm font-semibold text-white">{assessment.overall_score}</p>
                                   </div>
                                 )}
-                                <ChevronRight className="size-4 text-slate-400" />
+                                <ChevronRight className="size-4 text-zinc-400" />
                               </div>
                             </button>
                           </CardContent>
@@ -849,7 +976,7 @@ export default function CompliancePage() {
           <Card className={CARD.elevated}>
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-cyan-50 text-cyan-700`}>
+                <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-cyan-500/15 text-cyan-300`}>
                   <Shield className="size-5" />
                 </div>
                 <div>
@@ -883,7 +1010,7 @@ export default function CompliancePage() {
                   </SelectContent>
                 </Select>
                 <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
                   <Input
                     aria-label="搜索控制项"
                     value={searchQuery}
@@ -897,36 +1024,36 @@ export default function CompliancePage() {
           </Card>
 
           {controlsLoading ? (
-            <div className="p-10 text-center text-slate-500">加载中...</div>
+            <div className="p-10 text-center text-zinc-500">加载中...</div>
           ) : filteredControls.length === 0 ? (
-            <div className="p-10 text-center text-slate-500">没有匹配的控制项</div>
+            <div className="p-10 text-center text-zinc-500">没有匹配的控制项</div>
           ) : (
             <Card className={pageCardClass}>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" aria-label="合规控制项">
-                    <thead className="bg-slate-50">
-                      <tr className="border-b border-slate-200">
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">控制项ID</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">标题</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">类别</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">严重等级</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">映射</th>
+                    <thead className="bg-[#09090b]">
+                      <tr className="border-b border-white/6">
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">控制项ID</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">标题</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">类别</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">严重等级</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">映射</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredControls.map((ctrl) => {
                         const sevCfg = severityConfig[ctrl.severity] || severityConfig.medium
                         return (
-                          <tr key={ctrl.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                          <tr key={ctrl.id} className="border-b border-white/4 last:border-b-0 hover:bg-[#09090b]/50">
                             <td className="px-5 py-2.5">
-                              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cyan-700 font-mono">
+                              <code className="rounded bg-zinc-500/15 px-1.5 py-0.5 text-xs text-cyan-300 font-mono">
                                 {ctrl.control_id}
                               </code>
                             </td>
-                            <td className="px-5 py-2.5 text-slate-900">{ctrl.title}</td>
+                            <td className="px-5 py-2.5 text-white">{ctrl.title}</td>
                             <td className="px-5 py-2.5">
-                              <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600 text-[11px]">
+                              <Badge variant="outline" className="border-white/6 bg-[#09090b] text-zinc-400 text-[11px]">
                                 {ctrl.category}
                               </Badge>
                             </td>
@@ -956,7 +1083,7 @@ export default function CompliancePage() {
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-blue-50 text-blue-700`}>
+                  <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-blue-500/10 text-blue-300`}>
                     <FileCheck className="size-5" />
                   </div>
                   <div>
@@ -1005,10 +1132,10 @@ export default function CompliancePage() {
                   {assessmentStats && (
                     <div className="grid grid-cols-2 gap-x-8 gap-y-3 flex-1">
                       {[
-                        { label: "合规", count: assessmentStats.compliant, color: "bg-emerald-500", textColor: "text-emerald-700" },
-                        { label: "部分合规", count: assessmentStats.partially, color: "bg-amber-500", textColor: "text-amber-700" },
-                        { label: "不合规", count: assessmentStats.nonCompliant, color: "bg-red-500", textColor: "text-red-700" },
-                        { label: "未评估", count: assessmentStats.notAssessed, color: "bg-slate-400", textColor: "text-slate-600" },
+                        { label: "合规", count: assessmentStats.compliant, color: "bg-emerald-500", textColor: "text-emerald-300" },
+                        { label: "部分合规", count: assessmentStats.partially, color: "bg-amber-500", textColor: "text-amber-400" },
+                        { label: "不合规", count: assessmentStats.nonCompliant, color: "bg-red-500", textColor: "text-red-400" },
+                        { label: "未评估", count: assessmentStats.notAssessed, color: "bg-zinc-500", textColor: "text-zinc-400" },
                       ].map((item) => (
                         <div key={item.label} className="flex items-center gap-2">
                           <span className={`size-2.5 rounded-full ${item.color}`} />
@@ -1024,9 +1151,9 @@ export default function CompliancePage() {
           </Card>
 
           {assessmentLoading ? (
-            <div className="p-10 text-center text-slate-500">加载中...</div>
+            <div className="p-10 text-center text-zinc-500">加载中...</div>
           ) : !selectedAssessment.results || selectedAssessment.results.length === 0 ? (
-            <div className="p-10 text-center text-slate-500">
+            <div className="p-10 text-center text-zinc-500">
               暂无评估结果，请点击「自动评估」生成结果
             </div>
           ) : (
@@ -1034,27 +1161,27 @@ export default function CompliancePage() {
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" aria-label="评估结果">
-                    <thead className="bg-slate-50">
-                      <tr className="border-b border-slate-200">
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">控制项ID</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">标题</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">状态</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">发现</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">整改建议</th>
-                        <th className="px-5 py-2.5 text-left text-xs text-slate-500">操作</th>
+                    <thead className="bg-[#09090b]">
+                      <tr className="border-b border-white/6">
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">控制项ID</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">标题</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">状态</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">发现</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">整改建议</th>
+                        <th className="px-5 py-2.5 text-left text-xs text-zinc-500">操作</th>
                       </tr>
                     </thead>
                     <tbody>
                       {selectedAssessment.results.map((result) => {
                         const statusCfg = statusConfig[result.status] || statusConfig.not_assessed
                         return (
-                          <tr key={result.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50">
+                          <tr key={result.id} className="border-b border-white/4 last:border-b-0 hover:bg-[#09090b]/50">
                             <td className="px-5 py-2.5">
-                              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-cyan-700 font-mono">
+                              <code className="rounded bg-zinc-500/15 px-1.5 py-0.5 text-xs text-cyan-300 font-mono">
                                 {result.control?.control_id || `#${result.control_id}`}
                               </code>
                             </td>
-                            <td className="px-5 py-2.5 text-slate-900">
+                            <td className="px-5 py-2.5 text-white">
                               {result.control?.title || "-"}
                             </td>
                             <td className="px-5 py-2.5">
@@ -1073,7 +1200,7 @@ export default function CompliancePage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50"
+                                className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
                                 onClick={() => setEditResult(result)}
                               >
                                 编辑
@@ -1097,7 +1224,7 @@ export default function CompliancePage() {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-cyan-50 text-cyan-700`}>
+                  <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-cyan-500/15 text-cyan-300`}>
                     <Shield className="size-5" />
                   </div>
                   <div>
@@ -1107,7 +1234,7 @@ export default function CompliancePage() {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">
+                <Badge variant="outline" className="border-white/6 bg-[#09090b] text-zinc-400">
                   合规报告
                 </Badge>
               </div>
@@ -1124,13 +1251,13 @@ export default function CompliancePage() {
                 </div>
                 <div className="flex-1 space-y-4">
                   <div>
-                    <p className={`text-xs font-medium text-slate-500 mb-2`}>控制项结果摘要</p>
+                    <p className={`text-xs font-medium text-zinc-500 mb-2`}>控制项结果摘要</p>
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label: "合规", count: reportData.summary.compliant, total: reportData.summary.total, color: "bg-emerald-500", bg: "bg-emerald-100", textColor: "text-emerald-700" },
-                        { label: "部分合规", count: reportData.summary.partially_compliant, total: reportData.summary.total, color: "bg-amber-500", bg: "bg-amber-100", textColor: "text-amber-700" },
-                        { label: "不合规", count: reportData.summary.non_compliant, total: reportData.summary.total, color: "bg-red-500", bg: "bg-red-100", textColor: "text-red-700" },
-                        { label: "未评估", count: reportData.summary.not_assessed, total: reportData.summary.total, color: "bg-slate-400", bg: "bg-slate-100", textColor: "text-slate-600" },
+                        { label: "合规", count: reportData.summary.compliant, total: reportData.summary.total, color: "bg-emerald-500", bg: "bg-emerald-500/15", textColor: "text-emerald-300" },
+                        { label: "部分合规", count: reportData.summary.partially_compliant, total: reportData.summary.total, color: "bg-amber-500", bg: "bg-amber-500/15", textColor: "text-amber-400" },
+                        { label: "不合规", count: reportData.summary.non_compliant, total: reportData.summary.total, color: "bg-red-500", bg: "bg-red-500/15", textColor: "text-red-400" },
+                        { label: "未评估", count: reportData.summary.not_assessed, total: reportData.summary.total, color: "bg-zinc-500", bg: "bg-zinc-500/15", textColor: "text-zinc-400" },
                       ].map((item) => (
                         <div key={item.label} className={`${item.bg} rounded-lg px-3 py-2`}>
                           <div className="flex items-center justify-between">
@@ -1140,7 +1267,7 @@ export default function CompliancePage() {
                             </div>
                             <span className={`text-sm font-semibold ${item.textColor}`}>{item.count}</span>
                           </div>
-                          <div className="mt-1.5 h-1.5 rounded-full bg-white/60">
+                          <div className="mt-1.5 h-1.5 rounded-full bg-white/[0.06]">
                             <div
                               className={`h-full rounded-full ${item.color} transition-colors duration-500`}
                               style={{ width: `${item.total > 0 ? (item.count / item.total) * 100 : 0}%` }}
@@ -1162,8 +1289,8 @@ export default function CompliancePage() {
                 <div className="space-y-3">
                   {reportData.category_breakdown.map((cat) => (
                     <div key={cat.category} className="flex items-center gap-4">
-                      <span className="text-sm text-slate-700 w-32 shrink-0 truncate">{cat.category}</span>
-                      <div className="flex-1 h-2 rounded-full bg-slate-100">
+                      <span className="text-sm text-zinc-200 w-32 shrink-0 truncate">{cat.category}</span>
+                      <div className="flex-1 h-2 rounded-full bg-zinc-500/15">
                         <div
                           className={`h-full rounded-full transition-colors duration-500 ${
                             cat.score >= 75 ? "bg-emerald-500" : cat.score >= 50 ? "bg-amber-500" : "bg-red-500"
@@ -1172,7 +1299,7 @@ export default function CompliancePage() {
                         />
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-sm font-semibold text-slate-900">{Math.round(cat.score)}%</span>
+                        <span className="text-sm font-semibold text-white">{Math.round(cat.score)}%</span>
                         <span className={`text-xs ${subtleTextClass}`}>
                           ({cat.compliant}/{cat.total})
                         </span>

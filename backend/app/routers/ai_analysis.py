@@ -19,7 +19,7 @@ from app.services.ai_analysis_engine import (
 )
 
 router = APIRouter(
-    prefix="/api/ai-analysis", 
+    prefix="/ai-analysis", 
     tags=["AI Security Analysis"],
     responses={404: {"description": "Not found"}},
 )

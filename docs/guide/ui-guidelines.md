@@ -1,3 +1,6 @@
+> **⚠️ 弃用通知**: 本文档已归档，内容已迁移至 [admin-ui-guidelines-v2.md](../admin-ui-guidelines-v2.md)（Dark Theme v2 设计系统）。  
+> 本文档是 `admin-ui-guidelines-v1.md` 的副本，描述的是已被取代的 v1 浅色工作台规范。请使用 v2 版本作为当前设计标准。
+
 # SecMind 后台 UI 统一规范
 
 版本：v1.0  

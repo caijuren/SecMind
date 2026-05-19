@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SecMind Frontend
 
-## Getting Started
+AI 安全运营平台前端应用 — 信号感知、攻击推理、案件研判、自动处置。
 
-First, run the development server:
+## 技术栈
+
+- **框架**: Next.js 16 (App Router)
+- **样式**: Tailwind CSS v4
+- **组件库**: shadcn/ui
+- **语言**: TypeScript
+- **状态管理**: Zustand
+- **国际化**: i18next + react-i18next
+- **图表**: ECharts + echarts-for-react
+- **流程图**: @xyflow/react
+
+## 快速开始
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install && npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+启动后访问 [http://localhost:3000](http://localhost:3000)。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 构建
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## 关键目录
 
-To learn more about Next.js, take a look at the following resources:
+| 目录 | 说明 |
+|------|------|
+| `src/app` | Next.js App Router 页面路由 |
+| `src/components` | 可复用 UI 组件（layout、ui、ai、auth 等） |
+| `src/lib` | 工具函数和 API 客户端 |
+| `src/i18n` | 国际化翻译配置与语言包 |
+| `src/store` | Zustand 全局状态（auth、alert、dashboard、locale） |
+| `src/hooks` | 自定义 React Hooks |
+| `src/types` | TypeScript 类型定义 |
+| `src/core` | 核心业务逻辑（假设引擎、评分器等） |
+| `src/data` | Mock 数据和知识库数据 |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 设计系统
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+项目采用 **Dark Theme v2** 设计系统，以深色主题为主（浅色模式为辅）。
 
-## Deploy on Vercel
+设计规范参考：[admin-ui-guidelines-v2.md](../docs/admin-ui-guidelines-v2.md)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+核心设计原则：
+- 深色基调 `#09090b`，配合毛玻璃卡片效果
+- Electric Blue (`#3b82f6`) 为主强调色
+- 统一使用 shadcn/ui 组件体系
+- 支持亮色/暗色主题切换
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 代码规范检查
+
+```bash
+npm run ui:check          # UI 规范检查
+npm run ui:check:fix      # UI 规范自动修复
+npm run lint              # ESLint 代码检查
+```

@@ -20,7 +20,6 @@ import {
   CalendarDays,
   Zap,
   BookOpen,
-  Lock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -41,8 +40,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { useLocaleStore } from "@/store/locale-store"
 import { softCardClass } from "@/lib/admin-ui"
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 
 type ReportStatus = "generating" | "completed" | "sent"
 type ReportType = "daily" | "weekly" | "monthly" | "special"
@@ -231,11 +230,11 @@ function GenerateReportDialog({
 }
 
 export default function ReportsPage() {
-  const { t } = useLocaleStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false)
   const [reports, setReports] = useState<ReportItem[]>(mockReports)
+  const [deleteTarget, setDeleteTarget] = useState<{id: string, title: string} | null>(null)
 
   const filteredReports = reports.filter((r) => {
     if (searchQuery) {
@@ -416,7 +415,7 @@ export default function ReportsPage() {
                       variant="ghost"
                       size="icon-sm"
                       className="text-zinc-700 hover:text-red-400 hover:bg-red-500/10"
-                      onClick={() => handleDelete(report.id)}
+                      onClick={() => setDeleteTarget({id: report.id, title: report.title})}
                       aria-label="删除报告"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -478,6 +477,20 @@ export default function ReportsPage() {
       <GenerateReportDialog
         open={generateDialogOpen}
         onOpenChange={setGenerateDialogOpen}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="删除报告"
+        description={`确定要删除报告 ${deleteTarget?.title} 吗？此操作不可撤销。`}
+        level="warning"
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDelete(deleteTarget.id)
+            setDeleteTarget(null)
+          }
+        }}
       />
     </div>
   )

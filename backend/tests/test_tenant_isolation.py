@@ -15,6 +15,7 @@ from app.models.compliance import ComplianceFramework
 from app.services.auth_service import get_password_hash, create_access_token
 from app.services.tenant_context import TenantContext
 from app.middleware.tenant_isolation import TenantIsolation
+from app.services.rbac_service import seed_rbac, assign_user_roles, get_role_by_name
 
 TEST_DB_URL = "sqlite:///:memory:"
 
@@ -52,7 +53,6 @@ def _create_user(db, email: str, role: str = "analyst") -> User:
         name=email.split("@")[0],
         email=email,
         hashed_password=get_password_hash("test123"),
-        role=role,
         status="active",
         department="安全部",
         position="分析师",
@@ -175,8 +175,17 @@ class TestTenantIsolationSetTenantId:
 class TestTenantIsolationAdmin:
 
     def test_admin_detection(self, db):
-        admin_user = _create_user(db, "admin@test.com", role="admin")
-        normal_user = _create_user(db, "user@test.com", role="analyst")
+        seed_rbac(db)
+        admin_user = _create_user(db, "admin@test.com")
+        normal_user = _create_user(db, "user@test.com")
+        admin_role = get_role_by_name(db, "admin")
+        analyst_role = get_role_by_name(db, "analyst")
+        if admin_role:
+            assign_user_roles(db, admin_user.id, [admin_role.id])
+        if analyst_role:
+            assign_user_roles(db, normal_user.id, [analyst_role.id])
+        db.refresh(admin_user)
+        db.refresh(normal_user)
         assert TenantIsolation.is_admin(admin_user) is True
         assert TenantIsolation.is_admin(normal_user) is False
 

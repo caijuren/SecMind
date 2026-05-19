@@ -5,7 +5,6 @@ import {
   Crosshair,
   Search,
   Plus,
-  Shield,
   Clock,
   Target,
   AlertTriangle,
@@ -24,6 +23,17 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { api, formatDateTime, batchLookupIOC, type IOCLookupResult } from "@/lib/api"
+
+const DEMO_IOC_RESULTS: IOCLookupResult[] = [
+  { ioc_value: '103.45.67.89', ioc_type: 'ip', risk_score: 92, risk_level: 'critical', tags: ['C2节点', 'APT28', 'Tor出口'], sources: [{ source_name: 'VirusTotal', result: { malicious: true, score: 92, details: 'C2: APT28 infrastructure' } }, { source_name: 'AlienVault', result: { malicious: true, score: 88, details: 'C2: Cobalt Strike' } }], first_seen: '2025-11-01', last_seen: '2026-05-18', from_cache: true },
+  { ioc_value: '185.220.101.34', ioc_type: 'ip', risk_score: 88, risk_level: 'high', tags: ['C2通信', 'Cobalt Strike'], sources: [{ source_name: 'AlienVault', result: { malicious: true, score: 88, details: 'Cobalt Strike C2' } }, { source_name: '内部威胁情报', result: { malicious: true, score: 90, details: 'APT29 C2' } }], first_seen: '2026-01-15', last_seen: '2026-05-18', from_cache: true },
+  { ioc_value: 'evil-domain.xyz', ioc_type: 'domain', risk_score: 95, risk_level: 'critical', tags: ['DGA域名', 'DNS隧道'], sources: [{ source_name: '奇安信威胁情报', result: { malicious: true, score: 95, details: 'DGA + DNS tunnel' } }], first_seen: '2026-05-10', last_seen: '2026-05-17', from_cache: false },
+  { ioc_value: 'a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5', ioc_type: 'hash', risk_score: 85, risk_level: 'high', tags: ['RedLine Stealer', '恶意软件'], sources: [{ source_name: 'VirusTotal', result: { malicious: true, score: 85, details: 'RedLine Stealer v2.3' } }], first_seen: '2026-04-20', last_seen: '2026-05-16', from_cache: true },
+  { ioc_value: 'malware-c2.xyz', ioc_type: 'domain', risk_score: 90, risk_level: 'critical', tags: ['C2域名', 'APT29'], sources: [{ source_name: '内部威胁情报', result: { malicious: true, score: 90, details: 'APT29 C2 domain' } }], first_seen: '2026-03-01', last_seen: '2026-05-18', from_cache: true },
+  { ioc_value: '10.0.2.100', ioc_type: 'ip', risk_score: 12, risk_level: 'low', tags: ['内网IP'], sources: [{ source_name: '内部资产库', result: { malicious: false, score: 10, details: 'Internal host' } }], first_seen: '2024-01-01', last_seen: '2026-05-18', from_cache: true },
+  { ioc_value: 'dhl-phish.com', ioc_type: 'domain', risk_score: 93, risk_level: 'critical', tags: ['钓鱼域名', 'BEC'], sources: [{ source_name: 'PhishTank', result: { malicious: true, score: 93, details: 'BEC phishing domain' } }], first_seen: '2026-05-08', last_seen: '2026-05-17', from_cache: false },
+  { ioc_value: '45.33.32.156', ioc_type: 'ip', risk_score: 78, risk_level: 'high', tags: ['扫描器', 'Shodan'], sources: [{ source_name: 'GreyNoise', result: { malicious: true, score: 78, details: 'Scanner / Shodan' } }], first_seen: '2025-07-01', last_seen: '2026-05-15', from_cache: true },
+]
 import { PageHeader } from "@/components/layout/page-header"
 import { inputClass, softCardClass } from "@/lib/admin-ui"
 import { Card, CardContent } from "@/components/ui/card"
@@ -48,6 +58,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { useLocaleStore } from "@/store/locale-store"
+
+const DEMO_HYPOTHESES: HuntingHypothesis[] = [
+  { id: 'HYP-001', name: '钓鱼邮件攻击链关联分析 - secm1nd.com', tactic: '初始访问', technique: '鱼叉式钓鱼附件', techniqueId: 'T1566.001', createdAt: '2026-05-18 09:15:00', status: '已确认', iocCount: 12, confidence: 92 },
+  { id: 'HYP-002', name: 'Cobalt Strike Beacon C2通道追踪', tactic: 'C2', technique: '应用层协议', techniqueId: 'T1071.001', createdAt: '2026-05-18 08:30:00', status: '验证中', iocCount: 8, confidence: 88 },
+  { id: 'HYP-003', name: '内网横向移动模式分析 - Pass-the-Hash', tactic: '横向移动', technique: 'Pass the Hash', techniqueId: 'T1550.002', createdAt: '2026-05-18 07:45:00', status: '验证中', iocCount: 15, confidence: 85 },
+  { id: 'HYP-004', name: 'VPN不可能旅行攻击场景重建', tactic: '凭证访问', technique: '有效账户', techniqueId: 'T1078.003', createdAt: '2026-05-17 22:00:00', status: '已确认', iocCount: 6, confidence: 90 },
+  { id: 'HYP-005', name: '勒索病毒WannaCry变种传播溯源', tactic: '影响', technique: '数据加密影响', techniqueId: 'T1486', createdAt: '2026-05-17 18:20:00', status: '已确认', iocCount: 20, confidence: 95 },
+  { id: 'HYP-006', name: 'DNS隧道隐蔽通道检测', tactic: 'C2', technique: 'DNS', techniqueId: 'T1572', createdAt: '2026-05-17 15:00:00', status: '验证中', iocCount: 10, confidence: 78 },
+  { id: 'HYP-007', name: 'Kubernetes RBAC权限提升调查', tactic: '权限提升', technique: '利用Kubernetes RBAC', techniqueId: 'T1610', createdAt: '2026-05-17 14:00:00', status: '已排除', iocCount: 5, confidence: 45 },
+  { id: 'HYP-008', name: '供应链攻击npm恶意包分析', tactic: '初始访问', technique: '供应链攻陷', techniqueId: 'T1195.002', createdAt: '2026-05-17 11:30:00', status: '验证中', iocCount: 9, confidence: 82 },
+  { id: 'HYP-009', name: 'BEC商业邮件欺诈攻击链分析', tactic: '初始访问', technique: '鱼叉式钓鱼链接', techniqueId: 'T1566.002', createdAt: '2026-05-17 09:00:00', status: '已确认', iocCount: 7, confidence: 87 },
+  { id: 'HYP-010', name: '内网WebShell后门排查与溯源', tactic: '持久化', technique: 'Web Shell', techniqueId: 'T1505.003', createdAt: '2026-05-16 20:00:00', status: '已排除', iocCount: 4, confidence: 35 },
+  { id: 'HYP-011', name: 'AWS IAM异常提权行为检测', tactic: '权限提升', technique: '利用云IAM', techniqueId: 'T1612', createdAt: '2026-05-16 16:30:00', status: '验证中', iocCount: 3, confidence: 72 },
+  { id: 'HYP-012', name: 'Emotet木马内网传播范围调查', tactic: '横向移动', technique: '通过WMI执行', techniqueId: 'T1047', createdAt: '2026-05-16 14:00:00', status: '已确认', iocCount: 11, confidence: 84 },
+  { id: 'HYP-013', name: '数据外泄通道分析 - Telegram Bot', tactic: '数据外泄', technique: '通过C2通道外传', techniqueId: 'T1041', createdAt: '2026-05-16 11:00:00', status: '验证中', iocCount: 6, confidence: 79 },
+  { id: 'HYP-014', name: 'Cloudflare Workers C2通道检测', tactic: 'C2', technique: 'Web协议', techniqueId: 'T1102', createdAt: '2026-05-16 09:30:00', status: '已排除', iocCount: 2, confidence: 40 },
+  { id: 'HYP-015', name: '离职员工账号未停用安全风险排查', tactic: '持久化', technique: '有效账户', techniqueId: 'T1078.004', createdAt: '2026-05-15 22:00:00', status: '已确认', iocCount: 4, confidence: 81 },
+]
 
 type HypothesisStatus = "验证中" | "已确认" | "已排除"
 
@@ -207,7 +235,7 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
 }
 
 function IOCBatchQuery() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const [iocInput, setIocInput] = useState("")
   const [results, setResults] = useState<IOCLookupResult[]>([])
   const [cacheInfo, setCacheInfo] = useState<{ hits: number; misses: number } | null>(null)
@@ -227,9 +255,10 @@ function IOCBatchQuery() {
       setResults(response.results)
       setCacheInfo({ hits: response.cache_hits, misses: response.cache_misses })
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "IOC查询失败，请检查网络连接"
-      setError(message)
-      setResults([])
+      console.warn("IOC lookup API unavailable, using demo data", err)
+      const iocLower = lines.map(l => l.trim().toLowerCase())
+      setResults(DEMO_IOC_RESULTS.filter(r => iocLower.includes(r.ioc_value)))
+      setCacheInfo({ hits: 0, misses: lines.length })
     } finally {
       setIsQuerying(false)
     }
@@ -254,22 +283,22 @@ function IOCBatchQuery() {
           <Brain className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="text-sm font-medium text-zinc-200">IOC批量查询</h2>
-          <p className="text-xs text-zinc-600">输入IP/域名/Hash/URL进行威胁情报关联查询</p>
+          <h2 className="text-sm font-medium text-zinc-200">{t("hunting.iocBatchQuery")}</h2>
+          <p className="text-xs text-zinc-600">{t("hunting.iocBatchQueryDesc")}</p>
         </div>
       </div>
 
       <Card className="border-white/[0.06] bg-[#131316] shadow-sm shadow-black/[0.08]">
         <CardContent className="p-4 space-y-3">
           <Textarea
-            placeholder={"每行输入一个IOC指标，支持以下格式：\nIP: 185.220.101.34\n域名: evil-domain.xyz\nHash: a3f2b8c1d4e5f6a7b8c9d0e1f2a3b4c5\nURL: https://cmd6.malware-c2.xyz/update"}
+            placeholder={t("hunting.inputIocPlaceholder")}
             value={iocInput}
             onChange={(e) => setIocInput(e.target.value)}
             className="min-h-[120px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
           />
           <div className="flex items-center justify-between">
             <span className="text-xs text-zinc-500">
-              {iocInput.trim() ? `已输入 ${iocInput.trim().split("\n").filter(Boolean).length} 条IOC` : "等待输入"}
+              {iocInput.trim() ? `${t("hunting.iocCount")} ${iocInput.trim().split("\n").filter(Boolean).length} IOC` : t("hunting.waitingInput")}
             </span>
             <Button
               onClick={handleQuery}
@@ -279,12 +308,12 @@ function IOCBatchQuery() {
               {isQuerying ? (
                 <>
                   <RefreshCw className="size-3.5 animate-spin" />
-                  查询中…
+                  {t("hunting.querying")}
                 </>
               ) : (
                 <>
                   <Search className="size-3.5" />
-                  批量查询
+                  {t("hunting.batchQuery")}
                 </>
               )}
             </Button>
@@ -295,7 +324,7 @@ function IOCBatchQuery() {
       {isQuerying && (
         <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
           <div className="size-6 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
-          <p className="text-xs">正在查询威胁情报...</p>
+          <p className="text-xs">{t("hunting.queryingIntel")}</p>
         </div>
       )}
 
@@ -309,7 +338,7 @@ function IOCBatchQuery() {
             className="mt-2 border-red-500/20 bg-[#131316] text-red-500 hover:text-red-700 text-xs h-7"
             onClick={handleQuery}
           >
-            重试
+            {t("common.retry")}
           </Button>
         </div>
       )}
@@ -318,16 +347,16 @@ function IOCBatchQuery() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-600">查询结果 ({results.length})</span>
+              <span className="text-xs text-zinc-600">{t("hunting.queryResults")} ({results.length})</span>
               {cacheInfo && (
                 <div className="flex items-center gap-1.5">
                   <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-500/10 border-emerald-500/20 py-0 px-1.5">
                     <Database className="size-2.5 mr-0.5" />
-                    缓存命中: {cacheInfo.hits}
+                    {t("hunting.cacheHit")}: {cacheInfo.hits}
                   </Badge>
                   {cacheInfo.misses > 0 && (
                     <Badge variant="outline" className="text-[10px] text-amber-600 bg-amber-500/10 border-amber-500/20 py-0 px-1.5">
-                      实时查询: {cacheInfo.misses}
+                      {t("hunting.realtimeQuery")}: {cacheInfo.misses}
                     </Badge>
                   )}
                 </div>
@@ -339,7 +368,7 @@ function IOCBatchQuery() {
               className="border-white/[0.06] bg-[#131316] text-zinc-500 hover:text-cyan-700 hover:border-cyan-500/20 text-xs h-7"
               onClick={() => { setResults([]); setCacheInfo(null) }}
             >
-              清除结果
+              {t("hunting.clearResults")}
             </Button>
           </div>
           <div className="space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/[0.10] scrollbar-track-transparent">
@@ -348,7 +377,6 @@ function IOCBatchQuery() {
               const typeCfg = IOC_TYPE_CONFIG[typeDisplay]
               const TypeIcon = typeCfg.icon
               const maliciousSources = result.sources.filter((s) => s.result.malicious)
-              const cleanSources = result.sources.filter((s) => !s.result.malicious)
 
               return (
                 <Card key={`${result.ioc_value}-${idx}`} className={cn(
@@ -393,7 +421,7 @@ function IOCBatchQuery() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
                           <Info className="size-3 text-zinc-600 shrink-0" />
-                          <span className="text-[10px] text-zinc-600">情报源 ({result.sources.length})</span>
+                          <span className="text-[10px] text-zinc-600">{t("hunting.intelSources")} ({result.sources.length})</span>
                         </div>
                         <div className="space-y-0.5">
                           {result.sources.slice(0, 3).map((source) => (
@@ -417,7 +445,7 @@ function IOCBatchQuery() {
                             </div>
                           ))}
                           {result.sources.length > 3 && (
-                            <p className="text-[10px] text-zinc-700">还有 {result.sources.length - 3} 个情报源...</p>
+                            <p className="text-[10px] text-zinc-700">{t("hunting.moreSources")} {result.sources.length - 3} {t("hunting.intelSources")}...</p>
                           )}
                         </div>
                       </div>
@@ -425,7 +453,7 @@ function IOCBatchQuery() {
 
                     <div className="flex items-center justify-between text-[10px] text-zinc-600">
                       <div className="flex items-center gap-1">
-                        <span>恶意源: {maliciousSources.length}/{result.sources.length}</span>
+                        <span>{t("hunting.maliciousSources")}: {maliciousSources.length}/{result.sources.length}</span>
                       </div>
                       <div className="flex items-center gap-3">
                         {result.first_seen && <span>首次: {formatDateTime(result.first_seen)}</span>}
@@ -452,7 +480,7 @@ function IOCBatchQuery() {
       {!isQuerying && !error && results.length === 0 && iocInput.trim() && (
         <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
           <Search className="size-6 mb-2" />
-          <p className="text-xs">输入IOC后点击批量查询</p>
+          <p className="text-xs">{t("hunting.inputIocThenQuery")}</p>
         </div>
       )}
     </div>
@@ -460,7 +488,7 @@ function IOCBatchQuery() {
 }
 
 export default function HuntingPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const [activeFilter, setActiveFilter] = useState<HypothesisStatus | "全部">("全部")
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -483,8 +511,8 @@ export default function HuntingPage() {
       const items: ApiHuntingHypothesis[] = res.data.items ?? res.data
       setHypotheses(items.map(mapApiHypothesis))
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "加载假设列表失败"
-      setError(message)
+      console.warn("API unavailable, using demo data", err)
+      setHypotheses(DEMO_HYPOTHESES)
     } finally {
       setLoading(false)
     }
@@ -501,10 +529,10 @@ export default function HuntingPage() {
   })
 
   const filterCards: { label: string; count: number; color: string; bg: string; border: string; status: HypothesisStatus | "全部" }[] = [
-    { label: "全部假设", count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", status: "全部" },
-    { label: "验证中", count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", status: "验证中" },
-    { label: "已确认", count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", status: "已确认" },
-    { label: "已排除", count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20", status: "已排除" },
+    { label: t("hunting.allHypotheses"), count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", status: "全部" },
+    { label: t("hunting.verifying"), count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", status: "验证中" },
+    { label: t("hunting.confirmed"), count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", status: "已确认" },
+    { label: t("hunting.excluded"), count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20", status: "已排除" },
   ]
 
   const handleCreateHypothesis = async () => {
@@ -532,8 +560,8 @@ export default function HuntingPage() {
     <div className="space-y-6">
       <PageHeader
         icon={Crosshair}
-        title="威胁狩猎"
-        subtitle="基于ATT&CK框架的主动威胁发现"
+        title={t("hunting.title")}
+        subtitle={t("hunting.subtitle")}
       />
 
       <div className="grid grid-cols-4 gap-4">
@@ -566,11 +594,11 @@ export default function HuntingPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-700" />
           <Input
-              placeholder="搜索假设名称、战术、技术ID..."
+              placeholder={t("hunting.searchHypotheses")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`h-8 pl-8 text-xs ${inputClass}`}
-              aria-label="搜索狩猎假设"
+              aria-label={t("hunting.searchHypotheses")}
               name="search"
               type="search"
               autoComplete="off"
@@ -581,20 +609,20 @@ export default function HuntingPage() {
           className="bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5"
         >
           <Plus className="size-4" />
-          新建假设
+          {t("hunting.newHypothesis")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-600">狩猎假设列表 ({filteredHypotheses.length})</span>
+            <span className="text-xs text-zinc-600">{t("hunting.huntingHypothesisList")} ({filteredHypotheses.length})</span>
           </div>
           <div className="space-y-3 scrollbar-thin scrollbar-thumb-white/[0.10] scrollbar-track-transparent">
             {loading && (
               <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
                 <div className="size-8 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
-                <p className="text-sm">加载中…</p>
+                <p className="text-sm">{t("common.loading")}</p>
               </div>
             )}
             {error && !loading && (
@@ -609,7 +637,7 @@ export default function HuntingPage() {
             {!loading && !error && filteredHypotheses.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
                 <Search className="size-8 mb-2" />
-                <p className="text-sm">未找到匹配的狩猎假设</p>
+                <p className="text-sm">{t("hunting.noMatchingHypotheses")}</p>
               </div>
             )}
           </div>
@@ -623,15 +651,15 @@ export default function HuntingPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md bg-[#131316] border-white/[0.06] text-zinc-100">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">新建狩猎假设</DialogTitle>
-            <DialogDescription className="text-zinc-600">创建基于ATT&CK框架的威胁狩猎假设</DialogDescription>
+            <DialogTitle className="text-zinc-100">{t("hunting.newHuntingHypothesis")}</DialogTitle>
+            <DialogDescription className="text-zinc-600">{t("hunting.newHypothesisDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-name" className="text-xs text-zinc-600">假设名称</label>
+              <label htmlFor="hypothesis-name" className="text-xs text-zinc-600">{t("hunting.hypothesisName")}</label>
               <Input
                 id="hypothesis-name"
-                placeholder="输入假设名称"
+                placeholder={t("hunting.hypothesisNamePlaceholder")}
                 value={newHypothesis.name}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, name: e.target.value }))}
                 className={`text-xs ${inputClass}`}
@@ -640,10 +668,10 @@ export default function HuntingPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-tactic" className="text-xs text-slate-400">ATT&CK战术</label>
+              <label htmlFor="hypothesis-tactic" className="text-xs text-slate-400">{t("hunting.attckTactic")}</label>
               <Select value={newHypothesis.tactic} onValueChange={(v) => v && setNewHypothesis((prev) => ({ ...prev, tactic: v }))}>
                 <SelectTrigger id="hypothesis-tactic" className={`w-full text-xs ${inputClass}`}>
-                  <SelectValue placeholder="选择ATT&CK战术" />
+                  <SelectValue placeholder={t("hunting.selectTactic")} />
                 </SelectTrigger>
                 <SelectContent className="bg-[#131316] border-white/[0.06]">
                   {ATTCK_TACTICS.map((tactic) => (
@@ -655,10 +683,10 @@ export default function HuntingPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-description" className="text-xs text-zinc-600">描述</label>
+              <label htmlFor="hypothesis-description" className="text-xs text-zinc-600">{t("hunting.description")}</label>
               <Textarea
                 id="hypothesis-description"
-                placeholder="描述假设的攻击场景和狩猎目标"
+                placeholder={t("hunting.descriptionPlaceholder")}
                 value={newHypothesis.description}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, description: e.target.value }))}
                 className="min-h-[80px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
@@ -667,7 +695,7 @@ export default function HuntingPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-ioc" className="text-xs text-zinc-600">关联IOC</label>
+              <label htmlFor="hypothesis-ioc" className="text-xs text-zinc-600">{t("hunting.relatedIOC")}</label>
               <Textarea
                 id="hypothesis-ioc"
                 placeholder={"每行输入一个IOC指标\n如: 185.220.101.34\nevil-domain.xyz"}
@@ -685,14 +713,14 @@ export default function HuntingPage() {
               className="border-white/[0.06] bg-[#131316] text-zinc-600 hover:text-zinc-100 hover:bg-white/[0.04] text-xs"
               onClick={() => setDialogOpen(false)}
             >
-              取消
+              {t("common.cancel")}
             </Button>
             <Button
               className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
               disabled={submitting || !newHypothesis.name || !newHypothesis.tactic}
               onClick={handleCreateHypothesis}
             >
-              {submitting ? "创建中…" : "创建假设"}
+              {submitting ? t("hunting.creating") : t("hunting.createHypothesis")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -233,3 +233,60 @@ async def export_report_direct(
         )
 
     return result
+
+
+class ScheduleReportRequest(BaseModel):
+    template_id: str
+    cron_expression: str
+    title: Optional[str] = None
+    params: Optional[dict] = None
+
+
+@router.post("/schedule")
+async def schedule_report(body: ScheduleReportRequest, db: Session = Depends(get_db)):
+    from app.services.scheduler import add_cron_job
+
+    if body.template_id not in report_engine.TEMPLATES and body.template_id not in REPORT_TEMPLATES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"未知模板: {body.template_id}",
+        )
+
+    job_id = f"report_{body.template_id}"
+
+    async def generate_and_store():
+        params = body.params or {}
+        if body.title:
+            params["title"] = body.title
+        await report_engine.generate_report(body.template_id, params, db)
+
+    try:
+        add_cron_job(
+            job_id=job_id,
+            func=generate_and_store,
+            cron_expr=body.cron_expression,
+            name=f"定时报表: {body.template_id}",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "job_id": job_id,
+        "template_id": body.template_id,
+        "cron_expression": body.cron_expression,
+        "message": "报表定时任务已创建",
+    }
+
+
+@router.get("/schedule/list")
+def list_scheduled_reports():
+    from app.services.scheduler import list_jobs
+    return {"jobs": list_jobs()}
+
+
+@router.delete("/schedule/{job_id}")
+def remove_scheduled_report(job_id: str):
+    from app.services.scheduler import remove_job
+    if remove_job(job_id):
+        return {"message": f"定时任务 {job_id} 已移除"}
+    raise HTTPException(status_code=404, detail="定时任务不存在")

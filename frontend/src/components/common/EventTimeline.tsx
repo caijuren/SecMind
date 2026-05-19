@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Clock, AlertTriangle, Shield, Brain, FileText, Globe } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 interface TimelineEvent {
   id: string

@@ -29,7 +29,7 @@ interface ThreatStatsPanelProps {
 function AnimatedStatCard({ data }: { data: StatCardData }) {
   const [displayValue, setDisplayValue] = useState("0")
   const rafRef = useRef(0)
-  const { value, unit, label, icon, color, previousValue, trend, trendLabel } = data
+  const { value, unit, label, icon, color, trend, trendLabel } = data
 
   useEffect(() => {
     const duration = 1200
@@ -63,16 +63,16 @@ function AnimatedStatCard({ data }: { data: StatCardData }) {
 
   return (
     <div
-      className="flex flex-col gap-2 p-4 rounded-lg relative overflow-hidden group transition-all duration-300"
+      className="flex flex-col gap-2.5 p-4 rounded-lg relative overflow-hidden group transition-all duration-300"
       style={{
-        backgroundColor: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.06)",
+        backgroundColor: "rgba(255,255,255,0.02)",
+        border: "1px solid rgba(255,255,255,0.04)",
       }}
     >
       <div
-        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
         style={{
-          background: `linear-gradient(135deg, ${color}08 0%, transparent 50%)`,
+          background: `linear-gradient(135deg, ${color}06 0%, transparent 50%)`,
         }}
       />
 

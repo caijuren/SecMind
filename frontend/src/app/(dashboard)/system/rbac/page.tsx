@@ -35,6 +35,7 @@ import { api } from "@/lib/api"
 import { inputClass, pageCardClass, softCardClass, subtleTextClass } from "@/lib/admin-ui"
 import { CARD, RADIUS, TYPOGRAPHY } from "@/lib/design-system"
 import { useLocaleStore } from "@/store/locale-store"
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 
 interface PermissionItem {
   id: number
@@ -90,6 +91,86 @@ const rbacColorMap: Record<string, string> = {
   emerald: "bg-emerald-500/10 text-emerald-400",
   violet: "bg-violet-500/10 text-violet-400",
 }
+
+const MOCK_PERMISSIONS: PermissionItem[] = [
+  { id: 1, resource: "alert", action: "read", description: "查看告警列表和详情" },
+  { id: 2, resource: "alert", action: "write", description: "创建、编辑、删除告警规则" },
+  { id: 3, resource: "alert", action: "execute", description: "执行告警响应操作" },
+  { id: 4, resource: "response", action: "read", description: "查看响应记录" },
+  { id: 5, resource: "response", action: "write", description: "编辑响应策略" },
+  { id: 6, resource: "response", action: "execute", description: "执行响应动作" },
+  { id: 7, resource: "response", action: "approve", description: "审批响应操作" },
+  { id: 8, resource: "hunting", action: "read", description: "查看威胁狩猎结果" },
+  { id: 9, resource: "hunting", action: "execute", description: "执行威胁狩猎任务" },
+  { id: 10, resource: "investigate", action: "read", description: "查看安全调查" },
+  { id: 11, resource: "investigate", action: "write", description: "编辑安全调查" },
+  { id: 12, resource: "dashboard", action: "read", description: "查看仪表盘" },
+  { id: 13, resource: "report", action: "read", description: "查看报表" },
+  { id: 14, resource: "report", action: "write", description: "创建和编辑报表" },
+  { id: 15, resource: "playbook", action: "read", description: "查看剧本" },
+  { id: 16, resource: "playbook", action: "write", description: "编辑剧本" },
+  { id: 17, resource: "playbook", action: "execute", description: "执行剧本" },
+  { id: 18, resource: "user", action: "read", description: "查看用户列表" },
+  { id: 19, resource: "user", action: "write", description: "管理用户" },
+  { id: 20, resource: "system", action: "read", description: "查看系统设置" },
+  { id: 21, resource: "system", action: "write", description: "修改系统设置" },
+  { id: 22, resource: "integration", action: "read", description: "查看集成配置" },
+  { id: 23, resource: "integration", action: "write", description: "管理集成" },
+  { id: 24, resource: "*", action: "*", description: "超级管理员权限" },
+]
+
+const MOCK_ROLES: RoleItem[] = [
+  {
+    id: 1,
+    name: "super_admin",
+    display_name: "超级管理员",
+    description: "拥有系统所有权限，可执行任何操作",
+    is_system: 1,
+    created_at: new Date(Date.now() - 2592000000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+    permissions: MOCK_PERMISSIONS,
+  },
+  {
+    id: 2,
+    name: "security_analyst",
+    display_name: "安全分析师",
+    description: "负责安全告警分析、威胁狩猎和事件调查",
+    is_system: 1,
+    created_at: new Date(Date.now() - 2592000000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+    permissions: MOCK_PERMISSIONS.filter(p => ["alert", "response", "hunting", "investigate", "dashboard", "report", "playbook"].includes(p.resource)),
+  },
+  {
+    id: 3,
+    name: "soc_operator",
+    display_name: "SOC操作员",
+    description: "负责日常安全运营，处理告警和响应事件",
+    is_system: 0,
+    created_at: new Date(Date.now() - 1728000000).toISOString(),
+    updated_at: new Date(Date.now() - 432000000).toISOString(),
+    permissions: MOCK_PERMISSIONS.filter(p => ["alert", "response", "dashboard", "report"].includes(p.resource)),
+  },
+  {
+    id: 4,
+    name: "auditor",
+    display_name: "合规审计员",
+    description: "负责合规审计和安全报告的查看",
+    is_system: 1,
+    created_at: new Date(Date.now() - 2592000000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+    permissions: MOCK_PERMISSIONS.filter(p => p.action === "read" && ["alert", "response", "investigate", "dashboard", "report", "user", "system"].includes(p.resource)),
+  },
+  {
+    id: 5,
+    name: "readonly_viewer",
+    display_name: "只读观察者",
+    description: "仅可查看仪表盘和告警信息",
+    is_system: 1,
+    created_at: new Date(Date.now() - 2592000000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
+    permissions: MOCK_PERMISSIONS.filter(p => p.action === "read" && ["alert", "dashboard"].includes(p.resource)),
+  },
+]
 
 function CreateRoleDialog({
   open,
@@ -226,7 +307,7 @@ function CreateRoleDialog({
             <Button
               onClick={handleCreate}
               disabled={saving}
-              className="bg-cyan-600 text-white hover:bg-cyan-700"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
             >
               {saving ? "创建中…" : "创建角色"}
             </Button>
@@ -248,6 +329,7 @@ function AssignRoleDialog({
   roles: RoleItem[]
   onAssigned: () => void
 }) {
+  const { t } = useLocaleStore()
   const [userId, setUserId] = useState("")
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([])
   const [saving, setSaving] = useState(false)
@@ -288,7 +370,7 @@ function AssignRoleDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="border-white/[0.06] bg-[#131316] text-zinc-100 sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>用户角色分配</DialogTitle>
+          <DialogTitle>{t("rbac.assignRole")}</DialogTitle>
           <DialogDescription className="text-zinc-500">
             为指定用户分配角色，分配后将覆盖该用户的所有角色。
           </DialogDescription>
@@ -357,7 +439,7 @@ function AssignRoleDialog({
             <Button
               onClick={handleAssign}
               disabled={saving || !userId || selectedRoleIds.length === 0}
-              className="bg-cyan-600 text-white hover:bg-cyan-700"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
             >
               {saving ? "分配中…" : "确认分配"}
             </Button>
@@ -418,7 +500,7 @@ function UserPermissionLookup() {
           <Button
             onClick={handleLookup}
             disabled={loading || !userId}
-            className="bg-cyan-600 text-white hover:bg-cyan-700 shrink-0"
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all shrink-0"
           >
             {loading ? "查询中…" : "查询"}
           </Button>
@@ -484,7 +566,7 @@ function UserPermissionLookup() {
 }
 
 export default function RbacPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
 
   const [roles, setRoles] = useState<RoleItem[]>([])
   const [permissions, setPermissions] = useState<PermissionItem[]>([])
@@ -495,22 +577,23 @@ export default function RbacPage() {
   const [seeding, setSeeding] = useState(false)
   const [seedMessage, setSeedMessage] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [deleteTarget, setDeleteTarget] = useState<{roleId: number, name: string} | null>(null)
 
   const loadRoles = useCallback(async () => {
     try {
       const res = await api.get("/rbac/roles")
-      setRoles(res.data)
+      setRoles(res.data.length > 0 ? res.data : MOCK_ROLES)
     } catch {
-      setRoles([])
+      setRoles(MOCK_ROLES)
     }
   }, [])
 
   const loadPermissions = useCallback(async () => {
     try {
       const res = await api.get("/rbac/permissions")
-      setPermissions(res.data)
+      setPermissions(res.data.length > 0 ? res.data : MOCK_PERMISSIONS)
     } catch {
-      setPermissions([])
+      setPermissions(MOCK_PERMISSIONS)
     }
   }, [])
 
@@ -589,8 +672,8 @@ export default function RbacPage() {
     <div className="space-y-5">
       <PageHeader
         icon={Shield}
-        title="权限管理"
-        subtitle={<span>基于角色的访问控制（RBAC），管理角色与权限分配</span>}
+        title={t("rbac.title")}
+        subtitle={<span>{t("settings.rbacSubtitle")}</span>}
         actions={
           <div className="flex items-center gap-2">
             <Button
@@ -604,10 +687,10 @@ export default function RbacPage() {
               ) : (
                 <Zap className="size-3.5" />
               )}
-              {seeding ? "初始化中…" : "初始化权限"}
+              {seeding ? t("common.seeding") : t("rbac.seedBtn")}
             </Button>
             <Button
-              className="bg-cyan-600 text-white hover:bg-cyan-700"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
               onClick={() => setCreateDialogOpen(true)}
             >
               <Plus className="mr-1 size-4" />
@@ -627,9 +710,9 @@ export default function RbacPage() {
       <div className="grid gap-4 md:grid-cols-4">
         {[
           { label: "角色总数", value: stats.total, icon: Shield, color: "cyan" },
-          { label: "系统角色", value: stats.system, icon: Lock, color: "amber" },
-          { label: "自定义角色", value: stats.custom, icon: Users, color: "emerald" },
-          { label: "权限总数", value: stats.totalPermissions, icon: Key, color: "violet" },
+          { label: t("rbac.systemRoles"), value: stats.system, icon: Lock, color: "amber" },
+          { label: t("rbac.customRole"), value: stats.custom, icon: Users, color: "emerald" },
+          { label: t("rbac.allPermissions"), value: stats.totalPermissions, icon: Key, color: "violet" },
         ].map((item) => (
           <div key={item.label} className={`${softCardClass} p-4`}>
             <div className="flex items-center justify-between">
@@ -651,11 +734,11 @@ export default function RbacPage() {
         <TabsList variant="line">
           <TabsTrigger value="roles">
             <Shield className="size-3.5 mr-1" />
-            角色管理
+            {t("rbac.roles")}
           </TabsTrigger>
           <TabsTrigger value="permissions">
             <Key className="size-3.5 mr-1" />
-            权限列表
+            {t("rbac.permissions")}
           </TabsTrigger>
         </TabsList>
 
@@ -666,7 +749,7 @@ export default function RbacPage() {
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜索角色名称或描述…"
+                placeholder={t("rbac.searchRoles")}
                 className={`pl-9 ${inputClass}`}
               />
             </div>
@@ -676,7 +759,7 @@ export default function RbacPage() {
               onClick={() => setAssignDialogOpen(true)}
             >
               <UserCog className="size-3.5" />
-              用户角色分配
+              {t("rbac.assignRole")}
             </Button>
           </div>
 
@@ -752,7 +835,7 @@ export default function RbacPage() {
                               variant="outline"
                               size="sm"
                               className="border-red-500/25 text-red-400 hover:bg-red-500/10"
-                              onClick={() => handleDeleteRole(role.id)}
+                              onClick={() => setDeleteTarget({roleId: role.id, name: role.display_name})}
                             >
                               <Trash2 className="mr-1 size-3.5" />
                               删除角色
@@ -872,6 +955,20 @@ export default function RbacPage() {
         onOpenChange={setAssignDialogOpen}
         roles={roles}
         onAssigned={() => {}}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="删除角色"
+        description={`确定要删除角色 ${deleteTarget?.name} 吗？此操作不可撤销。`}
+        level="critical"
+        onConfirm={() => {
+          if (deleteTarget) {
+            handleDeleteRole(deleteTarget.roleId)
+            setDeleteTarget(null)
+          }
+        }}
       />
     </div>
   )

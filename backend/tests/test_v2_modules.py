@@ -7,6 +7,7 @@ from app.main import app
 from app.database import Base, get_db
 from app.models import User
 from app.services.auth_service import get_password_hash
+from app.services.rbac_service import seed_rbac, assign_user_roles, get_role_by_name
 
 TEST_DB_URL = "sqlite:///./test_v2.db"
 
@@ -26,9 +27,18 @@ def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-app.state.limiter = Limiter(key_func=get_remote_address, enabled=False)
+app.state.rbac_session_factory = TestSessionLocal
+
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    app.state.limiter = Limiter(key_func=get_remote_address, enabled=False)
+    app.state.limiter.enabled = False
+except Exception:
+    from app.routers.auth import limiter as auth_limiter
+    auth_limiter.enabled = False
+except Exception:
+    pass
 
 client = TestClient(app)
 
@@ -37,6 +47,8 @@ _admin_token = None
 
 def _get_admin_token():
     global _admin_token
+    app.state.rbac_session_factory = TestSessionLocal
+    app.dependency_overrides[get_db] = override_get_db
     if _admin_token:
         try:
             from app.services.auth_service import decode_access_token
@@ -47,17 +59,26 @@ def _get_admin_token():
             pass
 
     db = TestSessionLocal()
+    seed_rbac(db)
     existing = db.query(User).filter(User.email == "admin@test.com").first()
     if not existing:
         user = User(
             name="管理员",
             email="admin@test.com",
             hashed_password=get_password_hash("test123"),
-            role="admin",
             status="active",
+            department="安全部",
+            position="工程师",
+            level="P7",
+            manager="CTO",
+            office="北京",
         )
         db.add(user)
         db.commit()
+        db.refresh(user)
+        admin_role = get_role_by_name(db, "admin")
+        if admin_role:
+            assign_user_roles(db, user.id, [admin_role.id])
     db.close()
 
     r = client.post("/api/v1/auth/login", json={"email": "admin@test.com", "password": "test123"})
@@ -249,7 +270,8 @@ class TestSituation:
 
 class TestI18N:
     def test_locales(self):
-        r = client.get("/api/v1/i18n/locales")
+        h = _headers()
+        r = client.get("/api/v1/i18n/locales", headers=h)
         assert r.status_code == 200
         assert len(r.json()["locales"]) >= 2
 
@@ -267,3 +289,8 @@ class TestSystemMonitor:
         r = client.get("/api/v1/system/perf")
         assert r.status_code == 200
         assert "total_requests" in r.json()
+
+
+# Cleanup test database
+import atexit, os
+atexit.register(lambda: os.path.exists("./test_v2.db") and os.remove("./test_v2.db"))

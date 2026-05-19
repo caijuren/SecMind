@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
-import { useRealtimeAlerts } from "@/hooks/use-realtime"
+import { useState, useEffect } from "react"
+import { useRealtimeAlerts } from "@/hooks/useRealtimeAlerts"
 import {
   Bell,
   ShieldAlert,
   Activity,
   Zap,
-  BookOpen,
   Search,
   ArrowRight,
   AlertCircle,
@@ -16,20 +15,8 @@ import {
   Brain,
   TrendingUp,
   ChevronDown,
-  Loader2,
-  FileText,
-  Lock,
   Shield,
-  Globe,
-  Server,
   Database,
-  Radio,
-  User,
-  Target,
-  Layers,
-  CheckCircle2,
-  Network,
-  ArrowRight as ArrowRightIcon,
   Wifi,
   WifiOff,
 } from "lucide-react"
@@ -48,6 +35,8 @@ import { PageHeader } from "@/components/layout/page-header"
 import { PermissionGate } from "@/components/auth/PermissionGate"
 import { inputClass } from "@/lib/admin-ui"
 import { useLocaleStore } from "@/store/locale-store"
+import { useAuthStore } from "@/store/auth-store"
+import { ALL_ALERTS, mockITSMTickets } from "@/data/mock-data"
 import {
   TYPOGRAPHY,
   CARD,
@@ -58,45 +47,54 @@ import {
 
 // ==================== 数据定义 ====================
 
-/** 核心KPI - 聚焦"行动需求"而非"统计数字" */
+/** 核心KPI - 基于真实 mock 数据 */
+const pendingAlerts = ALL_ALERTS.filter(a => a.status === 'new' || a.status === 'investigating').length
+const activeCases = mockITSMTickets.filter(t => t.status === 'in_progress').length
+const criticalAlerts = ALL_ALERTS.filter(a => a.riskLevel === 'critical' && a.status !== 'resolved' && a.status !== 'false_positive').length
+const todayNewAlerts = ALL_ALERTS.filter(a => {
+  const d = new Date(a.timestamp)
+  const today = new Date()
+  return d.toDateString() === today.toDateString()
+}).length
+
 const coreKPIs = [
   {
     id: 'pending-alerts',
     label: '待处理告警',
-    value: '23',
+    value: String(pendingAlerts),
     icon: Bell,
     severity: 'critical' as const,
     trend: { direction: 'up' as const, value: '+12.5%' },
-    subtitle: '3条需立即处理',
+    subtitle: `${criticalAlerts}条需立即处理`,
     link: '/alerts?status=pending',
   },
   {
     id: 'pending-cases',
     label: '进行中案件',
-    value: '8',
+    value: String(activeCases),
     icon: Shield,
     severity: 'high' as const,
     trend: { direction: 'down' as const, value: '-2' },
-    subtitle: '2件今日到期',
+    subtitle: `${activeCases}件处理中`,
     link: '/cases?status=active',
   },
   {
     id: 'active-threats',
     label: '活跃威胁',
-    value: '7',
+    value: String(criticalAlerts),
     icon: ShieldAlert,
     severity: 'medium' as const,
     trend: null,
-    subtitle: '2个正在攻击中',
+    subtitle: `${criticalAlerts}个严重威胁`,
     link: '/threats',
   },
   {
     id: 'ai-insights',
     label: 'AI新发现',
-    value: '12',
+    value: String(todayNewAlerts),
     icon: Brain,
     severity: 'primary' as const,
-    trend: { direction: 'up' as const, value: '+5' },
+    trend: { direction: 'up' as const, value: '+' + todayNewAlerts },
     subtitle: '今日新增',
     link: '/workspace/ai',
   },
@@ -159,79 +157,11 @@ const initialAlerts: Array<{
   { time: '14:35:01', source: 'DNS', level: 'critical' as const, message: 'DGA域名高频TXT查询，疑似DNS隧道' },
 ]
 
-// ==================== AI能力展示板块数据 ====================
-
-interface DataSource {
-  id: string
-  name: string
-  icon: React.ElementType
-  status: "active" | "idle" | "error"
-  eventCount: number
-  color: string
-}
-
-interface AIAgent {
-  id: string
-  name: string
-  icon: React.ElementType
-  status: "thinking" | "analyzing" | "waiting" | "complete"
-  color: string
-}
-
-interface AIStep {
-  id: string
-  timestamp: string
-  agent: string
-  agentIcon: React.ElementType
-  agentColor: string
-  status: "working" | "complete"
-  message: string
-  result?: string[]
-}
-
-const demoDataSources: DataSource[] = [
-  { id: "email", name: "邮件网关", icon: FileText, status: "active", eventCount: 1247, color: "#ef4444" },
-  { id: "vpn", name: "VPN网关", icon: Lock, status: "active", eventCount: 389, color: "#f97316" },
-  { id: "edr", name: "EDR终端", icon: Shield, status: "active", eventCount: 567, color: "#ef4444" },
-  { id: "waf", name: "WAF防火墙", icon: Globe, status: "active", eventCount: 234, color: "#eab308" },
-  { id: "ueba", name: "UEBA行为", icon: Activity, status: "active", eventCount: 678, color: "#f97316" },
-  { id: "ad", name: "AD域控", icon: Server, status: "idle", eventCount: 145, color: "#22c55e" },
-  { id: "siem", name: "SIEM平台", icon: Database, status: "active", eventCount: 2345, color: "#3b82f6" },
-  { id: "dlp", name: "DLP系统", icon: Eye, status: "active", eventCount: 89, color: "#a78bfa" },
-]
-
-const demoAIAgents: AIAgent[] = [
-  { id: "soc", name: "SOC 分析员", icon: Radio, status: "complete", color: "#3b82f6" },
-  { id: "identity", name: "身份分析员", icon: User, status: "complete", color: "#8b5cf6" },
-  { id: "threat", name: "威胁情报员", icon: Target, status: "analyzing", color: "#ef4444" },
-  { id: "ueba", name: "行为分析师", icon: Activity, status: "thinking", color: "#f97316" },
-  { id: "forensics", name: "取证分析员", icon: Layers, status: "waiting", color: "#a78bfa" },
-  { id: "reasoning", name: "推理引擎", icon: Brain, status: "waiting", color: "#a78bfa" },
-  { id: "conclusion", name: "结论生成器", icon: CheckCircle2, status: "waiting", color: "#22c55e" },
-]
-
-const demoAISteps: AIStep[] = [
-  {
-    id: "1-1", timestamp: "09:15:23", agent: "SOC Agent", agentIcon: Radio, agentColor: "#3b82f6",
-    status: "complete", message: "收到紧急告警 - 检测到高仿域名邮件 secm1nd.com",
-    result: ["发件人: it-support@secm1nd.com", "收件人: 财务部全员(23人)", "严重程度: CRITICAL"]
-  },
-  {
-    id: "1-2", timestamp: "09:15:25", agent: "Mail Agent", agentIcon: FileText, agentColor: "#f97316",
-    status: "complete", message: "正在分析邮件内容...",
-    result: ["✓ 域名相似度: 95%", "✓ 包含恶意链接", "✓ 附件: fake-oa-update.exe"]
-  },
-  {
-    id: "1-3", timestamp: "09:15:28", agent: "Threat Intel Agent", agentIcon: Target, agentColor: "#ef4444",
-    status: "working", message: "查询威胁情报库...",
-    result: ["✓ IP已标记为恶意", "✓ 关联APT-41组织", "✓ 首次出现: 2025年12月"]
-  },
-]
-
 // ==================== 组件 ====================
 
 /** KPI卡片 - 行动导向设计 */
 function KPICard({ item }: { item: typeof coreKPIs[number] }) {
+  const { t } = useLocaleStore()
   const Icon = item.icon
   const severityColor = item.severity === 'primary'
     ? COLORS.primary[500]
@@ -243,7 +173,8 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
     : 'glow-green'
 
   return (
-    <Card className={cn(CARD.elevated, glowClass, "group cursor-pointer hover:border-white/[0.12] transition-[shadow,transform]")}>
+    <Card className={cn(CARD.elevated, glowClass, "group cursor-pointer hover:border-white/[0.12] hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden")}>
+      <div className="absolute inset-x-0 top-0 h-0.5" style={{ backgroundColor: severityColor }} />
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -284,7 +215,7 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
             {item.value}
           </span>
           <Button variant="ghost" size="sm" className={cn(TYPOGRAPHY.micro, "text-primary hover:bg-primary/5 gap-1")}>
-            查看
+            {t("common.view")}
             <ArrowRight className="size-3.5" />
           </Button>
         </div>
@@ -295,16 +226,20 @@ function KPICard({ item }: { item: typeof coreKPIs[number] }) {
 
 /** 优先级告警卡片 */
 function PriorityAlertCard({ alert }: { alert: typeof priorityAlerts[number] }) {
+  const { t } = useLocaleStore()
   const severity = getSeverityStyles(alert.level)
 
   return (
     <div
       className={cn(
         CARD.base,
-        "p-4 cursor-pointer hover:shadow-md transition-[shadow,transform] duration-200",
-        alert.level === 'critical' && "border-l-4 border-l-red-500"
+        "p-4 cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden group",
+        alert.level === 'critical' && "border-l-[3px] border-l-red-500"
       )}
     >
+      {alert.level === 'critical' && (
+        <div className="absolute inset-y-0 left-0 w-0.5 bg-gradient-to-b from-red-500/60 via-red-500/30 to-transparent" />
+      )}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className={cn("inline-flex items-center px-2 py-0.5 rounded", TYPOGRAPHY.micro, "font-semibold", severity.bg, severity.textColor)}>
@@ -335,11 +270,11 @@ function PriorityAlertCard({ alert }: { alert: typeof priorityAlerts[number] }) 
         <div className="flex items-center gap-2">
           <Eye className="size-4 text-zinc-600" />
           <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>
-            负责人: <strong className="text-zinc-300">{alert.assignee}</strong>
+            {t("dashboard.assignee")}: <strong className="text-zinc-300">{alert.assignee}</strong>
           </span>
         </div>
         <Button variant="outline" size="sm" className={cn(TYPOGRAPHY.micro, "gap-1")}>
-          立即处理
+          {t("dashboard.handleNow")}
           <ArrowRight className="size-3.5" />
         </Button>
       </div>
@@ -376,6 +311,7 @@ function AIMetricCard({ item }: { item: typeof aiOverview[number] }) {
 
 /** 实时告警流 - 优化版 */
 function RealtimeAlertStream() {
+  const { t } = useLocaleStore()
   const { alerts: wsAlerts, newAlertCount, clearNewAlerts, isConnected } = useRealtimeAlerts()
   const [alerts, setAlerts] = useState(initialAlerts)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -432,14 +368,15 @@ function RealtimeAlertStream() {
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <span className="absolute flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500" />
+            <div className="relative flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
               </span>
+              <span className="text-[10px] font-medium text-emerald-400/80 uppercase tracking-wider">LIVE</span>
             </div>
-            <Zap className="size-5 text-cyan-400" />
-            <h2 className={String(TYPOGRAPHY.h2)}>实时告警流</h2>
+            <Zap className="size-4 text-cyan-400" />
+            <h2 className={String(TYPOGRAPHY.h2)}>{t("dashboard.realtimeAlertStream")}</h2>
             {isConnected ? (
               <Wifi className="size-3.5 text-emerald-500" />
             ) : (
@@ -452,17 +389,17 @@ function RealtimeAlertStream() {
                 onClick={clearNewAlerts}
                 className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors")}
               >
-                +{newAlertCount} 新告警
+                +{newAlertCount} {t("dashboard.newAlerts")}
               </button>
             )}
-            <span className={cn(TYPOGRAPHY.caption, "text-zinc-600")}>共 {alerts.length} 条</span>
+            <span className={cn(TYPOGRAPHY.caption, "text-zinc-600")}>{t("common.total")} {alerts.length} {t("common.items")}</span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(TYPOGRAPHY.micro, "gap-1 text-zinc-400")}
             >
-              {isExpanded ? '收起' : '展开'}
+              {isExpanded ? t("dashboard.collapse") : t("dashboard.expand")}
               <ChevronDown className={cn("size-3.5 transition-transform", isExpanded && "rotate-180")} />
             </Button>
           </div>
@@ -513,257 +450,17 @@ function RealtimeAlertStream() {
   )
 }
 
-// ==================== AI能力展示板块组件 ====================
-
-/** 数据输入流卡片 */
-function AIDataSourceCard({ source, index }: { source: DataSource; index: number }) {
-  const [pulse, setPulse] = useState(false)
-  const Icon = source.icon
-
-  useEffect(() => {
-    if (source.status === "active") {
-      const interval = setInterval(() => setPulse((p) => !p), 2000 + index * 300)
-      return () => clearInterval(interval)
-    }
-  }, [source.status, index])
-
-  return (
-    <div className="group relative">
-      <div className={`
-        relative rounded-lg border p-2 transition-colors duration-200
-        ${source.status === "active"
-          ? `border-current/20 bg-[#131316] hover:border-current/40`
-          : "border-white/[0.06] bg-white/[0.02]"}
-      `} style={{ color: source.color }}>
-        <div className="flex items-center gap-2">
-          <div className={`flex size-6 items-center justify-center rounded-md transition-[transform] duration-300 ${
-            source.status === "active" ? "bg-current/10 scale-105" : "bg-white/[0.05]"
-          }`} style={{ color: source.color }}>
-            <Icon className="size-3" />
-          </div>
-          <span className={cn(TYPOGRAPHY.micro, "font-medium text-zinc-300 truncate")}>{source.name}</span>
-          <span className="text-[10px] font-mono text-zinc-600 tabular-nums ml-auto">{source.eventCount.toLocaleString()}</span>
-          <div className={`size-2 rounded-full ${source.status === "active" ? "bg-emerald-500 animate-pulse" : "bg-zinc-600"}`} />
-        </div>
-      </div>
-      {source.status === "active" && pulse && (
-        <div className="absolute -top-1 -right-1 size-2 rounded-full animate-ping" style={{ backgroundColor: source.color }} />
-      )}
-    </div>
-  )
-}
-
-/** AI分析步骤卡片 */
-function AIStepCard({ step, isLast }: { step: AIStep; isLast: boolean }) {
-  const Icon = step.agentIcon
-
-  return (
-    <div
-      className={cn(
-        "relative rounded-xl border p-3.5 transition-[shadow,transform,border-color] duration-700",
-        isLast
-          ? "border-current/30 bg-[#131316] shadow-md scale-[1.01]"
-          : "border-white/[0.06] bg-[#131316] hover:border-white/[0.12]"
-      )}
-      style={{ color: isLast ? step.agentColor : undefined }}
-    >
-      <div className="flex items-start gap-3">
-        <div className="relative flex size-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${step.agentColor}15` }}>
-          <Icon className="size-4" style={{ color: step.agentColor }} />
-          {step.status === "working" && (
-            <>
-              <div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white animate-ping" style={{ backgroundColor: step.agentColor }} />
-              <div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full" style={{ backgroundColor: step.agentColor }} />
-            </>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className={cn(TYPOGRAPHY.caption, "font-mono tabular-nums text-zinc-600")}>{step.timestamp}</span>
-              <span className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400")}>{step.agent}</span>
-              <span className={cn(
-                TYPOGRAPHY.micro,
-                "px-1.5 py-0.5 rounded-full",
-                step.status === "complete"
-                  ? "bg-emerald-500/10 text-emerald-400"
-                  : "bg-amber-500/10 text-amber-400 animate-pulse"
-              )}>
-                {step.status === "complete" ? "✓ 完成" : "● 分析中"}
-              </span>
-            </div>
-          </div>
-
-          <h4 className={cn(TYPOGRAPHY.body, "font-semibold text-zinc-200 mb-1.5")}>{step.message}</h4>
-
-          {step.result && (
-            <ul className="space-y-1">
-              {step.result.map((item, i) => (
-                <li key={i} className={cn(TYPOGRAPHY.caption, "text-zinc-400 flex items-center gap-1.5")}>
-                  <span className="size-1 rounded-full bg-zinc-600 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** AI协作Agent卡片 */
-function AICollabAgent({ agent }: { agent: AIAgent }) {
-  const Icon = agent.icon
-
-  const statusStyles = {
-    thinking: { bg: "bg-blue-500/10", text: "text-blue-400", label: "思考中..." },
-    analyzing: { bg: "bg-amber-500/10", text: "text-amber-400", label: "分析中..." },
-    waiting: { bg: "bg-white/[0.05]", text: "text-zinc-400", label: "待命中" },
-    complete: { bg: "bg-emerald-500/10", text: "text-emerald-400", label: "已完成" },
-  }
-
-  const style = statusStyles[agent.status]
-
-  return (
-    <div className="group relative overflow-hidden rounded-xl border border-white/[0.06] bg-[#131316] p-2.5 transition-colors duration-200 hover:border-white/[0.12]">
-      <div className="flex items-center gap-2.5">
-        <div className="relative flex size-8 shrink-0 items-center justify-center rounded-md transition-[transform] duration-200 group-hover:scale-105" style={{ backgroundColor: `${agent.color}10` }}>
-          <Icon className="size-4" style={{ color: agent.color }} />
-          {(agent.status === "thinking" || agent.status === "analyzing") && (
-            <>
-              <div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-white animate-ping" style={{ backgroundColor: agent.color }} />
-              <div className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full" style={{ backgroundColor: agent.color }} />
-            </>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between">
-            <span className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-200 truncate")}>{agent.name}</span>
-            <span className={cn(TYPOGRAPHY.micro, "font-medium px-1.5 py-0.5 rounded-full", style.bg, style.text, "shrink-0")}>
-              {style.label}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/** AI能力展示板块 */
-function AICapabilityShowcase() {
-  const [activeTab, setActiveTab] = useState<'input' | 'analysis' | 'collab'>('analysis')
-
-  return (
-    <Card className={CARD.elevated}>
-      <CardContent className="p-5">
-        {/* 标题 */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Brain className="size-5 text-primary" />
-            <h2 className={String(TYPOGRAPHY.h2)}>AI智能分析中心</h2>
-            <span className={cn(TYPOGRAPHY.micro, "px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-semibold")}>
-              实时演示
-            </span>
-          </div>
-          <Button variant="ghost" size="sm" className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}>
-            进入AI工作台
-            <ArrowRight className="size-4" />
-          </Button>
-        </div>
-
-        {/* Tab切换 */}
-        <div className="flex gap-1 mb-4 p-1 bg-white/[0.05] rounded-lg">
-          {[
-            { key: 'input' as const, label: '数据输入流', icon: Database },
-            { key: 'analysis' as const, label: 'AI分析结果', icon: Brain },
-            { key: 'collab' as const, label: 'AI协作', icon: Network },
-          ].map((tab) => {
-            const Icon = tab.icon
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-md transition-colors duration-200",
-                  TYPOGRAPHY.micro,
-                  "font-medium",
-                  activeTab === tab.key
-                    ? "bg-white/[0.06] text-zinc-100 shadow-sm"
-                    : "text-zinc-500 hover:text-zinc-300"
-                )}
-              >
-                <Icon className="size-3.5" />
-                {tab.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* 内容区域 */}
-        <div className="min-h-[280px]">
-          {activeTab === 'input' && (
-            <div className="space-y-2">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
-                <Zap className="size-3.5" />
-                实时数据接入
-                <span className="text-zinc-600 font-normal">({demoDataSources.filter(s => s.status === 'active').length} 个活跃源)</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {demoDataSources.map((source, index) => (
-                  <AIDataSourceCard key={source.id} source={source} index={index} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analysis' && (
-            <div className="space-y-3">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
-                <Brain className="size-3.5" />
-                事件分析进度
-                <span className="text-zinc-600 font-normal">(钓鱼邮件攻击)</span>
-              </div>
-              <div className="space-y-2 max-h-[240px] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800 pr-1">
-                {demoAISteps.map((step, index) => (
-                  <AIStepCard key={step.id} step={step} isLast={index === demoAISteps.length - 1} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'collab' && (
-            <div className="space-y-2">
-              <div className={cn(TYPOGRAPHY.micro, "font-semibold text-zinc-400 flex items-center gap-1.5 mb-2")}>
-                <Network className="size-3.5" />
-                Agent协作状态
-                <span className="text-zinc-600 font-normal">({demoAIAgents.filter(a => a.status === 'complete').length}/{demoAIAgents.length} 已完成)</span>
-              </div>
-              <div className="space-y-2">
-                {demoAIAgents.map((agent) => (
-                  <AICollabAgent key={agent.id} agent={agent} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 // ==================== 主页面 ====================
 
 export default function DashboardPage() {
+  const { t } = useLocaleStore()
   return (
     <PermissionGate resource="dashboard_overview" action="read" fallback={
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <ShieldAlert className="mx-auto size-12 text-slate-500 mb-4" />
-          <h2 className="text-lg font-semibold text-slate-300">无权限访问</h2>
-          <p className="text-sm text-slate-500 mt-1">你没有查看运营工作台的权限</p>
+          <ShieldAlert className="mx-auto size-12 text-zinc-500 mb-4" />
+          <h2 className="text-lg font-semibold text-slate-300">{t("common.forbidden")}</h2>
+          <p className="text-sm text-zinc-500 mt-1">{t("error.forbidden")}</p>
         </div>
       </div>
     }>
@@ -773,14 +470,36 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const { newAlertCount, clearNewAlerts, isConnected, lastMessage } = useRealtimeAlerts()
   const [kpiOverrides, setKpiOverrides] = useState<Record<string, any>>({})
+  const isDemo = useAuthStore(s => s.user?.isDemo)
 
   useEffect(() => {
     if (!lastMessage || lastMessage.type !== "stats_update") return
     setKpiOverrides(prev => ({ ...prev, ...lastMessage.data }))
   }, [lastMessage])
+
+  if (!isDemo) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          icon={Activity}
+          title={t("dashboard.title")}
+          subtitle={t("dashboard.subtitle")}
+        />
+        <Card className={CARD.default}>
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <Database className="size-12 text-zinc-700 mb-4" />
+            <h3 className={cn(TYPOGRAPHY.h3, "text-zinc-400 mb-2")}>{t("dashboard.noData")}</h3>
+            <p className={cn(TYPOGRAPHY.body, "text-zinc-600 text-center max-w-md")}>
+              {t("dashboard.noDataDesc")}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -789,54 +508,54 @@ function DashboardContent() {
           <div className="flex items-center gap-2">
             <Bell className="size-4 text-red-500 animate-pulse" />
             <span className="text-sm font-medium text-red-400">
-              收到 {newAlertCount} 条新实时告警
+              {t("dashboard.received")} {newAlertCount} {t("dashboard.newRealtimeAlerts")}
             </span>
             {!isConnected && (
-              <span className="text-xs text-zinc-600 ml-2">(WebSocket 已断开，显示为缓存数据)</span>
+              <span className="text-xs text-zinc-600 ml-2">({t("dashboard.websocketDisconnected")})</span>
             )}
           </div>
           <button
             onClick={clearNewAlerts}
             className="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
           >
-            确认
+            {t("common.confirm")}
           </button>
         </div>
       )}
       {/* 页面标题 */}
       <PageHeader
         icon={Activity}
-        title="运营概览"
-        subtitle="实时态势感知 · 掌握当前安全状态"
+        title={t("dashboard.title")}
+        subtitle={t("dashboard.subtitle")}
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", isConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
               <span className={cn("text-xs font-medium", isConnected ? "text-emerald-400" : "text-red-500")}>
-                {isConnected ? "实时连接" : "连接断开"}
+                {isConnected ? t("dashboard.connected") : t("dashboard.disconnected")}
               </span>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-600" />
               <Input
-                placeholder="搜索告警、案件..."
+                placeholder={t("dashboard.searchPlaceholder")}
                 className={`h-9 w-64 pl-10 ${inputClass}`}
               />
             </div>
             <Select>
               <SelectTrigger size="sm" className={`w-32 ${inputClass}`}>
-                <SelectValue placeholder="时间范围" />
+                <SelectValue placeholder={t("dashboard.timeRange")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1h">最近1小时</SelectItem>
-                <SelectItem value="6h">最近6小时</SelectItem>
-                <SelectItem value="24h">今天</SelectItem>
-                <SelectItem value="7d">本周</SelectItem>
+                <SelectItem value="1h">{t("dashboard.last1Hour")}</SelectItem>
+                <SelectItem value="6h">{t("dashboard.last6Hours")}</SelectItem>
+                <SelectItem value="24h">{t("time.today")}</SelectItem>
+                <SelectItem value="7d">{t("time.last7days")}</SelectItem>
               </SelectContent>
             </Select>
             <Button className="gap-2">
               <Brain className="size-4" />
-              进入AI工作台
+              {t("dashboard.enterAIWorkbench")}
               <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -844,7 +563,8 @@ function DashboardContent() {
       />
 
       {/* Bento Grid 布局 */}
-      <div className="bento-grid">
+      <div className="relative rounded-2xl bg-gradient-to-br from-white/[0.02] via-transparent to-white/[0.01] p-5 -mx-5">
+        <div className="bento-grid">
         {/* KPI 卡片行 */}
         {coreKPIs.map((kpi) => {
           const override = kpiOverrides[kpi.id]
@@ -859,14 +579,14 @@ function DashboardContent() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="size-5 text-red-500" />
-              <h2 className={String(TYPOGRAPHY.h2)}>最高优先级告警</h2>
+              <h2 className={String(TYPOGRAPHY.h2)}>{t("dashboard.highPriorityAlerts")}</h2>
               <span
                 className={cn(
                   TYPOGRAPHY.micro,
                   "px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold"
                 )}
               >
-                需立即关注
+                {t("dashboard.needsImmediateAttention")}
               </span>
             </div>
             <Button
@@ -874,7 +594,7 @@ function DashboardContent() {
               size="sm"
               className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}
             >
-              全部告警
+              {t("dashboard.allAlerts")}
               <ArrowRight className="size-4" />
             </Button>
           </div>
@@ -893,14 +613,14 @@ function DashboardContent() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Brain className="size-5 text-primary" />
-                  <h2 className={String(TYPOGRAPHY.h2)}>AI能力概览</h2>
+                  <h2 className={String(TYPOGRAPHY.h2)}>{t("dashboard.aiOverview")}</h2>
                 </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}
                 >
-                  详细报告
+                  {t("dashboard.detailedReport")}
                   <ArrowRight className="size-4" />
                 </Button>
               </div>
@@ -911,18 +631,18 @@ function DashboardContent() {
                 ))}
               </div>
 
-              <div className="pt-4 border-t border-white/[0.04] space-y-2">
+              <div className="rounded-lg bg-white/[0.03] p-3 space-y-2.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">正在分析的安全事件</span>
+                  <span className="text-zinc-400">{t("dashboard.analyzingEvents")}</span>
                   <span className="font-semibold text-zinc-100">156 个</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-zinc-400">今日自动处置</span>
+                  <span className="text-zinc-400">{t("dashboard.todayAutoDisposal")}</span>
                   <span className="font-semibold text-emerald-400">+42 个</span>
                 </div>
-                <Button variant="outline" className="w-full mt-3 gap-2">
+                <Button variant="outline" className="w-full mt-1 gap-2 border-white/[0.08] hover:bg-white/[0.04] hover:border-cyan-500/30">
                   <Eye className="size-4" />
-                  查看AI分析详情
+                  {t("dashboard.viewAIDetails")}
                 </Button>
               </div>
             </CardContent>
@@ -933,12 +653,8 @@ function DashboardContent() {
         <div className="bento-col-span-2">
           <RealtimeAlertStream />
         </div>
-
-        {/* 底部全宽：AI智能分析中心 */}
-        <div className="bento-col-span-4">
-          <AICapabilityShowcase />
-        </div>
       </div>
     </div>
+  </div>
   )
 }

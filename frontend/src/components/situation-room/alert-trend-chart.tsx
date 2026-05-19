@@ -97,7 +97,7 @@ export function AlertTrendChart({ data }: AlertTrendChartProps) {
               cy={y}
               r={2.5}
               fill={color}
-              stroke="#0a0e27"
+              stroke="#050508"
               strokeWidth={1.5}
             />
           )

@@ -43,7 +43,10 @@ class TenantIsolationMiddleware(BaseHTTPMiddleware):
     def _set_pg_tenant_var(tenant_id: int) -> None:
         db = SessionLocal()
         try:
-            db.execute(text(f"SET app.current_tenant_id = '{tenant_id}'"))
+            db.execute(
+                text("SET app.current_tenant_id = :tenant_id"),
+                {"tenant_id": str(tenant_id)},
+            )
             db.commit()
         except Exception:
             logger.debug("设置 PostgreSQL 租户变量失败", exc_info=True)

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * SecMind UI Guidelines Compliance Checker
+ * SecMind UI Guidelines Compliance Checker v2
  * 
- * 独立的 UI 规范合规性检查脚本
+ * 独立的 UI 规范合规性检查脚本（深色主题版）
  * 可用于：手动运行 / CI/CD / Git Hook
  * 
  * @usage:
@@ -11,7 +11,7 @@
  *   node scripts/check-ui-guidelines.js --fix          # 显示修复建议
  *   node scripts/check-ui-guidelines.js --json         # 输出 JSON 格式结果
  * 
- * @see docs/admin-ui-guidelines-v1.md
+ * @see docs/admin-ui-guidelines-v2.md
  */
 
 const fs = require('fs');
@@ -23,53 +23,44 @@ const DASHBOARD_DIR = path.join(__dirname, '../src/app/(dashboard)');
 
 const VIOLATION_PATTERNS = [
   {
-    id: 'transparent-bg',
-    name: '透明度背景',
+    id: 'light-bg-page',
+    name: '浅色背景残留',
     severity: 'error',
-    pattern: /bg-white\/\[0\.0[246]\]/g,
-    description: '禁止使用 bg-white/[0.02] 或 [0.04] (第19章禁用项)',
-    fix: '替换为 "bg-white" 或 "bg-slate-50"',
+    pattern: /\b(bg-white(?!\/)|bg-slate-50|bg-gray-50|bg-neutral-50)\b/g,
+    description: '禁止使用浅色背景 (v2规范第19章)，bg-white/ 透明变体除外',
+    fix: '替换为 "bg-[#09090b]" (页面) 或 "bg-[#131316]" (卡片)',
   },
   {
-    id: 'backdrop-blur',
-    name: '毛玻璃效果',
+    id: 'slate-text',
+    name: 'Slate 文本颜色',
     severity: 'error',
-    pattern: /backdrop-blur-(xl|lg|md)/g,
-    description: '禁止使用 backdrop-blur 毛玻璃效果 (第19章禁用项)',
-    fix: '移除 backdrop-blur，使用实底背景',
+    pattern: /\btext-slate-[789]\d{2}\b/g,
+    description: '禁止在深色背景使用 slate 文本 (对比度不足) (v2规范第4章)',
+    fix: '替换为 zinc 系列: text-zinc-100/200/300',
   },
   {
-    id: 'glow-shadow',
-    name: '发光阴影',
-    severity: 'error',
-    pattern: /shadow-\[0_0_\d+px?/g,
-    description: '禁止使用自定义发光阴影 shadow-[0_0_...] (第19章禁用项)',
-    fix: '使用标准阴影 (shadow-sm/md/lg) 或移除',
-  },
-  {
-    id: 'violet-primary',
-    name: 'Violet 主色',
+    id: 'light-input',
+    name: '浅色输入框',
     severity: 'warn',
-    pattern: /\b(text|bg|border)-violet-\d+/g,
-    excludePattern: /mitre|MITRE|attack|technique/gi,
-    description: '不建议使用 violet 作为主交互色（非 MITRE 场景）(第4/5章)',
-    fix: '替换为 cyan 系列 (text-cyan-600, bg-cyan-500)',
+    pattern: /\bborder-slate-200\b/g,
+    description: '禁止使用浅色输入框边框 (v2规范第8章)',
+    fix: '替换为 "border-white/8"',
   },
   {
-    id: 'light-text',
-    name: '浅色文本',
+    id: 'missing-dark-bg',
+    name: 'Slate 中色文本',
     severity: 'warn',
-    pattern: /\b(text-(?:cyan|slate)-[34]00)\b/g,
-    description: '不建议在浅色背景上使用过浅文本 (对比度不足) (第4章)',
-    fix: '正文用 text-slate-600，辅助信息用 text-slate-500',
+    pattern: /\btext-slate-[56]\d{2}\b/g,
+    description: 'slate-500/600 在深色背景上对比度可能不足 (v2规范第4章)',
+    fix: '替换为 "text-zinc-400" 或 "text-zinc-500"',
   },
   {
-    id: 'decorative-gradient',
-    name: '装饰渐变',
+    id: 'light-border',
+    name: '浅色边框',
     severity: 'warn',
-    pattern: /bg-gradient-to-(?:r|l|b|t|br|bl|tr|tl)\s+from-/g,
-    description: '不建议使用高饱和度装饰性渐变 (第19章禁用项)',
-    fix: '使用纯色 (bg-cyan-50, bg-slate-50) 或轻量边框',
+    pattern: /\bborder-slate-[12]\d{2}\b/g,
+    description: '不建议使用浅色边框在深色背景下 (v2规范第6章)',
+    fix: '替换为 "border-white/6" 或 "border-white/4"',
   },
 ];
 
@@ -83,7 +74,7 @@ function findPageFiles(dir) {
     try {
       entries = fs.readdirSync(currentDir, { withFileTypes: true });
     } catch (e) {
-      return; // 跳过无法读取的目录
+      return;
     }
 
     for (const entry of entries) {
@@ -111,18 +102,16 @@ function checkFile(filePath) {
     const regex = new RegExp(rule.pattern.source, rule.pattern.flags);
     
     while ((match = regex.exec(content)) !== null) {
-      // 检查是否在排除列表中（如 MITRE 注释）
       if (rule.excludePattern) {
         const lineStart = content.lastIndexOf('\n', match.index);
         const lineEnd = content.indexOf('\n', match.index);
         const line = content.substring(lineStart + 1, lineEnd || lineStart + 200);
         
         if (rule.excludePattern.test(line)) {
-          continue; // 跳过排除的匹配
+          continue;
         }
       }
       
-      // 计算行号
       const lineNumber = content.substring(0, match.index).split('\n').length;
       
       violations.push({
@@ -157,11 +146,10 @@ function formatOutput(results, options = {}) {
   
   output += '\n';
   output += '╔══════════════════════════════════════════════════════════╗\n';
-  output += '║     🎯 SecMind UI Guidelines Compliance Check            ║\n';
-  output += '║     基于 admin-ui-guidelines-v1.md 第19章                 ║\n';
+  output += '║     🎯 SecMind UI Guidelines Compliance Check v2         ║\n';
+  output += '║     基于 admin-ui-guidelines-v2.md (深色主题)            ║\n';
   output += '╚══════════════════════════════════════════════════════════╝\n\n';
   
-  // 按文件分组显示
   for (const fileResult of results.files) {
     if (fileResult.violations.length === 0) continue;
     
@@ -186,7 +174,6 @@ function formatOutput(results, options = {}) {
     }
   }
   
-  // 汇总统计
   output += '═'.repeat(60) + '\n';
   output += '📊 统计汇总\n\n';
   output += `   检查文件数: ${totalFiles}\n`;
@@ -194,9 +181,8 @@ function formatOutput(results, options = {}) {
   output += `   ❌ 错误 (Error): ${totalErrors}\n`;
   output += `   ⚠️  警告 (Warn): ${totalWarnings}\n\n`;
   
-  // 最终结论
   if (totalErrors === 0 && totalWarnings === 0) {
-    output += '🎉 所有检查项通过！UI 规范 100% 合规！\n\n';
+    output += '🎉 所有检查项通过！深色主题 UI 规范 100% 合规！\n\n';
   } else if (totalErrors === 0) {
     output += `✅ 无错误，但有 ${totalWarnings} 个警告（可提交但建议修复）\n\n`;
   } else {
@@ -215,13 +201,11 @@ async function main() {
     showFix: args.includes('--fix') || args.includes('--suggest'),
   };
   
-  console.log('🔍 正在扫描 UI 规范违规...\n');
+  console.log('🔍 正在扫描深色主题 UI 规范违规...\n');
   
-  // 查找所有页面文件
   const pageFiles = findPageFiles(DASHBOARD_DIR);
   console.log(`📂 发现 ${pageFiles.length} 个页面文件\n`);
   
-  // 检查每个文件
   const results = {
     timestamp: new Date().toISOString(),
     files: pageFiles.map(filePath => ({
@@ -235,7 +219,6 @@ async function main() {
     },
   };
   
-  // 计算汇总
   for (const fileResult of results.files) {
     for (const violation of fileResult.violations) {
       if (violation.severity === 'error') results.summary.errors++;
@@ -243,7 +226,6 @@ async function main() {
     }
   }
   
-  // 输出结果
   const output = formatOutput(results, options);
   console.log(output);
   
@@ -253,11 +235,10 @@ async function main() {
     console.log(`📄 完整报告已保存至: ${jsonPath}\n`);
   }
   
-  // 返回退出码
   if (results.summary.errors > 0) {
-    process.exit(1); // 有错误，阻止提交
+    process.exit(1);
   } else {
-    process.exit(0); // 通过
+    process.exit(0);
   }
 }
 

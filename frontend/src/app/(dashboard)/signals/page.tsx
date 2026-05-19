@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useRealtimeAlerts, useRealtimeConnection } from "@/hooks/use-realtime"
+import { useRealtimeAlerts, useRealtimeConnection } from "@/hooks/useRealtimeAlerts"
 import {
   Activity,
   AlertTriangle,
@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils"
 import { RISK_CONFIG, type RiskLevel } from "@/lib/risk-config"
 import { PageHeader } from "@/components/layout/page-header"
 import { softCardClass } from "@/lib/admin-ui"
+import { CARD } from "@/lib/design-system"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -41,6 +42,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 import { useLocaleStore } from "@/store/locale-store"
+import { useAuthStore } from "@/store/auth-store"
 
 type SignalSource = "EDR" | "VPN" | "IAM" | "Email" | "Firewall" | "DNS"
 type AIPreprocess = "去噪" | "聚合" | "上下文补全" | "风险评分"
@@ -303,17 +305,41 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-3">
-        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-zinc-400">总事件量</span><Activity className="size-4 text-zinc-400" /></div><p className="mt-1 text-xl font-bold text-zinc-100 font-mono tabular-nums">{signalCount.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-cyan-500/20 bg-cyan-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-400">AI去噪后</span><Filter className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-400 font-mono tabular-nums">{aiDenoised.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-amber-500/20 bg-amber-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-amber-400">异常行为</span><AlertTriangle className="size-4 text-amber-500" /></div><p className="mt-1 text-xl font-bold text-amber-400 font-mono tabular-nums">{anomalies.toLocaleString()}</p></CardContent></Card>
-        <Card className="border-red-500/20 bg-red-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-400">风险事件</span><Zap className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-400 font-mono tabular-nums">{riskSignals.toLocaleString()}</p></CardContent></Card>
+        <div className={cn(CARD.base, "p-4 hover:border-white/10 hover:shadow-md hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-white/[0.06] ring-1 ring-white/[0.08]"><Activity className="size-3.5 text-zinc-400" /></div>
+            <span className="text-[11px] text-zinc-500">总事件量</span>
+          </div>
+          <p className="text-xl font-bold text-zinc-100 font-mono tabular-nums">{signalCount.toLocaleString()}</p>
+        </div>
+        <div className={cn(CARD.base, "p-4 border-cyan-500/20 bg-cyan-500/[0.06] hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-cyan-500/15 ring-1 ring-cyan-500/20"><Filter className="size-3.5 text-cyan-400" /></div>
+            <span className="text-[11px] text-cyan-500/70">AI去噪后</span>
+          </div>
+          <p className="text-xl font-bold text-cyan-400 font-mono tabular-nums">{aiDenoised.toLocaleString()}</p>
+        </div>
+        <div className={cn(CARD.base, "p-4 border-amber-500/20 bg-amber-500/[0.06] hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-amber-500/15 ring-1 ring-amber-500/20"><AlertTriangle className="size-3.5 text-amber-400" /></div>
+            <span className="text-[11px] text-amber-500/70">异常行为</span>
+          </div>
+          <p className="text-xl font-bold text-amber-400 font-mono tabular-nums">{anomalies.toLocaleString()}</p>
+        </div>
+        <div className={cn(CARD.base, "p-4 border-red-500/20 bg-red-500/[0.06] hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-red-500/15 ring-1 ring-red-500/20"><Zap className="size-3.5 text-red-400" /></div>
+            <span className="text-[11px] text-red-500/70">风险事件</span>
+          </div>
+          <p className="text-xl font-bold text-red-400 font-mono tabular-nums">{riskSignals.toLocaleString()}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-5 gap-4">
         <div className="col-span-2 space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <LivePulse />
-            <span className="text-xs font-bold text-cyan-400 tracking-wider">{t("signals.live")}</span>
+            <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase">{t("signals.live")}</span>
             {isConnected ? (
               <Wifi className="size-3 text-emerald-500" />
             ) : (
@@ -327,21 +353,28 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                 +{newAlertCount}
               </button>
             )}
-            <span className="text-[10px] text-zinc-500 ml-1">点击查看详情</span>
+            <span className="text-[10px] text-zinc-500 ml-auto">{signals.length} 条信号</span>
           </div>
+          <div className="space-y-1.5 max-h-[calc(100vh-360px)] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {signals.map((signal, idx) => {
             const isSelected = selectedSignal?.id === signal.id
             return (
               <div
                 key={signal.id}
                 className={cn(
-                  "rounded-lg border p-2.5 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
+                  "relative rounded-lg border p-2.5 cursor-pointer transition-all duration-200 group",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
                   idx === 0 && "animate-in slide-in-from-top-2 duration-500",
-                  signal.riskLevel === "critical" && !isSelected && "border-red-500/20",
+                  signal.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
                 onClick={() => setSelectedSignal(signal)}
               >
+                {isSelected && (
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />
+                )}
+                {!isSelected && signal.riskLevel === "critical" && (
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />
+                )}
                 <div className="flex items-center gap-2 mb-1.5">
                   <SourceBadge source={signal.source} />
                   <RiskIndicator level={signal.riskLevel} />
@@ -352,11 +385,12 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
               </div>
             )
           })}
+          </div>
         </div>
 
         <div className="col-span-3">
           {selectedSignal ? (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+            <div className={cn(CARD.elevated, "p-5 space-y-4")}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SourceBadge source={selectedSignal.source} />
@@ -474,19 +508,21 @@ function AnomalousActivityTab() {
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        <div className="col-span-2 space-y-2">
+        <div className="col-span-2 space-y-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {filtered.map((activity) => {
             const isSelected = selectedActivity?.id === activity.id
             return (
               <div
                 key={activity.id}
                 className={cn(
-                  "rounded-lg border p-3 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
-                  activity.riskLevel === "critical" && !isSelected && "border-red-500/20",
+                  "relative rounded-lg border p-3 cursor-pointer transition-all duration-200",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
+                  activity.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
                 onClick={() => setSelectedActivity(activity)}
               >
+                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />}
+                {!isSelected && activity.riskLevel === "critical" && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />}
                 <div className="flex items-center gap-2 mb-1.5">
                   <SourceBadge source={activity.source} />
                   <RiskIndicator level={activity.riskLevel} score={activity.riskScore} />
@@ -500,7 +536,7 @@ function AnomalousActivityTab() {
 
         <div className="col-span-3">
           {selectedActivity ? (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+            <div className={cn(CARD.elevated, "p-5 space-y-4")}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <SourceBadge source={selectedActivity.source} />
@@ -544,25 +580,45 @@ function RiskAggregationTab() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Card className="card-default"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-zinc-400">活跃风险集群</span><Layers className="size-4 text-zinc-400" /></div><p className="mt-1 text-xl font-bold text-zinc-100 font-mono tabular-nums">{riskClusters.length}</p></CardContent></Card>
-        <Card className="border-red-500/20 bg-red-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-red-400">严重集群</span><AlertTriangle className="size-4 text-red-500" /></div><p className="mt-1 text-xl font-bold text-red-400 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p></CardContent></Card>
-        <Card className="border-cyan-500/20 bg-cyan-500/10"><CardContent className="p-3"><div className="flex items-center justify-between"><span className="text-xs text-cyan-400">关联事件总数</span><Activity className="size-4 text-cyan-500" /></div><p className="mt-1 text-xl font-bold text-cyan-400 font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p></CardContent></Card>
+        <div className={cn(CARD.base, "p-4 hover:border-white/10 hover:shadow-md hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-white/[0.06] ring-1 ring-white/[0.08]"><Layers className="size-3.5 text-zinc-400" /></div>
+            <span className="text-[11px] text-zinc-500">活跃风险集群</span>
+          </div>
+          <p className="text-xl font-bold text-zinc-100 font-mono tabular-nums">{riskClusters.length}</p>
+        </div>
+        <div className={cn(CARD.base, "p-4 border-red-500/20 bg-red-500/[0.06] hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-red-500/15 ring-1 ring-red-500/20"><AlertTriangle className="size-3.5 text-red-400" /></div>
+            <span className="text-[11px] text-red-500/70">严重集群</span>
+          </div>
+          <p className="text-xl font-bold text-red-400 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p>
+        </div>
+        <div className={cn(CARD.base, "p-4 border-cyan-500/20 bg-cyan-500/[0.06] hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex size-7 items-center justify-center rounded-md bg-cyan-500/15 ring-1 ring-cyan-500/20"><Activity className="size-3.5 text-cyan-400" /></div>
+            <span className="text-[11px] text-cyan-500/70">关联事件总数</span>
+          </div>
+          <p className="text-xl font-bold text-cyan-400 font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-5 gap-4">
-        <div className="col-span-2 space-y-2">
+        <div className="col-span-2 space-y-1.5">
           {riskClusters.map((cluster) => {
             const isSelected = selectedCluster?.id === cluster.id
             return (
               <div
                 key={cluster.id}
                 className={cn(
-                  "rounded-lg border p-3 cursor-pointer transition-colors duration-200",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]",
-                  cluster.riskLevel === "critical" && !isSelected && "border-red-500/20",
+                  "relative rounded-lg border p-3 cursor-pointer transition-all duration-200",
+                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
+                  cluster.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
                 onClick={() => setSelectedCluster(cluster)}
               >
+                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />}
+                {!isSelected && cluster.riskLevel === "critical" && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <RiskIndicator level={cluster.riskLevel} score={cluster.riskScore} />
@@ -581,7 +637,7 @@ function RiskAggregationTab() {
 
         <div className="col-span-3">
           {selectedCluster ? (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 space-y-4">
+            <div className={cn(CARD.elevated, "p-5 space-y-4")}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <RiskIndicator level={selectedCluster.riskLevel} score={selectedCluster.riskScore} />
@@ -625,9 +681,34 @@ function RiskAggregationTab() {
 }
 
 export default function SignalsPage() {
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const { t } = useLocaleStore()
-  const { isConnected: wsConnected } = useRealtimeConnection()
+  const { isConnected: rawConnected } = useRealtimeConnection()
+  const wsConnected = isDemo ? true : rawConnected
   const [activeTab, setActiveTab] = useState("live")
+
+  if (!isDemo) {
+    return (
+      <div className="space-y-4">
+        <PageHeader
+          icon={Radio}
+          title={t("signals.title")}
+          subtitle={<span className="flex items-center gap-1.5"><LivePulse />LIVE</span>}
+        />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <Database className="size-12 text-zinc-700 mb-4" />
+            <h3 className="text-lg font-semibold text-zinc-400 mb-2">暂无信号数据</h3>
+            <p className="text-sm text-zinc-600 text-center max-w-md">
+              你还没有接入任何安全数据源。
+              <br />
+              接入数据源后，实时信号将自动显示在此处。
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -640,7 +721,7 @@ export default function SignalsPage() {
             <div className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", wsConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
               <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-400" : "text-red-400")}>
-                {wsConnected ? "实时连接" : "连接断开"}
+                {wsConnected ? "已连接" : "连接断开"}
               </span>
             </div>
             <Link href="/datasource">

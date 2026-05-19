@@ -105,6 +105,8 @@ export interface VPNSession {
   dataTransferred: number
   isAnomaly: boolean
   anomalyReason?: string
+  status?: string
+  deviceType?: string
 }
 
 export interface EmailLog {
@@ -119,6 +121,13 @@ export interface EmailLog {
   isPhishing: boolean
   phishingIndicators?: string[]
   spamScore: number
+  body?: string
+  attachments?: string[]
+  status?: string
+  size?: number
+  sourceIp?: string
+  userId?: string
+  userName?: string
 }
 
 export interface LoginAttempt {
@@ -132,6 +141,10 @@ export interface LoginAttempt {
   timestamp: string
   success: boolean
   failureReason?: string
+  location?: string
+  status?: string
+  authMethod?: string
+  deviceType?: string
 }
 
 export interface DashboardStats {

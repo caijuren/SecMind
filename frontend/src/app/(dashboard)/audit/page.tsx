@@ -95,7 +95,7 @@ const mockLogs: AuditLog[] = [
 ]
 
 export default function AuditPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const [activeCategory, setActiveCategory] = useState<FilterCategory>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -126,7 +126,7 @@ export default function AuditPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         icon={FileText}
-        title="审计日志"
+        title={t("nav.audit")}
       />
 
       <div className="grid grid-cols-3 gap-4">
@@ -170,7 +170,7 @@ export default function AuditPage() {
                         }}
                       >
                         {config.count.toLocaleString()}
-                        <span className="text-xs font-normal text-zinc-600 ml-1">条</span>
+                        <span className="text-xs font-normal text-zinc-600 ml-1">{t("common.items")}</span>
                       </p>
                     </div>
                   </div>
@@ -200,11 +200,11 @@ export default function AuditPage() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="搜索操作人、对象、详情、IP..."
+              placeholder={t("audit.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={`pl-8 h-8 ${inputClass}`}
-              aria-label="搜索审计日志"
+              aria-label={t("audit.searchAriaLabel")}
               name="search"
               type="search"
               autoComplete="off"
@@ -212,40 +212,40 @@ export default function AuditPage() {
           </div>
 
           <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
-            <SelectTrigger className={`h-8 w-[130px] ${inputClass}`} aria-label="操作类型筛选">
+            <SelectTrigger className={`h-8 w-[130px] ${inputClass}`} aria-label={t("audit.filterByType")}>
               <Filter className="h-3.5 w-3.5 mr-1 text-zinc-500" />
-              <SelectValue placeholder="操作类型" />
+              <SelectValue placeholder={t("audit.operationType")} />
             </SelectTrigger>
             <SelectContent className="border-cyan-500/25 bg-[#131316] text-foreground">
-              <SelectItem value="all">全部类型</SelectItem>
-              <SelectItem value="登录">登录</SelectItem>
-              <SelectItem value="查询">查询</SelectItem>
-              <SelectItem value="修改">修改</SelectItem>
-              <SelectItem value="删除">删除</SelectItem>
-              <SelectItem value="导出">导出</SelectItem>
+              <SelectItem value="all">{t("audit.allTypes")}</SelectItem>
+              <SelectItem value="登录">{t("audit.typeLogin")}</SelectItem>
+              <SelectItem value="查询">{t("audit.typeQuery")}</SelectItem>
+              <SelectItem value="修改">{t("audit.typeModify")}</SelectItem>
+              <SelectItem value="删除">{t("audit.typeDelete")}</SelectItem>
+              <SelectItem value="导出">{t("audit.typeExport")}</SelectItem>
             </SelectContent>
           </Select>
 
           <Input
-            placeholder="操作人"
+            placeholder={t("audit.operator")}
             value={operatorFilter}
             onChange={(e) => setOperatorFilter(e.target.value)}
             className={`h-8 w-[120px] ${inputClass}`}
-            aria-label="操作人筛选"
+            aria-label={t("audit.filterByOperator")}
             name="operator"
             autoComplete="off"
           />
 
           <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v ?? "7d")}>
-            <SelectTrigger className={`h-8 w-[120px] ${inputClass}`} aria-label="时间范围筛选">
+            <SelectTrigger className={`h-8 w-[120px] ${inputClass}`} aria-label={t("audit.filterByTime")}>
               <Clock className="h-3.5 w-3.5 mr-1 text-zinc-500" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="border-cyan-500/25 bg-[#131316] text-foreground">
-              <SelectItem value="today">今天</SelectItem>
-              <SelectItem value="7d">近7天</SelectItem>
-              <SelectItem value="30d">近30天</SelectItem>
-              <SelectItem value="90d">近90天</SelectItem>
+              <SelectItem value="today">{t("time.today")}</SelectItem>
+              <SelectItem value="7d">{t("audit.last7Days")}</SelectItem>
+              <SelectItem value="30d">{t("audit.last30Days")}</SelectItem>
+              <SelectItem value="90d">{t("audit.last90Days")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -256,13 +256,13 @@ export default function AuditPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-white/[0.06] hover:bg-transparent">
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">时间</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作人</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作类型</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作对象</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">操作详情</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">IP地址</TableHead>
-                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">结果</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colTime")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colOperator")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colOperationType")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colTarget")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colDetail")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colIP")}</TableHead>
+                <TableHead className="text-zinc-500 text-xs font-semibold tracking-wider h-9">{t("audit.colResult")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -321,7 +321,7 @@ export default function AuditPage() {
                           }}
                         >
                           <CheckCircle2 className="h-2.5 w-2.5" />
-                          成功
+                          {t("common.success")}
                         </Badge>
                       ) : (
                         <Badge
@@ -334,7 +334,7 @@ export default function AuditPage() {
                           }}
                         >
                           <XCircle className="h-2.5 w-2.5" />
-                          失败
+                          {t("common.failed")}
                         </Badge>
                       )}
                     </TableCell>
@@ -344,7 +344,7 @@ export default function AuditPage() {
               {filteredLogs.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={7} className="h-32 text-center text-sm text-zinc-500">
-                    暂无匹配的审计日志
+                    {t("audit.noMatchingLogs")}
                   </TableCell>
                 </TableRow>
               )}
@@ -355,7 +355,7 @@ export default function AuditPage() {
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-zinc-500">
-          共 {filteredLogs.length} 条记录
+          {t("common.total")} {filteredLogs.length} {t("audit.records")}
         </span>
         <div className="flex items-center gap-2">
           <Button
@@ -363,14 +363,14 @@ export default function AuditPage() {
             className="border-cyan-500/25 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:border-cyan-500/30 gap-2"
           >
             <Download className="h-3.5 w-3.5" />
-            导出CSV
+            {t("audit.exportCSV")}
           </Button>
           <Button
             variant="outline"
             className="border-white/[0.06] bg-white/[0.03] text-zinc-300 hover:bg-white/[0.05] hover:border-white/[0.08] gap-2"
           >
             <Download className="h-3.5 w-3.5" />
-            导出PDF
+            {t("audit.exportPDF")}
           </Button>
         </div>
       </div>

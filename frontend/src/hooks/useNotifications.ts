@@ -83,7 +83,7 @@ export function useNotifications(): UseNotificationsReturn {
     showBrowserNotification(enriched)
   }, [updateDocumentTitle, showBrowserNotification])
 
-  const { connectionStatus } = useWebSocket({
+  useWebSocket({
     messageTypes: {
       notification: handleNotification,
     },

@@ -99,9 +99,9 @@ class RouteRequest(BaseModel):
 
 
 class RouteResponse(BaseModel):
-    model_id: int
-    model_name: str
-    provider: str
+    model_id: Optional[int] = None
+    model_name: Optional[str] = None
+    provider: Optional[str] = None
     output: str
     input_tokens: int
     output_tokens: int
@@ -109,6 +109,7 @@ class RouteResponse(BaseModel):
     cost: float
     routing_strategy: str
     fallback_used: bool
+    error: Optional[str] = None
 
 
 class ModelStats(BaseModel):

@@ -17,6 +17,7 @@ import {
   Check,
   Sun,
   Moon,
+  Menu,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/auth-store"
@@ -36,6 +37,7 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { AccountDialog } from "@/components/layout/account-dialog"
+import { GlobalSearch } from "@/components/common/global-search"
 
 const pathKeyMap: Record<string, string> = {
   dashboard: "nav.dashboard",
@@ -61,7 +63,7 @@ const pathKeyMap: Record<string, string> = {
 
 const searchPlaceholderMap: Record<string, string> = {
   "/dashboard": "搜索运营指标、统计数据...",
-  "/signals": "搜索原始信号、异常活动、来源系统...",
+  "/signals": "搜索告警事件、异常活动、来源系统...",
   "/cases": "搜索AI研判、攻击链、证据与处置建议...",
   "/investigate": "搜索AI研判、攻击链、证据与处置建议...",
   "/response": "搜索响应处置、审批、回滚记录...",
@@ -113,7 +115,7 @@ function Breadcrumb() {
 
 const locales: Locale[] = ["zh-CN", "en"]
 
-export function Topbar() {
+export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuthStore()
   const { locale, setLocale, t } = useLocaleStore()
   const pathname = usePathname()
@@ -125,6 +127,7 @@ export function Topbar() {
     }
     return false
   })
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
   const initials = user?.name
     ? user.name.slice(0, 2).toUpperCase()
     : "U"
@@ -163,7 +166,18 @@ export function Topbar() {
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-[#0c0c10]/90 px-6 backdrop-blur-xl">
-      <Breadcrumb />
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onMenuClick}
+          className="md:hidden text-zinc-500 hover:text-zinc-300"
+          aria-label="打开菜单"
+        >
+          <Menu className="size-[18px]" />
+        </Button>
+        <Breadcrumb />
+      </div>
 
       <div className="flex flex-1 min-w-0 max-w-80 items-center gap-2">
         <div className="relative w-full">
@@ -172,7 +186,9 @@ export function Topbar() {
             name="q"
             autoComplete="off"
             placeholder={searchPlaceholder}
-            className="h-9 border-white/8 bg-white/5 text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+            readOnly
+            onClick={() => setGlobalSearchOpen(true)}
+            className="h-9 border-white/8 bg-white/5 text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20 cursor-pointer"
           />
         </div>
       </div>
@@ -299,7 +315,7 @@ export function Topbar() {
             <DropdownMenuSeparator className="bg-white/6" />
             <DropdownMenuItem
               className="cursor-pointer gap-2 text-red-400 focus:bg-red-500/10 focus:text-red-400"
-              onClick={logout}
+              onClick={() => { logout(); router.push('/login') }}
             >
               <LogOut className="size-4" />
               {t("topbar.logout")}
@@ -309,6 +325,7 @@ export function Topbar() {
       </div>
 
       <AccountDialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen} />
+      <GlobalSearch open={globalSearchOpen} onOpenChange={setGlobalSearchOpen} />
     </header>
   )
 }

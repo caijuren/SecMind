@@ -6,10 +6,6 @@ import {
   Search,
   Shield,
   CheckCircle2,
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-  Clock,
   Sparkles,
   Target,
   Server,
@@ -26,9 +22,6 @@ import {
   Activity,
   Globe,
   MoveRight,
-  CircleCheck,
-  CircleSlash,
-  Edit3,
   FileText,
   ClipboardList,
   Wrench,
@@ -40,6 +33,7 @@ import {
   FileCheck,
   Inbox,
   ArrowRightLeft,
+  Database,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -54,9 +48,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-import { RISK_CONFIG, type RiskLevel } from "@/lib/risk-config"
+import type { RiskLevel } from "@/lib/risk-config"
 import { PageHeader } from "@/components/layout/page-header"
 import { inputClass, pageCardClass } from "@/lib/admin-ui"
+import { useAuthStore } from "@/store/auth-store"
 
 type InvestigationStatus = "investigating" | "pending_review" | "disposing" | "closed"
 type InvestigationTab = InvestigationStatus | "all"
@@ -209,10 +204,10 @@ function GridIcon() {
 }
 
 const STATUS_CONFIG: Record<InvestigationStatus, { color: string; bg: string; border: string; pulseColor: string; label: string }> = {
-  investigating: { color: "text-cyan-600", bg: "bg-cyan-50", border: "border-cyan-200", pulseColor: "bg-cyan-600", label: "研判中" },
-  pending_review: { color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-200", pulseColor: "bg-amber-600", label: "待复核" },
-  disposing: { color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200", pulseColor: "bg-purple-600", label: "处置中" },
-  closed: { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", pulseColor: "bg-emerald-600", label: "已闭环" },
+  investigating: { color: "text-cyan-300", bg: "bg-cyan-500/10", border: "border-cyan-500/20", pulseColor: "bg-cyan-400", label: "研判中" },
+  pending_review: { color: "text-amber-300", bg: "bg-amber-500/10", border: "border-amber-500/20", pulseColor: "bg-amber-400", label: "待复核" },
+  disposing: { color: "text-purple-300", bg: "bg-purple-500/10", border: "border-purple-500/20", pulseColor: "bg-purple-400", label: "处置中" },
+  closed: { color: "text-emerald-300", bg: "bg-emerald-500/10", border: "border-emerald-500/20", pulseColor: "bg-emerald-400", label: "已闭环" },
 }
 
 const STEP_TYPE_CONFIG: Record<AIReasoningStep["type"], { icon: React.ElementType; color: string; label: string }> = {
@@ -289,7 +284,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "VPN-GW-01",
     status: "investigating",
     sourceEvent: {
-      eventId: "SIG-002", source: "VPN", sourceSystemName: "深信服SSL VPN",
+      eventId: "ALT003", source: "VPN", sourceSystemName: "深信服SSL VPN",
       classification: "不可能旅行-凭证疑似窃取", riskLevel: "critical",
       rawInput: "USER=zhangwei SRC=103.45.67.89 DST=VPN-GW-01 STATUS=success DURATION=0s",
       receivedTime: "2026-05-10 14:35:18",
@@ -372,7 +367,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "WEB-SVR",
     status: "investigating",
     sourceEvent: {
-      eventId: "SIG-007", source: "EDR", sourceSystemName: "安恒信息明御",
+      eventId: "ALT004", source: "EDR", sourceSystemName: "安恒信息明御",
       classification: "WebShell植入-后门", riskLevel: "critical",
       rawInput: "HOST=WEB-SVR PATH=/uploads/cmd.php TYPE=WebShell SIG=ChinaChopper",
       receivedTime: "2026-05-10 14:28:45",
@@ -438,7 +433,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "Email-GW",
     status: "investigating",
     sourceEvent: {
-      eventId: "SIG-010", source: "Email", sourceSystemName: "360邮件安全网关",
+      eventId: "ALT001", source: "Email", sourceSystemName: "360邮件安全网关",
       classification: "广撒网钓鱼-凭证收集", riskLevel: "high",
       rawInput: "FROM=it-support@corp-evil.com TO=all-staff@corp.com LINK=portal.phish.com",
       receivedTime: "2026-05-10 14:15:30",
@@ -509,7 +504,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "APP-SVC-01",
     status: "pending_review",
     sourceEvent: {
-      eventId: "SIG-005", source: "IAM", sourceSystemName: "阿里云RAM + IDaaS",
+      eventId: "ALT021", source: "IAM", sourceSystemName: "阿里云RAM + IDaaS",
       classification: "权限提升-云资源接管", riskLevel: "high",
       rawInput: "USER=app-service ACTION=AddUserToGroup GROUP=Administrators SRC=10.0.2.50",
       receivedTime: "2026-05-10 13:42:18",
@@ -570,7 +565,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "HOST-10.0.2.100",
     status: "pending_review",
     sourceEvent: {
-      eventId: "SIG-004", source: "Firewall", sourceSystemName: "华为USG6550E",
+      eventId: "ALT005", source: "Firewall", sourceSystemName: "华为USG6550E",
       classification: "C2通信-数据暂存", riskLevel: "critical",
       rawInput: "SRC=10.0.2.100 DST=185.220.101.34 PORT=443 PROTO=TCP BYTES=2.3MB",
       receivedTime: "2026-05-10 12:55:33",
@@ -635,7 +630,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "MAIL-GW",
     status: "pending_review",
     sourceEvent: {
-      eventId: "SIG-003", source: "Email", sourceSystemName: "Coremail论客",
+      eventId: "ALT002", source: "Email", sourceSystemName: "Coremail论客",
       classification: "定向钓鱼攻击-凭证窃取", riskLevel: "high",
       rawInput: "FROM=shipping@dhl-phish.com TO=cfo@corp.com ATTACH=invoice.exe SCORE=93",
       receivedTime: "2026-05-10 11:20:15",
@@ -698,7 +693,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "DNS-SRV-01",
     status: "investigating",
     sourceEvent: {
-      eventId: "SIG-006", source: "DNS", sourceSystemName: "奇安信DNSGuard",
+      eventId: "ALT009", source: "DNS", sourceSystemName: "奇安信DNSGuard",
       classification: "DNS隧道-C2通信", riskLevel: "critical",
       rawInput: "QUERY=cmd6.malware-c2.xyz TYPE=TXT CLIENT=10.0.2.100 FREQ=12/min",
       receivedTime: "2026-05-10 09:30:00",
@@ -778,7 +773,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "EAP-SYS",
     status: "disposing",
     sourceEvent: {
-      eventId: "SIG-009", source: "VPN", sourceSystemName: "奇安信虚拟VPN",
+      eventId: "ALT019", source: "VPN", sourceSystemName: "奇安信虚拟VPN",
       classification: "多设备异常在线", riskLevel: "medium",
       rawInput: "USER=linfeng SESSIONS=3 DEVICES=Beijing,Shanghai,Shenzhen",
       receivedTime: "2026-05-10 08:15:00",
@@ -861,7 +856,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "FILE-SVR-02",
     status: "closed",
     sourceEvent: {
-      eventId: "SIG-001", source: "SIEM", sourceSystemName: "Splunk Enterprise Security",
+      eventId: "ALT011", source: "SIEM", sourceSystemName: "Splunk Enterprise Security",
       classification: "勒索软件-加密行为检测", riskLevel: "critical",
       rawInput: "HOST=FILE-SRV-01 PROCESS=vssadmin.exe ARGS='delete shadows /all /quiet'",
       receivedTime: "2026-05-10 07:00:00",
@@ -943,7 +938,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "WS-03",
     status: "closed",
     sourceEvent: {
-      eventId: "SIG-015", source: "EDR", sourceSystemName: "CrowdStrike Falcon",
+      eventId: "ALT015", source: "EDR", sourceSystemName: "CrowdStrike Falcon",
       classification: "无文件攻击-PowerShell注入", riskLevel: "high",
       rawInput: "PROCESS=powershell.exe ARGS=-enc JABjACA... HOST=WS-HR-08",
       receivedTime: "2026-05-09 16:00:00",
@@ -1026,7 +1021,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "CONSOLE-API",
     status: "closed",
     sourceEvent: {
-      eventId: "SIG-012", source: "CloudTrail", sourceSystemName: "AWS CloudTrail + GuardDuty",
+      eventId: "ALT012", source: "CloudTrail", sourceSystemName: "AWS CloudTrail + GuardDuty",
       classification: "云资源未授权访问-IAM越权", riskLevel: "critical",
       rawInput: "ACTION=AssumeRole ROLE=cross-account-admin SRC_IP=203.0.113.50 USER=anonymous",
       receivedTime: "2026-05-10 10:00:00",
@@ -1104,7 +1099,7 @@ const mockRecords: InvestigationRecord[] = [
     asset: "NESSUS-SCN",
     status: "closed",
     sourceEvent: {
-      eventId: "SIG-011", source: "IDS", sourceSystemName: "Snort 3 + Suricata",
+      eventId: "ALT008", source: "IDS", sourceSystemName: "Snort 3 + Suricata",
       classification: "网络扫描-端口探测", riskLevel: "low",
       rawInput: "SRC=192.168.1.200 DST=10.0.0.0/8 PORTS=22,80,443,3306,8080 TYPE=SYN Scan",
       receivedTime: "2026-05-09 06:00:00",
@@ -1176,10 +1171,6 @@ const mockRecords: InvestigationRecord[] = [
   },
 ]
 
-function RadioIcon() {
-  return <span className="inline-block size-3 rounded-sm border border-current opacity-40" />
-}
-
 function StatPill({
   label,
   value,
@@ -1193,82 +1184,20 @@ function StatPill({
 }) {
   const toneClass =
     tone === "cyan"
-      ? "border-cyan-200 bg-cyan-50 text-cyan-700"
+      ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
       : tone === "amber"
-        ? "border-amber-200 bg-amber-50 text-amber-700"
+        ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
         : tone === "emerald"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
           : tone === "red"
-            ? "border-red-200 bg-red-50 text-red-700"
-            : "border-slate-200 bg-white text-slate-700"
+            ? "border-red-500/20 bg-red-500/10 text-red-300"
+            : "border-white/6 bg-[#131316] text-zinc-200"
 
   return (
     <div className={cn("rounded-2xl border px-3 py-2.5", toneClass)}>
-      <div className="text-[11px]">{label}</div>
-      <div className="mt-1 text-lg font-semibold">{value}</div>
+      <div className="text-[11px] opacity-80">{label}</div>
+      <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
       {hint && <div className="mt-1 text-[10px] opacity-75">{hint}</div>}
-    </div>
-  )
-}
-
-function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 80 ? "bg-red-500" : value >= 60 ? "bg-amber-500" : "bg-cyan-500"
-  return (
-    <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
-      <div className={cn("h-full rounded-full transition-[width] duration-700", color)} style={{ width: `${value}%` }} />
-    </div>
-  )
-}
-
-function InvestigationDecisionBrief({ record }: { record: InvestigationRecord }) {
-  const supportEvidence = record.aiReasoningSteps.reduce((total, step) => total + step.evidence.length, 0)
-  const uncertainSignals = record.aiReasoningSteps.filter((step) => step.baselineDeviation || step.correlations?.some((c) => c.strength !== "confirmed")).length
-  const primaryEntities = [...record.involvedAccounts ?? [], ...record.involvedAssets ?? [], ...record.entities].slice(0, 4)
-  const recommendedAction =
-    record.status === "pending_review"
-      ? "人工复核AI结论后批准或修正处置方案"
-      : record.status === "disposing"
-        ? record.currentAction ?? "跟踪处置执行并观察攻击面是否收敛"
-        : record.status === "closed"
-          ? record.closeReason ?? "复盘闭环结果并回流学习"
-          : "继续收集证据链，确认主假设是否成立"
-
-  return (
-    <div className={cn(pageCardClass, "p-5 shadow-none")}>
-      <div className="grid gap-5 xl:grid-cols-[1.7fr_1fr]">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Brain className="h-4 w-4 text-cyan-700" />
-            <span className="text-sm font-bold text-slate-900">AI研判摘要</span>
-            <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
-              {record.confidence}% 置信度
-            </Badge>
-          </div>
-          <p className="text-sm font-medium leading-6 text-slate-800">
-            {record.aiConclusion || record.description}
-          </p>
-          <div className="grid gap-2 sm:grid-cols-3">
-            <StatPill label="支撑证据" value={supportEvidence} tone="cyan" />
-            <StatPill label="不确定点" value={uncertainSignals} tone="amber" />
-            <StatPill label="推理步骤" value={record.aiReasoningSteps.length} />
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-sm font-semibold text-slate-900">建议决策</span>
-          </div>
-          <p className="text-sm leading-6 text-slate-700">{recommendedAction}</p>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {primaryEntities.map((entity) => (
-              <span key={entity} className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-mono text-slate-600">
-                {entity}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -1285,68 +1214,42 @@ function StatusBadge({ status }: { status: InvestigationStatus }) {
 
 function TriggerBadge({ type }: { type: "auto" | "manual" }) {
   return (
-    <Badge variant="outline" className={cn("text-[8px] py-0 px-1", type === "auto" ? "text-emerald-600 bg-emerald-500/10 border-emerald-200" : "text-cyan-600 bg-cyan-500/10 border-cyan-200")}>
+    <Badge variant="outline" className={cn("text-[8px] py-0 px-1", type === "auto" ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" : "text-cyan-300 bg-cyan-500/10 border-cyan-500/20")}>
       {type === "auto" ? "AI自动" : "手动触发"}
     </Badge>
   )
 }
 
-function AssetTag({ name, type }: { name: string; type: "asset" | "account" }) {
+function AssetTag({ name, type, vendor }: { name: string; type: "asset" | "account"; vendor?: string }) {
   const color = type === "asset" ? "#22d3ee" : "#a78bfa"
   const Icon = type === "asset" ? Server : User
   return (
     <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-mono font-semibold" style={{ backgroundColor: `${color}12`, color, border: `1px solid ${color}25` }}>
       <Icon className="h-2.5 w-2.5" />
+      {vendor && <span className="opacity-60">{vendor}</span>}
       {name}
     </span>
   )
 }
 
-function PersonMiniTag({ profile }: { profile: PersonProfile }) {
-  const wsCfg = WORK_STATUS_CONFIG[profile.workStatus]
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-md border px-1.5 py-0.5 text-[9px]" style={{ borderColor: `${wsCfg.color}25`, backgroundColor: `${wsCfg.color}10` }}>
-      <span className="relative flex h-3 w-3 shrink-0">
-        <span className="absolute inline-flex h-full w-full rounded-full opacity-40" style={{ backgroundColor: wsCfg.color }} />
-        <span className="relative inline-flex h-2 w-2 rounded-full" style={{ backgroundColor: wsCfg.color }} />
-      </span>
-      <span className="font-medium text-slate-700">{profile.name}</span>
-      <span className="text-slate-600">{profile.jobTitle}</span>
-      <span className="size-1.5 rounded-full" style={{ backgroundColor: wsCfg.color }} />
-    </span>
-  )
+function extractVendor(sourceSystemName: string): string {
+  const knownVendors = ["深信服", "安恒信息", "奇安信", "华为", "360", "阿里云", "Coremail", "Splunk", "CrowdStrike"]
+  for (const vendor of knownVendors) {
+    if (sourceSystemName.startsWith(vendor)) return vendor
+  }
+  return ""
 }
 
-function ReasoningStepItem({ step, compact }: { step: AIReasoningStep; compact?: boolean }) {
-  const cfg = STEP_TYPE_CONFIG[step.type]
-  const Icon = cfg.icon
-  if (compact) {
-    return (
-      <div className="flex items-center gap-1.5 min-w-0">
-        <Icon className={cn("h-3 w-3 shrink-0", cfg.color)} />
-        <span className={cn("text-[10px] font-medium whitespace-nowrap", cfg.color)}>{cfg.label}</span>
-        <span className="text-[10px] text-slate-500 leading-relaxed line-clamp-1">{step.detail}</span>
-      </div>
-    )
+function getAccountDisplay(account: string, steps: AIReasoningStep[]): string {
+  for (const step of steps) {
+    if (step.personProfile) {
+      const emailPrefix = step.personProfile.email.split("@")[0]
+      if (emailPrefix === account) {
+        return `${step.personProfile.name}（${step.personProfile.department}）`
+      }
+    }
   }
-  return (
-    <div className="flex items-start gap-2">
-      <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border" style={{ borderColor: `${cfg.color}60`, backgroundColor: `${cfg.color}15` }}>
-        <Icon className={cn("h-2.5 w-2.5", cfg.color)} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] text-slate-600">{step.time}</span>
-          <span className={cn("text-xs font-medium", cfg.color)}>{step.step}</span>
-          {step.confidenceContribution > 0 && (
-            <span className="text-[9px] font-mono text-slate-600">+{step.confidenceContribution}%</span>
-          )}
-        </div>
-        <p className="text-xs text-slate-600 leading-relaxed mt-0.5">{step.detail}</p>
-        {step.personProfile && <div className="mt-1"><PersonMiniTag profile={step.personProfile} /></div>}
-      </div>
-    </div>
-  )
+  return `${account}`
 }
 
 function EvidenceItemCard({ item }: { item: EvidenceItem }) {
@@ -1360,15 +1263,15 @@ function EvidenceItemCard({ item }: { item: EvidenceItem }) {
         <span className="text-[10px] font-semibold" style={{ color: typeCfg.color }}>{item.source}</span>
         <span className="ml-auto inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: sevCfg.color, backgroundColor: sevCfg.bg }}>{sevCfg.label}</span>
       </div>
-      <p className="text-[10px] text-slate-500 leading-relaxed">{item.content}</p>
-      <div className="flex items-center gap-2 text-[9px] text-slate-600">
+      <p className="text-[10px] text-zinc-500 leading-relaxed">{item.content}</p>
+      <div className="flex items-center gap-2 text-[9px] text-zinc-400">
         <span className="font-mono">{item.timestamp.slice(-8)}</span>
         {item.ioc && (
           <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] font-mono" style={{ color: "#f97316", backgroundColor: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}>
             IOC: {item.ioc.length > 20 ? item.ioc.slice(0, 20) + ".." : item.ioc}
           </span>
         )}
-        <span className="ml-auto capitalize text-slate-600">{item.type.replace("_", " ")}</span>
+        <span className="ml-auto capitalize text-zinc-400">{item.type.replace("_", " ")}</span>
       </div>
     </div>
   )
@@ -1382,18 +1285,18 @@ function PersonProfileCard({ profile }: { profile: PersonProfile }) {
         <UserCircle className="h-4 w-4 text-cyan-600" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">关联人员</span>
       </div>
-      <div className="rounded-md border border-slate-200 bg-slate-50 p-2.5 space-y-1.5">
+      <div className="rounded-md border border-white/6 bg-[#09090b] p-2.5 space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-slate-900" style={{ backgroundColor: `${wsCfg.color}25`, color: wsCfg.color }}>
+          <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: `${wsCfg.color}25`, color: wsCfg.color }}>
             {profile.name.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-800">{profile.name}</span>
-              <span className="text-[10px] text-slate-600 font-mono">{profile.email}</span>
+              <span className="text-xs font-semibold text-zinc-100">{profile.name}</span>
+              <span className="text-[10px] text-zinc-400 font-mono">{profile.email}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] text-slate-600">{profile.department} · {profile.jobTitle}({profile.level})</span>
+              <span className="text-[10px] text-zinc-400">{profile.department} · {profile.jobTitle}({profile.level})</span>
               <span className="inline-flex items-center gap-1">
                 <span className="size-1.5 rounded-full" style={{ backgroundColor: wsCfg.color }} />
                 <span className="text-[10px]" style={{ color: wsCfg.color }}>{wsCfg.label}</span>
@@ -1401,15 +1304,15 @@ function PersonProfileCard({ profile }: { profile: PersonProfile }) {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-slate-100">
-          <span className="text-slate-400">工号 <span className="text-slate-500 font-mono ml-1">{profile.employeeId}</span></span>
-          <span className="text-slate-400">位置 <span className="text-slate-500 ml-1">{profile.location}</span></span>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-white/4">
+          <span className="text-slate-400">工号 <span className="text-zinc-500 font-mono ml-1">{profile.employeeId}</span></span>
+          <span className="text-slate-400">位置 <span className="text-zinc-500 ml-1">{profile.location}</span></span>
           <span className="text-slate-400">风险分 <span className={cn("font-mono tabular-nums ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
-          <span className="text-slate-400">在线设备 <span className="text-slate-500 font-mono tabular-nums ml-1">{profile.deviceCount}</span></span>
-          <span className="text-slate-400">上次登录 <span className="text-slate-600 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
+          <span className="text-slate-400">在线设备 <span className="text-zinc-500 font-mono tabular-nums ml-1">{profile.deviceCount}</span></span>
+          <span className="text-slate-400">上次登录 <span className="text-zinc-400 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
         </div>
         {profile.notes && (
-          <p className="text-[9px] text-slate-600 italic pt-1 border-t border-slate-100">备注：{profile.notes}</p>
+          <p className="text-[9px] text-zinc-400 italic pt-1 border-t border-white/4">备注：{profile.notes}</p>
         )}
       </div>
     </div>
@@ -1426,14 +1329,14 @@ function BaselineDeviationCard({ deviation }: { deviation: BaselineDeviation }) 
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-600 min-w-[60px]">{deviation.metric}</span>
-          <ArrowRight className="h-3 w-3 text-slate-600" />
-          <span className="text-[10px] text-slate-600 line-clamp-1">{deviation.normalValue}</span>
+          <span className="text-[10px] text-zinc-400 min-w-[60px]">{deviation.metric}</span>
+          <ArrowRight className="h-3 w-3 text-zinc-400" />
+          <span className="text-[10px] text-zinc-400 line-clamp-1">{deviation.normalValue}</span>
           <MoveRight className="h-3 w-3 text-amber-600/50" />
           <span className={cn("text-[10px] font-medium line-clamp-1", devCfg.color)}>{deviation.actualValue}</span>
           <span className="inline-flex items-center rounded px-1 py-[1px] text-[8px] font-medium ml-auto shrink-0" style={{ color: devCfg.color, backgroundColor: `${devCfg.color}15` }}>{devCfg.label}</span>
         </div>
-        <div className="flex items-center gap-3 text-[9px] text-slate-600 pl-[68px]">
+        <div className="flex items-center gap-3 text-[9px] text-zinc-400 pl-[68px]">
           <span>统计窗口：{deviation.timeWindow}</span>
           <span>·</span>
           <span>样本量：{deviation.sampleSize.toLocaleString()}</span>
@@ -1451,11 +1354,11 @@ function MITREMappingCard({ mapping }: { mapping: MITREMapping }) {
         <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600/70">MITRE ATT&CK</span>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[11px] text-slate-600">{mapping.tactic}</span>
-        <span className="text-slate-600">→</span>
+        <span className="text-[11px] text-zinc-400">{mapping.tactic}</span>
+        <span className="text-zinc-400">→</span>
         <span className="font-mono text-[11px] font-bold text-purple-600">{mapping.techniqueId}</span>
-        <span className="text-[11px] text-slate-500">{mapping.techniqueName}</span>
-        {mapping.subTechnique && <span className="text-[10px] text-slate-600">({mapping.subTechnique})</span>}
+        <span className="text-[11px] text-zinc-500">{mapping.techniqueName}</span>
+        {mapping.subTechnique && <span className="text-[10px] text-zinc-400">({mapping.subTechnique})</span>}
         <span className="ml-auto flex items-center gap-1">
           <span className={cn("text-[10px] font-mono font-bold", mapping.confidence >= 90 ? "text-red-600" : mapping.confidence >= 70 ? "text-amber-600" : "text-cyan-600")}>{mapping.confidence}%</span>
         </span>
@@ -1467,14 +1370,14 @@ function MITREMappingCard({ mapping }: { mapping: MITREMapping }) {
 function CorrelationCard({ corr }: { corr: CorrelationDetail }) {
   const strCfg = CORRELATION_STRENGTH_CONFIG[corr.strength]
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-2 flex items-start gap-2">
+    <div className="rounded-md border border-white/6 bg-[#09090b] p-2 flex items-start gap-2">
       <ArrowRightLeft className="h-3.5 w-3.5 text-cyan-600/60 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-[10px] font-medium text-cyan-600/80">{corr.relatedSystem}</span>
           <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: strCfg.color, backgroundColor: `${strCfg.color}12` }}>{strCfg.label}</span>
         </div>
-        <p className="text-[9px] text-slate-900/45 leading-relaxed">{corr.description}</p>
+        <p className="text-[9px] text-white/45 leading-relaxed">{corr.description}</p>
       </div>
     </div>
   )
@@ -1484,13 +1387,13 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
   const cfg = STEP_TYPE_CONFIG[step.type]
   const Icon = cfg.icon
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/40">
-      <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3" style={{ background: `linear-gradient(90deg, ${cfg.color}08, rgba(248,250,252,0.85))` }}>
+    <div className="overflow-hidden rounded-2xl border border-white/6 bg-[#131316] shadow-sm shadow-slate-200/40">
+      <div className="flex items-center gap-2 border-b border-white/6 px-4 py-3" style={{ background: `linear-gradient(90deg, ${cfg.color}08, rgba(248,250,252,0.85))` }}>
         <div className="flex h-6 w-6 items-center justify-center rounded-full border" style={{ borderColor: `${cfg.color}40`, backgroundColor: `${cfg.color}15` }}>
           <Icon className={cn("h-3.5 w-3.5", cfg.color)} />
         </div>
-        <span className="text-xs font-semibold text-slate-800">步骤{index + 1}：{cfg.label}</span>
-        <span className="font-mono text-[10px] text-slate-600 ml-auto">{step.time}</span>
+        <span className="text-xs font-semibold text-zinc-100">步骤{index + 1}：{cfg.label}</span>
+        <span className="font-mono text-[10px] text-zinc-400 ml-auto">{step.time}</span>
         {step.confidenceContribution > 0 && (
           <span className={cn("inline-flex items-center text-[10px] font-mono tabular-nums font-semibold", step.confidenceContribution >= 30 ? "text-red-600" : step.confidenceContribution >= 20 ? "text-amber-600" : "text-cyan-600")}>
             +{step.confidenceContribution}%
@@ -1499,7 +1402,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
       </div>
 
       <div className="space-y-3 p-4">
-        <p className="text-sm text-slate-700 leading-relaxed font-medium">{step.detail}</p>
+        <p className="text-sm text-zinc-200 leading-relaxed font-medium">{step.detail}</p>
 
         {step.reasoning && (
           <div className="rounded-lg border border-cyan-500/10 bg-cyan-500/[0.03] p-3">
@@ -1507,7 +1410,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
               <Brain className="h-3.5 w-3.5 text-cyan-600" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">推理逻辑</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">{step.reasoning}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{step.reasoning}</p>
           </div>
         )}
 
@@ -1521,7 +1424,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
               <Link2 className="h-3.5 w-3.5 text-cyan-600/60" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">跨系统关联 ({step.correlations.length}条)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">跨系统关联 ({step.correlations.length}条)</span>
             </div>
             <div className="space-y-1.5">
               {step.correlations.map((corr, cIdx) => <CorrelationCard key={cIdx} corr={corr} />)}
@@ -1533,7 +1436,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
               <FileSearch className="h-3.5 w-3.5 text-amber-600/70" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">证据链 ({step.evidence.length}条)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">证据链 ({step.evidence.length}条)</span>
             </div>
             <div className="space-y-1.5">
               {step.evidence.map((item, eIdx) => <EvidenceItemCard key={eIdx} item={item} />)}
@@ -1574,22 +1477,22 @@ function FeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white border-cyan-500/20 text-slate-900 shadow-lg">
+      <DialogContent className="sm:max-w-md bg-[#131316] border-white/6 text-white shadow-[0_22px_60px_rgba(0,0,0,0.35)]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-900">
+          <DialogTitle className="flex items-center gap-2 text-white">
             <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: isPositive ? "#22c55e15" : "#ff4d4f15" }}>
               {isPositive ? <ThumbsUp className="size-4 text-emerald-600" /> : <ThumbsDown className="size-4 text-red-600" />}
             </div>
             {isPositive ? "好评反馈" : "差评反馈"}
           </DialogTitle>
-          <DialogDescription className="text-slate-600">
+          <DialogDescription className="text-zinc-400">
             {isPositive ? "请选择您认可的具体方面，帮助我们持续优化AI研判能力" : "请告诉我们哪里有问题，您的反馈将帮助改进AI模型"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
           <div className="space-y-2">
-            <span className="text-xs text-slate-500 font-medium">反馈类型 <span className="text-red-600">*</span></span>
+            <span className="text-xs text-zinc-500 font-medium">反馈类型 <span className="text-red-600">*</span></span>
             <div className="grid grid-cols-1 gap-2">
               {filteredOptions.map((opt) => {
                 const color = FEEDBACK_TYPE_COLORS[opt.value]
@@ -1597,12 +1500,12 @@ function FeedbackDialog({
                 return (
                   <button key={opt.value} onClick={() => setFeedbackType(opt.value)}
                     className="flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors"
-                    style={{ borderColor: isSelected ? `${color}60` : "rgba(0,0,0,0.08)", backgroundColor: isSelected ? `${color}12` : "rgba(0,0,0,0.02)" }}
+                    style={{ borderColor: isSelected ? `${color}60` : "rgba(255,255,255,0.08)", backgroundColor: isSelected ? `${color}12` : "rgba(255,255,255,0.02)" }}
                   >
-                    <div className="flex size-4 items-center justify-center rounded-full border" style={{ borderColor: isSelected ? color : "rgba(0,0,0,0.15)", backgroundColor: isSelected ? color : "transparent" }}>
-                      {isSelected && <div className="size-1.5 rounded-full bg-white" />}
+                    <div className="flex size-4 items-center justify-center rounded-full border" style={{ borderColor: isSelected ? color : "rgba(255,255,255,0.15)", backgroundColor: isSelected ? color : "transparent" }}>
+                      {isSelected && <div className="size-1.5 rounded-full bg-[#131316]" />}
                     </div>
-                    <span style={{ color: isSelected ? color : "rgba(0,0,0,0.6)" }}>{opt.label}</span>
+                    <span style={{ color: isSelected ? color : "rgba(255,255,255,0.72)" }}>{opt.label}</span>
                   </button>
                 )
               })}
@@ -1610,9 +1513,9 @@ function FeedbackDialog({
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs text-slate-500 font-medium">补充说明</span>
+            <span className="text-xs text-zinc-500 font-medium">补充说明</span>
             <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="可选：补充说明您的具体意见..."
-              className="min-h-[80px] bg-white border-slate-200 text-slate-900 placeholder:text-slate-600 focus:border-cyan-500/40 focus:ring-cyan-500/20 resize-none text-xs" />
+              className="min-h-[80px] bg-[#131316] border-white/6 text-white placeholder:text-zinc-400 focus:border-cyan-500/40 focus:ring-cyan-500/20 resize-none text-xs" />
           </div>
 
           <Button onClick={handleSubmit} disabled={!feedbackType}
@@ -1627,322 +1530,54 @@ function FeedbackDialog({
   )
 }
 
-function InvestigatingCard({ record, onSelect }: { record: InvestigationRecord; onSelect: (record: InvestigationRecord) => void }) {
-  const [expanded, setExpanded] = useState(false)
-  const srcRiskCfg = RISK_CONFIG[record.sourceEvent.riskLevel]
+function InvestigationListItem({
+  record,
+  selected,
+  onSelect,
+}: {
+  record: InvestigationRecord
+  selected: boolean
+  onSelect: () => void
+}) {
   return (
-    <Card onClick={() => onSelect(record)} className={cn(
-      "group cursor-pointer overflow-hidden border-slate-200 bg-white transition-[shadow,transform] hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md hover:shadow-slate-200/70"
-    )}>
-      <CardContent className="flex min-h-[328px] flex-col p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-mono text-sm font-bold text-cyan-600">{record.id}</span>
-            <StatusBadge status={record.status} />
-            <TriggerBadge type={record.triggerType} />
-          </div>
-          <span className="text-xs text-slate-600 flex items-center gap-1"><Clock className="h-2.5 w-2.5" />{record.updatedAt.slice(11)}</span>
-        </div>
-
-        <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
-        <AssetTag name={record.asset} type="asset" />
-
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] text-slate-600 flex items-center gap-1"><RadioIcon />来源事件</span>
-            <span className="text-[9px] font-mono text-cyan-600/60">{record.sourceEvent.eventId}</span>
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: srcRiskCfg.hex, borderColor: `${srcRiskCfg.hex}25`, backgroundColor: `${srcRiskCfg.hex}10`, border: `1px solid ${srcRiskCfg.hex}25` }}>
-              {srcRiskCfg.label}
-            </span>
-            <span className="text-[9px] text-slate-600">{record.sourceEvent.sourceSystemName}</span>
-            <span className="text-[9px] text-slate-600">·</span>
-            <span className="text-[9px] text-slate-500 truncate max-w-[180px]">{record.sourceEvent.classification}</span>
-          </div>
-          <p className="text-[9px] text-slate-600 font-mono leading-relaxed line-clamp-1">{record.sourceEvent.rawInput}</p>
-        </div>
-
-        <div className="mt-3 space-y-2">
-          <div className="relative pl-7">
-            <div className="absolute left-[7px] top-1 bottom-1 w-px bg-gradient-to-b from-cyan-300 to-transparent" />
-            <div className="space-y-2">
-              {record.aiReasoningSteps.map((step, idx) => (
-                <div key={idx} className="relative flex items-start gap-2">
-                  <div className="absolute -left-[18px] top-0.5 flex h-3 w-3 items-center justify-center rounded-full border border-cyan-500/40 bg-cyan-500/10" />
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    {(() => { const c = STEP_TYPE_CONFIG[step.type]; const I = c.icon; return <I className={cn("h-3 w-3 shrink-0", c.color)} /> })()}
-                    <span className={cn("text-[10px] font-medium whitespace-nowrap", STEP_TYPE_CONFIG[step.type].color)}>{STEP_TYPE_CONFIG[step.type].label}</span>
-                  </div>
-                  <span className="text-[10px] text-slate-500 leading-relaxed line-clamp-1">{step.detail}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-600">置信度</span>
-            <span className={cn("text-xs font-semibold", record.confidence >= 80 ? "text-[#ff4d4f]" : record.confidence >= 60 ? "text-amber-600" : "text-cyan-600")}>{record.confidence}%</span>
-            <div className="w-16"><ConfidenceBar value={record.confidence} /></div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {record.entities.slice(0, 2).map((e) => (
-              <span key={e} className="inline-flex items-center rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[9px] font-mono text-slate-600">{e}</span>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 pt-3">
-          <Button size="xs" className="bg-emerald-600 text-white hover:bg-emerald-700 gap-1" onClick={(e) => e.stopPropagation()}>
-            <CircleCheck className="size-3" />确认威胁
-          </Button>
-          <Button size="xs" variant="outline" className="border-slate-200 text-slate-600 hover:text-slate-500 hover:border-slate-300 gap-1" onClick={(e) => e.stopPropagation()}>
-            <CircleSlash className="size-3" />关闭误报
-          </Button>
-          <button onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }} className="ml-auto flex items-center gap-1 text-xs text-cyan-600/70 hover:text-cyan-600 transition-colors">
-            {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}展开详情
-          </button>
-        </div>
-
-        {expanded && (
-          <div className="pt-3 border-t border-slate-200 space-y-2">
-            {record.aiReasoningSteps.map((step, idx) => (
-              <RichReasoningStepCard key={idx} step={step} index={idx} />
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function PendingReviewCard({ record }: { record: InvestigationRecord }) {
-  const [expanded, setExpanded] = useState(false)
-  return (
-    <Card className="cursor-pointer border-amber-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60">
-      <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StatusBadge status={record.status} />
-            <span className="text-xs font-mono text-slate-600">{record.id}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <TriggerBadge type={record.triggerType} />
-            <ChevronDown className={cn("h-3.5 w-3.5 text-slate-600 transition-transform", expanded && "rotate-180")} />
-          </div>
-        </div>
-        <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
-        <AssetTag name={record.asset} type="asset" />
-
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Brain className="h-3.5 w-3.5 text-amber-600" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/70">AI结论</span>
-          </div>
-          <p className="text-xs text-slate-700 leading-relaxed">{record.aiConclusion}</p>
-        </div>
-
-        <div className="mt-3 flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-slate-600">置信度</span>
-            <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
-            <div className="w-20"><ConfidenceBar value={record.confidence} /></div>
-          </div>
-        </div>
-
-        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <Zap className="h-3 w-3 text-purple-600" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600/70">处置建议</span>
-          </div>
-          <p className="text-xs text-slate-500 leading-relaxed">{record.disposalSuggestion}</p>
-        </div>
-
-        <div className="mt-auto grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
-          <button className="flex items-center justify-center gap-1 rounded-xl bg-emerald-50 text-emerald-700 px-2 py-2 text-xs font-medium hover:bg-emerald-100 transition-colors">
-            <CircleCheck className="h-3 w-3" /> 同意
-          </button>
-          <button className="flex items-center justify-center gap-1 rounded-xl bg-cyan-50 text-cyan-700 px-2 py-2 text-xs font-medium hover:bg-cyan-100 transition-colors">
-            <Edit3 className="h-3 w-3" /> 修改
-          </button>
-          <button className="flex items-center justify-center gap-1 rounded-xl bg-red-50 text-red-700 px-2 py-2 text-xs font-medium hover:bg-red-100 transition-colors">
-            <XCircle className="h-3 w-3" /> 驳回
-          </button>
-        </div>
-
-        {expanded && (
-          <div className="mt-3 pt-3 border-t border-slate-100 space-y-2">
-            {record.aiReasoningSteps.map((step, idx) => (
-              <RichReasoningStepCard key={idx} step={step} index={idx} />
-            ))}
-          </div>
-        )}
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "w-full rounded-2xl border p-4 text-left transition-all",
+        selected
+          ? "border-cyan-500/25 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(34,211,238,0.14)]"
+          : "border-white/6 bg-[#131316] hover:border-white/10 hover:bg-[#17171b]"
+      )}
+    >
+      <div className="flex items-center gap-2">
+        <StatusBadge status={record.status} />
+        <span className="text-[10px] font-mono text-zinc-500">{record.id}</span>
+        <span className="ml-auto text-[10px] text-zinc-500">{record.updatedAt.slice(11, 16)}</span>
       </div>
-    </Card>
-  )
-}
-
-function DisposingCard({ record }: { record: InvestigationRecord }) {
-  const [expanded, setExpanded] = useState(false)
-  return (
-    <Card className="border-orange-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60">
-      <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <StatusBadge status={record.status} />
-            <span className="text-xs font-mono text-slate-600">{record.id}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <TriggerBadge type={record.triggerType} />
-            <ChevronDown className={cn("h-3.5 w-3.5 text-slate-600 transition-transform", expanded && "rotate-180")} />
-          </div>
-        </div>
-        <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
-        <AssetTag name={record.asset} type="asset" />
-
-        <div className="mt-3 space-y-1.5">
-          {record.aiReasoningSteps.slice(0, 2).map((step, idx) => (
-            <ReasoningStepItem key={idx} step={step} compact />
-          ))}
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-            <span className="text-slate-600">处置人</span>
-            <p className="text-slate-600 font-medium truncate">{record.handler || "—"}</p>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-            <span className="text-slate-600">截止时间</span>
-            <p className="text-amber-600/80 font-medium">{record.deadline || "—"}</p>
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center gap-2 text-[10px]">
-          <span className="text-slate-600">置信度</span>
-          <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
-          <div className="w-16"><ConfidenceBar value={record.confidence} /></div>
-        </div>
-
-        <div className="mt-auto px-3 pb-3 pt-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div className="flex items-center gap-1.5 mb-1">
-              <ClipboardList className="h-3 w-3 text-orange-600" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600/70">当前处置动作</span>
-            </div>
-            <p className="text-xs text-slate-500">{record.currentAction || "正在执行隔离与取证..."}</p>
-          </div>
-        </div>
-
-        {expanded && (
-          <div className="px-3 pb-3 space-y-2">
-            {record.aiReasoningSteps.map((step, idx) => (
-              <RichReasoningStepCard key={idx} step={step} index={idx} />
-            ))}
-          </div>
-        )}
+      <div className="mt-3">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-6 text-zinc-100">{record.title}</h3>
+        <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-400">{record.description}</p>
       </div>
-    </Card>
-  )
-}
-
-function ClosedCard({ record }: { record: InvestigationRecord }) {
-  const [expanded, setExpanded] = useState(false)
-  const [showFeedback, setShowFeedback] = useState(false)
-  const [feedbackRating, setFeedbackRating] = useState<"thumbs_up" | "thumbs_down" | null>(null)
-  return (
-    <>
-      <Card className={cn(
-        "cursor-pointer border-slate-200 bg-white transition-[shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md hover:shadow-slate-200/60",
-        record.feedback?.rating === "thumbs_up" && "border-emerald-500/20",
-        record.feedback?.rating === "thumbs_down" && "border-red-500/20"
-      )}>
-        <div className="flex min-h-[328px] flex-col p-3 space-y-2" onClick={() => setExpanded(!expanded)}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <StatusBadge status={record.status} />
-              <span className="text-xs font-mono text-slate-600">{record.id}</span>
-              {record.feedback?.rating === "thumbs_up" && <ThumbsUp className="h-3 w-3 text-emerald-600" />}
-              {record.feedback?.rating === "thumbs_down" && <ThumbsDown className="h-3 w-3 text-red-600" />}
-            </div>
-            <ChevronDown className={cn("h-3.5 w-3.5 text-slate-600 transition-transform", expanded && "rotate-180")} />
-          </div>
-          <h3 className="text-sm font-bold text-slate-800 leading-snug">{record.title}</h3>
-          <AssetTag name={record.asset} type="asset" />
-
-          <div className="mt-3 space-y-1.5">
-            {record.aiReasoningSteps.slice(0, 2).map((step, idx) => (
-              <ReasoningStepItem key={idx} step={step} compact />
-            ))}
-          </div>
-
-          <div className="mt-3 grid grid-cols-3 gap-2 text-[10px]">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <span className="text-slate-600">闭环时间</span>
-              <p className="text-emerald-600/80 font-medium">{record.closedAt || "—"}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <span className="text-slate-600">处置人</span>
-              <p className="text-slate-600 font-medium truncate">{record.handler || "—"}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2">
-              <span className="text-slate-600">耗时</span>
-              <p className="text-slate-600 font-medium">{record.duration || "—"}</p>
-            </div>
-          </div>
-
-          <div className="mt-auto flex items-center justify-between pt-3">
-            <div className="flex items-center gap-2 text-[10px]">
-              <span className="text-slate-600">置信度</span>
-              <span className={cn("text-xs font-bold", record.confidence >= 80 ? "text-[#ff4d4f]" : "text-amber-600")}>{record.confidence}%</span>
-              <div className="w-16"><ConfidenceBar value={record.confidence} /></div>
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); setFeedbackRating("thumbs_up"); setShowFeedback(true) }}
-                className={cn("rounded p-1 transition-colors hover:bg-slate-100", record.feedback?.rating === "thumbs_up" && "text-emerald-600")}
-              >
-                <ThumbsUp className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setFeedbackRating("thumbs_down"); setShowFeedback(true) }}
-                className={cn("rounded p-1 transition-colors hover:bg-slate-100", record.feedback?.rating === "thumbs_down" && "text-red-600")}
-              >
-                <ThumbsDown className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
+      <div className="mt-3 flex items-center gap-2">
+        <AssetTag name={record.asset} type="asset" />
+        <span className="truncate text-[11px] text-zinc-500">{record.sourceEvent.sourceSystemName}</span>
+      </div>
+      <div className="mt-3 flex items-center justify-between border-t border-white/6 pt-3">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-zinc-500">置信度</span>
+          <span className={cn("text-xs font-semibold tabular-nums", record.confidence >= 80 ? "text-red-300" : record.confidence >= 60 ? "text-amber-300" : "text-cyan-300")}>
+            {record.confidence}%
+          </span>
         </div>
-
-        {expanded && (
-          <div className="px-3 pb-3 space-y-2">
-            {record.aiReasoningSteps.map((step, idx) => (
-              <RichReasoningStepCard key={idx} step={step} index={idx} />
-            ))}
-            {record.conclusion && (
-              <div className="rounded-lg border border-emerald-500/15 bg-emerald-500/5 p-2.5">
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span className="text-xs font-bold text-emerald-600">闭环结论</span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">{record.conclusion}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </Card>
-
-      <FeedbackDialog
-        open={showFeedback}
-        onOpenChange={setShowFeedback}
-        rating={feedbackRating as "thumbs_up" | "thumbs_down"}
-      />
-    </>
+        <span className="text-[11px] text-zinc-500">{record.aiReasoningSteps.length} 步</span>
+      </div>
+    </button>
   )
 }
 
 export default function InvestigatePage() {
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [selectedRecord, setSelectedRecord] = useState<InvestigationRecord | null>(null)
   const [selectedStepIndex, setSelectedStepIndex] = useState(0)
   const [activeTab, setActiveTab] = useState("all")
@@ -1958,9 +1593,6 @@ export default function InvestigatePage() {
     return counts
   }, [])
 
-  const positiveCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_up").length
-  const negativeCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_down").length
-
   const filteredRecords = useMemo(() => {
     return mockRecords.filter(record => {
       if (activeTab !== "all" && record.status !== activeTab) return false
@@ -1973,6 +1605,8 @@ export default function InvestigatePage() {
     })
   }, [activeTab, searchQuery])
 
+  const positiveCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_up").length
+  const negativeCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_down").length
   const totalCount = mockRecords.length
   const investigatingCount = mockRecords.filter((record) => record.status === "investigating").length
   const reviewCount = mockRecords.filter((record) => record.status === "pending_review").length
@@ -1981,8 +1615,33 @@ export default function InvestigatePage() {
   const avgConfidence = Math.round(mockRecords.reduce((sum, record) => sum + record.confidence, 0) / mockRecords.length)
   const visibleSelectedRecord = selectedRecord ? filteredRecords.find((record) => record.id === selectedRecord.id) ?? null : null
   const previewRecord = filteredRecords[0] ?? null
-  const activeRecord = visibleSelectedRecord ?? null
+  const activeRecord = visibleSelectedRecord ?? previewRecord ?? null
   const safeSelectedStepIndex = activeRecord ? Math.min(selectedStepIndex, activeRecord.aiReasoningSteps.length - 1) : 0
+
+  if (!isDemo) {
+    return (
+      <div className="min-h-screen">
+        <PageHeader
+          title="智能研判中心"
+          subtitle="AI驱动的安全事件调查与证据链分析平台"
+          icon={Brain}
+        />
+        <div className="mx-auto max-w-[1560px] pb-8 pt-4 space-y-5">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-20">
+              <Database className="size-12 text-zinc-300 mb-4" />
+              <h3 className="text-lg font-semibold text-zinc-500 mb-2">暂无调查记录</h3>
+              <p className="text-sm text-zinc-400 text-center max-w-md">
+                你还没有接入任何安全数据源。
+                <br />
+                接入数据源后，AI将自动进行安全事件研判。
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen">
@@ -1992,7 +1651,7 @@ export default function InvestigatePage() {
         icon={Brain}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+            <Button variant="outline" className="border-white/6 bg-[#131316] text-zinc-200 hover:bg-[#09090b]">
               <ArrowUpRight className="mr-1 h-4 w-4" />
               导出简报
             </Button>
@@ -2006,16 +1665,16 @@ export default function InvestigatePage() {
 
       <div className="mx-auto max-w-[1560px] pb-8 pt-4 space-y-5">
         <div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
-          <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f4fbfd_48%,#ffffff_100%)] p-6 shadow-sm shadow-slate-200/70">
+          <div className="rounded-[28px] border border-white/6 bg-[linear-gradient(135deg,#131316_0%,#101a26_52%,#131316_100%)] p-6 shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
             <div className="flex flex-col gap-5">
               <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
                   <Sparkles className="h-3.5 w-3.5" />
                   AI研判工作台
                 </div>
                 <div>
-                  <h1 className="text-3xl font-semibold tracking-tight text-slate-950">让证据链自己说服你</h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                  <h1 className="text-3xl font-semibold tracking-tight text-white">让证据链自己说服你</h1>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
                     把原始事件、人员画像、基线偏差、跨系统关联和处置建议压进同一个研判工作流里，先看清，再行动。
                   </p>
                 </div>
@@ -2031,8 +1690,8 @@ export default function InvestigatePage() {
 
           <div className={cn(pageCardClass, "p-5")}>
             <div className="mb-4 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-cyan-700" />
-              <span className="text-sm font-semibold text-slate-900">筛选与状态</span>
+              <Activity className="h-4 w-4 text-cyan-300" />
+              <span className="text-sm font-semibold text-white">筛选与状态</span>
             </div>
             <div className="space-y-4">
               <div className="relative">
@@ -2048,23 +1707,23 @@ export default function InvestigatePage() {
                 />
               </div>
               <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <div className="text-[11px] text-slate-500">正向反馈</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-emerald-700">
+                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
+                  <div className="text-[11px] text-zinc-500">正向反馈</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-emerald-300">
                     <ThumbsUp className="h-4 w-4 shrink-0" />
                     <span className="text-lg font-semibold tabular-nums">{positiveCount}</span>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <div className="text-[11px] text-slate-500">负向反馈</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-red-700">
+                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
+                  <div className="text-[11px] text-zinc-500">负向反馈</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-red-300">
                     <ThumbsDown className="h-4 w-4 shrink-0" />
                     <span className="text-lg font-semibold tabular-nums">{negativeCount}</span>
                   </div>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                  <div className="text-[11px] text-slate-500">处置中</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-amber-700">
+                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
+                  <div className="text-[11px] text-zinc-500">处置中</div>
+                  <div className="mt-1 flex items-center justify-between gap-2 text-amber-300">
                     <Wrench className="h-4 w-4 shrink-0" />
                     <span className="text-lg font-semibold tabular-nums">{disposingCount}</span>
                   </div>
@@ -2081,16 +1740,16 @@ export default function InvestigatePage() {
                       onClick={() => setActiveTab(tab.value)}
                       className={cn(
                         "flex min-h-16 flex-col items-start justify-between rounded-2xl border px-3 py-3 text-left transition-colors",
-                        active ? "border-cyan-200 bg-cyan-50 shadow-sm" : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        active ? "border-cyan-500/25 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(34,211,238,0.15)]" : "border-white/6 bg-[#131316] hover:border-white/10 hover:bg-[#17171b]"
                       )}
                     >
                       <div className="flex w-full items-center justify-between">
-                        {TabIcon && <TabIcon className={cn("h-4 w-4 shrink-0", active ? "text-cyan-700" : "text-slate-500")} />}
-                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono", active ? "bg-white text-cyan-700" : "bg-slate-100 text-slate-500")}>
+                        {TabIcon && <TabIcon className={cn("h-4 w-4 shrink-0", active ? "text-cyan-300" : "text-zinc-500")} />}
+                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono", active ? "bg-[#09090b] text-cyan-300" : "bg-white/5 text-zinc-500")}>
                           {tabCounts[tab.value] || 0}
                         </span>
                       </div>
-                      <span className={cn("text-xs font-medium", active ? "text-cyan-700" : "text-slate-600")}>{tab.label}</span>
+                      <span className={cn("text-xs font-medium", active ? "text-cyan-300" : "text-zinc-400")}>{tab.label}</span>
                     </button>
                   )
                 })}
@@ -2099,76 +1758,143 @@ export default function InvestigatePage() {
           </div>
         </div>
 
-        {activeRecord ? (
+        <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
           <div className="space-y-3">
-            <button
-              onClick={() => {
-                setSelectedRecord(null)
-                setSelectedStepIndex(0)
-              }}
-              className="flex items-center gap-1.5 text-xs text-slate-600 transition-colors hover:text-slate-900"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> 返回案件列表
-            </button>
+            <div className="flex items-center justify-between px-1">
+              <h3 className="text-sm font-semibold text-white">案件池</h3>
+              <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-zinc-400">{filteredRecords.length} 条</span>
+            </div>
+            <div className="space-y-3">
+              {filteredRecords.length > 0 ? filteredRecords.map((record) => (
+                <InvestigationListItem
+                  key={record.id}
+                  record={record}
+                  selected={activeRecord?.id === record.id}
+                  onSelect={() => {
+                    setSelectedRecord(record)
+                    setSelectedStepIndex(0)
+                  }}
+                />
+              )) : (
+                <div className={cn(pageCardClass, "flex min-h-[320px] flex-col items-center justify-center py-20 text-zinc-400")}>
+                  <Inbox className="mb-3 h-12 w-12 opacity-40" />
+                  <p className="text-sm">暂无匹配的事件记录</p>
+                </div>
+              )}
+            </div>
+          </div>
 
-            <Card className="overflow-hidden border-slate-200 bg-white shadow-sm shadow-slate-200/60">
-              <div className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfc_100%)] p-6">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <StatusBadge status={activeRecord.status} />
-                      <span className="text-sm font-mono text-slate-400">{activeRecord.id}</span>
-                      <TriggerBadge type={activeRecord.triggerType} />
+          {activeRecord ? (
+            <div className="space-y-3">
+              <Card className="overflow-hidden border-white/6 bg-[#131316] shadow-[0_18px_40px_rgba(0,0,0,0.22)]">
+              <div className="border-b border-white/6 bg-[linear-gradient(180deg,#17171b_0%,#131316_100%)] p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={activeRecord.status} />
+                    <span className="text-sm font-mono text-zinc-500">{activeRecord.id}</span>
+                    <TriggerBadge type={activeRecord.triggerType} />
+                    {selectedRecord && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedRecord(null)
+                          setSelectedStepIndex(0)
+                        }}
+                        className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/6 bg-white/5 px-2 py-1 text-[10px] text-zinc-400 hover:text-white"
+                      >
+                        <ArrowLeft className="h-3 w-3" />
+                        返回自动预览
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="min-w-0 shrink">
+                      <h2 className="text-2xl font-semibold tracking-tight text-white">{activeRecord.title}</h2>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        <AssetTag name={activeRecord.asset} type="asset" vendor={extractVendor(activeRecord.sourceEvent.sourceSystemName)} />
+                        {activeRecord.involvedAccounts?.slice(0, 2).map((account) => (
+                          <AssetTag key={account} name={getAccountDisplay(account, activeRecord.aiReasoningSteps)} type="account" />
+                        ))}
+                      </div>
                     </div>
-                    <h2 className="text-2xl font-semibold tracking-tight text-slate-950">{activeRecord.title}</h2>
-                    <p className="max-w-3xl text-sm leading-6 text-slate-600">{activeRecord.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      <AssetTag name={activeRecord.asset} type="asset" />
-                      {activeRecord.involvedAccounts?.slice(0, 2).map((account) => (
-                        <AssetTag key={account} name={account} type="account" />
-                      ))}
+                    <div className="flex shrink-0 flex-wrap items-center gap-3">
+                      <StatPill label="AI置信度" value={`${activeRecord.confidence}%`} tone={activeRecord.confidence >= 80 ? "red" : "amber"} />
+                      <StatPill label="支撑证据" value={activeRecord.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)} tone="cyan" />
+                      <StatPill label="不确定点" value={activeRecord.aiReasoningSteps.filter((step) => step.baselineDeviation || step.correlations?.some((c) => c.strength !== "confirmed")).length} tone="amber" />
+                      <StatPill label="推理步骤" value={activeRecord.aiReasoningSteps.length} />
                     </div>
                   </div>
-                  <div className="grid gap-3 sm:grid-cols-3 xl:w-[440px]">
-                    <StatPill label="AI置信度" value={`${activeRecord.confidence}%`} tone={activeRecord.confidence >= 80 ? "red" : "amber"} />
-                    <StatPill label="证据条数" value={activeRecord.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)} tone="cyan" />
-                    <StatPill label="推理步骤" value={activeRecord.aiReasoningSteps.length} />
+
+                  <p className="max-w-4xl text-sm leading-6 text-zinc-400">{activeRecord.description}</p>
+
+                  {activeRecord.aiConclusion && (
+                    <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Brain className="h-4 w-4 text-violet-300" />
+                        <span className="text-xs font-semibold text-violet-300">AI研判摘要</span>
+                      </div>
+                      <p className="text-sm leading-6 text-zinc-100">{activeRecord.aiConclusion}</p>
+                    </div>
+                  )}
+
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4">
+                    <div className="mb-2 flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                      <span className="text-xs font-semibold text-emerald-400">建议决策</span>
+                    </div>
+                    <p className="text-sm leading-6 text-zinc-200">
+                      {activeRecord.status === "pending_review"
+                        ? "人工复核AI结论后批准或修正处置方案"
+                        : activeRecord.status === "disposing"
+                          ? activeRecord.currentAction ?? "跟踪处置执行并观察攻击面是否收敛"
+                          : activeRecord.status === "closed"
+                            ? activeRecord.closeReason ?? "复盘闭环结果并回流学习"
+                            : "继续收集证据链，确认主假设是否成立"
+                      }
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {[...activeRecord.involvedAccounts ?? [], ...activeRecord.involvedAssets ?? [], ...activeRecord.entities].slice(0, 4).map((entity) => (
+                        <span key={entity} className="rounded-md border border-white/6 bg-[#09090b] px-2 py-1 text-[11px] font-mono text-zinc-400">
+                          {entity}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-5 p-5 xl:grid-cols-[420px_1fr]">
+              <div className="p-5">
                 <div className="space-y-4">
-                  <InvestigationDecisionBrief record={activeRecord} />
-
                   {activeRecord.status === "closed" && activeRecord.conclusion && (
-                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
                       <div className="mb-2 flex items-center gap-2">
-                        <FileCheck className="h-4 w-4 text-emerald-700" />
-                        <span className="text-sm font-semibold text-emerald-700">闭环结论</span>
+                        <FileCheck className="h-4 w-4 text-emerald-300" />
+                        <span className="text-sm font-semibold text-emerald-300">闭环结论</span>
                       </div>
-                      <p className="text-sm leading-6 text-slate-700">{activeRecord.conclusion}</p>
+                      <p className="text-sm leading-6 text-zinc-200">{activeRecord.conclusion}</p>
                     </div>
                   )}
 
                   {activeRecord.disposalSuggestion && activeRecord.status === "pending_review" && (
-                    <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-5">
+                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5">
                       <div className="mb-2 flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-cyan-700" />
-                        <span className="text-sm font-semibold text-cyan-700">AI 处置建议</span>
+                        <Zap className="h-4 w-4 text-cyan-300" />
+                        <span className="text-sm font-semibold text-cyan-300">AI 处置建议</span>
                       </div>
-                      <p className="text-sm leading-6 text-slate-700">{activeRecord.disposalSuggestion}</p>
+                      <p className="text-sm leading-6 text-zinc-200">{activeRecord.disposalSuggestion}</p>
                     </div>
                   )}
+
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <GitBranch className="h-4 w-4 text-cyan-700" />
-                      <span className="text-sm font-semibold text-slate-900">完整证据链</span>
+                      <GitBranch className="h-4 w-4 text-cyan-300" />
+                      <span className="text-sm font-semibold text-white">完整证据链</span>
                     </div>
-                    <span className="text-xs text-slate-500">{activeRecord.aiReasoningSteps.length} 个推理步骤，当前聚焦第 {safeSelectedStepIndex + 1} 步</span>
+                    <span className="text-xs text-zinc-500">{activeRecord.aiReasoningSteps.length} 个推理步骤，当前聚焦第 {safeSelectedStepIndex + 1} 步</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {activeRecord.aiReasoningSteps.map((step, idx) => (
@@ -2179,8 +1905,8 @@ export default function InvestigatePage() {
                         className={cn(
                           "rounded-xl border px-3 py-2 text-left transition-colors",
                           selectedStepIndex === idx
-                            ? "border-cyan-200 bg-cyan-50 text-cyan-700"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                            ? "border-cyan-500/25 bg-cyan-500/10 text-cyan-300"
+                            : "border-white/6 bg-[#131316] text-zinc-400 hover:border-white/10 hover:bg-[#17171b]"
                         )}
                       >
                         <div className="text-[10px] font-mono">步骤 {idx + 1}</div>
@@ -2188,107 +1914,21 @@ export default function InvestigatePage() {
                       </button>
                     ))}
                   </div>
-                  <div className="grid gap-3 xl:grid-cols-[1fr_240px]">
-                    <RichReasoningStepCard
+                  <RichReasoningStepCard
                       step={activeRecord.aiReasoningSteps[safeSelectedStepIndex]}
                       index={safeSelectedStepIndex}
                     />
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <div className="mb-3 flex items-center gap-2">
-                        <FileSearch className="h-4 w-4 text-cyan-700" />
-                        <span className="text-sm font-semibold text-slate-900">阅读提示</span>
-                      </div>
-                      <div className="space-y-3 text-xs leading-6 text-slate-600">
-                        <p>先看“推理逻辑”，确认 AI 为什么会走到这一步。</p>
-                        <p>再看“证据链”，核对输入是否足够支撑当前判断。</p>
-                        <p>如果当前步骤不成立，再切回上一步或下一步，不必一次读完整条链。</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </Card>
           </div>
         ) : (
-          <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-900">案件池</h3>
-                  <p className="text-xs text-slate-500">按状态查看 AI 研判进度，选中后进入完整证据链工作台。</p>
-                </div>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-600">{filteredRecords.length} 条</span>
-              </div>
-              <div className="space-y-3">
-                {filteredRecords.length > 0 ? filteredRecords.map(record => {
-                  switch (record.status) {
-                    case "investigating": return <InvestigatingCard key={record.id} record={record} onSelect={() => { setSelectedRecord(record); setSelectedStepIndex(0) }} />
-                    case "pending_review": return <PendingReviewCard key={record.id} record={record} />
-                    case "disposing": return <DisposingCard key={record.id} record={record} />
-                    case "closed": return <ClosedCard key={record.id} record={record} />
-                    default: return null
-                  }
-                }) : (
-                  <div className={cn(pageCardClass, "flex min-h-[320px] flex-col items-center justify-center py-20 text-slate-600")}>
-                    <Inbox className="mb-3 h-12 w-12 opacity-40" />
-                    <p className="text-sm">暂无匹配的事件记录</p>
-                  </div>
-                )}
-              </div>
+            <div className={cn(pageCardClass, "flex min-h-[720px] flex-col items-center justify-center p-10 text-center text-zinc-400")}>
+              <Brain className="mb-3 h-12 w-12 opacity-40" />
+              <p className="text-sm">暂无可展示的研判详情</p>
             </div>
-
-            {previewRecord ? (
-              <Card className="overflow-hidden border-slate-200 bg-white shadow-sm shadow-slate-200/60">
-                <div className="border-b border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbfc_100%)] p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <StatusBadge status={previewRecord.status} />
-                        <span className="text-sm font-mono text-slate-400">{previewRecord.id}</span>
-                        <TriggerBadge type={previewRecord.triggerType} />
-                      </div>
-                      <h3 className="text-xl font-semibold tracking-tight text-slate-950">{previewRecord.title}</h3>
-                      <p className="max-w-3xl text-sm leading-6 text-slate-600">{previewRecord.description}</p>
-                    </div>
-                    <Button className="shrink-0 bg-cyan-600 text-white hover:bg-cyan-700" onClick={() => setSelectedRecord(previewRecord)}>
-                      进入完整研判
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid gap-5 p-5 xl:grid-cols-[340px_1fr]">
-                  <div className="space-y-4">
-                    <InvestigationDecisionBrief record={previewRecord} />
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <GitBranch className="h-4 w-4 text-cyan-700" />
-                        <span className="text-sm font-semibold text-slate-900">证据链预览</span>
-                      </div>
-                      <span className="text-xs text-slate-500">先预览，再进入完整工作台</span>
-                    </div>
-                    <div className="space-y-3">
-                      {previewRecord.aiReasoningSteps.slice(0, 2).map((step, idx) => (
-                        <RichReasoningStepCard key={idx} step={step} index={idx} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ) : (
-              <div className={cn(pageCardClass, "flex min-h-[720px] flex-col items-center justify-center p-10 text-center")}>
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
-                  <Brain className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-slate-900">没有可预览的案件</h3>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                  调整左侧筛选条件后，这里会自动显示第一条案件的研判预览。
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <style jsx>{`

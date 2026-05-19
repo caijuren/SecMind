@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
@@ -21,7 +21,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
     return encoded_jwt
@@ -36,9 +36,8 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 
 def create_refresh_token(data: dict) -> str:
-    """Create a refresh token with 7 day expiry"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=7)
+    expire = datetime.now(timezone.utc) + timedelta(days=7)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -72,12 +71,12 @@ def authenticate_user_with_lockout(db: Session, email: str, password: str) -> tu
         return None, "邮箱或密码错误"
     
     # Check if account is locked
-    if user.locked_until and user.locked_until > datetime.utcnow():
-        remaining = int((user.locked_until - datetime.utcnow()).total_seconds() / 60)
+    if user.locked_until and user.locked_until > datetime.now(timezone.utc):
+        remaining = int((user.locked_until - datetime.now(timezone.utc)).total_seconds() / 60)
         return None, f"账户已被锁定，请在{remaining}分钟后重试"
     
     # Clear expired lock
-    if user.locked_until and user.locked_until <= datetime.utcnow():
+    if user.locked_until and user.locked_until <= datetime.now(timezone.utc):
         user.failed_login_attempts = 0
         user.locked_until = None
         db.commit()
@@ -91,7 +90,7 @@ def authenticate_user_with_lockout(db: Session, email: str, password: str) -> tu
     # Failed attempt
     user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
     if user.failed_login_attempts >= 5:
-        user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+        user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
     return None, "邮箱或密码错误"
 

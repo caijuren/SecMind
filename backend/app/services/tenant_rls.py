@@ -33,6 +33,8 @@ TENANT_ISOLATED_TABLES = [
 
 RLS_POLICY_NAME = "tenant_isolation_policy"
 
+ALLOWED_TABLES = frozenset(TENANT_ISOLATED_TABLES)
+
 POLICY_SQL_TEMPLATE = """
 CREATE POLICY {policy_name} ON {table_name}
 USING (
@@ -77,6 +79,9 @@ def _table_exists(db: Session, table_name: str) -> bool:
 
 
 def enable_rls_for_table(db: Session, table_name: str) -> bool:
+    if table_name not in ALLOWED_TABLES:
+        logger.warning("表 %s 不在 RLS 白名单中，跳过", table_name)
+        return False
     if not _table_exists(db, table_name):
         logger.warning("表 %s 不存在，跳过 RLS 启用", table_name)
         return False

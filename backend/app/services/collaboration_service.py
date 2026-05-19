@@ -1,6 +1,8 @@
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import asyncio
+import json
 
 from app.models.collaboration import Comment, Notification
 from app.models.user import User
@@ -63,7 +65,31 @@ def create_notification(db: Session, user_id: int, type: str, title: str, conten
     db.add(notif)
     db.commit()
     db.refresh(notif)
+
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(_push_notification(user_id, notif))
+    except RuntimeError:
+        pass
+
     return notif
+
+
+async def _push_notification(user_id: int, notif: Notification):
+    from app.routers.ws import manager
+    await manager.send_to_user(user_id, {
+        "type": "notification",
+        "data": {
+            "id": notif.id,
+            "type": notif.type,
+            "title": notif.title,
+            "content": notif.content,
+            "reference_type": notif.reference_type,
+            "reference_id": notif.reference_id,
+            "is_read": notif.is_read,
+            "created_at": notif.created_at.isoformat() if notif.created_at else None,
+        }
+    })
 
 
 def get_notifications(db: Session, user_id: int, is_read: Optional[int] = None, skip: int = 0, limit: int = 20) -> Dict[str, Any]:

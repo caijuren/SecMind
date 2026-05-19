@@ -33,7 +33,7 @@ interface AuthActions {
   setRememberMe: (rememberMe: boolean) => void
   setRefreshToken: (refreshToken: string | null) => void
   setPermissions: (permissions: string[]) => void
-  hasPermission: (resource: string, action: string) => boolean
+  hasPermission: (resource: string, action?: string) => boolean
 }
 
 export type AuthStore = AuthState & AuthActions
@@ -47,7 +47,7 @@ export const useAuthStore = create<AuthStore>()(
       rememberMe: false,
       refreshToken: null,
       permissions: [],
-      login: (user, token, rememberMe = false, refreshToken = null) =>
+      login: (user, token, rememberMe = false, refreshToken = null) => {
         set((state) => {
           state.user = user
           state.token = token
@@ -56,9 +56,10 @@ export const useAuthStore = create<AuthStore>()(
           if (refreshToken !== undefined && refreshToken !== null) {
             state.refreshToken = refreshToken
           }
-          setApiToken(token)
-        }),
-      logout: () =>
+        })
+        setApiToken(token)
+      },
+      logout: () => {
         set((state) => {
           state.user = null
           state.token = null
@@ -66,8 +67,9 @@ export const useAuthStore = create<AuthStore>()(
           state.rememberMe = false
           state.refreshToken = null
           state.permissions = []
-          setApiToken(null)
-        }),
+        })
+        setApiToken(null)
+      },
       setUser: (partial) =>
         set((state) => {
           if (state.user) {
@@ -92,10 +94,10 @@ export const useAuthStore = create<AuthStore>()(
         set((state) => {
           state.permissions = permissions
         }),
-      hasPermission: (resource, action) => {
-        const { permissions, user } = get()
-        if (user?.role === 'admin') return true
-        const key = `${resource}:${action}`
+      hasPermission: (resourceOrKey: string, action?: string) => {
+        const { permissions } = get()
+        if (permissions.includes('*:*')) return true
+        const key = action ? `${resourceOrKey}:${action}` : resourceOrKey
         return permissions.includes(key)
       },
     })),

@@ -67,13 +67,13 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
             key={tactic.id}
             className="flex items-center justify-center px-1 py-1.5 rounded-t"
             style={{
-              backgroundColor: "rgba(34,211,238,0.08)",
-              borderBottom: "1px solid rgba(34,211,238,0.15)",
+              backgroundColor: "rgba(255,255,255,0.03)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <span
               className="text-[9px] font-medium text-center leading-tight"
-              style={{ color: "rgba(34,211,238,0.7)" }}
+              style={{ color: "rgba(255,255,255,0.35)" }}
             >
               {tactic.short}
             </span>
@@ -112,8 +112,8 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
             }
 
             if (isHovered) {
-              bgColor = hasAlert ? bgColor : "rgba(255,255,255,0.06)"
-              borderColor = "rgba(34,211,238,0.4)"
+              bgColor = hasAlert ? bgColor : "rgba(255,255,255,0.04)"
+              borderColor = "rgba(34,211,238,0.3)"
             }
 
             return (

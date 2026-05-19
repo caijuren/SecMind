@@ -87,10 +87,6 @@ export function SecurityScoreGauge({ score, previousScore, size = 200 }: Securit
       >
         <defs>
           {arcs.map((arc, i) => {
-            const s = angleForPercent(arc.start)
-            const e = angleForPercent(arc.end)
-            const sr = (s * Math.PI) / 180
-            const er = (e * Math.PI) / 180
             return (
               <linearGradient key={i} id={`gaugeGrad-${i}`} x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor={arc.color} stopOpacity="0.6" />
@@ -123,7 +119,7 @@ export function SecurityScoreGauge({ score, previousScore, size = 200 }: Securit
             return `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`
           })()}
           fill="none"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="rgba(255,255,255,0.04)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
         />

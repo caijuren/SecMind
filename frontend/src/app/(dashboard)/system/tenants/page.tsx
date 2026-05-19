@@ -47,6 +47,7 @@ import {
 } from "@/lib/admin-ui"
 import { CARD, RADIUS, TYPOGRAPHY } from "@/lib/design-system"
 import { useLocaleStore } from "@/store/locale-store"
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
 
 type TenantPlan = "free" | "starter" | "professional" | "enterprise"
 type TenantStatus = "active" | "trial" | "expired" | "suspended"
@@ -116,6 +117,21 @@ const statusClassMap: Record<TenantStatus, string> = {
   expired: "border-red-500/25 bg-red-500/10 text-red-400",
   suspended: "border-zinc-500/25 bg-zinc-800/30 text-zinc-400",
 }
+
+const MOCK_TENANTS: TenantItem[] = [
+  { id: "t-001", name: "某大型银行总行", slug: "big-bank-hq", plan: "enterprise", status: "active", owner_email: "admin@bigbank.com", max_users: 200, expires_at: new Date(Date.now() + 31536000000).toISOString(), created_at: new Date(Date.now() - 31536000000).toISOString() },
+  { id: "t-002", name: "XX证券股份有限公司", slug: "xx-securities", plan: "professional", status: "active", owner_email: "secops@xxsecurities.com", max_users: 50, expires_at: new Date(Date.now() + 18000000000).toISOString(), created_at: new Date(Date.now() - 18000000000).toISOString() },
+  { id: "t-003", name: "顺丰科技有限公司", slug: "sf-tech", plan: "professional", status: "active", owner_email: "devops@sftech.com", max_users: 30, expires_at: new Date(Date.now() + 25000000000).toISOString(), created_at: new Date(Date.now() - 12000000000).toISOString() },
+  { id: "t-004", name: "华润集团信息部", slug: "crc-it", plan: "enterprise", status: "active", owner_email: "itsec@crc.com", max_users: 150, expires_at: new Date(Date.now() + 40000000000).toISOString(), created_at: new Date(Date.now() - 20000000000).toISOString() },
+  { id: "t-005", name: "美团安全团队", slug: "meituan-sec", plan: "starter", status: "trial", owner_email: "security@meituan.com", max_users: 10, expires_at: new Date(Date.now() + 1209600000).toISOString(), created_at: new Date(Date.now() - 1209600000).toISOString() },
+  { id: "t-006", name: "字节跳动SOC", slug: "bytedance-soc", plan: "enterprise", status: "active", owner_email: "soc@bytedance.com", max_users: 500, expires_at: new Date(Date.now() + 50000000000).toISOString(), created_at: new Date(Date.now() - 25000000000).toISOString() },
+  { id: "t-007", name: "滴滴出行安全部", slug: "didi-security", plan: "professional", status: "active", owner_email: "infosec@didiglobal.com", max_users: 40, expires_at: new Date(Date.now() + 22000000000).toISOString(), created_at: new Date(Date.now() - 15000000000).toISOString() },
+  { id: "t-008", name: "京东科技集团", slug: "jd-tech", plan: "enterprise", status: "active", owner_email: "cirt@jd.com", max_users: 300, expires_at: new Date(Date.now() + 35000000000).toISOString(), created_at: new Date(Date.now() - 30000000000).toISOString() },
+  { id: "t-009", name: "某创业科技公司", slug: "startup-tech", plan: "free", status: "expired", owner_email: "cto@startup-demo.com", max_users: 5, expires_at: new Date(Date.now() - 864000000).toISOString(), created_at: new Date(Date.now() - 5184000000).toISOString() },
+  { id: "t-010", name: "新希望集团", slug: "newhope-group", plan: "professional", status: "trial", owner_email: "it@newhope.cn", max_users: 20, expires_at: new Date(Date.now() + 2592000000).toISOString(), created_at: new Date(Date.now() - 604800000).toISOString() },
+  { id: "t-011", name: "上海浦东发展银行", slug: "spdb", plan: "enterprise", status: "active", owner_email: "soc@spdb.com.cn", max_users: 250, expires_at: new Date(Date.now() + 38000000000).toISOString(), created_at: new Date(Date.now() - 28000000000).toISOString() },
+  { id: "t-012", name: "小米科技安全部", slug: "xiaomi-sec", plan: "professional", status: "suspended", owner_email: "sec@xiaomi.com", max_users: 60, expires_at: new Date(Date.now() - 864000000).toISOString(), created_at: new Date(Date.now() - 14000000000).toISOString() },
+]
 
 function QuotaBar({
   label,
@@ -273,7 +289,7 @@ function CreateTenantDialog({
             <Button
               onClick={handleCreate}
               disabled={saving}
-              className="bg-cyan-600 text-white hover:bg-cyan-700"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
             >
               {saving ? "创建中…" : "创建租户"}
             </Button>
@@ -361,7 +377,7 @@ function AddMemberDialog({
             <Button
               onClick={handleAdd}
               disabled={saving}
-              className="bg-cyan-600 text-white hover:bg-cyan-700"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
             >
               {saving ? "添加中…" : "添加成员"}
             </Button>
@@ -384,6 +400,7 @@ function TenantDetailView({
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [memberDialogOpen, setMemberDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{userId: string, name: string} | null>(null)
 
   async function loadQuota() {
     try {
@@ -561,7 +578,7 @@ function TenantDetailView({
                     </p>
                   </div>
                   <Button
-                    className="bg-cyan-600 text-white hover:bg-cyan-700"
+                    className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
                     size="sm"
                     onClick={() => setMemberDialogOpen(true)}
                   >
@@ -629,7 +646,7 @@ function TenantDetailView({
                                   variant="outline"
                                   size="sm"
                                   className="border-red-500/25 text-red-400 hover:bg-red-500/10"
-                                  onClick={() => removeMember(member.user_id)}
+                                  onClick={() => setDeleteTarget({userId: member.user_id, name: member.name || member.email})}
                                   disabled={member.role === "owner"}
                                 >
                                   <Trash2 className="mr-1 size-3.5" />
@@ -723,12 +740,25 @@ function TenantDetailView({
           </TabsContent>
         </Tabs>
       )}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="移除成员"
+        description={`确定要将 ${deleteTarget?.name} 从该租户中移除吗？此操作不可撤销。`}
+        level="danger"
+        onConfirm={() => {
+          if (deleteTarget) {
+            removeMember(deleteTarget.userId)
+            setDeleteTarget(null)
+          }
+        }}
+      />
     </div>
   )
 }
 
 export default function TenantsPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
 
   const [tenants, setTenants] = useState<TenantItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -740,7 +770,10 @@ export default function TenantsPage() {
     setLoading(true)
     try {
       const response = await api.get("/tenants")
-      setTenants(response.data.items ?? response.data ?? [])
+      const data = response.data.items ?? response.data ?? []
+      setTenants(data.length > 0 ? data : MOCK_TENANTS)
+    } catch {
+      setTenants(MOCK_TENANTS)
     } finally {
       setLoading(false)
     }
@@ -775,8 +808,8 @@ export default function TenantsPage() {
       <div className="space-y-5">
         <PageHeader
           icon={Building2}
-          title="租户管理"
-          subtitle="租户详情"
+          title={t("tenant.title")}
+          subtitle={t("tenant.tenantDetail")}
         />
         <TenantDetailView
           tenant={selectedTenant}
@@ -790,11 +823,11 @@ export default function TenantsPage() {
     <div className="space-y-5">
       <PageHeader
         icon={Building2}
-        title="租户管理"
-        subtitle={<span>管理所有租户组织、配额和订阅</span>}
+        title={t("tenant.title")}
+        subtitle={<span>{t("settings.tenantSubtitle")}</span>}
         actions={
           <Button
-            className="bg-cyan-600 text-white hover:bg-cyan-700"
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all"
             onClick={() => setDialogOpen(true)}
           >
             <Plus className="mr-1 size-4" />

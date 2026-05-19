@@ -123,7 +123,7 @@ function getRiskTextColor(score: number): string {
 }
 
 export default function AssetsPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
   const [activeFilter, setActiveFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -156,7 +156,7 @@ export default function AssetsPage() {
     <div className="space-y-6">
       <PageHeader
         icon={Shield}
-        title="资产管理"
+        title={t("nav.assets")}
       />
 
       <div className="grid grid-cols-4 gap-4">
@@ -193,8 +193,8 @@ export default function AssetsPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
           <Input
-            placeholder="搜索资产名称、IP、部门、负责人..."
-            aria-label="搜索资产"
+            placeholder={t("assets.searchPlaceholder")}
+            aria-label={t("assets.searchAriaLabel")}
             className={`pl-9 ${inputClass}`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -205,15 +205,15 @@ export default function AssetsPage() {
           onClick={() => setDialogOpen(true)}
         >
           <Plus className="size-4" />
-          添加资产
+          {t("assets.addAsset")}
         </Button>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg bg-[#131316] border-cyan-500/20 text-zinc-100">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">添加资产</DialogTitle>
-            <DialogDescription className="text-zinc-500">录入新的IT资产信息</DialogDescription>
+            <DialogTitle className="text-zinc-100">{t("assets.addAsset")}</DialogTitle>
+            <DialogDescription className="text-zinc-500">{t("assets.addAssetDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-1.5">

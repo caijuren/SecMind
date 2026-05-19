@@ -29,3 +29,4 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     verification_token = Column(String, nullable=True)
     refresh_token = Column(String, nullable=True)
+    token_version = Column(Integer, default=0, nullable=False)

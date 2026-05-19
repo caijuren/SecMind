@@ -1,6 +1,7 @@
 "use client"
 
 import dynamic from "next/dynamic"
+import { Button } from "@/components/ui/button"
 
 export const DynamicECharts = dynamic(() => import("echarts-for-react"), {
   ssr: false,
@@ -48,6 +49,16 @@ export const DynamicContactFormDialog = dynamic(
   () => import("@/components/contact-form-dialog").then((mod) => mod.ContactFormDialog),
   {
     ssr: false,
+    loading: () => (
+      <Button
+        variant="outline"
+        size="lg"
+        className="rounded-xl border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-zinc-100 text-base px-6 h-11 opacity-60 cursor-wait"
+        disabled
+      >
+        预约演示
+      </Button>
+    ),
   }
 )
 

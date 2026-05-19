@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { api, formatDateTime } from "@/lib/api"
 import { inputClass, pageCardClass, softCardClass, subtleTextClass } from "@/lib/admin-ui"
+import { ConfirmDialog } from "@/components/common/confirm-dialog"
+import { useAuthStore } from "@/store/auth-store"
 
 type UserRole = "admin" | "analyst" | "viewer" | "user"
 type UserStatus = "active" | "disabled"
@@ -41,6 +43,17 @@ const roleClassMap: Record<UserRole, string> = {
   viewer: "border-white/[0.08] bg-white/[0.03] text-zinc-400",
   user: "border-amber-500/25 bg-amber-500/10 text-amber-400",
 }
+
+const MOCK_USERS: UserItem[] = [
+  { id: 1, name: "张伟", email: "zhangwei@secmind.com", phone: "13800000001", role: "admin", department: "安全运营中心", status: "active", last_login: new Date(Date.now() - 300000).toISOString() },
+  { id: 2, name: "李娜", email: "lina@secmind.com", phone: "13800000002", role: "analyst", department: "安全分析组", status: "active", last_login: new Date(Date.now() - 900000).toISOString() },
+  { id: 3, name: "王芳", email: "wangfang@secmind.com", phone: "13800000003", role: "analyst", department: "威胁情报组", status: "active", last_login: new Date(Date.now() - 1800000).toISOString() },
+  { id: 4, name: "赵磊", email: "zhaolei@secmind.com", phone: "13800000004", role: "viewer", department: "合规审计部", status: "active", last_login: new Date(Date.now() - 3600000).toISOString() },
+  { id: 5, name: "孙婷", email: "sunting@secmind.com", phone: "13800000005", role: "analyst", department: "安全运营中心", status: "active", last_login: new Date(Date.now() - 600000).toISOString() },
+  { id: 6, name: "周杰", email: "zhoujie@secmind.com", phone: "13800000006", role: "viewer", department: "IT运维部", status: "active", last_login: new Date(Date.now() - 7200000).toISOString() },
+  { id: 7, name: "吴敏", email: "wumin@secmind.com", phone: "13800000007", role: "user", department: "研发部", status: "disabled", last_login: new Date(Date.now() - 86400000).toISOString() },
+  { id: 8, name: "陈强", email: "chenqiang@secmind.com", phone: "13800000008", role: "analyst", department: "安全分析组", status: "active", last_login: new Date(Date.now() - 1500000).toISOString() },
+]
 
 function AddUserDialog({
   open,
@@ -119,7 +132,7 @@ function AddUserDialog({
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>取消</Button>
-            <Button onClick={handleCreate} disabled={saving} className="bg-cyan-600 text-white hover:bg-cyan-700">
+            <Button onClick={handleCreate} disabled={saving} className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all">
               {saving ? "创建中…" : "创建用户"}
             </Button>
           </div>
@@ -130,27 +143,34 @@ function AddUserDialog({
 }
 
 export default function UsersPage() {
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [users, setUsers] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "disabled">("all")
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{id: number, name: string} | null>(null)
 
   async function loadUsers() {
+    if (isDemo) {
+      setUsers(MOCK_USERS)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const response = await api.get("/users")
       setUsers(response.data.items)
+    } catch {
+      setUsers(MOCK_USERS)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void loadUsers()
-    })
-  }, [])
+    void loadUsers()
+  }, [isDemo])
 
   async function toggleStatus(user: UserItem) {
     await api.put(`/users/${user.id}`, {
@@ -188,7 +208,7 @@ export default function UsersPage() {
         title="用户管理"
         subtitle={<span>用户数据直接来自数据库，新增、禁用、删除都会实时落库。</span>}
         actions={
-          <Button className="bg-cyan-600 text-white hover:bg-cyan-700" onClick={() => setDialogOpen(true)}>
+          <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all" onClick={() => setDialogOpen(true)}>
             <Plus className="mr-1 size-4" />
             添加用户
           </Button>
@@ -201,7 +221,7 @@ export default function UsersPage() {
           { key: "active" as const, label: "活跃用户", value: stats.active, icon: Shield },
           { key: "disabled" as const, label: "已禁用", value: stats.disabled, icon: UserX },
         ].map((item) => (
-          <button key={item.key} aria-pressed={activeFilter === item.key} onClick={() => setActiveFilter(item.key)} className={`${softCardClass} p-4 text-left ${activeFilter === item.key ? "ring-2 ring-cyan-200" : ""}`}>
+          <button key={item.key} aria-pressed={activeFilter === item.key} onClick={() => setActiveFilter(item.key)} className={`${softCardClass} p-4 text-left ${activeFilter === item.key ? "ring-2 ring-cyan-500/30" : ""}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-xs ${subtleTextClass}`}>{item.label}</p>
@@ -283,7 +303,7 @@ export default function UsersPage() {
                           <UserCog className="mr-1 size-3.5" />
                           {user.status === "active" ? "禁用" : "启用"}
                         </Button>
-                        <Button variant="outline" size="sm" className="border-red-500/25 text-red-400 hover:bg-red-500/10" onClick={() => deleteUser(user.id)}>
+                        <Button variant="outline" size="sm" className="border-red-500/25 text-red-400 hover:bg-red-500/10" onClick={() => setDeleteTarget({id: user.id, name: user.name})}>
                           <Trash2 className="mr-1 size-3.5" />
                           删除
                         </Button>
@@ -300,6 +320,20 @@ export default function UsersPage() {
       </Card>
 
       <AddUserDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={loadUsers} />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
+        title="删除用户"
+        description={`确定要删除用户 ${deleteTarget?.name} 吗？此操作不可撤销。`}
+        level="danger"
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteUser(deleteTarget.id)
+            setDeleteTarget(null)
+          }
+        }}
+      />
     </div>
   )
 }

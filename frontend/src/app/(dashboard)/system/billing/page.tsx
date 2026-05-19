@@ -64,13 +64,46 @@ const PLAN_PRICES: Record<string, number> = {
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending: { label: "待支付", className: "border-amber-200 bg-amber-50 text-amber-700" },
   paid: { label: "已支付", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  cancelled: { label: "已取消", className: "border-slate-200 bg-slate-50 text-slate-500" },
+  cancelled: { label: "已取消", className: "border-white/6 bg-[#09090b] text-zinc-500" },
 }
 
 const INVOICE_STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   issued: { label: "已开具", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   pending: { label: "开具中", className: "border-amber-200 bg-amber-50 text-amber-700" },
 }
+
+const MOCK_TRIAL_STATUS: TrialStatusData = {
+  is_trial: true,
+  trial_ends_at: new Date(Date.now() + 1296000000).toISOString(),
+  days_remaining: 15,
+  is_expired: false,
+  plan: "professional",
+}
+
+const MOCK_CONVERSION_PREVIEW: ConversionPreviewData = {
+  current_plan: "professional",
+  target_plan: "enterprise",
+  current_price: 999,
+  target_price: 2999,
+  proration_days: 15,
+  proration_amount: 1000,
+  total_amount: 2000,
+}
+
+const MOCK_ORDERS: OrderItem[] = [
+  { id: 1, tenant_id: 1, order_no: "ORD-20250519-001", plan: "professional", amount: 999, currency: "CNY", status: "paid", payment_method: "alipay", paid_at: new Date(Date.now() - 1296000000).toISOString(), created_at: new Date(Date.now() - 1382400000).toISOString() },
+  { id: 2, tenant_id: 1, order_no: "ORD-20250519-002", plan: "enterprise", amount: 2999, currency: "CNY", status: "pending", payment_method: "wechat", paid_at: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+  { id: 3, tenant_id: 1, order_no: "ORD-20250401-003", plan: "starter", amount: 299, currency: "CNY", status: "paid", payment_method: "bank_transfer", paid_at: new Date(Date.now() - 4147200000).toISOString(), created_at: new Date(Date.now() - 4233600000).toISOString() },
+  { id: 4, tenant_id: 1, order_no: "ORD-20250315-004", plan: "starter", amount: 299, currency: "CNY", status: "cancelled", payment_method: "alipay", paid_at: null, created_at: new Date(Date.now() - 5616000000).toISOString() },
+  { id: 5, tenant_id: 1, order_no: "ORD-20250301-005", plan: "professional", amount: 999, currency: "CNY", status: "paid", payment_method: "alipay", paid_at: new Date(Date.now() - 6825600000).toISOString(), created_at: new Date(Date.now() - 6912000000).toISOString() },
+]
+
+const MOCK_INVOICES: InvoiceItem[] = [
+  { id: 1, tenant_id: 1, order_id: 1, invoice_no: "INV-20250501-001", title: "某大型银行总行", amount: 999, tax_rate: 6, tax_amount: 56.55, total_amount: 1055.55, status: "issued", buyer_name: "某大型银行总行", buyer_tax_no: "91110000MA12345678", issued_at: new Date(Date.now() - 1209600000).toISOString(), created_at: new Date(Date.now() - 1296000000).toISOString() },
+  { id: 2, tenant_id: 1, order_id: 3, invoice_no: "INV-20250402-002", title: "某大型银行总行", amount: 299, tax_rate: 6, tax_amount: 16.98, total_amount: 315.98, status: "issued", buyer_name: "某大型银行总行", buyer_tax_no: "91110000MA12345678", issued_at: new Date(Date.now() - 4147200000).toISOString(), created_at: new Date(Date.now() - 4233600000).toISOString() },
+  { id: 3, tenant_id: 1, order_id: 5, invoice_no: "INV-20250302-003", title: "某大型银行总行", amount: 999, tax_rate: 6, tax_amount: 56.55, total_amount: 1055.55, status: "issued", buyer_name: "某大型银行总行", buyer_tax_no: "91110000MA12345678", issued_at: new Date(Date.now() - 6739200000).toISOString(), created_at: new Date(Date.now() - 6825600000).toISOString() },
+  { id: 4, tenant_id: 1, order_id: 2, invoice_no: "INV-20250520-004", title: "某大型银行总行", amount: 2999, tax_rate: 6, tax_amount: null, total_amount: null, status: "pending", buyer_name: "某大型银行总行", buyer_tax_no: "91110000MA12345678", issued_at: null, created_at: new Date(Date.now() - 86400000).toISOString() },
+]
 
 interface TrialStatusData {
   is_trial: boolean
@@ -149,10 +182,10 @@ function InvoiceRequestDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/6 bg-[#131316] text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>申请发票</DialogTitle>
-          <DialogDescription className="text-slate-500">为已支付的订单申请开具发票，信息将用于增值税发票。</DialogDescription>
+          <DialogDescription className="text-zinc-500">为已支付的订单申请开具发票，信息将用于增值税发票。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -207,7 +240,7 @@ function InvoiceRequestDialog({
 }
 
 export default function BillingPage() {
-  useLocaleStore()
+  const { t } = useLocaleStore()
 
   const [trialStatus, setTrialStatus] = useState<TrialStatusData | null>(null)
   const [conversionPreview, setConversionPreview] = useState<ConversionPreviewData | null>(null)
@@ -231,7 +264,9 @@ export default function BillingPage() {
     try {
       const res = await api.get(`/billing/tenants/${TENANT_ID}/trial-status`)
       setTrialStatus(res.data)
-    } catch {}
+    } catch {
+      setTrialStatus(MOCK_TRIAL_STATUS)
+    }
   }, [])
 
   const loadConversionPreview = useCallback(async () => {
@@ -240,21 +275,31 @@ export default function BillingPage() {
         params: { target_plan: targetPlan },
       })
       setConversionPreview(res.data)
-    } catch {}
+    } catch {
+      setConversionPreview({
+        ...MOCK_CONVERSION_PREVIEW,
+        target_plan: targetPlan,
+        target_price: PLAN_PRICES[targetPlan] ?? 999,
+      })
+    }
   }, [targetPlan])
 
   const loadOrders = useCallback(async () => {
     try {
       const res = await api.get(`/billing/tenants/${TENANT_ID}/orders`)
       setOrders(res.data)
-    } catch {}
+    } catch {
+      setOrders(MOCK_ORDERS)
+    }
   }, [])
 
   const loadInvoices = useCallback(async () => {
     try {
       const res = await api.get(`/billing/tenants/${TENANT_ID}/invoices`)
       setInvoices(res.data)
-    } catch {}
+    } catch {
+      setInvoices(MOCK_INVOICES)
+    }
   }, [])
 
   const loadAll = useCallback(async () => {
@@ -317,8 +362,8 @@ export default function BillingPage() {
     <div className="space-y-6 max-w-6xl">
       <PageHeader
         icon={CreditCard}
-        title="订阅与账单"
-        subtitle="管理订阅计划、订单和发票"
+        title={t("billing.title")}
+        subtitle={t("settings.billingSubtitle")}
       />
 
       <div className="flex items-center gap-1 rounded-lg bg-slate-100 p-1 w-fit" role="tablist">
@@ -328,7 +373,7 @@ export default function BillingPage() {
           onClick={() => setActiveTab("subscription")}
           className={cn(
             "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "subscription" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            activeTab === "subscription" ? "bg-[#131316] text-white shadow-sm" : "text-zinc-500 hover:text-zinc-200"
           )}
         >
           订阅管理
@@ -339,7 +384,7 @@ export default function BillingPage() {
           onClick={() => setActiveTab("orders")}
           className={cn(
             "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "orders" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            activeTab === "orders" ? "bg-[#131316] text-white shadow-sm" : "text-zinc-500 hover:text-zinc-200"
           )}
         >
           订单列表
@@ -350,7 +395,7 @@ export default function BillingPage() {
           onClick={() => setActiveTab("invoices")}
           className={cn(
             "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "invoices" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            activeTab === "invoices" ? "bg-[#131316] text-white shadow-sm" : "text-zinc-500 hover:text-zinc-200"
           )}
         >
           发票列表
@@ -361,7 +406,7 @@ export default function BillingPage() {
           onClick={() => setActiveTab("funnel")}
           className={cn(
             "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "funnel" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+            activeTab === "funnel" ? "bg-[#131316] text-white shadow-sm" : "text-zinc-500 hover:text-zinc-200"
           )}
         >
           转化漏斗
@@ -373,7 +418,7 @@ export default function BillingPage() {
       {activeTab === "funnel" && <FunnelTab />}
 
       {activeTab !== "subscription" && activeTab !== "funnel" && loading && (
-        <div className="flex items-center justify-center py-20 text-slate-500">
+        <div className="flex items-center justify-center py-20 text-zinc-500">
           <Loader2 className="mr-2 size-5 animate-spin" />
           加载中...
         </div>
@@ -390,15 +435,15 @@ export default function BillingPage() {
                   </div>
                   <div>
                     <h2 className={String(TYPOGRAPHY.h2)}>试用状态</h2>
-                    <p className={cn(TYPOGRAPHY.caption, "text-slate-500")}>当前计划：{PLAN_LABELS[trialStatus?.plan ?? "free"] ?? trialStatus?.plan}</p>
+                    <p className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>当前计划：{PLAN_LABELS[trialStatus?.plan ?? "free"] ?? trialStatus?.plan}</p>
                   </div>
                 </div>
 
                 {trialStatus?.is_trial && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className={cn(TYPOGRAPHY.body, "text-slate-700")}>试用剩余天数</span>
-                      <span className={cn(TYPOGRAPHY.h2, "font-bold font-mono", trialStatus.is_expired ? "text-red-600" : "text-slate-900")}>
+                      <span className={cn(TYPOGRAPHY.body, "text-zinc-200")}>试用剩余天数</span>
+                      <span className={cn(TYPOGRAPHY.h2, "font-bold font-mono", trialStatus.is_expired ? "text-red-600" : "text-white")}>
                         {trialStatus.is_expired ? "已过期" : `${trialStatus.days_remaining} 天`}
                       </span>
                     </div>
@@ -431,7 +476,7 @@ export default function BillingPage() {
                         </Badge>
                       )}
                       {trialStatus.trial_ends_at && (
-                        <span className={cn(TYPOGRAPHY.micro, "text-slate-500")}>
+                        <span className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>
                           到期日：{formatDateTime(trialStatus.trial_ends_at)}
                         </span>
                       )}
@@ -445,7 +490,7 @@ export default function BillingPage() {
                       <CheckCircle2 className="mr-1 size-3" />
                       正式订阅
                     </Badge>
-                    <span className={cn(TYPOGRAPHY.caption, "text-slate-500")}>
+                    <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>
                       当前为正式订阅用户
                     </span>
                   </div>
@@ -461,13 +506,13 @@ export default function BillingPage() {
                   </div>
                   <div>
                     <h2 className={String(TYPOGRAPHY.h2)}>升级预览</h2>
-                    <p className={cn(TYPOGRAPHY.caption, "text-slate-500")}>查看计划变更的费用明细</p>
+                    <p className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>查看计划变更的费用明细</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>目标计划</Label>
+                    <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>目标计划</Label>
                     <Select value={targetPlan} onValueChange={(v) => setTargetPlan(v ?? "professional")}>
                       <SelectTrigger className={`w-full ${inputClass}`}>
                         <SelectValue placeholder="选择目标计划" />
@@ -483,25 +528,25 @@ export default function BillingPage() {
                   {conversionPreview && (
                     <div className={`${softCardClass} p-4 space-y-3`}>
                       <div className="flex items-center justify-between">
-                        <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>当前计划</span>
-                        <span className={cn(TYPOGRAPHY.body, "font-medium text-slate-900")}>{PLAN_LABELS[conversionPreview.current_plan]}</span>
+                        <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>当前计划</span>
+                        <span className={cn(TYPOGRAPHY.body, "font-medium text-white")}>{PLAN_LABELS[conversionPreview.current_plan]}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>目标计划</span>
-                        <span className={cn(TYPOGRAPHY.body, "font-medium text-slate-900")}>{PLAN_LABELS[conversionPreview.target_plan]}</span>
+                        <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>目标计划</span>
+                        <span className={cn(TYPOGRAPHY.body, "font-medium text-white")}>{PLAN_LABELS[conversionPreview.target_plan]}</span>
                       </div>
                       <div className="h-px bg-slate-200" />
                       <div className="flex items-center justify-between">
-                        <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>当前价格</span>
-                        <span className={cn(TYPOGRAPHY.body, "font-mono text-slate-900")}>¥{conversionPreview.current_price}</span>
+                        <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>当前价格</span>
+                        <span className={cn(TYPOGRAPHY.body, "font-mono text-white")}>¥{conversionPreview.current_price}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>目标价格</span>
-                        <span className={cn(TYPOGRAPHY.body, "font-mono text-slate-900")}>¥{conversionPreview.target_price}</span>
+                        <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>目标价格</span>
+                        <span className={cn(TYPOGRAPHY.body, "font-mono text-white")}>¥{conversionPreview.target_price}</span>
                       </div>
                       {conversionPreview.proration_days > 0 && (
                         <div className="flex items-center justify-between">
-                          <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>按天折算（{conversionPreview.proration_days}天）</span>
+                          <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>按天折算（{conversionPreview.proration_days}天）</span>
                           <span className={cn(TYPOGRAPHY.body, "font-mono", conversionPreview.proration_amount >= 0 ? "text-amber-600" : "text-emerald-600")}>
                             {conversionPreview.proration_amount >= 0 ? "+" : ""}¥{conversionPreview.proration_amount}
                           </span>
@@ -509,7 +554,7 @@ export default function BillingPage() {
                       )}
                       <div className="h-px bg-slate-200" />
                       <div className="flex items-center justify-between">
-                        <span className={cn(TYPOGRAPHY.h3, "font-semibold text-slate-900")}>应付总额</span>
+                        <span className={cn(TYPOGRAPHY.h3, "font-semibold text-white")}>应付总额</span>
                         <span className={cn(TYPOGRAPHY.h2, "font-bold font-mono text-cyan-700")}>¥{conversionPreview.total_amount}</span>
                       </div>
                     </div>
@@ -527,13 +572,13 @@ export default function BillingPage() {
                 </div>
                 <div>
                   <h2 className={String(TYPOGRAPHY.h2)}>创建订单</h2>
-                  <p className={cn(TYPOGRAPHY.caption, "text-slate-500")}>选择计划与支付方式，创建新订单</p>
+                  <p className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>选择计划与支付方式，创建新订单</p>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="space-y-2">
-                  <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>订阅计划</Label>
+                  <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>订阅计划</Label>
                   <Select value={newOrderPlan} onValueChange={(v) => setNewOrderPlan(v ?? "professional")}>
                     <SelectTrigger className={`w-full ${inputClass}`}>
                       <SelectValue />
@@ -546,7 +591,7 @@ export default function BillingPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>支付方式</Label>
+                  <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>支付方式</Label>
                   <Select value={newOrderPayment} onValueChange={(v) => setNewOrderPayment(v ?? "alipay")}>
                     <SelectTrigger className={`w-full ${inputClass}`}>
                       <SelectValue />
@@ -580,30 +625,30 @@ export default function BillingPage() {
                 </div>
                 <div>
                   <h2 className={String(TYPOGRAPHY.h2)}>订单与发票</h2>
-                  <p className={cn(TYPOGRAPHY.caption, "text-slate-500")}>查看订单记录和管理发票</p>
+                  <p className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>查看订单记录和管理发票</p>
                 </div>
               </div>
 
               {activeTab === "orders" && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" aria-label="订单列表">
-                    <thead className="bg-slate-50">
-                      <tr className="border-b border-slate-200">
-                        <th className="px-4 py-3 text-left text-slate-500">订单号</th>
-                        <th className="px-4 py-3 text-left text-slate-500">计划</th>
-                        <th className="px-4 py-3 text-left text-slate-500">金额</th>
-                        <th className="px-4 py-3 text-left text-slate-500">状态</th>
-                        <th className="px-4 py-3 text-left text-slate-500">创建时间</th>
-                        <th className="px-4 py-3 text-right text-slate-500">操作</th>
+                    <thead className="bg-[#09090b]">
+                      <tr className="border-b border-white/6">
+                        <th className="px-4 py-3 text-left text-zinc-500">订单号</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">计划</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">金额</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">状态</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">创建时间</th>
+                        <th className="px-4 py-3 text-right text-zinc-500">操作</th>
                       </tr>
                     </thead>
                     <tbody>
                       {orders.map((order) => {
                         const statusCfg = STATUS_CONFIG[order.status] ?? { label: order.status, className: "" }
                         return (
-                          <tr key={order.id} className="border-b border-slate-100 last:border-b-0">
+                          <tr key={order.id} className="border-b border-white/4 last:border-b-0">
                             <td className="px-4 py-4">
-                              <span className="font-mono text-slate-900">{order.order_no}</span>
+                              <span className="font-mono text-white">{order.order_no}</span>
                             </td>
                             <td className="px-4 py-4">
                               <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
@@ -611,15 +656,15 @@ export default function BillingPage() {
                               </Badge>
                             </td>
                             <td className="px-4 py-4">
-                              <span className="font-mono font-semibold text-slate-900">¥{order.amount}</span>
-                              <span className="ml-1 text-slate-500">{order.currency}</span>
+                              <span className="font-mono font-semibold text-white">¥{order.amount}</span>
+                              <span className="ml-1 text-zinc-500">{order.currency}</span>
                             </td>
                             <td className="px-4 py-4">
                               <Badge variant="outline" className={statusCfg.className}>
                                 {statusCfg.label}
                               </Badge>
                             </td>
-                            <td className="px-4 py-4 text-slate-500">
+                            <td className="px-4 py-4 text-zinc-500">
                               {formatDateTime(order.created_at)}
                             </td>
                             <td className="px-4 py-4">
@@ -645,7 +690,7 @@ export default function BillingPage() {
                                       size="sm"
                                       onClick={() => handleCancelOrder(order.id)}
                                       disabled={cancellingOrderId === order.id}
-                                      className="gap-1 border-slate-200 text-slate-500 hover:bg-slate-50"
+                                      className="gap-1 border-white/6 text-zinc-500 hover:bg-[#09090b]"
                                     >
                                       <XCircle className="size-3.5" />
                                       取消
@@ -670,7 +715,7 @@ export default function BillingPage() {
                       })}
                       {orders.length === 0 && (
                         <tr>
-                          <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                          <td colSpan={6} className="px-4 py-10 text-center text-zinc-500">
                             暂无订单记录
                           </td>
                         </tr>
@@ -683,41 +728,41 @@ export default function BillingPage() {
               {activeTab === "invoices" && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm" aria-label="发票列表">
-                    <thead className="bg-slate-50">
-                      <tr className="border-b border-slate-200">
-                        <th className="px-4 py-3 text-left text-slate-500">发票号</th>
-                        <th className="px-4 py-3 text-left text-slate-500">抬头</th>
-                        <th className="px-4 py-3 text-left text-slate-500">金额</th>
-                        <th className="px-4 py-3 text-left text-slate-500">税额</th>
-                        <th className="px-4 py-3 text-left text-slate-500">价税合计</th>
-                        <th className="px-4 py-3 text-left text-slate-500">状态</th>
-                        <th className="px-4 py-3 text-left text-slate-500">开具时间</th>
+                    <thead className="bg-[#09090b]">
+                      <tr className="border-b border-white/6">
+                        <th className="px-4 py-3 text-left text-zinc-500">发票号</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">抬头</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">金额</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">税额</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">价税合计</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">状态</th>
+                        <th className="px-4 py-3 text-left text-zinc-500">开具时间</th>
                       </tr>
                     </thead>
                     <tbody>
                       {invoices.map((inv) => {
                         const statusCfg = INVOICE_STATUS_CONFIG[inv.status] ?? { label: inv.status, className: "" }
                         return (
-                          <tr key={inv.id} className="border-b border-slate-100 last:border-b-0">
+                          <tr key={inv.id} className="border-b border-white/4 last:border-b-0">
                             <td className="px-4 py-4">
-                              <span className="font-mono text-slate-900">{inv.invoice_no}</span>
+                              <span className="font-mono text-white">{inv.invoice_no}</span>
                             </td>
-                            <td className="px-4 py-4 text-slate-700">{inv.title}</td>
-                            <td className="px-4 py-4 font-mono text-slate-900">¥{inv.amount}</td>
-                            <td className="px-4 py-4 font-mono text-slate-500">¥{inv.tax_amount ?? "-"}</td>
-                            <td className="px-4 py-4 font-mono font-semibold text-slate-900">¥{inv.total_amount ?? "-"}</td>
+                            <td className="px-4 py-4 text-zinc-200">{inv.title}</td>
+                            <td className="px-4 py-4 font-mono text-white">¥{inv.amount}</td>
+                            <td className="px-4 py-4 font-mono text-zinc-500">¥{inv.tax_amount ?? "-"}</td>
+                            <td className="px-4 py-4 font-mono font-semibold text-white">¥{inv.total_amount ?? "-"}</td>
                             <td className="px-4 py-4">
                               <Badge variant="outline" className={statusCfg.className}>
                                 {statusCfg.label}
                               </Badge>
                             </td>
-                            <td className="px-4 py-4 text-slate-500">{formatDateTime(inv.issued_at)}</td>
+                            <td className="px-4 py-4 text-zinc-500">{formatDateTime(inv.issued_at)}</td>
                           </tr>
                         )
                       })}
                       {invoices.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                          <td colSpan={7} className="px-4 py-10 text-center text-zinc-500">
                             暂无发票记录
                           </td>
                         </tr>

@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 
 from app.schemas.alert import AlertRead, AlertStatusUpdate, AlertListResponse
-from app.services.alert_service import get_alerts, get_alert_by_id, update_alert_status
+from app.services.alert_service import get_alerts, get_alert_by_id, update_alert_status, get_alert_stats
 from app.database import get_db
 
 router = APIRouter(prefix="/alerts", tags=["告警"])
@@ -46,3 +46,8 @@ def update_status(alert_id: int, body: AlertStatusUpdate, db: Session = Depends(
     if not alert:
         raise HTTPException(status_code=404, detail="告警不存在")
     return alert
+
+
+@router.get("/stats/aggregation")
+def alert_aggregation(db: Session = Depends(get_db)):
+    return get_alert_stats(db)

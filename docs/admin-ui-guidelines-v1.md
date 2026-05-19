@@ -1,5 +1,9 @@
 # SecMind 后台 UI 统一规范 v1
 
+> ⚠️ **已废弃 (DEPRECATED)** — 本规范已由 [admin-ui-guidelines-v2.md](./admin-ui-guidelines-v2.md) 取代。
+> v1 基于浅色主题 + cyan 品牌色，v2 已全面转向深色主题 + blue-violet 品牌色。
+> 所有新页面开发请以 v2 为准。本文件保留仅作历史参考。
+
 版本：v1.0  
 适用范围：`frontend/src/app/(dashboard)` 全部后台页面  
 目标：统一视觉语言、提升 B 端精致感、满足上线标准  

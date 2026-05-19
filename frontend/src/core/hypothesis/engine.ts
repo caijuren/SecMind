@@ -20,7 +20,7 @@ const patternRules: PatternRule[] = [
     requiredCategories: ['vpn_anomaly', 'email_click'],
     requiredRiskLevels: ['high', 'critical'],
     actorConstraints: { isOnLeave: true, locationMismatch: true },
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, matched) => ({
       name: 'Account Compromise',
       description: `用户${matched[0]?.actor.name ?? ''}的账号可能已失陷。攻击者通过钓鱼邮件获取凭证后，从境外异常位置登录VPN。用户当前处于休假状态，不存在境外登录合理性。`,
       status: 'primary',
@@ -31,7 +31,7 @@ const patternRules: PatternRule[] = [
     name: 'Account Compromise via Brute Force',
     requiredCategories: ['brute_force'],
     requiredRiskLevels: ['critical', 'high'],
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, matched) => ({
       name: 'Credential Stuffing / Brute Force',
       description: `检测到针对${matched[0]?.target.name ?? ''}的暴力破解攻击。短时间大量失败登录后出现成功登录，可能已获取有效凭证。`,
       status: 'primary',
@@ -42,7 +42,7 @@ const patternRules: PatternRule[] = [
     name: 'Full Kill Chain',
     requiredCategories: ['email_click', 'malware_execution', 'c2_communication'],
     requiredRiskLevels: ['high', 'critical'],
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, _matched) => ({
       name: 'Full Kill Chain Attack',
       description: `检测到完整攻击链：钓鱼邮件→恶意软件执行→C2通信。攻击者已建立持久化控制通道。`,
       status: 'primary',
@@ -54,7 +54,7 @@ const patternRules: PatternRule[] = [
     requiredCategories: ['lateral_movement', 'data_exfiltration'],
     requiredRiskLevels: ['high', 'critical'],
     actorConstraints: { isSensitive: true },
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, matched) => ({
       name: 'Insider Threat',
       description: `敏感岗位用户${matched[0]?.actor.name ?? ''}出现横向移动和数据外传行为，可能存在内部威胁。`,
       status: 'alternative',
@@ -65,7 +65,7 @@ const patternRules: PatternRule[] = [
     name: 'False Positive - Single Anomaly',
     requiredCategories: ['vpn_anomaly'],
     requiredRiskLevels: ['medium'],
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, _matched) => ({
       name: 'False Positive',
       description: `单一VPN异常事件，无后续关联行为。可能是员工出差或VPN节点切换导致。`,
       status: 'alternative',
@@ -76,7 +76,7 @@ const patternRules: PatternRule[] = [
     name: 'False Positive - Policy Violation',
     requiredCategories: ['policy_violation'],
     requiredRiskLevels: ['low', 'medium'],
-    generateHypothesis: (events, matched) => ({
+    generateHypothesis: (_events, _matched) => ({
       name: 'Policy Violation (Non-malicious)',
       description: `策略违规事件，无恶意行为特征。可能是员工误操作或合规培训不足。`,
       status: 'low_probability',

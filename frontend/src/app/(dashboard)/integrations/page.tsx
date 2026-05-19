@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { api } from "@/lib/api"
 import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
+import { useAuthStore } from "@/store/auth-store"
 
 interface IntegrationApp {
   id: number
@@ -38,7 +39,27 @@ interface WebhookItem {
   created_at: string
 }
 
+const MOCK_APPS: IntegrationApp[] = [
+  { id: 1, slug: "qianxin-edr", name: "奇安信 天擎 EDR", description: "奇安信终端检测与响应平台，实时采集主机告警和威胁事件", category: "EDR", status: "connected", color: "#ef4444", last_sync: new Date(Date.now() - 120000).toISOString(), api_url: "https://edr.qianxin.com/api", sync_frequency: "realtime", source: "integrated" },
+  { id: 2, slug: "qianxin-ngsoc", name: "奇安信 NGSOC", description: "奇安信安全运营中心平台，统一收集和分析安全事件", category: "SIEM", status: "connected", color: "#f97316", last_sync: new Date(Date.now() - 60000).toISOString(), api_url: "https://ngsoc.qianxin.com/api", sync_frequency: "realtime", source: "integrated" },
+  { id: 3, slug: "sangfor-af", name: "深信服 下一代防火墙", description: "深信服NGAF系列防火墙，提供网络层攻击检测和访问控制日志", category: "防火墙", status: "connected", color: "#22d3ee", last_sync: new Date(Date.now() - 90000).toISOString(), api_url: "https://fw.sangfor.com/syslog", sync_frequency: "realtime", source: "integrated" },
+  { id: 4, slug: "anheng-waf", name: "安恒信息 明御WAF", description: "安恒信息Web应用防火墙，检测SQL注入/XSS等Web攻击", category: "WAF", status: "connected", color: "#a78bfa", last_sync: new Date(Date.now() - 45000).toISOString(), api_url: "https://waf.dbappsecurity.com/api", sync_frequency: "realtime", source: "integrated" },
+  { id: 5, slug: "crowdstrike-falcon", name: "CrowdStrike Falcon", description: "CrowdStrike端点安全平台，提供威胁猎杀和事件响应能力", category: "EDR", status: "connected", color: "#ef4444", last_sync: new Date(Date.now() - 300000).toISOString(), api_url: "https://api.crowdstrike.com", sync_frequency: "realtime", source: "integrated" },
+  { id: 6, slug: "splunk-es", name: "Splunk ES", description: "Splunk Enterprise Security，大数据安全分析和关联规则引擎", category: "SIEM", status: "connected", color: "#22d3ee", last_sync: new Date(Date.now() - 75000).toISOString(), api_url: "https://splunk.internal:8089", sync_frequency: "5min", source: "integrated" },
+  { id: 7, slug: "aliyun-security", name: "阿里云安全中心", description: "阿里云云安全中心，提供云资产安全态势和漏洞管理", category: "SIEM", status: "disconnected", color: "#f97316", last_sync: null, sync_frequency: "15min", source: "marketplace" },
+  { id: 8, slug: "tencent-waf", name: "腾讯云 WAF", description: "腾讯云Web应用防火墙，为Web应用提供安全防护", category: "WAF", status: "disconnected", color: "#22d3ee", last_sync: null, sync_frequency: "15min", source: "marketplace" },
+  { id: 9, slug: "paloalto-xdr", name: "Palo Alto Cortex XDR", description: "Palo Alto扩展检测与响应平台，跨端点、网络和云的威胁检测", category: "EDR", status: "disconnected", color: "#22d3ee", last_sync: null, sync_frequency: "15min", source: "marketplace" },
+  { id: 10, slug: "microsoft-sentinel", name: "Microsoft Sentinel", description: "微软安全信息和事件管理(SIEM)与安全编排自动化响应(SOAR)", category: "SIEM", status: "disconnected", color: "#22d3ee", last_sync: null, sync_frequency: "15min", source: "marketplace" },
+]
+
+const MOCK_WEBHOOKS: WebhookItem[] = [
+  { id: 1, name: "钉钉告警通知", url: "https://oapi.dingtalk.com/robot/webhook/xxx", events: ["告警创建", "告警升级"], active: true, created_at: "2025-12-01" },
+  { id: 2, name: "企业微信通知", url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/xxx", events: ["告警创建"], active: true, created_at: "2025-12-05" },
+  { id: 3, name: "飞书告警机器人", url: "https://open.feishu.cn/open-apis/bot/v2/xxx", events: ["告警创建", "告警处理", "告警关闭"], active: true, created_at: "2025-12-10" },
+]
+
 export default function IntegrationsPage() {
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [apps, setApps] = useState<IntegrationApp[]>([])
   const [webhooks, setWebhooks] = useState<WebhookItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,6 +71,12 @@ export default function IntegrationsPage() {
   const [newWebhook, setNewWebhook] = useState({ name: "", url: "", events: "告警创建,告警升级" })
 
   async function loadData() {
+    if (isDemo) {
+      setApps(MOCK_APPS)
+      setWebhooks(MOCK_WEBHOOKS)
+      setLoading(false)
+      return
+    }
     setLoading(true)
     try {
       const [appsResponse, webhookResponse] = await Promise.all([
@@ -58,16 +85,17 @@ export default function IntegrationsPage() {
       ])
       setApps(appsResponse.data.items)
       setWebhooks(webhookResponse.data.items)
+    } catch {
+      setApps(MOCK_APPS)
+      setWebhooks(MOCK_WEBHOOKS)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      void loadData()
-    })
-  }, [])
+    void loadData()
+  }, [isDemo])
 
   async function saveAppConfig(app: IntegrationApp) {
     await api.put(`/integrations/apps/${app.id}`, {
@@ -152,7 +180,7 @@ export default function IntegrationsPage() {
           <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索集成名称、说明、分类..." className={`pl-9 ${inputClass}`} aria-label="搜索集成" name="search" type="search" autoComplete="off" />
         </div>
         {tab === "webhooks" && (
-          <Button onClick={() => setWebhookDialogOpen(true)} className="bg-cyan-600 text-white hover:bg-cyan-700">
+          <Button onClick={() => setWebhookDialogOpen(true)} className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all">
             <Plus className="mr-1 size-4" />
             新建 Webhook
           </Button>
@@ -182,7 +210,7 @@ export default function IntegrationsPage() {
                       配置
                     </Button>
                   ) : (
-                    <Button size="sm" className="bg-cyan-600 text-white hover:bg-cyan-700" onClick={() => setSelectedMarketApp(app)}>
+                    <Button size="sm" className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all" onClick={() => setSelectedMarketApp(app)}>
                       <Plus className="mr-1 size-3.5" />
                       接入
                     </Button>
@@ -259,7 +287,7 @@ export default function IntegrationsPage() {
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setSelectedApp(null)}>取消</Button>
-                <Button onClick={() => saveAppConfig({ ...selectedApp, status: "connected" })} className="bg-cyan-600 text-white hover:bg-cyan-700">保存配置</Button>
+                <Button onClick={() => saveAppConfig({ ...selectedApp, status: "connected" })} className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all">保存配置</Button>
               </div>
             </div>
           )}
@@ -284,7 +312,7 @@ export default function IntegrationsPage() {
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setSelectedMarketApp(null)}>取消</Button>
-                <Button onClick={addMarketplaceApp} className="bg-cyan-600 text-white hover:bg-cyan-700">确认接入</Button>
+                <Button onClick={addMarketplaceApp} className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all">确认接入</Button>
               </div>
             </div>
           )}
@@ -312,7 +340,7 @@ export default function IntegrationsPage() {
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setWebhookDialogOpen(false)}>取消</Button>
-              <Button onClick={createWebhook} className="bg-cyan-600 text-white hover:bg-cyan-700">创建</Button>
+              <Button onClick={createWebhook} className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_16px_rgba(6,182,212,0.2)] hover:shadow-[0_10px_20px_rgba(6,182,212,0.3)] hover:-translate-y-0.5 transition-all">创建</Button>
             </div>
           </div>
         </DialogContent>

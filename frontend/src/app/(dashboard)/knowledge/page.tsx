@@ -4,7 +4,6 @@ import { useState, useMemo, useEffect } from "react"
 import {
   Brain,
   BookOpen,
-  Plus,
   Clock,
   Search,
   Shield,
@@ -14,14 +13,11 @@ import {
   Bug,
   Upload,
   ArrowRight,
-  ArrowLeft,
   X,
   Tag,
-  Calendar,
   Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -43,32 +39,21 @@ import {
 import { useLocaleStore } from "@/store/locale-store"
 import { PageHeader } from "@/components/layout/page-header"
 import { getAllArticles } from "@/data/knowledge"
-import { inputClass, pageCardClass } from "@/lib/admin-ui"
+import { pageCardClass } from "@/lib/admin-ui"
+import { EmptyState } from "@/components/common/state-components"
 
 const knowledgeCategories = [
-  { nameKey: "knowledgeCategories.threatIntelligence", icon: Shield, color: "#ef4444" },
-  { nameKey: "knowledgeCategories.incidentResponse", icon: Zap, color: "#f97316" },
-  { nameKey: "knowledgeCategories.securityBaseline", icon: Ruler, color: "#06b6d4" },
-  { nameKey: "knowledgeCategories.compliance", icon: Scale, color: "#3b82f6" },
-  { nameKey: "knowledgeCategories.vulnerabilityDatabase", icon: Bug, color: "#a855f7" },
-  { nameKey: "knowledgeCategories.playbook", icon: BookOpen, color: "#22c55e" },
+  { nameKey: "knowledgeCategories.threatIntelligence", icon: Shield, color: "#f87171" },
+  { nameKey: "knowledgeCategories.incidentResponse", icon: Zap, color: "#fb923c" },
+  { nameKey: "knowledgeCategories.securityBaseline", icon: Ruler, color: "#22d3ee" },
+  { nameKey: "knowledgeCategories.compliance", icon: Scale, color: "#60a5fa" },
+  { nameKey: "knowledgeCategories.vulnerabilityDatabase", icon: Bug, color: "#c084fc" },
+  { nameKey: "knowledgeCategories.playbook", icon: BookOpen, color: "#4ade80" },
 ]
 
 const initialKnowledgeArticles = getAllArticles()
 
-function t0(key: string): string {
-  const map: Record<string, string> = {
-    "knowledgeCategories.threatIntelligence": "威胁情报",
-    "knowledgeCategories.incidentResponse": "应急响应",
-    "knowledgeCategories.securityBaseline": "安全基线",
-    "knowledgeCategories.compliance": "合规要求",
-    "knowledgeCategories.vulnerabilityDatabase": "漏洞库",
-    "knowledgeCategories.playbook": "处置手册",
-  }
-  return map[key] || key
-}
-
-function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean; onOpenChange: (v: boolean) => void; onImport: (article: { title: string; categoryKey: string; content: string; tags: string[] }) => void }) {
+function ImportKnowledgeDialog({ open, onOpenChange, onImport, t }: { open: boolean; onOpenChange: (v: boolean) => void; onImport: (article: { title: string; categoryKey: string; content: string; tags: string[] }) => void; t: (key: string) => string }) {
   const [form, setForm] = useState({
     title: "",
     category: "",
@@ -130,7 +115,7 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
                 </SelectTrigger>
                 <SelectContent className="bg-[#131316] border-white/[0.06] text-zinc-100">
                   {knowledgeCategories.map((cat) => (
-                    <SelectItem key={cat.nameKey} value={cat.nameKey}>{t0(cat.nameKey)}</SelectItem>
+                    <SelectItem key={cat.nameKey} value={cat.nameKey}>{t(cat.nameKey)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -151,7 +136,7 @@ function ImportKnowledgeDialog({ open, onOpenChange, onImport }: { open: boolean
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="import-content" className="text-slate-500 text-xs">知识内容 <span className="text-red-400">*</span></Label>
+            <Label htmlFor="import-content" className="text-zinc-500 text-xs">知识内容 <span className="text-red-400">*</span></Label>
             <Textarea
               required
               id="import-content"
@@ -181,7 +166,7 @@ function renderMarkdownText(text: string): React.ReactNode {
   const parts = text.split(/(\*\*.*?\*\*)/g)
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} className="text-slate-700">{part.slice(2, -2)}</strong>
+      return <strong key={i} className="text-zinc-200">{part.slice(2, -2)}</strong>
     }
     return part
   })
@@ -243,12 +228,18 @@ export default function KnowledgePage() {
       <div className="space-y-5">
         <PageHeader
           icon={BookOpen}
-          title={t("nav.tabAiKnowledge")}
+          title={selectedArticle.title}
+          subtitle={`${selectedArticle.date} · ${selectedArticle.author}`}
+          actions={
+            <Button variant="ghost" size="sm" className="gap-1.5 text-zinc-500 hover:text-zinc-200" onClick={() => setSelectedArticle(null)}>
+              <ArrowRight className="size-3.5 rotate-180" />
+              返回列表
+            </Button>
+          }
         />
 
         <div className={`${pageCardClass} p-6 space-y-4`}>
-          <div className="space-y-3">
-            <h2 className="text-lg font-bold text-zinc-100">{selectedArticle.title}</h2>
+          <div className="border-b border-white/[0.06] pb-4">
             <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-600">
               {cat && (
                 <span
@@ -258,20 +249,12 @@ export default function KnowledgePage() {
                   {t(cat.nameKey)}
                 </span>
               )}
-              <span className="flex items-center gap-1">
-                <Calendar className="size-3" />
-                {selectedArticle.date}
-              </span>
-              <span className="flex items-center gap-1">
-                <BookOpen className="size-3" />
-                {selectedArticle.author}
-              </span>
-              <span className="flex items-center gap-1 text-cyan-700/70">
+              <span className="flex items-center gap-1 text-cyan-400/60">
                 <Brain className="size-3" />
                 AI引用 {selectedArticle.citedByAI}次
               </span>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mt-3">
               {selectedArticle.tags.map((tag) => (
                 <span key={tag} className="inline-flex items-center gap-1 rounded-md border border-white/[0.06] bg-white/[0.03] px-2 py-0.5 text-[10px] text-zinc-500">
                   <Tag className="size-2.5" />
@@ -283,7 +266,7 @@ export default function KnowledgePage() {
 
           <div className="border-t border-white/[0.04] pt-4">
             <p className="text-sm text-zinc-600 italic mb-4">{selectedArticle.summary}</p>
-            <div className="prose prose prose-sm max-w-none text-zinc-400 space-y-3">
+            <div className="prose prose-sm max-w-none text-zinc-400 space-y-3">
               {selectedArticle.content.split("\n\n").map((block, i) => {
                 if (block.startsWith("## ")) {
                   return <h3 key={i} className="text-base font-semibold text-zinc-100 mt-6 mb-2">{block.replace("## ", "")}</h3>
@@ -330,7 +313,7 @@ export default function KnowledgePage() {
                   return (
                     <ol key={i} className="space-y-1 ml-4 list-decimal list-outside">
                       {items.map((item, j) => (
-                        <li key={j} className="text-sm text-slate-500 pl-1">{renderMarkdownText(item.replace(/^\d+\.\s*/, ""))}</li>
+                        <li key={j} className="text-sm text-zinc-500 pl-1">{renderMarkdownText(item.replace(/^\d+\.\s*/, ""))}</li>
                       ))}
                     </ol>
                   )
@@ -350,7 +333,7 @@ export default function KnowledgePage() {
         icon={BookOpen}
         title={t("nav.tabAiKnowledge")}
         actions={
-          <Button variant="outline" size="sm" className="gap-1.5 border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800" onClick={() => setImportDialogOpen(true)}>
+          <Button variant="outline" size="sm" className="gap-1.5 border-cyan-500/25 bg-cyan-500/[0.04] text-cyan-300 hover:bg-cyan-500/10 hover:text-cyan-200" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-3.5 w-3.5" />
             {t("settings.importKnowledge")}
           </Button>
@@ -378,7 +361,7 @@ export default function KnowledgePage() {
             <div
               key={cat.nameKey}
               className={cn(
-                "rounded-xl border p-5 text-center space-y-2 cursor-pointer transition-colors",
+                "rounded-xl border p-5 text-center space-y-2 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md",
               )}
               style={{
                 borderColor: isSelected ? `${cat.color}60` : `${cat.color}25`,
@@ -399,8 +382,8 @@ export default function KnowledgePage() {
       <div className={pageCardClass}>
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-3">
           <h2 className="text-sm font-medium text-zinc-200 flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5 text-cyan-600" />
-            {selectedCategory ? `${t0(selectedCategory)}知识` : "AI最近引用"}
+            <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
+            {selectedCategory ? `${t(selectedCategory)}知识` : "AI最近引用"}
           </h2>
           <div className="flex items-center gap-2">
             {selectedCategory && (
@@ -458,7 +441,7 @@ export default function KnowledgePage() {
             )
           })}
           {filteredArticles.length === 0 && (
-            <div className="py-12 text-center text-sm text-zinc-700">{t("settings.noMatchingArticles")}</div>
+            <EmptyState title="没有匹配的文档" description="尝试调整搜索关键词或筛选条件" icon={Search} />
           )}
         </div>
         {filteredArticles.length > 0 && (
@@ -473,7 +456,7 @@ export default function KnowledgePage() {
         )}
       </div>
 
-      <ImportKnowledgeDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} />
+      <ImportKnowledgeDialog open={importDialogOpen} onOpenChange={setImportDialogOpen} onImport={handleImport} t={t} />
     </div>
   )
 }

@@ -52,7 +52,10 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.SECRET_KEY:
-            self.SECRET_KEY = secrets.token_urlsafe(32)
+            raise ValueError(
+                "SECRET_KEY 未设置。请通过环境变量 SECRET_KEY 或 .env 文件设置。"
+                "\n生成方式: python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
+            )
         if not self.POSTGRES_PASSWORD and self.DATABASE_URL.startswith("postgresql"):
             raise ValueError(
                 "POSTGRES_PASSWORD must be set when using PostgreSQL. "

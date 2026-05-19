@@ -2,6 +2,7 @@ from app.models.alert import Alert
 from app.models.ai_analysis import AIAnalysis
 from app.models.ai_chat import ChatSession, ChatMessage, Report
 from app.models.ai_model import AIModel, ModelRouting, ModelCallLog
+from app.models.audit_log import AuditLog
 from app.models.billing import Order, Invoice
 from app.models.collaboration import Comment, Notification
 from app.models.compliance import ComplianceFramework, ComplianceControl, ComplianceAssessment, ComplianceResult
@@ -29,6 +30,7 @@ __all__ = [
     "AIModel",
     "ModelRouting",
     "ModelCallLog",
+    "AuditLog",
     "Order",
     "Invoice",
     "Comment",

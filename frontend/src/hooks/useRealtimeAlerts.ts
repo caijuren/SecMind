@@ -8,11 +8,20 @@ import type { Alert } from "@/types"
 interface UseRealtimeAlertsReturn {
   isConnected: boolean
   newAlertCount: number
+  alerts: Alert[]
+  clearNewAlerts: () => void
+  lastMessage: any
+}
+
+export function useRealtimeConnection() {
+  const { connectionStatus } = useWebSocket({})
+  return { isConnected: connectionStatus === "connected" }
 }
 
 export function useRealtimeAlerts(): UseRealtimeAlertsReturn {
   const [newAlertCount, setNewAlertCount] = useState(0)
   const countRef = useRef(0)
+  const [lastMessage, setLastMessage] = useState<any>(null)
 
   const addAlertToStore = useCallback((alertData: any) => {
     const alert: Alert = {
@@ -43,6 +52,7 @@ export function useRealtimeAlerts(): UseRealtimeAlertsReturn {
       })
       countRef.current += 1
       setNewAlertCount(countRef.current)
+      setLastMessage(alertData)
     }
   }, [])
 
@@ -56,5 +66,11 @@ export function useRealtimeAlerts(): UseRealtimeAlertsReturn {
   return {
     isConnected: connectionStatus === "connected",
     newAlertCount,
+    alerts: useAlertStore.getState().alerts,
+    clearNewAlerts: () => {
+      countRef.current = 0
+      setNewAlertCount(0)
+    },
+    lastMessage,
   }
 }

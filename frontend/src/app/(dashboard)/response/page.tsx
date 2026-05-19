@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { useWebSocket } from "@/hooks/use-websocket"
+import { useWebSocket } from "@/hooks/useWebSocket"
 import {
   Brain,
   Clock,
@@ -40,17 +40,20 @@ import {
   Lightbulb,
   Database,
   ExternalLink,
-  Wifi,
+  RefreshCw,
   WifiOff,
+  Lock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/page-header"
 import { softCardClass } from "@/lib/admin-ui"
+import { CARD } from "@/lib/design-system"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useLocaleStore } from "@/store/locale-store"
-import { api, formatDateTime } from "@/lib/api"
+import { useAuthStore } from "@/store/auth-store"
+import { api, isAxiosError } from "@/lib/api"
 
 type ActionStatus = "pending" | "executing" | "completed" | "failed" | "awaiting_approval"
 type Priority = "critical" | "high" | "medium" | "low"
@@ -155,6 +158,30 @@ const ACTION_TYPE_NAME_MAP: Record<string, string> = {
   preserveForensicData: "execution.preserveForensicData",
   monitorUserActivity: "execution.monitorUserActivity",
   reviewAccessLogs: "execution.reviewAccessLogs",
+}
+
+function parseError(err: unknown): { message: string; type: "network" | "auth" | "permission" | "server" | "unknown"; detail?: string } {
+  if (isAxiosError(err)) {
+    if (!err.response) {
+      return { message: "无法连接到服务器，请检查后端服务是否运行", type: "network", detail: err.message }
+    }
+    const status = err.response.status
+    const detail = err.response.data?.detail
+    if (status === 401) {
+      return { message: "登录已过期，请重新登录", type: "auth", detail: detail || "未提供有效的认证凭证" }
+    }
+    if (status === 403) {
+      return { message: "权限不足，无法访问处置中心", type: "permission", detail: detail || "当前用户没有响应处置的权限" }
+    }
+    if (status >= 500) {
+      return { message: "服务器内部错误，请稍后重试", type: "server", detail: detail || "服务器处理请求时发生异常" }
+    }
+    return { message: `请求失败 (${status})`, type: "unknown", detail: detail || err.message }
+  }
+  if (err instanceof Error) {
+    return { message: err.message, type: "unknown" }
+  }
+  return { message: "获取处置数据失败", type: "unknown" }
 }
 
 function mapApiAction(raw: ApiResponseAction): ActionItem {
@@ -426,15 +453,104 @@ function getHypothesisProgress(h: Hypothesis) {
   return { completed, total, percent: Math.round((completed / total) * 100), executing, pending, awaiting }
 }
 
-function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessage: any }) {
+function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string; wsMessage: any; isDemo?: boolean }) {
   const [actions, setActions] = useState<ActionItem[]>([])
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ReturnType<typeof parseError> | null>(null)
   const [actionLoading, setActionLoading] = useState<string | number | null>(null)
   const [filterHypothesis, setFilterHypothesis] = useState<string>("all")
 
+  const MOCK_ACTIONS: ActionItem[] = [
+    {
+      id: "mock-1",
+      nameKey: "execution.freezeAccount",
+      icon: UserLock,
+      target: "用户: wangfang@secm1nd.com",
+      status: "completed",
+      priority: "critical",
+      hypothesisId: "hyp-001",
+      hypothesisLabel: "账号失陷（不可能旅行）",
+      hypothesisConfidence: 92,
+      requestedBy: "AI引擎",
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      aiReasoning: "用户王芳在2小时内从北京(39.9,116.4)和莫斯科(55.75,37.62)登录，物理上不可能实现，判定账号凭据已泄露",
+      reasoningChain: [],
+      evidenceSummary: { supporting: 5, contradicting: 0, neutral: 1 },
+    },
+    {
+      id: "mock-2",
+      nameKey: "execution.isolateHost",
+      icon: ShieldAlert,
+      target: "主机: WIN-DESK-15 (192.168.1.105)",
+      status: "executing",
+      priority: "critical",
+      hypothesisId: "hyp-002",
+      hypothesisLabel: "Cobalt Strike Beacon活动",
+      hypothesisConfidence: 95,
+      requestedBy: "AI引擎",
+      timestamp: new Date(Date.now() - 1800000).toISOString(),
+      aiReasoning: "检测到PowerShell编码执行行为与Cobalt Strike Beacon特征匹配，EDR已触发自动隔离",
+      reasoningChain: [],
+      evidenceSummary: { supporting: 7, contradicting: 1, neutral: 0 },
+    },
+    {
+      id: "mock-3",
+      nameKey: "execution.blockIp",
+      icon: Ban,
+      target: "IP: 91.234.56.78 (俄罗斯莫斯科)",
+      status: "completed",
+      priority: "high",
+      hypothesisId: "hyp-003",
+      hypothesisLabel: "VPN暴力破解攻击",
+      hypothesisConfidence: 88,
+      requestedBy: "AI引擎",
+      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      aiReasoning: "Tor出口节点91.234.56.78在10分钟内发起200+次VPN登录尝试，判定为自动化暴力破解攻击",
+      reasoningChain: [],
+      evidenceSummary: { supporting: 4, contradicting: 0, neutral: 2 },
+    },
+    {
+      id: "mock-4",
+      nameKey: "execution.notifySecurityTeam",
+      icon: Bell,
+      target: "安全团队: SOC值班组",
+      status: "awaiting_approval",
+      priority: "high",
+      hypothesisId: "hyp-004",
+      hypothesisLabel: "数据外泄（代码仓库）",
+      hypothesisConfidence: 85,
+      requestedBy: "AI引擎",
+      timestamp: new Date(Date.now() - 900000).toISOString(),
+      aiReasoning: "检测到2.3GB代码仓库数据通过HTTPS加密外传至境外IP 185.220.101.x，疑似Tor出口节点",
+      reasoningChain: [],
+      evidenceSummary: { supporting: 6, contradicting: 0, neutral: 1 },
+    },
+    {
+      id: "mock-5",
+      nameKey: "execution.resetVpnCredentials",
+      icon: KeyRound,
+      target: "用户: zhangwei@secm1nd.com",
+      status: "pending",
+      priority: "medium",
+      hypothesisId: "hyp-005",
+      hypothesisLabel: "可疑VPN登录尝试",
+      hypothesisConfidence: 72,
+      requestedBy: "AI引擎",
+      timestamp: new Date(Date.now() - 600000).toISOString(),
+      aiReasoning: "用户zhangwei的账号在非工作时间从境外IP尝试登录，但置信度不足以判定为账号失陷",
+      reasoningChain: [],
+      evidenceSummary: { supporting: 3, contradicting: 2, neutral: 2 },
+    },
+  ]
+
   const fetchActions = useCallback(async () => {
+    if (isDemo) {
+      setActions(MOCK_ACTIONS)
+      setHypotheses(buildHypotheses(MOCK_ACTIONS))
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -444,15 +560,21 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
       setActions(mapped)
       setHypotheses(buildHypotheses(mapped))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch actions")
+      setError(parseError(err))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isDemo])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
+      if (isDemo) {
+        setActions(MOCK_ACTIONS)
+        setHypotheses(buildHypotheses(MOCK_ACTIONS))
+        setLoading(false)
+        return
+      }
       setLoading(true)
       setError(null)
       try {
@@ -464,14 +586,14 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
         setHypotheses(buildHypotheses(mapped))
       } catch (err) {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : "Failed to fetch actions")
+        setError(parseError(err))
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [isDemo])
 
   useEffect(() => {
     if (!wsMessage) return
@@ -503,7 +625,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
       await api.post(`/response/actions/${actionId}/execute`)
       await fetchActions()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to execute action")
+      setError(parseError(err))
     } finally {
       setActionLoading(null)
     }
@@ -515,7 +637,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
       await api.post(`/response/actions/${actionId}/approve`, { approved_by: "current_user" })
       await fetchActions()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to approve action")
+      setError(parseError(err))
     } finally {
       setActionLoading(null)
     }
@@ -527,7 +649,7 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
       await api.post(`/response/actions/${actionId}/cancel`, { cancelled_by: "current_user", reason: "手动取消" })
       await fetchActions()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel action")
+      setError(parseError(err))
     } finally {
       setActionLoading(null)
     }
@@ -568,9 +690,52 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
   }
 
   if (error) {
+    const errorConfig = {
+      network: { icon: WifiOff, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "网络连接失败" },
+      auth: { icon: Lock, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", title: "认证失败" },
+      permission: { icon: ShieldAlert, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", title: "权限不足" },
+      server: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "服务器错误" },
+      unknown: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "加载失败" },
+    }
+    const cfg = errorConfig[error.type]
+
     return (
-      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
-        {error}
+      <div className={cn("rounded-lg border p-5", cfg.bg, cfg.border)}>
+        <div className="flex flex-col items-center gap-4 py-6">
+          <div className={cn("flex h-12 w-12 items-center justify-center rounded-full", cfg.bg)}>
+            <cfg.icon className={cn("h-6 w-6", cfg.color)} />
+          </div>
+          <div className="text-center">
+            <h3 className={cn("text-sm font-semibold", cfg.color)}>{cfg.title}</h3>
+            <p className="mt-1 text-sm text-zinc-400">{error.message}</p>
+            {error.detail && (
+              <p className="mt-1 text-xs text-zinc-600">{error.detail}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              className="gap-1.5 border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+              onClick={() => {
+                setLoading(true)
+                setError(null)
+                fetchActions()
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              重试
+            </Button>
+            {error.type === "auth" && (
+              <Button
+                size="sm"
+                className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+                onClick={() => window.location.href = "/login"}
+              >
+                重新登录
+              </Button>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
@@ -581,15 +746,18 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
         {statCards.map((stat) => (
           <div
             key={stat.label}
-            className="card-default p-5"
+            className={cn(CARD.base, "p-5 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5 transition-all duration-200")}
+            style={{
+              borderColor: stat.borderColor.replace('border-', ''),
+            }}
           >
             <div className="flex items-center gap-4">
-              <div className={cn("flex h-11 w-11 items-center justify-center rounded-lg", stat.bg)}>
+              <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1", stat.bg, stat.borderColor)}>
                 <stat.icon className={cn("h-5 w-5", stat.color)} />
               </div>
               <div>
                 <p className="text-xs text-zinc-500">{stat.label}</p>
-                <p className="text-2xl font-bold text-zinc-100">{stat.value.toLocaleString()}</p>
+                <p className="text-2xl font-bold font-mono tabular-nums text-zinc-100">{stat.value.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -638,11 +806,10 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
               const priority = priorityConfig[action.priority]
               const StatusIcon = status.icon
               const isAiDriven = action.requestedBy === "AI引擎"
-              const isHighPriority = action.priority === "critical" || action.priority === "high"
               return (
                 <div
               key={action.id}
-                  className="card-default p-4 hover:border-cyan-500/20 transition-colors"
+                  className={cn(CARD.base, "p-4 hover:border-cyan-500/15 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -780,8 +947,8 @@ function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessa
 
               return (
                 <div
-                  key={h.id}
-                  className="card-default p-5"
+                key={h.id}
+                  className={cn(CARD.base, "p-5 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div
@@ -923,7 +1090,7 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
         {strategies.map((s) => (
           <div
             key={s.name}
-            className="card-default p-5 hover:border-cyan-500/20 transition-colors"
+            className={cn(CARD.base, "p-5 hover:border-cyan-500/15 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -1005,7 +1172,7 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
 
   return (
     <div className="space-y-6">
-      <div className="card-default p-5">
+      <div className={cn(CARD.base, "p-5")}>
         <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2 mb-4">
           <Brain className="h-4 w-4 text-cyan-400" />
           {t("execution.executionLog")}
@@ -1112,8 +1279,10 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
 export default function ResponsePage() {
   const { t } = useLocaleStore()
   const router = useRouter()
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [activeTab, setActiveTab] = useState("auto-disposal")
-  const { isConnected: wsConnected, lastMessage: wsMessage } = useWebSocket({})
+  const { connectionStatus, lastMessage: wsMessage } = useWebSocket({})
+  const wsConnected = isDemo ? true : connectionStatus === "connected"
 
   return (
     <div className="space-y-6 p-1">
@@ -1125,7 +1294,7 @@ export default function ResponsePage() {
             <div className="flex items-center gap-1.5 mr-2">
               <span className={cn("size-2 rounded-full", wsConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
               <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-400" : "text-red-400")}>
-                {wsConnected ? "实时连接" : "连接断开"}
+                {wsConnected ? "已连接" : "连接断开"}
               </span>
             </div>
             <Button
@@ -1162,7 +1331,7 @@ export default function ResponsePage() {
         </div>
 
         <TabsContent value="auto-disposal" className="mt-4">
-          <AutoDisposalTab t={t} wsMessage={wsMessage} />
+          <AutoDisposalTab t={t} wsMessage={wsMessage} isDemo={isDemo} />
         </TabsContent>
         <TabsContent value="strategy" className="mt-4">
           <DisposalStrategyTab t={t} />

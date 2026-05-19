@@ -1,15 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse
 from scalar_fastapi import get_scalar_api_reference
+from contextlib import asynccontextmanager
 import os
 
-from app.routers import auth, alerts, dashboard, devices, users, itsm, ai, email, vpn, brute_force
+from app.routers import auth, alerts, dashboard, devices, users, itsm, ai, email, vpn, brute_force, demo
 from app.routers import system_settings, integrations
 from app.routers import ai_analysis, response, hunting, playbooks, contacts, rbac, collaboration
-from app.routers import ai_chat, ws, integration_adapters, tenants, billing, documents, i18n, system_monitor, ai_models, strategies, playbook_editor, situation, compliance, ioc, execution, dag, reports, funnel, model_router, strategy_evolution
-from app.routers.system_monitor import monitor_router
+from app.routers import ai_chat, ws, integration_adapters, tenants, billing, documents, i18n, system_monitor, ai_models, strategies, playbook_editor, situation, compliance, ioc, execution, dag, reports, funnel, model_router, strategy_evolution, search, audit
 from app.middleware.performance import PerformanceMiddleware, get_perf_stats
 from app.middleware.cache_middleware import CacheControlMiddleware
 from app.middleware.rbac import RBACMiddleware
@@ -30,13 +30,31 @@ def _read_version() -> str:
 
 APP_VERSION = _read_version()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from app.services.scheduler import init_scheduler, shutdown_scheduler
+    init_scheduler()
+    yield
+    shutdown_scheduler()
+
+
 app = FastAPI(
     title="SecMind AI安全运营平台",
     description="SecMind AI安全运营平台后端API",
     version=APP_VERSION,
     docs_url=None,
     redoc_url=None,
+    lifespan=lifespan,
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "服务器内部错误，请稍后重试"},
+    )
 
 app.add_middleware(CacheControlMiddleware)
 app.add_middleware(PerformanceMiddleware)
@@ -56,6 +74,7 @@ app.add_middleware(
 api_prefix = "/api/v1"
 
 app.include_router(auth.router, prefix=api_prefix)
+app.include_router(demo.router, prefix=api_prefix)
 app.include_router(alerts.router, prefix=api_prefix)
 app.include_router(dashboard.router, prefix=api_prefix)
 app.include_router(devices.router, prefix=api_prefix)
@@ -82,7 +101,6 @@ app.include_router(billing.router, prefix=api_prefix)
 app.include_router(documents.router, prefix=api_prefix)
 app.include_router(i18n.router, prefix=api_prefix)
 app.include_router(system_monitor.router, prefix=api_prefix)
-app.include_router(monitor_router, prefix=api_prefix)
 app.include_router(ai_models.router, prefix=api_prefix)
 app.include_router(strategies.router, prefix=api_prefix)
 app.include_router(playbook_editor.router, prefix=api_prefix)
@@ -95,6 +113,8 @@ app.include_router(reports.router, prefix=api_prefix)
 app.include_router(funnel.router, prefix=api_prefix)
 app.include_router(model_router.router, prefix=api_prefix)
 app.include_router(strategy_evolution.router, prefix=api_prefix)
+app.include_router(search.router, prefix=api_prefix)
+app.include_router(audit.router, prefix=api_prefix)
 
 
 @app.get("/")

@@ -20,6 +20,7 @@ import {
   Brain,
   Wifi,
   Globe,
+  Database,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { PageHeader } from "@/components/layout/page-header"
@@ -34,8 +35,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import { useLocaleStore } from "@/store/locale-store"
-import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
+import { inputClass } from "@/lib/admin-ui"
+import { CARD } from "@/lib/design-system"
+import { useAuthStore } from "@/store/auth-store"
 
 type AlertLevel = "P0" | "P1" | "P2" | "P3"
 type AlertSource = "防火墙" | "IDS" | "EDR" | "SIEM" | "态势感知"
@@ -125,13 +127,32 @@ const notificationChannels: NotificationChannel[] = [
 ]
 
 export default function NotificationsPage() {
-  const { t } = useLocaleStore()
+  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [selectedLevel, setSelectedLevel] = useState<AlertLevel | null>(null)
   const [sourceFilter, setSourceFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [channels, setChannels] = useState<NotificationChannel[]>(notificationChannels)
   const [alerts, setAlerts] = useState<AlertRecord[]>(mockAlerts)
+
+  if (!isDemo) {
+    return (
+      <div className="space-y-6">
+        <PageHeader icon={Bell} title="告警中心" />
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-20">
+            <Database className="size-12 text-zinc-700 mb-4" />
+            <h3 className="text-lg font-semibold text-zinc-400 mb-2">暂无告警记录</h3>
+            <p className="text-sm text-zinc-600 text-center max-w-md">
+              你还没有接入任何安全数据源。
+              <br />
+              接入数据源后，告警将自动显示在此处。
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const filteredAlerts = alerts.filter((alert) => {
     if (selectedLevel && alert.level !== selectedLevel) return false
@@ -183,28 +204,39 @@ export default function NotificationsPage() {
           const LevelIcon = LEVEL_ICONS[level]
           const isSelected = selectedLevel === level
           return (
-            <Card
+            <button
               key={level}
               className={cn(
-                "cursor-pointer transition-colors duration-200",
+                CARD.base,
+                "p-4 text-left cursor-pointer transition-all duration-200",
                 isSelected
-                  ? cn(config.border, config.bg, "shadow-sm shadow-black/20")
-                  : softCardClass
+                  ? "shadow-sm shadow-black/30 -translate-y-0.5"
+                  : "hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
               )}
+              style={{
+                borderColor: isSelected ? `${config.hex}40` : undefined,
+                backgroundColor: isSelected ? `${config.hex}10` : undefined,
+              }}
               onClick={() => handleLevelClick(level)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className={cn("text-xs font-medium", isSelected ? config.color : "text-zinc-500")}>
-                    {config.label}
-                  </span>
-                  <LevelIcon className={cn("size-4", isSelected ? config.color : "text-zinc-600")} />
+              <div className="flex items-center justify-between mb-2">
+                <div
+                  className="flex size-7 items-center justify-center rounded-md ring-1"
+                  style={{
+                    backgroundColor: `${config.hex}18`,
+                    borderColor: `${config.hex}30`,
+                  }}
+                >
+                  <LevelIcon className="size-3.5" style={{ color: isSelected ? config.hex : '#71717a' }} />
                 </div>
-                <p className={cn("mt-1 text-2xl font-bold font-mono tabular-nums", isSelected ? config.color : "text-zinc-100")}>
-                  {LEVEL_COUNTS[level]}
-                </p>
-              </CardContent>
-            </Card>
+                <span className={cn("text-[11px] font-semibold", isSelected ? "text-zinc-400" : "text-zinc-500")}>
+                  {config.label}
+                </span>
+              </div>
+              <p className={cn("text-2xl font-bold font-mono tabular-nums", isSelected ? "text-zinc-100" : "text-zinc-300")}>
+                {LEVEL_COUNTS[level]}
+              </p>
+            </button>
           )
         })}
       </div>
@@ -280,13 +312,14 @@ export default function NotificationsPage() {
             <div
               key={alert.id}
               className={cn(
-                "rounded-lg border bg-[#131316] p-3.5 transition-colors shadow-sm shadow-black/10",
-                alert.level === "P0" && "border-[#ef4444]/25",
-                alert.level === "P1" && "border-[#f97316]/20",
-                alert.level === "P2" && "border-[#eab308]/15",
-                alert.level === "P3" && "border-white/[0.06]"
+                CARD.base,
+                "relative p-3.5 transition-all duration-200 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
               )}
             >
+              <div
+                className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg"
+                style={{ backgroundColor: levelConfig.hex }}
+              />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -374,16 +407,14 @@ export default function NotificationsPage() {
           {channels.map((channel) => {
             const ChannelIcon = channel.icon
             return (
-              <Card
+              <div
                 key={channel.id}
                 className={cn(
-                  "transition-colors",
-                  channel.enabled
-                    ? cn(channel.bg, "border-white/[0.06]")
-                    : softCardClass
+                  CARD.base,
+                  "p-4 space-y-3 transition-all duration-200 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
+                  channel.enabled && channel.bg,
                 )}
               >
-                <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <ChannelIcon className={cn("size-4", channel.enabled ? channel.color : "text-zinc-600")} />
@@ -403,7 +434,7 @@ export default function NotificationsPage() {
                     >
                       <span
                         className={cn(
-                          "pointer-events-none inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform duration-200",
+                          "pointer-events-none inline-block size-3.5 rounded-full bg-[#131316] shadow-sm transition-transform duration-200",
                           channel.enabled ? "translate-x-4" : "translate-x-0.5"
                         )}
                       />
@@ -421,10 +452,8 @@ export default function NotificationsPage() {
                         : "border-white/[0.08] text-zinc-600"
                     )}
                   >
-                    {channel.enabled ? "已启用" : "未启用"}
-                  </Badge>
-                </CardContent>
-              </Card>
+                    {channel.enabled ? "已启用" : "未启用"}</Badge>
+                </div>
             )
           })}
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, AlertTriangle, ArrowRight, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -96,19 +96,20 @@ interface TrialBannerProps {
 }
 
 export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
+  const [dismissed, setDismissed] = useState(false)
+  const [daysLeft, setDaysLeft] = useState(14)
+
+  useEffect(() => {
     const dismissedAt = localStorage.getItem('secmind-trial-banner-dismissed')
     if (dismissedAt) {
       const dismissedDate = new Date(dismissedAt)
       const now = new Date()
       if (now.getTime() - dismissedDate.getTime() < 24 * 60 * 60 * 1000) {
-        return true
+        setDismissed(true)
       }
     }
-    return false
-  })
-  const [daysLeft] = useState(() => getTrialInfo().daysLeft)
+    setDaysLeft(getTrialInfo().daysLeft)
+  }, [])
 
   if (dismissed) return null
 
