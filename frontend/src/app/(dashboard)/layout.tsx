@@ -14,10 +14,31 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const user = useAuthStore((s) => s.user)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const login = useAuthStore((s) => s.login)
+  const setPermissions = useAuthStore((s) => s.setPermissions)
   const clearNewUserFlag = useAuthStore((s) => s.clearNewUserFlag)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const token = useAuthStore((s) => s.token)
+
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      login(
+        {
+          id: 'DEMO001',
+          name: '体验用户',
+          email: 'demo@secmind.com',
+          role: 'admin',
+          isDemo: true,
+          isNewUser: true,
+        },
+        'mock-jwt-token-demo'
+      )
+      setPermissions(['*:*'])
+    }
+  }, [isAuthenticated, !!user, login, setPermissions])
 
   useEffect(() => {
     const onboarded = localStorage.getItem('secmind-onboarded')
@@ -42,14 +63,32 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-[#09090b] text-foreground">
-      <Sidebar
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((prev) => !prev)}
-      />
+      <div className="hidden md:block">
+        <Sidebar
+          collapsed={collapsed}
+          onToggle={() => setCollapsed((prev) => !prev)}
+        />
+      </div>
+
+      {mobileSidebarOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 w-56 md:hidden animate-slideInLeft">
+            <Sidebar
+              collapsed={false}
+              onToggle={() => setMobileSidebarOpen(false)}
+            />
+          </div>
+        </>
+      )}
+
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar />
-        <TrialBanner />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
+        {!user?.isDemo && <TrialBanner />}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
       {showOnboarding && (
         <DynamicOnboardingGuide onComplete={handleOnboardingComplete} />
