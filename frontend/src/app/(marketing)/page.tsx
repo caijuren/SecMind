@@ -84,7 +84,9 @@ export default function Home() {
       'mock-jwt-token-demo'
     );
     useAuthStore.getState().setPermissions(['*:*']);
-    window.location.href = '/investigate';
+    setTimeout(() => {
+      window.location.href = '/investigate';
+    }, 200);
   };
 
   return (
