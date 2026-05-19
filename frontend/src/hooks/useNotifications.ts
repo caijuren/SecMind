@@ -10,7 +10,17 @@ interface Notification {
   message: string
   timestamp: string
   read: boolean
-  [key: string]: any
+  [key: string]: unknown
+}
+
+interface NotificationPayload {
+  id?: string
+  type?: string
+  title?: string
+  message?: string
+  description?: string
+  timestamp?: string
+  [key: string]: unknown
 }
 
 interface UseNotificationsReturn {
@@ -63,15 +73,16 @@ export function useNotifications(): UseNotificationsReturn {
     requestNotificationPermission()
   }, [requestNotificationPermission])
 
-  const handleNotification = useCallback((notifData: any) => {
+  const handleNotification = useCallback((notifData: unknown) => {
+    const payload = notifData as NotificationPayload
     const enriched: Notification = {
-      id: notifData.id || `notif-${Date.now()}`,
-      type: notifData.type || "info",
-      title: notifData.title || "Notification",
-      message: notifData.message || notifData.description || "",
-      timestamp: notifData.timestamp || new Date().toISOString(),
+      id: payload.id || `notif-${Date.now()}`,
+      type: payload.type || "info",
+      title: payload.title || "Notification",
+      message: payload.message || payload.description || "",
+      timestamp: payload.timestamp || new Date().toISOString(),
       read: false,
-      ...notifData,
+      ...payload,
     }
 
     notifsRef.current = [enriched, ...notifsRef.current].slice(0, 50)

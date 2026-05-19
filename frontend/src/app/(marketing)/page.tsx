@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Shield,
   Sparkles,
@@ -20,7 +21,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAuthStore } from "@/store/auth-store";
 import { useLocaleStore } from "@/store/locale-store";
 import { DynamicContactFormDialog } from "@/components/dynamic-imports";
 import { AnimateIn } from "@/components/common/animate-in";
@@ -56,7 +56,6 @@ const accentMap: Record<string, { border: string; bg: string; icon: string; text
 };
 
 export default function Home() {
-  const login = useAuthStore((s) => s.login);
   const t = useLocaleStore((s) => s.t);
 
   const stat87 = useCountUp(87, 1500);
@@ -70,24 +69,6 @@ export default function Home() {
     { icon: Shield, title: t("landing.capabilities.assessmentLoop"), desc: t("landing.capabilities.assessmentLoopDesc"), color: "violet" },
     { icon: Zap, title: t("landing.capabilities.autoResponse"), desc: t("landing.capabilities.autoResponseDesc"), color: "emerald" },
   ];
-
-  const handleDemoExperience = async () => {
-    login(
-      {
-        id: 'DEMO001',
-        name: '体验用户',
-        email: 'demo@secmind.com',
-        role: 'admin',
-        isDemo: true,
-        isNewUser: true,
-      },
-      'mock-jwt-token-demo'
-    );
-    useAuthStore.getState().setPermissions(['*:*']);
-    setTimeout(() => {
-      window.location.href = '/investigate';
-    }, 200);
-  };
 
   return (
     <>
@@ -119,14 +100,15 @@ export default function Home() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                <Button
-                  size="lg"
-                  className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_26px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_32px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-6 h-11"
-                  onClick={handleDemoExperience}
-                >
-                  {t("landing.hero.freeTrial")}
-                  <ChevronRight className="size-4 ml-1" />
-                </Button>
+                <Link href="/auth/demo">
+                  <Button
+                    size="lg"
+                    className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_26px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_32px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-6 h-11"
+                  >
+                    {t("landing.hero.freeTrial")}
+                    <ChevronRight className="size-4 ml-1" />
+                  </Button>
+                </Link>
                 <DynamicContactFormDialog>
                   <Button
                     variant="outline"
@@ -507,11 +489,13 @@ export default function Home() {
           </AnimateIn>
           <AnimateIn delay={300}>
             <div className="flex flex-wrap justify-center gap-4">
-              <Button size="lg" onClick={handleDemoExperience}
-                className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_26px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_32px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-8 h-12">
-                {t("landing.cta.freeTrial")}
-                <ArrowRight className="size-4 ml-2" />
-              </Button>
+              <Link href="/auth/demo">
+                <Button size="lg"
+                  className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_26px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_32px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-base px-8 h-12">
+                  {t("landing.cta.freeTrial")}
+                  <ArrowRight className="size-4 ml-2" />
+                </Button>
+              </Link>
               <DynamicContactFormDialog>
                 <Button size="lg" variant="outline"
                   className="rounded-xl border-zinc-600 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-zinc-100 text-base px-8 h-12">

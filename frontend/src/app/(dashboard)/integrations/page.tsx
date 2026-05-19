@@ -94,7 +94,13 @@ export default function IntegrationsPage() {
   }
 
   useEffect(() => {
-    void loadData()
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void loadData()
+      })
+    } else {
+      Promise.resolve().then(() => loadData())
+    }
   }, [isDemo])
 
   async function saveAppConfig(app: IntegrationApp) {

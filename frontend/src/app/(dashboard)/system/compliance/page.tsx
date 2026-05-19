@@ -412,11 +412,16 @@ function ResultEditDialog({
 
   useEffect(() => {
     if (result && open) {
-      setForm({
+      const nextForm = {
         status: result.status || "not_assessed",
         findings: result.findings || "",
         remediation: result.remediation || "",
-      })
+      }
+      if (typeof queueMicrotask === "function") {
+        queueMicrotask(() => setForm(nextForm))
+      } else {
+        Promise.resolve().then(() => setForm(nextForm))
+      }
     }
   }, [result, open])
 

@@ -7,19 +7,23 @@ export function usePermission(resource: string, action: string): boolean {
 }
 
 export function useHasAnyPermission(permissions: string[]): boolean {
+  const user = useAuthStore((s) => s.user)
   const userPermissions = useAuthStore((s) => s.permissions)
 
   return useMemo(() => {
+    if (user?.role === 'admin' || user?.isDemo) return true
     if (userPermissions.includes('*:*')) return true
     return permissions.some((perm) => userPermissions.includes(perm))
-  }, [userPermissions, permissions])
+  }, [user, userPermissions, permissions])
 }
 
 export function useHasAllPermissions(permissions: string[]): boolean {
+  const user = useAuthStore((s) => s.user)
   const userPermissions = useAuthStore((s) => s.permissions)
 
   return useMemo(() => {
+    if (user?.role === 'admin' || user?.isDemo) return true
     if (userPermissions.includes('*:*')) return true
     return permissions.every((perm) => userPermissions.includes(perm))
-  }, [userPermissions, permissions])
+  }, [user, userPermissions, permissions])
 }

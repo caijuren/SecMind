@@ -53,6 +53,9 @@ export const useAuthStore = create<AuthStore>()(
           state.token = token
           state.isAuthenticated = true
           state.rememberMe = rememberMe
+          if (user.role === 'admin' || user.isDemo) {
+            state.permissions = ['*:*']
+          }
           if (refreshToken !== undefined && refreshToken !== null) {
             state.refreshToken = refreshToken
           }
@@ -95,7 +98,8 @@ export const useAuthStore = create<AuthStore>()(
           state.permissions = permissions
         }),
       hasPermission: (resourceOrKey: string, action?: string) => {
-        const { permissions } = get()
+        const { permissions, user } = get()
+        if (user?.role === 'admin' || user?.isDemo) return true
         if (permissions.includes('*:*')) return true
         const key = action ? `${resourceOrKey}:${action}` : resourceOrKey
         return permissions.includes(key)

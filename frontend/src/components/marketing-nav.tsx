@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Shield,
   Sparkles,
@@ -11,7 +11,6 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuthStore } from "@/store/auth-store";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -23,38 +22,21 @@ const navItems = [
 
 export function MarketingNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const login = useAuthStore((s) => s.login);
-
   useEffect(() => {
-    setMounted(true);
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setMounted(true));
+    } else {
+      Promise.resolve().then(() => setMounted(true));
+    }
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const handleDemoExperience = () => {
-    login(
-      {
-        id: 'DEMO001',
-        name: '体验用户',
-        email: 'demo@secmind.com',
-        role: 'admin',
-        isDemo: true,
-        isNewUser: true,
-      },
-      'mock-jwt-token-demo'
-    );
-    useAuthStore.getState().setPermissions(['*:*']);
-    setTimeout(() => {
-      window.location.href = '/investigate';
-    }, 200);
-  };
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -113,14 +95,15 @@ export function MarketingNav() {
               登录
             </Button>
           </Link>
-          <Button
-            size="default"
-            onClick={handleDemoExperience}
-            className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_8px_24px_rgba(59,130,246,0.3)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-sm h-9 px-5"
-          >
-            免费体验
-            <ArrowRight className="size-3.5 ml-1" />
-          </Button>
+          <Link href="/auth/demo">
+            <Button
+              size="default"
+              className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_8px_24px_rgba(59,130,246,0.3)] hover:shadow-[0_12px_30px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] text-sm h-9 px-5"
+            >
+              免费体验
+              <ArrowRight className="size-3.5 ml-1" />
+            </Button>
+          </Link>
         </div>
 
         <button
@@ -173,13 +156,14 @@ export function MarketingNav() {
                 登录
               </Button>
             </Link>
-            <Button
-              size="sm"
-              onClick={handleDemoExperience}
-              className="flex-1 rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_8px_22px_rgba(59,130,246,0.24)]"
-            >
-              免费体验
-            </Button>
+            <Link href="/auth/demo" className="flex-1">
+              <Button
+                size="sm"
+                className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_8px_22px_rgba(59,130,246,0.24)]"
+              >
+                免费体验
+              </Button>
+            </Link>
           </div>
         </div>
       )}

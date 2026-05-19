@@ -96,6 +96,15 @@ interface RealtimeEvent {
   timestamp: string
 }
 
+interface ChartTooltipParams {
+  data?: {
+    name: string
+    value: [number, number, number]
+    topType: string
+  }
+  name: string
+}
+
 // ==================== 常量 ====================
 
 const REGION_COORDS: Record<string, [number, number]> = {
@@ -292,7 +301,7 @@ function getMapOption(regions: ThreatRegion[]) {
       borderWidth: 1,
       padding: [12, 16],
       textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
-      formatter: (params: any) => params.data ? `<div style="font-size:13px;font-weight:600;margin-bottom:4px">${params.data.name}</div><div style="color:#71717a;font-size:12px">告警数: <strong style="color:#0891b2">${params.data.value[2]}</strong></div><div style="color:#71717a;font-size:12px">主要威胁: <strong style="color:#ef4444">${params.data.topType}</strong></div>` : params.name,
+      formatter: (params: ChartTooltipParams) => params.data ? `<div style="font-size:13px;font-weight:600;margin-bottom:4px">${params.data.name}</div><div style="color:#71717a;font-size:12px">告警数: <strong style="color:#0891b2">${params.data.value[2]}</strong></div><div style="color:#71717a;font-size:12px">主要威胁: <strong style="color:#ef4444">${params.data.topType}</strong></div>` : params.name,
     },
     xAxis: {
       show: false,
@@ -546,7 +555,13 @@ function ScreenContent() {
   }, [])
 
   useEffect(() => {
-    fetchData()
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void fetchData()
+      })
+    } else {
+      Promise.resolve().then(() => fetchData())
+    }
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
   }, [fetchData])

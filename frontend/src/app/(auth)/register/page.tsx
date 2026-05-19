@@ -10,9 +10,20 @@ import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/auth-store'
 import { useToast } from '@/components/ui/toast'
 import { Progress, ProgressTrack, ProgressIndicator } from '@/components/ui/progress'
-import { api } from '@/lib/api'
+import { api, isAxiosError } from '@/lib/api'
 
 type RegisterMode = 'phone' | 'email'
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isAxiosError(error)) {
+    const detail = error.response?.data
+    if (typeof detail === 'object' && detail && 'detail' in detail && typeof detail.detail === 'string') {
+      return detail.detail
+    }
+  }
+
+  return fallback
+}
 
 function useCountdown(initial: number = 60) {
   const [countdown, setCountdown] = useState(0)
@@ -155,8 +166,8 @@ export default function RegisterPage() {
       await createTrialTenant(res.data.access_token)
       localStorage.setItem('secmind-trial-start', String(Date.now()))
       setRegisteredEmail(res.data.email || phone)
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || '注册失败，请稍后重试'
+    } catch (err) {
+      const message = getErrorMessage(err, '注册失败，请稍后重试')
       setError(message)
       toast(message, 'error')
     } finally {
@@ -202,8 +213,8 @@ export default function RegisterPage() {
       await createTrialTenant(res.data.access_token)
       localStorage.setItem('secmind-trial-start', String(Date.now()))
       setRegisteredEmail(email.trim())
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || '注册失败，请稍后重试'
+    } catch (err) {
+      const message = getErrorMessage(err, '注册失败，请稍后重试')
       setError(message)
       toast(message, 'error')
     } finally {

@@ -307,7 +307,13 @@ export default function DataSourcePage() {
   }
 
   useEffect(() => {
-    void loadDevices()
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void loadDevices()
+      })
+    } else {
+      Promise.resolve().then(() => loadDevices())
+    }
   }, [isDemo])
 
   const filtered = useMemo(() => {

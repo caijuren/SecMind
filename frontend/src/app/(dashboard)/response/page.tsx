@@ -138,6 +138,17 @@ interface ApiResponseAction {
   updated_at: string | null
 }
 
+interface WsActionMessage {
+  type: "action_update" | "action_status" | "new_action"
+  data: ApiResponseAction
+}
+
+const MOCK_ACTION_BASE_TIME = new Date("2026-05-19T16:00:00+08:00").getTime()
+
+function mockTimestamp(offsetMs: number) {
+  return new Date(MOCK_ACTION_BASE_TIME - offsetMs).toISOString()
+}
+
 const ACTION_TYPE_ICON_MAP: Record<string, typeof Clock> = {
   freezeAccount: UserLock,
   isolateHost: ShieldAlert,
@@ -453,7 +464,7 @@ function getHypothesisProgress(h: Hypothesis) {
   return { completed, total, percent: Math.round((completed / total) * 100), executing, pending, awaiting }
 }
 
-function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string; wsMessage: any; isDemo?: boolean }) {
+function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string; wsMessage: WsActionMessage | null; isDemo?: boolean }) {
   const [actions, setActions] = useState<ActionItem[]>([])
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([])
   const [loading, setLoading] = useState(true)
@@ -473,7 +484,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       hypothesisLabel: "账号失陷（不可能旅行）",
       hypothesisConfidence: 92,
       requestedBy: "AI引擎",
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      timestamp: mockTimestamp(3600000),
       aiReasoning: "用户王芳在2小时内从北京(39.9,116.4)和莫斯科(55.75,37.62)登录，物理上不可能实现，判定账号凭据已泄露",
       reasoningChain: [],
       evidenceSummary: { supporting: 5, contradicting: 0, neutral: 1 },
@@ -489,7 +500,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       hypothesisLabel: "Cobalt Strike Beacon活动",
       hypothesisConfidence: 95,
       requestedBy: "AI引擎",
-      timestamp: new Date(Date.now() - 1800000).toISOString(),
+      timestamp: mockTimestamp(1800000),
       aiReasoning: "检测到PowerShell编码执行行为与Cobalt Strike Beacon特征匹配，EDR已触发自动隔离",
       reasoningChain: [],
       evidenceSummary: { supporting: 7, contradicting: 1, neutral: 0 },
@@ -505,7 +516,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       hypothesisLabel: "VPN暴力破解攻击",
       hypothesisConfidence: 88,
       requestedBy: "AI引擎",
-      timestamp: new Date(Date.now() - 7200000).toISOString(),
+      timestamp: mockTimestamp(7200000),
       aiReasoning: "Tor出口节点91.234.56.78在10分钟内发起200+次VPN登录尝试，判定为自动化暴力破解攻击",
       reasoningChain: [],
       evidenceSummary: { supporting: 4, contradicting: 0, neutral: 2 },
@@ -521,7 +532,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       hypothesisLabel: "数据外泄（代码仓库）",
       hypothesisConfidence: 85,
       requestedBy: "AI引擎",
-      timestamp: new Date(Date.now() - 900000).toISOString(),
+      timestamp: mockTimestamp(900000),
       aiReasoning: "检测到2.3GB代码仓库数据通过HTTPS加密外传至境外IP 185.220.101.x，疑似Tor出口节点",
       reasoningChain: [],
       evidenceSummary: { supporting: 6, contradicting: 0, neutral: 1 },
@@ -537,7 +548,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       hypothesisLabel: "可疑VPN登录尝试",
       hypothesisConfidence: 72,
       requestedBy: "AI引擎",
-      timestamp: new Date(Date.now() - 600000).toISOString(),
+      timestamp: mockTimestamp(600000),
       aiReasoning: "用户zhangwei的账号在非工作时间从境外IP尝试登录，但置信度不足以判定为账号失陷",
       reasoningChain: [],
       evidenceSummary: { supporting: 3, contradicting: 2, neutral: 2 },
@@ -600,21 +611,35 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
     if (wsMessage.type === "action_update" || wsMessage.type === "action_status") {
       try {
         const updatedAction = mapApiAction(wsMessage.data)
-        setActions(prev => {
-          const next = prev.map(a => a.id === updatedAction.id ? updatedAction : a)
-          setHypotheses(buildHypotheses(next))
-          return next
-        })
+        const applyUpdate = () => {
+          setActions(prev => {
+            const next = prev.map(a => a.id === updatedAction.id ? updatedAction : a)
+            setHypotheses(buildHypotheses(next))
+            return next
+          })
+        }
+        if (typeof queueMicrotask === "function") {
+          queueMicrotask(applyUpdate)
+        } else {
+          Promise.resolve().then(applyUpdate)
+        }
       } catch {}
     }
     if (wsMessage.type === "new_action") {
       try {
         const newAction = mapApiAction(wsMessage.data)
-        setActions(prev => {
-          const next = [newAction, ...prev]
-          setHypotheses(buildHypotheses(next))
-          return next
-        })
+        const applyInsert = () => {
+          setActions(prev => {
+            const next = [newAction, ...prev]
+            setHypotheses(buildHypotheses(next))
+            return next
+          })
+        }
+        if (typeof queueMicrotask === "function") {
+          queueMicrotask(applyInsert)
+        } else {
+          Promise.resolve().then(applyInsert)
+        }
       } catch {}
     }
   }, [wsMessage])
@@ -1331,7 +1356,7 @@ export default function ResponsePage() {
         </div>
 
         <TabsContent value="auto-disposal" className="mt-4">
-          <AutoDisposalTab t={t} wsMessage={wsMessage} isDemo={isDemo} />
+          <AutoDisposalTab t={t} wsMessage={wsMessage as WsActionMessage | null} isDemo={isDemo} />
         </TabsContent>
         <TabsContent value="strategy" className="mt-4">
           <DisposalStrategyTab t={t} />

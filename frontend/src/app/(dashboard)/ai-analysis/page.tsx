@@ -940,19 +940,22 @@ function TypewriterText({ text, speed = 30 }: { text: string; speed?: number }) 
 
 function EvidenceCard({ evidence, delay }: { evidence: Evidence; delay: number }) {
   const [visible, setVisible] = useState(false)
+  const isValidEvidence = Boolean(evidence?.icon)
+
+  useEffect(() => {
+    if (!isValidEvidence) return
+
+    const timer = setTimeout(() => setVisible(true), delay)
+    return () => clearTimeout(timer)
+  }, [delay, isValidEvidence])
 
   // 安全检查：确保evidence对象完整
-  if (!evidence || !evidence.icon) {
+  if (!isValidEvidence) {
     devWarn('⚠️ Invalid evidence object:', evidence)
     return null
   }
 
   const Icon = evidence.icon
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), delay)
-    return () => clearTimeout(timer)
-  }, [delay])
 
   if (!visible) return null
 
@@ -1102,45 +1105,28 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
   const containerRef = useRef<HTMLDivElement>(null)
   const evidenceRef = useRef<HTMLDivElement>(null)
   const timersRef = useRef<NodeJS.Timeout[]>([])
+  const startEventAnalysisRef = useRef<(eventIndex: number) => void>(() => {})
+
+  const scheduleTask = useCallback((task: () => void | Promise<void>) => {
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void task()
+      })
+      return
+    }
+
+    Promise.resolve().then(task)
+  }, [])
 
   // 根据模式选择数据源
   const currentEvents = useRealData ? realEvents : securityEvents
   const currentEvent = currentEvents[eventState.currentIndex]
   const totalEvents = currentEvents.length
 
-  // 从API获取真实事件数据
-  const fetchRealEvents = useCallback(async () => {
-    setIsLoadingEvents(true)
-    setApiError(null)
-    
-    try {
-      const response = await fetch('/api/v1/api-analysis/events?limit=10')
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json()
-      
-      if (data.events && data.events.length > 0) {
-        setRealEvents(data.events)
-        devLog(`✅ 成功获取 ${data.events.length} 个真实安全事件`)
-      } else {
-        // API返回空，生成一些示例事件
-        devLog('⚠️ API返回空数据，生成示例事件...')
-        await generateSampleEvents()
-      }
-
-    } catch (error) {
-      devError('❌ 获取真实事件失败:', error)
-      setApiError(error instanceof Error ? error.message : '未知错误')
-
-      // 降级：生成示例数据
-      devLog('🔄 降级到示例数据...')
-      await generateSampleEvents()
-    } finally {
-      setIsLoadingEvents(false)
-    }
+  // 清理定时器
+  const clearTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout)
+    timersRef.current = []
   }, [])
 
   // 生成示例事件（当API无数据时调用）
@@ -1161,21 +1147,40 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
     }
   }, [])
 
-  // 当 useRealData 改变时，重新获取数据
-  useEffect(() => {
-    if (useRealData) {
-      fetchRealEvents()
-    } else {
-      // 切回演示模式时，清空真实数据并使用内置数据
-      setRealEvents([])
-      setApiError(null)
-      // 重置状态并重新开始演示
-      resetAndStartDemo()
-    }
-  }, [useRealData])
+  // 从API获取真实事件数据
+  const fetchRealEvents = useCallback(async () => {
+    setIsLoadingEvents(true)
+    setApiError(null)
 
-  // 重置演示状态（不自动启动，由外部控制）
-  const resetAndStartDemo = () => {
+    try {
+      const response = await fetch('/api/v1/api-analysis/events?limit=10')
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      if (data.events && data.events.length > 0) {
+        setRealEvents(data.events)
+        devLog(`✅ 成功获取 ${data.events.length} 个真实安全事件`)
+      } else {
+        devLog('⚠️ API返回空数据，生成示例事件...')
+        await generateSampleEvents()
+      }
+    } catch (error) {
+      devError('❌ 获取真实事件失败:', error)
+      setApiError(error instanceof Error ? error.message : '未知错误')
+      devLog('🔄 降级到示例数据...')
+      await generateSampleEvents()
+    } finally {
+      setIsLoadingEvents(false)
+    }
+  }, [generateSampleEvents])
+
+  const resetToDemoMode = useCallback(() => {
+    setRealEvents([])
+    setApiError(null)
     clearTimers()
     setEventState({
       currentIndex: 0,
@@ -1184,13 +1189,19 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
       showEvidence: false,
       isAnalyzing: false,
     })
-  }
+  }, [clearTimers])
 
-  // 清理定时器
-  const clearTimers = useCallback(() => {
-    timersRef.current.forEach(clearTimeout)
-    timersRef.current = []
-  }, [])
+  // 当 useRealData 改变时，重新获取数据
+  useEffect(() => {
+    scheduleTask(async () => {
+      if (useRealData) {
+        await fetchRealEvents()
+        return
+      }
+
+      resetToDemoMode()
+    })
+  }, [fetchRealEvents, resetToDemoMode, scheduleTask, useRealData])
 
   // 开始分析新事件
   const startEventAnalysis = useCallback((eventIndex: number) => {
@@ -1268,7 +1279,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
 
               // 3秒后开始下一个事件
               setTimeout(() => {
-                startEventAnalysis(nextIndex)
+                startEventAnalysisRef.current(nextIndex)
               }, 3000)
             }, 8000) // 证据展示8秒
           }, 2000)
@@ -1283,7 +1294,11 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
       const firstTimer = setTimeout(addStep, 800)
       timersRef.current.push(firstTimer)
     }, 100)
-  }, [totalEvents, clearTimers, currentEvents])
+  }, [eventState.isAnalyzing, totalEvents, clearTimers, currentEvents])
+
+  useEffect(() => {
+    startEventAnalysisRef.current = startEventAnalysis
+  }, [startEventAnalysis])
 
   // 启动第一个事件
   useEffect(() => {
@@ -1295,7 +1310,7 @@ function ReasoningStream({ useRealData, onToggleMode, onAgentStatusChange }: {
       clearTimeout(startTimer)
       clearTimers()
     }
-  }, [])
+  }, [clearTimers, startEventAnalysis])
 
   // 同步Agent状态到右侧面板
   useEffect(() => {
@@ -1842,9 +1857,9 @@ export default function AIAnalysisPage() {
   })
 
   // 切换数据源模式
-  const toggleMode = () => {
-    setUseRealData(!useRealData)
-  }
+  const toggleMode = useCallback(() => {
+    setUseRealData((prev) => !prev)
+  }, [])
 
   return (
     <div className="space-y-6">

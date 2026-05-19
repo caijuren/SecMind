@@ -8,6 +8,12 @@ RUN npm ci
 COPY . .
 
 ARG APP_VERSION
+ARG NEXT_PUBLIC_API_BASE_URL
+ARG NEXT_PUBLIC_API_URL
+
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 RUN if [ -n "$APP_VERSION" ]; then \
       npm version $APP_VERSION --no-git-tag-version --allow-same-version; \
     fi
@@ -22,6 +28,10 @@ RUN apk add --no-cache wget
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -36,8 +46,5 @@ EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
-
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]

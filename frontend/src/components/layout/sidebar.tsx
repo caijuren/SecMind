@@ -33,7 +33,6 @@ import {
 import { cn } from "@/lib/utils"
 import { useLocaleStore } from "@/store/locale-store"
 import { useAuthStore } from "@/store/auth-store"
-import { Button } from "@/components/ui/button"
 
 interface NavItem {
   label: string
@@ -58,10 +57,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { t } = useLocaleStore()
   const hasPermission = useAuthStore((s) => s.hasPermission)
   const [mounted, setMounted] = useState(false)
-  const [settingsExpanded, setSettingsExpanded] = useState(false)
+  const user = useAuthStore((s) => s.user)
+  const [settingsExpanded, setSettingsExpanded] = useState(true)
 
   useEffect(() => {
-    setMounted(true)
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setMounted(true))
+      return
+    }
+
+    Promise.resolve().then(() => setMounted(true))
   }, [])
 
   const mainNavGroups: NavGroup[] = useMemo(() => [
@@ -117,7 +122,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     pathname === href || pathname.startsWith(href + "/")
 
   const filterItems = (items: NavItem[]) =>
-    items.filter((item) => !mounted || !item.permission || hasPermission(item.permission))
+    items.filter((item) => {
+      if (!mounted) return true
+      if (user?.role === "admin" || user?.isDemo) return true
+      return !item.permission || hasPermission(item.permission)
+    })
 
   const renderNavItem = (item: NavItem, indent = false) => {
     const active = isActive(item.href)
@@ -266,19 +275,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       <div className="p-3">
         <div className={cn("flex items-center", collapsed && "justify-center")}>
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          <button
+            type="button"
             onClick={onToggle}
             aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-            className="text-zinc-500 hover:text-blue-400 transition-colors"
+            className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-zinc-500 transition-colors hover:bg-white/5 hover:text-blue-400"
           >
             {collapsed ? (
               <ChevronsRight className="size-4" />
             ) : (
               <ChevronsLeft className="size-4" />
             )}
-          </Button>
+          </button>
         </div>
       </div>
     </aside>

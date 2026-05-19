@@ -214,7 +214,11 @@ export default function KnowledgePage() {
   }, [knowledgeSearch, selectedCategory, articles])
 
   useEffect(() => {
-    setCurrentPage(1)
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setCurrentPage(1))
+    } else {
+      Promise.resolve().then(() => setCurrentPage(1))
+    }
   }, [knowledgeSearch, selectedCategory])
 
   const totalPages = Math.max(1, Math.ceil(filteredArticles.length / 20))

@@ -17,10 +17,18 @@ export function RouteGuard({ children, fallback }: RouteGuardProps) {
 
   useEffect(() => {
     const unsub = useAuthStore.persist.onFinishHydration(() => {
-      setHydrated(true)
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => setHydrated(true))
+      } else {
+        Promise.resolve().then(() => setHydrated(true))
+      }
     })
     if (useAuthStore.persist.hasHydrated()) {
-      setHydrated(true)
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => setHydrated(true))
+      } else {
+        Promise.resolve().then(() => setHydrated(true))
+      }
     }
     return () => {
       unsub()

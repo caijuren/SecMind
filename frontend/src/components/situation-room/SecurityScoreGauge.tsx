@@ -42,7 +42,7 @@ export function SecurityScoreGauge({ score, previousScore, size = 200 }: Securit
   const totalAngle = endAngle - startAngle
 
   useEffect(() => {
-    let startTime = performance.now()
+    const startTime = performance.now()
     const duration = 1500
 
     function animate(currentTime: number) {

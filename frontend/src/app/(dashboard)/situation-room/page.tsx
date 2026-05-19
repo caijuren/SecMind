@@ -203,7 +203,7 @@ export default function SituationRoomPage() {
   const [tickerThreats, setTickerThreats] = useState(TICKER_THREATS)
   const [attackTypes, setAttackTypes] = useState(ATTACK_TYPES)
   const [isPresentationMode, setIsPresentationMode] = useState(false)
-  const [lastRefresh, setLastRefresh] = useState(Date.now())
+  const [lastRefresh, setLastRefresh] = useState(() => Date.now())
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const { connectionStatus } = useWebSocket({})
   const isConnected = connectionStatus === "connected"

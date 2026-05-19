@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState, useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
@@ -158,11 +159,15 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   useEffect(() => {
     const saved = localStorage.getItem('secmind-theme')
     if (saved === 'light' && !isLightMode) {
-      setIsLightMode(true)
       document.documentElement.classList.remove('dark')
       document.documentElement.classList.add('light')
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(() => setIsLightMode(true))
+      } else {
+        Promise.resolve().then(() => setIsLightMode(true))
+      }
     }
-  }, [])
+  }, [isLightMode])
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-white/5 bg-[#0c0c10]/90 px-6 backdrop-blur-xl">
@@ -231,27 +236,24 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="relative text-zinc-500 hover:text-blue-400"
-          onClick={() => router.push("/notifications")}
+        <Link
+          href="/notifications"
           aria-label="通知 (5条未读)"
+          className="relative inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-zinc-500 transition-colors hover:bg-white/5 hover:text-blue-400"
         >
           <Bell className="size-[18px]" aria-hidden="true" />
           <Badge className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-blue-500 p-0 text-[10px] font-bold text-white" aria-hidden="true">
             5
           </Badge>
-        </Button>
+        </Link>
 
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          className="text-zinc-500 hover:text-violet-400"
+        <Link
+          href="/ai-chat"
           aria-label="AI 助手"
+          className="inline-flex size-7 items-center justify-center rounded-[min(var(--radius-md),12px)] text-zinc-500 transition-colors hover:bg-white/5 hover:text-violet-400"
         >
           <Sparkles className="size-[18px]" aria-hidden="true" />
-        </Button>
+        </Link>
 
         <DropdownMenu>
           <DropdownMenuTrigger

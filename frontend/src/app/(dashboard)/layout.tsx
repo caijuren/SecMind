@@ -7,6 +7,7 @@ import { DynamicOnboardingGuide } from "@/components/dynamic-imports"
 import { TrialBanner } from "@/components/billing/TrialBanner"
 import { useAuthStore } from "@/store/auth-store"
 import { setApiToken } from "@/lib/api"
+import { startDemoSession } from "@/lib/demo-session"
 
 export default function DashboardLayout({
   children,
@@ -17,7 +18,7 @@ export default function DashboardLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  const login = useAuthStore((s) => s.login)
+  const permissions = useAuthStore((s) => s.permissions)
   const setPermissions = useAuthStore((s) => s.setPermissions)
   const clearNewUserFlag = useAuthStore((s) => s.clearNewUserFlag)
   const [showOnboarding, setShowOnboarding] = useState(false)
@@ -25,20 +26,14 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!isAuthenticated && !user) {
-      login(
-        {
-          id: 'DEMO001',
-          name: '体验用户',
-          email: 'demo@secmind.com',
-          role: 'admin',
-          isDemo: true,
-          isNewUser: true,
-        },
-        'mock-jwt-token-demo'
-      )
-      setPermissions(['*:*'])
+      startDemoSession()
+      return
     }
-  }, [isAuthenticated, !!user, login, setPermissions])
+
+    if (user && (user.role === "admin" || user.isDemo) && !permissions.includes("*:*")) {
+      setPermissions(["*:*"])
+    }
+  }, [isAuthenticated, permissions, setPermissions, user])
 
   useEffect(() => {
     const onboarded = localStorage.getItem('secmind-onboarded')

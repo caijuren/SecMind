@@ -22,6 +22,21 @@ interface AttackMapProps {
   attacks: AttackPoint[]
 }
 
+interface GeoJsonPosition extends Array<number> {
+  0: number
+  1: number
+}
+
+type GeoJsonRing = GeoJsonPosition[]
+type GeoJsonPolygon = GeoJsonRing[]
+
+interface GeoJsonFeature {
+  geometry?: {
+    type?: "Polygon" | "MultiPolygon"
+    coordinates?: GeoJsonPolygon[] | GeoJsonPolygon
+  }
+}
+
 const SEVERITY_COLORS = {
   critical: "#ef4444",
   high: "#f97316",
@@ -73,8 +88,9 @@ export function AttackMap({ attacks }: AttackMapProps) {
   const [newAttackIds, setNewAttackIds] = useState<Set<string>>(new Set())
 
   const mapFeatures = useMemo(() => {
-    return (worldData as any).features.filter(
-      (f: any) => f.geometry?.type === "Polygon" || f.geometry?.type === "MultiPolygon"
+    const features = (worldData as unknown as { features?: GeoJsonFeature[] }).features ?? []
+    return features.filter(
+      (feature) => feature.geometry?.type === "Polygon" || feature.geometry?.type === "MultiPolygon"
     )
   }, [])
 
@@ -95,8 +111,12 @@ export function AttackMap({ attacks }: AttackMapProps) {
     const ids = new Set(
       attacks.filter((a) => a.timestamp === latest || a.timestamp > latest - 3000).map((a) => a.id)
     )
-    setNewAttackIds(ids)
-    const timer = setTimeout(() => setNewAttackIds(new Set()), 2000)
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setNewAttackIds(ids))
+    } else {
+      Promise.resolve().then(() => setNewAttackIds(ids))
+    }
+    const timer = setTimeout(() => setNewAttackIds(new Set<string>()), 2000)
     return () => clearTimeout(timer)
   }, [attacks])
 
@@ -133,13 +153,14 @@ export function AttackMap({ attacks }: AttackMapProps) {
     ctx.lineWidth = 0.5
     ctx.fillStyle = "rgba(34,211,238,0.05)"
 
-    mapFeatures.forEach((feature: any) => {
+    mapFeatures.forEach((feature) => {
+      if (!feature.geometry) return
       const geomType = feature.geometry.type
 
-      const drawPolygon = (coords: any) => {
+      const drawPolygon = (coords: GeoJsonPolygon) => {
         ctx.beginPath()
-        coords.forEach((ring: any, ri: number) => {
-          ring.forEach((pos: any, i: number) => {
+        coords.forEach((ring, ri) => {
+          ring.forEach((pos, i) => {
             const lng = pos[0]
             const lat = pos[1]
             const x = lngToX(lng, mapW)
@@ -152,12 +173,12 @@ export function AttackMap({ attacks }: AttackMapProps) {
       }
 
       if (geomType === "Polygon") {
-        const coords = feature.geometry.coordinates
+        const coords = feature.geometry.coordinates as GeoJsonPolygon
         drawPolygon(coords)
         ctx.fill()
         ctx.stroke()
       } else if (geomType === "MultiPolygon") {
-        feature.geometry.coordinates.forEach((polygon: any) => {
+        ;(feature.geometry.coordinates as GeoJsonPolygon[]).forEach((polygon) => {
           drawPolygon(polygon)
           ctx.fill()
           ctx.stroke()

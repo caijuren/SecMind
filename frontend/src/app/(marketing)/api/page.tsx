@@ -284,7 +284,13 @@ export default function ApiDocsPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem("secmind-api-docs-theme");
-    if (saved === "light" || saved === "dark") setTheme(saved);
+    if (saved === "light" || saved === "dark") {
+      if (typeof queueMicrotask === "function") {
+        queueMicrotask(() => setTheme(saved));
+      } else {
+        Promise.resolve().then(() => setTheme(saved));
+      }
+    }
   }, []);
 
   const toggleTheme = () => {

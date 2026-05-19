@@ -325,7 +325,14 @@ function RealtimeAlertStream() {
         level: (latest.riskLevel === "critical" || latest.riskLevel === "high" || latest.riskLevel === "medium" ? latest.riskLevel : "medium") as "critical" | "high" | "medium",
         message: latest.title || latest.description || "新安全告警",
       }
-      setAlerts((prev) => [newAlert, ...prev.slice(0, 19)])
+      const applyAlert = () => {
+        setAlerts((prev) => [newAlert, ...prev.slice(0, 19)])
+      }
+      if (typeof queueMicrotask === "function") {
+        queueMicrotask(applyAlert)
+      } else {
+        Promise.resolve().then(applyAlert)
+      }
     }
   }, [wsAlerts])
 
@@ -476,8 +483,17 @@ function DashboardContent() {
   const isDemo = useAuthStore(s => s.user?.isDemo)
 
   useEffect(() => {
-    if (!lastMessage || lastMessage.type !== "stats_update") return
-    setKpiOverrides(prev => ({ ...prev, ...lastMessage.data }))
+    if (!lastMessage || lastMessage.type !== "stats_update" || !lastMessage.data) return
+    const nextData = lastMessage.data as Record<string, any>
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        setKpiOverrides(prev => ({ ...prev, ...nextData }))
+      })
+      return
+    }
+    Promise.resolve().then(() => {
+      setKpiOverrides(prev => ({ ...prev, ...nextData }))
+    })
   }, [lastMessage])
 
   if (!isDemo) {

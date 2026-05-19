@@ -259,14 +259,21 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
         aiClassification: latest.title || "实时安全告警",
         riskLevel: (["critical", "high", "medium", "low", "info"].includes(latest.riskLevel) ? latest.riskLevel : "medium") as RiskLevel,
       }
-      setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
-      setSignalCount((prev) => prev + 1)
+      const applySignal = () => {
+        setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
+        setSignalCount((prev) => prev + 1)
+      }
+      if (typeof queueMicrotask === "function") {
+        queueMicrotask(applySignal)
+      } else {
+        Promise.resolve().then(applySignal)
+      }
     }
   }, [wsAlerts])
 
   useEffect(() => {
     if (!lastMessage || lastMessage.type !== "new_signal") return
-    const signalData = lastMessage.data
+    const signalData = (lastMessage.data ?? {}) as Record<string, string>
     const now = new Date()
     const ts = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
     const ms = String(now.getMilliseconds()).padStart(3, "0")
@@ -284,8 +291,15 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
       aiClassification: signalData.aiClassification || signalData.title || "实时安全信号",
       riskLevel: (["critical", "high", "medium", "low", "info"].includes(signalData.riskLevel) ? signalData.riskLevel : "medium") as RiskLevel,
     }
-    setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
-    setSignalCount((prev) => prev + 1)
+    const applySignal = () => {
+      setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
+      setSignalCount((prev) => prev + 1)
+    }
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(applySignal)
+    } else {
+      Promise.resolve().then(applySignal)
+    }
   }, [lastMessage])
 
   useEffect(() => {

@@ -159,7 +159,13 @@ export default function GuidePage() {
 
   useEffect(() => {
     const saved = localStorage.getItem("secmind-guide-theme");
-    if (saved === "light" || saved === "dark") setTheme(saved);
+    if (saved === "light" || saved === "dark") {
+      if (typeof queueMicrotask === "function") {
+        queueMicrotask(() => setTheme(saved));
+      } else {
+        Promise.resolve().then(() => setTheme(saved));
+      }
+    }
   }, []);
 
   const toggleTheme = () => {

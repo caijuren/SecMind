@@ -519,7 +519,13 @@ export default function HuntingPage() {
   }, [])
 
   useEffect(() => {
-    fetchHypotheses()
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void fetchHypotheses()
+      })
+    } else {
+      Promise.resolve().then(() => fetchHypotheses())
+    }
   }, [fetchHypotheses])
 
   const filteredHypotheses = hypotheses.filter((h) => {

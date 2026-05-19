@@ -169,7 +169,13 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    void loadUsers()
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => {
+        void loadUsers()
+      })
+    } else {
+      Promise.resolve().then(() => loadUsers())
+    }
   }, [isDemo])
 
   async function toggleStatus(user: UserItem) {

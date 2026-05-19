@@ -38,17 +38,16 @@ function CallbackContent() {
 
   const provider = searchParams.get('provider') || ''
   const providerInfo = SSO_PROVIDER_MAP[provider]
-
-  const [status, setStatus] = useState<CallbackStatus>('loading')
-  const [errorMsg, setErrorMsg] = useState('')
+  const initialState = providerInfo
+    ? { status: 'loading' as CallbackStatus, errorMsg: '' }
+    : { status: 'error' as CallbackStatus, errorMsg: `不支持的登录方式: ${provider || '未指定'}` }
+  const [status, setStatus] = useState<CallbackStatus>(initialState.status)
+  const [errorMsg, setErrorMsg] = useState(initialState.errorMsg)
 
   useEffect(() => {
-    if (!providerInfo) {
-      setStatus('error')
-      setErrorMsg(`不支持的登录方式: ${provider || '未指定'}`)
-      return
-    }
+    if (!providerInfo) return
 
+    let redirectTimer: ReturnType<typeof setTimeout> | null = null
     const timer = setTimeout(() => {
       try {
         login(
@@ -62,7 +61,7 @@ function CallbackContent() {
           `mock-jwt-token-sso-${provider}`
         )
         setStatus('success')
-        setTimeout(() => {
+        redirectTimer = setTimeout(() => {
           router.push('/investigate')
         }, 800)
       } catch {
@@ -71,7 +70,12 @@ function CallbackContent() {
       }
     }, 1500)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      if (redirectTimer) {
+        clearTimeout(redirectTimer)
+      }
+    }
   }, [provider, providerInfo, login, router])
 
   return (

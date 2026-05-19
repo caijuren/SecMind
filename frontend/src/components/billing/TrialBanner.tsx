@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, AlertTriangle, ArrowRight, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 function getTrialInfo(): { daysLeft: number; trialEnd: string } {
@@ -105,10 +104,20 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
       const dismissedDate = new Date(dismissedAt)
       const now = new Date()
       if (now.getTime() - dismissedDate.getTime() < 24 * 60 * 60 * 1000) {
-        setDismissed(true)
+        if (typeof queueMicrotask === 'function') {
+          queueMicrotask(() => setDismissed(true))
+        } else {
+          Promise.resolve().then(() => setDismissed(true))
+        }
       }
     }
-    setDaysLeft(getTrialInfo().daysLeft)
+
+    const nextDaysLeft = getTrialInfo().daysLeft
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(() => setDaysLeft(nextDaysLeft))
+    } else {
+      Promise.resolve().then(() => setDaysLeft(nextDaysLeft))
+    }
   }, [])
 
   if (dismissed) return null
@@ -148,16 +157,18 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <Link href="/pricing">
-          <Button
-            size="sm"
-            className={cn('text-xs font-semibold rounded-lg h-7 px-3', style.button)}
-          >
-            立即升级
-            <ArrowRight className="size-3 ml-1" />
-          </Button>
+        <Link
+          href="/pricing"
+          className={cn(
+            'inline-flex h-7 items-center rounded-lg px-3 text-xs font-semibold transition-colors',
+            style.button
+          )}
+        >
+          立即升级
+          <ArrowRight className="size-3 ml-1" />
         </Link>
         <button
+          type="button"
           onClick={handleDismiss}
           className="text-zinc-500 hover:text-zinc-300 transition-colors"
           aria-label="关闭"

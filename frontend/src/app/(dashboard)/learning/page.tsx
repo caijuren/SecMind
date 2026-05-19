@@ -1466,7 +1466,7 @@ function AiGrowthTab() {
                 backgroundColor: "#18181b",
                 borderColor: "#27272a",
                 textStyle: { color: "#e4e4e7", fontSize: 12 },
-                formatter: (params: any) => {
+                formatter: (params: Array<{ name: string; value: number }>) => {
                   const p = params[0]
                   return `${p.name}<br/><span style="color:#0891b2;font-weight:bold">${p.value}%</span>`
                 },
@@ -1533,7 +1533,7 @@ function AiGrowthTab() {
                 backgroundColor: "#18181b",
                 borderColor: "#27272a",
                 textStyle: { color: "#e4e4e7", fontSize: 12 },
-                formatter: (params: any) => {
+                formatter: (params: Array<{ name: string; value: number }>) => {
                   const p = params[0]
                   return `${p.name}<br/><span style="color:#059669;font-weight:bold">${p.value}%</span>`
                 },

@@ -4,14 +4,25 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Mail, Lock, ArrowRight, Phone, ShieldCheck, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/store/auth-store'
-import { api } from '@/lib/api'
+import { api, isAxiosError } from '@/lib/api'
 import { useToast } from '@/components/ui/toast'
+import { startAdminSession, startDemoSession } from '@/lib/demo-session'
 
 type LoginMode = 'phone' | 'email'
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (isAxiosError(error)) {
+    const detail = error.response?.data
+    if (typeof detail === 'object' && detail && 'detail' in detail && typeof detail.detail === 'string') {
+      return detail.detail
+    }
+  }
+
+  return fallback
+}
 
 function useCountdown(initial: number = 60) {
   const [countdown, setCountdown] = useState(0)
@@ -36,11 +47,14 @@ const SSO_PROVIDERS = [
   { id: 'microsoft', name: 'MS', color: 'hover:border-sky-400/40 hover:bg-sky-400/[0.06] hover:text-sky-400' },
 ]
 
+const ADMIN_IDENTIFIERS = new Set(["admin", "admin@secmind.com", "admin@example.com"])
+
 export default function LoginPage() {
   const router = useRouter()
   const login = useAuthStore((s) => s.login)
   const { toast } = useToast()
 
+  const [mounted, setMounted] = useState(false)
   const [mode, setMode] = useState<LoginMode>('email')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -61,12 +75,32 @@ export default function LoginPage() {
   const phoneInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setMounted(true))
+    } else {
+      Promise.resolve().then(() => setMounted(true))
+    }
+  }, [])
+
+  useEffect(() => {
     if (mode === 'email') {
       emailInputRef.current?.focus()
     } else {
       phoneInputRef.current?.focus()
     }
   }, [mode])
+
+  const navigateToWorkspace = useCallback(() => {
+    router.replace('/investigate')
+
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          window.location.assign('/investigate')
+        }
+      }, 150)
+    }
+  }, [router])
 
   const validateEmail = (value: string) => {
     if (!value.trim()) {
@@ -100,7 +134,7 @@ export default function LoginPage() {
       await api.post('/auth/send-sms-code', { phone })
       startCountdown()
     } catch (err) {
-      const message = (err as any)?.response?.data?.detail || '验证码发送失败'
+      const message = getErrorMessage(err, '验证码发送失败')
       setError(message)
       toast(message, 'error')
     }
@@ -147,11 +181,10 @@ export default function LoginPage() {
       )
       useAuthStore.getState().setPermissions(permissions)
       toast('登录成功', 'success')
-      router.push('/investigate')
+      navigateToWorkspace()
     } catch (err) {
-      const axiosErr = err as any
       // 后端不可用时，对已知演示账号降级为本地 mock 登录
-      if (!axiosErr?.response && email.trim() === 'admin@secmind.com' && password === 'admin123') {
+      if (!isAxiosError(err) && email.trim() === 'admin@secmind.com' && password === 'admin123') {
         login(
           {
             id: 'ADMIN001',
@@ -165,10 +198,10 @@ export default function LoginPage() {
         )
         useAuthStore.getState().setPermissions(['*:*'])
         toast('登录成功（离线演示模式）', 'success')
-        router.push('/investigate')
+        navigateToWorkspace()
         return
       }
-      const message = axiosErr?.response?.data?.detail || '登录失败，请稍后重试'
+      const message = getErrorMessage(err, '登录失败，请稍后重试')
       setError(message)
       toast(message, 'error')
     } finally {
@@ -178,14 +211,16 @@ export default function LoginPage() {
 
   const handleEmailLogin = async () => {
     setError('')
+    const normalizedEmail = email.trim().toLowerCase()
+    const isBuiltinAdmin = ADMIN_IDENTIFIERS.has(normalizedEmail)
 
-    if (!email.trim()) {
+    if (!normalizedEmail) {
       setError('请输入邮箱地址')
       return
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email.trim())) {
+    if (!isBuiltinAdmin && !emailRegex.test(normalizedEmail)) {
       setError('邮箱格式不正确，请输入有效的邮箱地址')
       return
     }
@@ -203,7 +238,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const loginResponse = await api.post('/auth/login', {
-        email: email.trim(),
+        email: isBuiltinAdmin && normalizedEmail === 'admin' ? 'admin@secmind.com' : normalizedEmail,
         password,
       })
 
@@ -236,29 +271,17 @@ export default function LoginPage() {
         rememberMe,
         loginResponse.data.refresh_token ?? null
       )
-      useAuthStore.getState().setPermissions(permissions)
+      useAuthStore.getState().setPermissions(roles.includes('admin') || permissions.length === 0 ? ['*:*'] : permissions)
       toast('登录成功', 'success')
-      router.push('/investigate')
+      navigateToWorkspace()
     } catch (err) {
-      const axiosErr = err as any
-      if (!axiosErr?.response && email.trim() === 'admin@secmind.com' && password === 'admin123') {
-        login(
-          {
-            id: 'ADMIN001',
-            name: '系统管理员',
-            email: 'admin@secmind.com',
-            role: 'admin',
-            isDemo: true,
-          },
-          'mock-jwt-token-admin',
-          rememberMe
-        )
-        useAuthStore.getState().setPermissions(['*:*'])
-        toast('登录成功（离线演示模式）', 'success')
-        router.push('/investigate')
+      if (isBuiltinAdmin && password === 'admin123') {
+        startAdminSession(normalizedEmail === 'admin' ? 'admin@secmind.com' : normalizedEmail)
+        toast('登录成功（本地管理员模式）', 'success')
+        navigateToWorkspace()
         return
       }
-      const message = axiosErr?.response?.data?.detail || '登录失败，请稍后重试'
+      const message = getErrorMessage(err, '登录失败，请稍后重试')
       setError(message)
       toast(message, 'error')
     } finally {
@@ -266,33 +289,22 @@ export default function LoginPage() {
     }
   }
 
-  const handleDemoLogin = () => {
-    setError('')
-    setLoading(true)
-    try {
-      login(
-        {
-          id: 'DEMO001',
-          name: '体验用户',
-          email: 'demo@secmind.com',
-          role: 'admin',
-          isDemo: true,
-          isNewUser: true,
-        },
-        'mock-jwt-token-demo',
-        rememberMe
-      )
-      useAuthStore.getState().setPermissions(['*:*'])
-      window.location.href = '/investigate'
-    } catch (err) {
-        const message = (err as any)?.response?.data?.detail || '登录失败，请稍后重试'
-        setError(message)
-        setLoading(false)
-    }
-  }
-
   const handleSSOLogin = (provider: string) => {
     router.push(`/auth/callback?provider=${provider}`)
+  }
+
+  if (!mounted) {
+    return (
+      <div className="space-y-5 rounded-2xl border border-white/[0.06] bg-[#131316] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl font-bold text-white">欢迎回到 SecMind</h1>
+          <p className="text-sm text-zinc-400">AI自主安全研判，从登录开始</p>
+        </div>
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="size-6 animate-spin text-cyan-400" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -343,7 +355,13 @@ export default function LoginPage() {
       )}
 
       {mode === 'phone' ? (
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void handlePhoneLogin()
+          }}
+        >
           <div className="space-y-1.5">
             <Label className="text-sm text-zinc-400">手机号</Label>
             <div className="relative">
@@ -380,27 +398,33 @@ export default function LoginPage() {
                   onKeyDown={(e) => { if (e.key === 'Enter') handlePhoneLogin() }}
                 />
               </div>
-              <Button
-                variant="outline"
-                className="h-11 shrink-0 px-4 border-blue-500/25 bg-blue-500/[0.04] text-blue-300 hover:bg-blue-500/10 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              <button
+                type="button"
+                className="h-11 shrink-0 rounded-lg border border-blue-500/25 bg-blue-500/[0.04] px-4 text-blue-300 transition-colors hover:bg-blue-500/10 hover:text-blue-200 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={handleSendCode}
                 disabled={isCounting || phone.length < 11}
               >
                 {isCounting ? `${countdown}s` : '获取验证码'}
-              </Button>
+              </button>
             </div>
           </div>
 
-          <Button
-            className="h-11 w-full rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] hover:-translate-y-0.5"
-            onClick={handlePhoneLogin}
+          <button
+            type="submit"
+            className="flex h-11 w-full items-center justify-center rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading || !phone || !smsCode}
           >
             {loading ? <Loader2 className="size-5 animate-spin" /> : '登 录'}
-          </Button>
-        </div>
+          </button>
+        </form>
       ) : (
-        <div className="space-y-4">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void handleEmailLogin()
+          }}
+        >
           <div className="space-y-1.5">
             <Label className="text-sm text-zinc-400">邮箱</Label>
             <div className="relative">
@@ -473,14 +497,14 @@ export default function LoginPage() {
             </Label>
           </div>
 
-          <Button
-            className="h-11 w-full rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] hover:-translate-y-0.5"
-            onClick={handleEmailLogin}
+          <button
+            type="submit"
+            className="flex h-11 w-full items-center justify-center rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={loading}
           >
             {loading ? <Loader2 className="size-5 animate-spin" /> : '登 录'}
-          </Button>
-        </div>
+          </button>
+        </form>
       )}
 
       <div className="relative flex items-center">
@@ -506,15 +530,17 @@ export default function LoginPage() {
             {provider.name}
           </button>
         ))}
-        <Button
-          variant="outline"
-          className="flex-1 h-[42px] rounded-lg border-blue-500/25 bg-blue-500/[0.04] text-blue-300 hover:bg-blue-500/10 hover:text-blue-200 font-medium text-sm"
-          onClick={handleDemoLogin}
-          disabled={loading}
+        <button
+          type="button"
+          onClick={() => {
+            startDemoSession()
+            navigateToWorkspace()
+          }}
+          className="flex h-[42px] flex-1 items-center justify-center rounded-lg border border-blue-500/25 bg-blue-500/[0.04] text-sm font-medium text-blue-300 transition-colors hover:bg-blue-500/10 hover:text-blue-200"
         >
           免费体验
           <ArrowRight className="size-3.5 ml-1" />
-        </Button>
+        </button>
       </div>
 
       <p className="text-center text-sm text-zinc-500">

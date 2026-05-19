@@ -94,15 +94,15 @@ export function PaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="border-slate-200 bg-white text-slate-900 sm:max-w-md">
+      <DialogContent className="border-white/8 bg-[#131316] text-zinc-100 sm:max-w-md">
         {step === "success" ? (
           <div className="flex flex-col items-center justify-center py-8 gap-4">
             <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/30">
               <CheckCircle2 className="size-7 text-emerald-500" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className={cn(TYPOGRAPHY.h2, "text-slate-900")}>订单创建成功</h3>
-              <p className={cn(TYPOGRAPHY.body, "text-slate-500")}>
+              <h3 className={cn(TYPOGRAPHY.h2, "text-zinc-100")}>订单创建成功</h3>
+              <p className={cn(TYPOGRAPHY.body, "text-zinc-500")}>
                 您的 {planName} 订单已创建，请在订单列表中完成支付
               </p>
             </div>
@@ -117,12 +117,12 @@ export function PaymentDialog({
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <div className={`flex size-8 items-center justify-center ${RADIUS.md} bg-cyan-50`}>
-                  <CreditCard className="size-4 text-cyan-700" />
+                <div className={`flex size-8 items-center justify-center ${RADIUS.md} bg-cyan-500/10`}>
+                  <CreditCard className="size-4 text-cyan-400" />
                 </div>
                 确认订阅
               </DialogTitle>
-              <DialogDescription className="text-slate-500">
+              <DialogDescription className="text-zinc-500">
                 确认以下信息并选择支付方式
               </DialogDescription>
             </DialogHeader>
@@ -130,28 +130,28 @@ export function PaymentDialog({
             <div className="space-y-5 mt-2">
               <div className={`${softCardClass} p-4 space-y-3`}>
                 <div className="flex items-center justify-between">
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>订阅套餐</span>
-                  <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
+                  <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>订阅套餐</span>
+                  <Badge variant="outline" className="border-cyan-500/30 bg-cyan-500/10 text-cyan-400">
                     {planName}
                   </Badge>
                 </div>
-                <div className="h-px bg-slate-200" />
+                <div className="h-px bg-white/8" />
                 <div className="flex items-center justify-between">
-                  <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>月费</span>
-                  <span className={cn(TYPOGRAPHY.h2, "font-bold font-mono text-cyan-700")}>
+                  <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>月费</span>
+                  <span className={cn(TYPOGRAPHY.h2, "font-bold font-mono text-cyan-400")}>
                     {planPrice === 0 ? "免费" : `¥${planPrice.toLocaleString()}`}
                   </span>
                 </div>
                 {planPrice > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className={cn(TYPOGRAPHY.body, "text-slate-600")}>计费周期</span>
-                    <span className={cn(TYPOGRAPHY.body, "text-slate-900")}>按月计费</span>
+                    <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>计费周期</span>
+                    <span className={cn(TYPOGRAPHY.body, "text-zinc-100")}>按月计费</span>
                   </div>
                 )}
               </div>
 
               <div className="space-y-3">
-                <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>支付方式</Label>
+                <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>支付方式</Label>
                 <div className="space-y-2">
                   {PAYMENT_METHODS.map((method) => {
                     const MethodIcon = method.icon
@@ -163,19 +163,19 @@ export function PaymentDialog({
                         className={cn(
                           "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
                           isSelected
-                            ? "border border-cyan-400 bg-cyan-50/50 ring-1 ring-cyan-200/60"
-                            : "border border-slate-200 bg-white hover:bg-slate-50"
+                            ? "border border-cyan-400 bg-cyan-500/10 ring-1 ring-cyan-500/30"
+                            : "border border-white/8 bg-[#18181b] hover:bg-white/[0.03]"
                         )}
                       >
                         <div className={cn(
                           "flex size-9 items-center justify-center rounded-lg",
-                          isSelected ? "bg-cyan-100" : "bg-slate-50"
+                          isSelected ? "bg-cyan-500/15" : "bg-white/[0.04]"
                         )}>
-                          <MethodIcon className={cn("size-4", isSelected ? "text-cyan-700" : "text-slate-500")} />
+                          <MethodIcon className={cn("size-4", isSelected ? "text-cyan-400" : "text-zinc-500")} />
                         </div>
                         <div className="flex-1">
-                          <p className={cn(TYPOGRAPHY.h3, "text-slate-900")}>{method.name}</p>
-                          <p className={cn(TYPOGRAPHY.micro, "text-slate-500")}>{method.description}</p>
+                          <p className={cn(TYPOGRAPHY.h3, "text-zinc-100")}>{method.name}</p>
+                          <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>{method.description}</p>
                         </div>
                         {isSelected && (
                           <CheckCircle2 className="size-4 text-cyan-500 shrink-0" />
@@ -187,7 +187,7 @@ export function PaymentDialog({
               </div>
 
               <div className="space-y-2">
-                <Label className={cn(TYPOGRAPHY.caption, "text-slate-500")}>优惠码（可选）</Label>
+                <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>优惠码（可选）</Label>
                 <Input
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
@@ -196,9 +196,9 @@ export function PaymentDialog({
                 />
               </div>
 
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200/60">
+              <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
                 <Shield className="size-4 text-amber-600 shrink-0 mt-0.5" />
-                <p className={cn(TYPOGRAPHY.micro, "text-amber-700")}>
+                <p className={cn(TYPOGRAPHY.micro, "text-amber-300")}>
                   支付安全由平台保障，所有交易数据加密传输。付费后可随时在订阅管理中取消。
                 </p>
               </div>

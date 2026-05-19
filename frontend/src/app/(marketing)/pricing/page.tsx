@@ -24,9 +24,9 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { api } from "@/lib/api";
-import { useAuthStore } from "@/store/auth-store";
 import { AnimateIn } from "@/components/common/animate-in";
+import { startDemoSession } from "@/lib/demo-session";
+import { useAuthStore } from "@/store/auth-store";
 
 type TierKey = "trial" | "professional" | "enterprise";
 
@@ -119,43 +119,28 @@ const comparisonFeatures = [
 
 export default function PricingPage() {
   const router = useRouter();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const [subscribing, setSubscribing] = useState<TierKey | null>(null);
-  const [error, setError] = useState("");
+  const subscribing = null as TierKey | null;
+  const error = "";
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [successPlan, setSuccessPlan] = useState("");
+  const successPlan = "";
   const [trialDays, setTrialDays] = useState(14);
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
 
   useEffect(() => {
-    setTrialDays(getTrialRemainingDays());
+    const nextTrialDays = getTrialRemainingDays();
+    if (typeof queueMicrotask === "function") {
+      queueMicrotask(() => setTrialDays(nextTrialDays));
+    } else {
+      Promise.resolve().then(() => setTrialDays(nextTrialDays));
+    }
   }, []);
 
   const handleSubscribe = async (tier: (typeof tiers)[number]) => {
     if (tier.cta === "联系销售") return;
 
-    setError("");
-    setSubscribing(tier.key);
-
-    try {
-      await api.post("/billing/orders", {
-        plan: tier.plan,
-        payment_method: "alipay",
-      });
-
-      if (!isAuthenticated) {
-        localStorage.setItem("secmind-intent-plan", tier.plan);
-        router.push("/register");
-        return;
-      }
-
-      setSuccessPlan(tier.name);
-      setShowSuccessDialog(true);
-    } catch (err: any) {
-      const message = err?.response?.data?.detail || "订阅请求失败，请稍后重试";
-      setError(message);
-    } finally {
-      setSubscribing(null);
-    }
+    startDemoSession();
+    router.push("/investigate");
+    return;
   };
 
   const handleSuccessClose = () => {

@@ -107,7 +107,7 @@ export default function DocsPage() {
                 让安全分析师从繁重的告警中解放出来，专注于真正的威胁。
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/login">
+                <Link href="/auth/demo">
                   <Button
                     size="lg"
                     className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_28px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_34px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] w-full sm:w-auto"
@@ -231,7 +231,7 @@ export default function DocsPage() {
                 立即开始免费试用，让 SecMind 成为您安全团队的智能助手
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link href="/login">
+                <Link href="/auth/demo">
                   <Button
                     size="lg"
                     className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-semibold shadow-[0_10px_28px_rgba(59,130,246,0.3)] hover:shadow-[0_14px_34px_rgba(59,130,246,0.4)] hover:-translate-y-0.5 transition-[shadow,transform] w-full sm:w-auto"

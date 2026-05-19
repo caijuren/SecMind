@@ -3,14 +3,47 @@
 import { useState, useCallback, useRef } from "react"
 import { useWebSocket } from "./useWebSocket"
 import { useAlertStore } from "@/store/alert-store"
-import type { Alert } from "@/types"
+import type { Alert, AlertType, RiskLevel, AlertStatus } from "@/types"
 
 interface UseRealtimeAlertsReturn {
   isConnected: boolean
   newAlertCount: number
   alerts: Alert[]
   clearNewAlerts: () => void
-  lastMessage: any
+  lastMessage: RealtimeMessage | null
+}
+
+interface RealtimeAlertPayload {
+  id?: string
+  type?: string
+  title?: string
+  description?: string
+  riskLevel?: Alert["riskLevel"]
+  risk_level?: Alert["riskLevel"]
+  status?: string
+  source?: string
+  sourceIp?: string
+  source_ip?: string
+  destinationIp?: string
+  destination_ip?: string
+  timestamp?: string
+  rawLog?: string
+  raw_log?: string
+  tags?: string[]
+  aiScore?: number
+  ai_score?: number
+  aiSummary?: string
+  ai_summary?: string
+  aiRecommendation?: string
+  ai_recommendation?: string
+  relatedAlerts?: string[]
+  related_alerts?: string[]
+}
+
+export interface RealtimeMessage {
+  type?: string
+  data?: Record<string, unknown>
+  [key: string]: unknown
 }
 
 export function useRealtimeConnection() {
@@ -21,26 +54,27 @@ export function useRealtimeConnection() {
 export function useRealtimeAlerts(): UseRealtimeAlertsReturn {
   const [newAlertCount, setNewAlertCount] = useState(0)
   const countRef = useRef(0)
-  const [lastMessage, setLastMessage] = useState<any>(null)
+  const [lastMessage, setLastMessage] = useState<RealtimeMessage | null>(null)
 
-  const addAlertToStore = useCallback((alertData: any) => {
+  const addAlertToStore = useCallback((alertData: unknown) => {
+    const payload = alertData as RealtimeAlertPayload
     const alert: Alert = {
-      id: alertData.id || `alert-${Date.now()}`,
-      type: alertData.type || "phishing",
-      title: alertData.title || "New Alert",
-      description: alertData.description || "",
-      riskLevel: alertData.riskLevel || alertData.risk_level || "medium",
-      status: alertData.status || "new",
-      source: alertData.source || "WebSocket",
-      sourceIp: alertData.sourceIp || alertData.source_ip || "",
-      destinationIp: alertData.destinationIp || alertData.destination_ip || "",
-      timestamp: alertData.timestamp || new Date().toISOString(),
-      rawLog: alertData.rawLog || alertData.raw_log || "",
-      tags: alertData.tags || [],
-      aiScore: alertData.aiScore ?? alertData.ai_score,
-      aiSummary: alertData.aiSummary ?? alertData.ai_summary,
-      aiRecommendation: alertData.aiRecommendation ?? alertData.ai_recommendation,
-      relatedAlerts: alertData.relatedAlerts ?? alertData.related_alerts,
+      id: payload.id || `alert-${Date.now()}`,
+      type: (payload.type || "phishing") as AlertType,
+      title: payload.title || "New Alert",
+      description: payload.description || "",
+      riskLevel: (payload.riskLevel || payload.risk_level || "medium") as RiskLevel,
+      status: (payload.status || "new") as AlertStatus,
+      source: payload.source || "WebSocket",
+      sourceIp: payload.sourceIp || payload.source_ip || "",
+      destinationIp: payload.destinationIp || payload.destination_ip || "",
+      timestamp: payload.timestamp || new Date().toISOString(),
+      rawLog: payload.rawLog || payload.raw_log || "",
+      tags: payload.tags || [],
+      aiScore: payload.aiScore ?? payload.ai_score,
+      aiSummary: payload.aiSummary ?? payload.ai_summary,
+      aiRecommendation: payload.aiRecommendation ?? payload.ai_recommendation,
+      relatedAlerts: payload.relatedAlerts ?? payload.related_alerts,
     }
 
     const store = useAlertStore.getState()
@@ -52,7 +86,7 @@ export function useRealtimeAlerts(): UseRealtimeAlertsReturn {
       })
       countRef.current += 1
       setNewAlertCount(countRef.current)
-      setLastMessage(alertData)
+      setLastMessage({ type: "new_alert", ...payload })
     }
   }, [])
 
