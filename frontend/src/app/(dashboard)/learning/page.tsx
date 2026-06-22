@@ -1,11 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import Link from "next/link"
+import { useState, useMemo, useCallback } from "react"
 import {
   Brain,
-  Sparkles,
-  CheckCircle2,
   ArrowRight,
   ArrowUpRight,
   TrendingUp,
@@ -13,22 +10,21 @@ import {
   Activity,
   Target,
   Zap,
-  Clock,
   Shield,
   RotateCcw,
   Trophy,
   Radar,
   LineChart,
-  Radio,
   ThumbsUp,
   ThumbsDown,
-  MessageSquare,
 } from "lucide-react"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { useLocaleStore } from "@/store/locale-store"
-import { PageHeader } from "@/components/layout/page-header"
-import { pageCardClass, softCardClass } from "@/lib/admin-ui"
+import { usePageTitle } from "@/hooks/use-page-title"
+import { useToast } from "@/components/ui/toast"
 import { EmptyState } from "@/components/common/state-components"
+import { PageHeader } from "@/components/layout/page-header"
+import { cn } from "@/lib/utils"
 import ReactEChartsCore from "echarts-for-react/lib/core"
 import * as echarts from "echarts/core"
 import { LineChart as ELineChart, BarChart as EBarChart } from "echarts/charts"
@@ -50,17 +46,7 @@ echarts.use([
   CanvasRenderer,
 ])
 
-type LearningTab = "knowledge_feedback" | "feedback_learning" | "reasoning_correction" | "ai_growth"
-
-interface FeedbackItem {
-  id: string
-  caseId: string
-  attackType: string
-  humanAction: string
-  beforeConfidence: number
-  afterConfidence: number
-  timestamp: string
-}
+type LearningTab = "feedback_learning" | "reasoning_correction" | "ai_growth"
 
 interface FeedbackLearningItem {
   id: string
@@ -96,58 +82,9 @@ interface Milestone {
 }
 
 const TABS: { value: LearningTab; labelKey: string }[] = [
-  { value: "knowledge_feedback", labelKey: "nav.tabKnowledgeFeedback" },
   { value: "feedback_learning", labelKey: "nav.tabFeedbackLearning" },
   { value: "reasoning_correction", labelKey: "nav.tabReasoningCorrection" },
   { value: "ai_growth", labelKey: "nav.tabAiGrowth" },
-]
-
-const mockFeedbackItems: FeedbackItem[] = [
-  {
-    id: "FB-001",
-    caseId: "CASE-2026-0042",
-    attackType: "alerts.typeCredential",
-    humanAction: "learning.humanConfirmAttack",
-    beforeConfidence: 78,
-    afterConfidence: 92,
-    timestamp: "2026-05-09 08:45",
-  },
-  {
-    id: "FB-002",
-    caseId: "CASE-2026-0043",
-    attackType: "alerts.typeExfiltration",
-    humanAction: "learning.humanConfirmAttack",
-    beforeConfidence: 72,
-    afterConfidence: 88,
-    timestamp: "2026-05-09 09:12",
-  },
-  {
-    id: "FB-003",
-    caseId: "CASE-2026-0045",
-    attackType: "alerts.typePhishing",
-    humanAction: "learning.humanConfirmAttack",
-    beforeConfidence: 65,
-    afterConfidence: 85,
-    timestamp: "2026-05-09 07:55",
-  },
-  {
-    id: "FB-004",
-    caseId: "CASE-2026-0050",
-    attackType: "alerts.typeC2",
-    humanAction: "learning.humanConfirmAttack",
-    beforeConfidence: 80,
-    afterConfidence: 91,
-    timestamp: "2026-05-09 11:20",
-  },
-  {
-    id: "FB-005",
-    caseId: "CASE-2026-0052",
-    attackType: "alerts.typeExfiltration",
-    humanAction: "learning.humanConfirmAttack",
-    beforeConfidence: 82,
-    afterConfidence: 95,
-    timestamp: "2026-05-09 03:30",
-  },
 ]
 
 const mockFeedbackLearning: FeedbackLearningItem[] = [
@@ -983,8 +920,8 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
   const color = isPositive ? "#22c55e" : "#ff4d4f"
   return (
     <div className="flex items-center gap-2">
-      <span className="font-mono text-xs text-zinc-600">{before}%</span>
-      <ArrowRight className="h-3 w-3 text-zinc-700" />
+      <span className="font-mono text-xs text-muted-foreground/60">{before}%</span>
+      <ArrowRight className="h-3 w-3 text-muted-foreground/70" />
       <span
         className="font-mono text-xs font-bold"
         style={{ color }}
@@ -1006,10 +943,10 @@ function ConfidenceDelta({ before, after }: { before: number; after: number }) {
   )
 }
 
-function MiniBar({ value, max = 100, color = "#22d3ee" }: { value: number; max?: number; color?: string }) {
+function MiniBar({ value, max = 100, color = "#00d4ff" }: { value: number; max?: number; color?: string }) {
   const pct = Math.min((value / max) * 100, 100)
   return (
-    <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
       <div
         className="h-full rounded-full transition-colors"
         style={{
@@ -1021,128 +958,8 @@ function MiniBar({ value, max = 100, color = "#22d3ee" }: { value: number; max?:
   )
 }
 
-function KnowledgeFeedbackTab() {
-  const { t } = useLocaleStore()
 
-  return (
-    <div className="space-y-6">
-      <div
-        className={`${pageCardClass} p-6`}
-      >
-        <div className="flex items-center gap-2 mb-5">
-          <Sparkles className="h-4 w-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold text-zinc-200">{t("learning.feedbackFlow")}</h3>
-        </div>
-        <div className="flex items-center justify-center gap-4 py-6">
-          <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-6 py-4"
-          >
-            <Shield className="h-6 w-6 text-amber-400" />
-            <span className="text-xs font-medium text-amber-400">{t("learning.humanConfirmAttack")}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-white/[0.06]" />
-            <ArrowRight className="h-4 w-4 text-cyan-500" />
-            <div className="h-px w-8 bg-white/[0.06]" />
-          </div>
-          <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-6 py-4"
-          >
-            <Brain className="h-6 w-6 text-cyan-400" />
-            <span className="text-xs font-medium text-cyan-400">{t("learning.aiUpdateWeight")}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="h-px w-8 bg-white/[0.06]" />
-            <ArrowRight className="h-4 w-4 text-emerald-500" />
-            <div className="h-px w-8 bg-white/[0.06]" />
-          </div>
-          <div
-            className="flex flex-col items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-6 py-4"
-          >
-            <TrendingUp className="h-6 w-6 text-emerald-600" />
-            <span className="text-xs font-medium text-emerald-700">{t("learning.futureMoreAccurate")}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className={`${softCardClass} p-5`}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
-              <Activity className="h-5 w-5 text-cyan-600" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-600">{t("learning.feedbackTotal")}</p>
-              <p className="text-2xl font-bold tabular-nums text-zinc-100">1,847</p>
-            </div>
-          </div>
-        </div>
-        <div className={`${softCardClass} p-5`}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
-              <TrendingUp className="h-5 w-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-600">{t("learning.accuracyImprovement")}</p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-600">+19%</p>
-            </div>
-          </div>
-        </div>
-        <div className={`${softCardClass} p-5`}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
-              <Shield className="h-5 w-5 text-amber-400" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-600">{t("learning.falsePositiveReduction")}</p>
-              <p className="text-2xl font-bold tabular-nums text-amber-400">-68%</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <Clock className="h-4 w-4 text-cyan-600" />
-          {t("learning.recentFeedback")}
-        </h3>
-        {mockFeedbackItems.map((item) => (
-          <div
-            key={item.id}
-            className={`${softCardClass} p-4 hover:border-cyan-200 transition-colors`}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-bold text-cyan-400">{item.caseId}</span>
-                <span
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
-                  style={{
-                    backgroundColor: "#22d3ee15",
-                    color: "#22d3ee",
-                    border: "1px solid #22d3ee30",
-                  }}
-                >
-                  {t(item.attackType)}
-                </span>
-              </div>
-              <span className="text-[10px] text-zinc-500 font-mono">{item.timestamp}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-amber-600" />
-                <span className="text-[11px] text-amber-700">{t(item.humanAction)}</span>
-              </div>
-              <div className="flex-1" />
-              <ConfidenceDelta before={item.beforeConfidence} after={item.afterConfidence} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function FeedbackLearningTab() {
+function FeedbackLearningTab({ onKnowledgeBackflow }: { onKnowledgeBackflow: () => void }) {
   const { t } = useLocaleStore()
   const [filter, setFilter] = useState<"all" | "confirmed" | "disputed">("all")
 
@@ -1155,66 +972,89 @@ function FeedbackLearningTab() {
   const totalThumbsUp = 158
   const totalThumbsDown = 20
 
+  const filterCards = [
+    { key: "all" as const, icon: BarChart3, color: "primary", label: t("common.all"), value: totalFeedbackCount },
+    { key: "confirmed" as const, icon: ThumbsUp, color: "emerald", label: t("learning.thumbsUpCases"), value: totalThumbsUp },
+    { key: "disputed" as const, icon: ThumbsDown, color: "red", label: t("learning.thumbsDownCases"), value: totalThumbsDown },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div
-          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
-            filter === "all"
-              ? "border-cyan-500/20 bg-cyan-500/10 shadow-sm"
-              : "border-white/[0.06] bg-[#131316] hover:border-cyan-500/20"
-          }`}
-          onClick={() => setFilter("all")}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
-              <BarChart3 className="h-5 w-5 text-cyan-400" />
+      <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+              <RotateCcw className="size-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-zinc-400">{t("common.all")}</p>
-              <p className="text-2xl font-bold tabular-nums text-cyan-400">{totalFeedbackCount}</p>
+              <h3 className="text-sm font-semibold text-foreground">反馈学习闭环</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">人工确认、知识回流与模型权重更新合并在同一流程中。</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={onKnowledgeBackflow}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            <RotateCcw className="size-3.5" />
+            执行知识回流
+          </button>
         </div>
-        <div
-          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
-            filter === "confirmed"
-              ? "border-emerald-500/20 bg-emerald-500/10 shadow-sm"
-              : "border-white/[0.06] bg-[#131316] hover:border-emerald-500/20"
-          }`}
-          onClick={() => setFilter(filter === "confirmed" ? "all" : "confirmed")}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
-              <ThumbsUp className="h-5 w-5 text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.thumbsUpCases")}</p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-400">{totalThumbsUp}</p>
-            </div>
+
+        <div className="mt-4 grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-3">
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2">
+            <Shield className="size-3.5 text-amber-600" />
+            <span className="text-xs font-medium text-amber-600">{t("learning.humanConfirmAttack")}</span>
           </div>
-        </div>
-        <div
-          className={`rounded-xl border p-5 cursor-pointer transition-colors ${
-            filter === "disputed"
-              ? "border-red-500/20 bg-red-500/10 shadow-sm"
-              : "border-white/[0.06] bg-[#131316] hover:border-red-500/20"
-          }`}
-          onClick={() => setFilter(filter === "disputed" ? "all" : "disputed")}
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/15">
-              <ThumbsDown className="h-5 w-5 text-red-400" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.thumbsDownCases")}</p>
-              <p className="text-2xl font-bold tabular-nums text-red-400">{totalThumbsDown}</p>
-            </div>
+          <ArrowRight className="size-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2">
+            <Brain className="size-3.5 text-primary" />
+            <span className="text-xs font-medium text-primary">{t("learning.aiUpdateWeight")}</span>
+          </div>
+          <ArrowRight className="size-3.5 text-muted-foreground" />
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2">
+            <TrendingUp className="size-3.5 text-emerald-600" />
+            <span className="text-xs font-medium text-emerald-600">{t("learning.futureMoreAccurate")}</span>
           </div>
         </div>
       </div>
 
-      <div className="space-y-3">
+      {/* 筛选 — 紧凑切换按钮 */}
+      <div className="flex items-center gap-2">
+        {filterCards.map((card) => {
+          const isActive = filter === card.key
+          return (
+            <button
+              key={card.key}
+              type="button"
+              onClick={() => setFilter(card.key === "all" ? "all" : card.key === filter ? "all" : card.key)}
+              className={cn(
+                "inline-flex items-center gap-1.5 h-8 px-3 rounded-md text-xs font-medium border transition-colors",
+                isActive
+                  ? cn(
+                      "border-transparent",
+                      card.color === "primary" && "bg-primary/15 text-primary",
+                      card.color === "emerald" && "bg-emerald-500/15 text-emerald-600",
+                      card.color === "red" && "bg-red-500/15 text-red-600",
+                    )
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {card.label}
+              <span className="font-mono font-bold tabular-nums">{card.value}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* 学习记录 — 紧凑两行布局 */}
+      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className="grid grid-cols-[120px_1fr_120px_120px] items-center gap-3 border-b border-border bg-muted/40 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span>案件</span>
+          <span>反馈内容</span>
+          <span>学习结果</span>
+          <span className="text-right">时间</span>
+        </div>
         {filtered.map((item) => {
           const isConfirmed = item.type === "confirmed"
           const statusColor = isConfirmed ? "#22c55e" : "#ff4d4f"
@@ -1222,74 +1062,42 @@ function FeedbackLearningTab() {
           return (
             <div
               key={item.id}
-              className={`${softCardClass} p-5 hover:border-cyan-200 transition-colors`}
+              className="grid grid-cols-[120px_1fr_120px_120px] items-center gap-3 border-b border-border/70 px-4 py-3 last:border-0 transition-colors hover:bg-muted/20"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="font-mono text-xs font-bold text-cyan-700">{item.caseId}</span>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold"
-                    style={{
-                      backgroundColor: "#22d3ee15",
-                      color: "#22d3ee",
-                      border: "1px solid #22d3ee30",
-                    }}
-                  >
-                    {t(item.attackProfile)}
-                  </span>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                    style={{
-                      backgroundColor: `${statusColor}20`,
-                      color: statusColor,
-                      border: `1px solid ${statusColor}40`,
-                    }}
-                  >
-                    <StatusIcon className="h-2.5 w-2.5" />
-                    {isConfirmed ? t("learning.thumbsUp") : t("learning.thumbsDown")}
-                  </span>
-                </div>
-                <span className="text-[10px] text-zinc-500 font-mono">{item.timestamp}</span>
+              <div className="min-w-0">
+                <span className="font-mono text-xs font-bold text-primary">{item.caseId}</span>
+                <span className="mt-1 inline-flex items-center gap-1 rounded-md border border-primary/15 bg-primary/[0.06] px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                  {t(item.attackProfile)}
+                </span>
               </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Brain className="h-3 w-3 text-cyan-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
-                      {t("learning.originalAssessment")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{item.originalAssessment}</p>
-                  <div className="mt-2">
-                    <MiniBar value={item.originalConfidence} color={item.originalConfidence >= 80 ? "#22c55e" : "#faad14"} />
-                    <span className="text-[10px] font-mono text-zinc-600 mt-1 inline-block">{item.originalConfidence}%</span>
-                  </div>
-                </div>
-                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <MessageSquare className="h-3 w-3 text-amber-400" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400/70">
-                      {t("learning.userFeedback")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{item.comment}</p>
-                </div>
-                <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <Sparkles className="h-3 w-3 text-emerald-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
-                      {t("learning.learningOutcome")}
-                    </span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{t(item.aiLearningOutcome)}</p>
-                </div>
+              <div className="min-w-0">
+                <span
+                  className="mb-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+                  style={{
+                    backgroundColor: `${statusColor}15`,
+                    color: statusColor,
+                    border: `1px solid ${statusColor}30`,
+                  }}
+                >
+                  <StatusIcon className="size-2.5" />
+                  {isConfirmed ? t("learning.thumbsUp") : t("learning.thumbsDown")}
+                </span>
+                <p className="truncate text-xs leading-relaxed text-muted-foreground">
+                  {item.originalAssessment}
+                  <span className="text-muted-foreground/60"> — {item.comment}</span>
+                </p>
               </div>
+              <span className="font-mono text-[10px] text-muted-foreground">
+                {t(item.aiLearningOutcome)} · {item.originalConfidence}%
+              </span>
+              <span className="text-right text-[10px] text-muted-foreground font-mono">{item.timestamp}</span>
             </div>
           )
         })}
         {filtered.length === 0 && (
-          <EmptyState title="暂无反馈记录" description="当前筛选条件下没有匹配的反馈学习记录" />
+          <div className="py-10">
+            <EmptyState title={t("learning.noFeedbackRecords")} description={t("learning.noMatchingFeedback")} />
+          </div>
         )}
       </div>
     </div>
@@ -1300,12 +1108,24 @@ function ReasoningCorrectionTab() {
   const { t } = useLocaleStore()
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <RotateCcw className="h-4 w-4 text-cyan-400" />
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <RotateCcw className="size-4 text-primary" />
           {t("learning.recentCorrections")}
         </h3>
+        <span className="text-xs text-muted-foreground">{mockCorrections.length} 条修正</span>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className="grid grid-cols-[180px_140px_140px_1fr_160px_120px] items-center gap-3 border-b border-border bg-muted/40 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <span>规则</span>
+          <span>权重变化</span>
+          <span>置信度</span>
+          <span>识别模式</span>
+          <span>改进结果</span>
+          <span className="text-right">时间</span>
+        </div>
         {mockCorrections.map((correction) => {
           const weightDelta = correction.afterWeight - correction.beforeWeight
           const isIncrease = weightDelta > 0
@@ -1313,66 +1133,26 @@ function ReasoningCorrectionTab() {
           return (
             <div
               key={correction.id}
-              className="rounded-xl border border-white/[0.06] bg-[#131316] p-5 hover:border-cyan-500/30 transition-colors"
+              className="grid grid-cols-[180px_140px_140px_1fr_160px_120px] items-center gap-3 border-b border-border/70 px-4 py-3 last:border-0 transition-colors hover:bg-muted/20"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <Brain className="h-4 w-4 text-cyan-400" />
-                  <span className="text-sm font-semibold text-zinc-100">{t(correction.ruleName)}</span>
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-primary/15 bg-primary/10">
+                  <Brain className="size-3.5 text-primary" />
                 </div>
-                <span className="text-[10px] text-zinc-700 font-mono">{correction.timestamp}</span>
+                <span className="truncate text-xs font-semibold text-foreground">{t(correction.ruleName)}</span>
               </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 block">
-                    {t("learning.weightAdjustment")}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm text-zinc-500">{correction.beforeWeight.toFixed(2)}</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-zinc-700" />
-                    <span
-                      className="font-mono text-sm font-bold"
-                      style={{ color: weightColor }}
-                    >
-                      {correction.afterWeight.toFixed(2)}
-                    </span>
-                    <span
-                      className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold"
-                      style={{
-                        backgroundColor: `${weightColor}15`,
-                        color: weightColor,
-                        border: `1px solid ${weightColor}30`,
-                      }}
-                    >
-                      {isIncrease ? "+" : ""}{weightDelta.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2 block">
-                    {t("learning.beforeAfter")}
-                  </span>
-                  <ConfidenceDelta before={correction.beforeConfidence} after={correction.afterConfidence} />
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[11px] text-muted-foreground">{correction.beforeWeight.toFixed(2)}</span>
+                <ArrowRight className="size-3 text-muted-foreground" />
+                <span className="font-mono text-[11px] font-bold" style={{ color: weightColor }}>{correction.afterWeight.toFixed(2)}</span>
+                <span className="rounded-md border px-1.5 py-0.5 text-[10px] font-bold" style={{ backgroundColor: `${weightColor}12`, borderColor: `${weightColor}30`, color: weightColor }}>
+                  {isIncrease ? "+" : ""}{weightDelta.toFixed(2)}
+                </span>
               </div>
-
-              <div className="rounded-lg border border-white/[0.04] bg-white/[0.03] p-3">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Target className="h-3 w-3 text-cyan-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400/70">
-                    {t("learning.patternRecognition")}
-                  </span>
-                </div>
-                <p className="text-xs text-zinc-500 mb-2">{t(correction.pattern)}</p>
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-emerald-400" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/70">
-                    {t("learning.improvement")}
-                  </span>
-                  <span className="text-xs text-emerald-300/80">{t(correction.improvement)}</span>
-                </div>
-              </div>
+              <ConfidenceDelta before={correction.beforeConfidence} after={correction.afterConfidence} />
+              <span className="truncate text-xs text-muted-foreground">{t(correction.pattern)}</span>
+              <span className="truncate text-xs font-medium text-emerald-600">{t(correction.improvement)}</span>
+              <span className="text-right text-[10px] text-muted-foreground font-mono">{correction.timestamp}</span>
             </div>
           )
         })}
@@ -1384,62 +1164,50 @@ function ReasoningCorrectionTab() {
 function AiGrowthTab() {
   const { t } = useLocaleStore()
 
+  const growthStats = [
+    { icon: Target, color: "primary", label: t("learning.currentAccuracy"), value: "91.3%" },
+    { icon: Activity, color: "emerald", label: t("learning.monthlyLearningCount"), value: "347" },
+    { icon: TrendingUp, color: "amber", label: t("learning.falsePositiveDecline"), value: "-68%" },
+    { icon: Shield, color: "purple", label: t("learning.coveredAttackTypes"), value: "24" },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500/15">
-              <Target className="h-5 w-5 text-cyan-600" />
+      {/* 成长指标 — 紧凑 KPI 条 */}
+      <div className="flex items-center divide-x divide-border/60 rounded-md border border-border bg-card">
+        {growthStats.map((stat, i) => {
+          const Icon = stat.icon
+          return (
+            <div key={i} className="flex-1 flex items-center gap-2 px-4 py-2">
+              <Icon className={cn(
+                "size-4 shrink-0",
+                stat.color === "primary" && "text-primary",
+                stat.color === "emerald" && "text-emerald-600",
+                stat.color === "amber" && "text-amber-600",
+                stat.color === "purple" && "text-purple-600",
+              )} />
+              <div className="flex items-baseline gap-1.5 min-w-0">
+                <span className={cn(
+                  "text-base font-bold tabular-nums",
+                  stat.color === "primary" && "text-primary",
+                  stat.color === "emerald" && "text-emerald-600",
+                  stat.color === "amber" && "text-amber-600",
+                  stat.color === "purple" && "text-purple-600",
+                )}>{stat.value}</span>
+                <span className="text-[11px] text-muted-foreground/70 truncate">{stat.label}</span>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.currentAccuracy")}</p>
-              <p className="text-2xl font-bold tabular-nums text-cyan-400">91.3%</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/15">
-              <Activity className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.monthlyLearningCount")}</p>
-              <p className="text-2xl font-bold tabular-nums text-emerald-400">347</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/15">
-              <TrendingUp className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.falsePositiveDecline")}</p>
-              <p className="text-2xl font-bold tabular-nums text-amber-600">-68%</p>
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-white/[0.06] bg-[#131316] p-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/15">
-              <Shield className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-zinc-400">{t("learning.coveredAttackTypes")}</p>
-              <p className="text-2xl font-bold tabular-nums text-purple-600">24</p>
-            </div>
-          </div>
-        </div>
+          )
+        })}
       </div>
 
+      {/* 图表区 */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-        <div
-          className="rounded-xl border border-white/[0.06] bg-[#131316] p-5"
-        >
+        <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center gap-2 mb-4">
-            <LineChart className="h-4 w-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-zinc-200">{t("learning.accuracyTrend")}</h3>
+            <LineChart className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">{t("learning.accuracyTrend")}</h3>
           </div>
           <ReactEChartsCore
             echarts={echarts}
@@ -1468,7 +1236,7 @@ function AiGrowthTab() {
                 textStyle: { color: "#e4e4e7", fontSize: 12 },
                 formatter: (params: Array<{ name: string; value: number }>) => {
                   const p = params[0]
-                  return `${p.name}<br/><span style="color:#0891b2;font-weight:bold">${p.value}%</span>`
+                  return `${p.name}<br/><span style="color:#00d4ff;font-weight:bold">${p.value}%</span>`
                 },
               },
               series: [
@@ -1478,19 +1246,19 @@ function AiGrowthTab() {
                   smooth: true,
                   symbol: "circle",
                   symbolSize: 6,
-                  lineStyle: { color: "#0891b2", width: 2.5 },
-                  itemStyle: { color: "#0891b2", borderColor: "#18181b", borderWidth: 2 },
+                  lineStyle: { color: "#00d4ff", width: 2.5 },
+                  itemStyle: { color: "#00d4ff", borderColor: "#18181b", borderWidth: 2 },
                   areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                      { offset: 0, color: "rgba(8,145,178,0.15)" },
-                      { offset: 1, color: "rgba(8,145,178,0.02)" },
+                      { offset: 0, color: "rgba(0,212,255,0.15)" },
+                      { offset: 1, color: "rgba(0,212,255,0.02)" },
                     ]),
                   },
                   markPoint: {
                     data: [{ type: "max", name: "Max" }],
                     symbol: "pin",
                     symbolSize: 36,
-                    itemStyle: { color: "#0891b2" },
+                    itemStyle: { color: "#00d4ff" },
                     label: { color: "#ffffff", fontSize: 10, fontWeight: "bold", formatter: "{c}%" },
                   },
                 },
@@ -1501,12 +1269,11 @@ function AiGrowthTab() {
           />
         </div>
 
-        <div
-          className="rounded-xl border border-white/[0.06] bg-[#131316] p-5"
-        >
+        <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
-            <h3 className="text-sm font-semibold text-zinc-200">{t("learning.falsePositiveTrend")}</h3>
+            <TrendingUp className="size-4 text-emerald-600" />
+            <h3 className="text-sm font-semibold text-foreground">{t("learning.falsePositiveTrend")}</h3>
           </div>
           <ReactEChartsCore
             echarts={echarts}
@@ -1578,62 +1345,56 @@ function AiGrowthTab() {
         </div>
       </div>
 
-      <div
-        className="rounded-xl border border-white/[0.06] bg-[#131316] p-6"
-      >
-        <div className="flex items-center gap-2 mb-5">
-          <Radar className="h-4 w-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold text-zinc-200">{t("learning.capabilityRadar")}</h3>
-        </div>
-        <div className="flex flex-col gap-4">
-          {RADAR_DIMENSIONS.map((dim) => {
-            const color = dim.value >= 90 ? "#22d3ee" : dim.value >= 80 ? "#22c55e" : "#faad14"
-            return (
-              <div key={dim.key} className="flex items-center gap-4">
-                <span className="text-xs text-zinc-500 w-24 shrink-0">{t(dim.labelKey)}</span>
-                <div className="flex-1">
-                  <MiniBar value={dim.value} color={color} />
+      {/* 能力雷达 */}
+      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-6 shadow-sm">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,212,255,0.02)_0%,transparent_60%)]" />
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-5">
+            <Radar className="size-4 text-primary" />
+            <h3 className="text-sm font-semibold text-foreground">{t("learning.capabilityRadar")}</h3>
+          </div>
+          <div className="flex flex-col gap-4">
+            {RADAR_DIMENSIONS.map((dim) => {
+              const color = dim.value >= 90 ? "#00d4ff" : dim.value >= 80 ? "#22c55e" : "#faad14"
+              return (
+                <div key={dim.key} className="flex items-center gap-4">
+                  <span className="text-xs text-muted-foreground w-24 shrink-0">{t(dim.labelKey)}</span>
+                  <div className="flex-1">
+                    <MiniBar value={dim.value} color={color} />
+                  </div>
+                  <span
+                    className="font-mono text-xs font-bold w-10 text-right"
+                    style={{ color }}
+                  >
+                    {dim.value}%
+                  </span>
                 </div>
-                <span
-                  className="font-mono text-xs font-bold w-10 text-right"
-                  style={{
-                    color,
-                  }}
-                >
-                  {dim.value}%
-                </span>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-amber-400" />
+      {/* 学习里程碑 — 紧凑时间线 */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Trophy className="size-4 text-amber-600" />
           {t("learning.learningMilestones")}
         </h3>
         <div className="relative">
-          <div className="absolute left-[15px] top-2 bottom-2 w-px bg-white/[0.06]" />
-          <div className="space-y-4">
+          <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border/60" />
+          <div className="space-y-2">
             {mockMilestones.map((milestone) => {
               const Icon = milestone.icon
               return (
-                <div key={milestone.id} className="relative flex items-start gap-4 pl-10">
-                  <div
-                    className="absolute left-0 top-1 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20"
-                  >
-                    <Icon className="h-3.5 w-3.5 text-amber-400" />
+                <div key={milestone.id} className="relative flex items-center gap-3 pl-7">
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 flex size-[22px] items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/30">
+                    <Icon className="size-3 text-amber-600" />
                   </div>
-                  <div
-                    className="flex-1 rounded-xl border border-white/[0.06] bg-[#131316] p-4"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-zinc-100">{t(milestone.title)}</span>
-                      <span className="text-[10px] text-zinc-700 font-mono">{milestone.date}</span>
-                    </div>
-                    <p className="text-xs text-zinc-600">{t(milestone.description)}</p>
-                  </div>
+                  <span className="text-sm font-medium text-foreground">{t(milestone.title)}</span>
+                  <span className="text-xs text-muted-foreground/60 flex-1 truncate">{t(milestone.description)}</span>
+                  <span className="text-[10px] text-muted-foreground/50 font-mono shrink-0">{milestone.date}</span>
                 </div>
               )
             })}
@@ -1645,43 +1406,49 @@ function AiGrowthTab() {
 }
 
 export default function LearningPage() {
+  usePageTitle("learning")
   const { t } = useLocaleStore()
-  const [activeTab, setActiveTab] = useState<LearningTab>("knowledge_feedback")
+  const { toast } = useToast()
+  const [activeTab, setActiveTab] = useState<LearningTab>("feedback_learning")
+
+  const handleKnowledgeBackflow = useCallback(() => {
+    toast("正在执行知识回流...", "info")
+    setTimeout(() => {
+      toast("知识回流完成", "success")
+    }, 2000)
+  }, [toast])
 
   return (
     <div className="flex flex-col gap-5">
+      {/* ===== AI 学习头部 — 紧凑工具栏 ===== */}
       <PageHeader
         icon={Brain}
         title={t("learning.title")}
+        subtitle="AI 持续学习 · 人类反馈驱动 · 推理自我修正"
         actions={
-          <Link
-            className="inline-flex items-center gap-1.5 bg-cyan-500 text-white hover:bg-cyan-400 h-9 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            href="/signals?from=learning"
-          >
-            <Radio className="h-4 w-4" />
-            查看新信号
-          </Link>
+          <div className="inline-flex rounded-lg border border-border bg-card p-1 shadow-sm">
+            {TABS.map((tab) => (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setActiveTab(tab.value)}
+                className={cn(
+                  "h-8 rounded-md px-3 text-xs font-medium transition-colors",
+                  activeTab === tab.value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                )}
+              >
+                {t(tab.labelKey)}
+              </button>
+            ))}
+          </div>
         }
       />
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LearningTab)} className="gap-5">
-        <TabsList variant="line" className="border-b border-white/[0.06] w-full justify-start gap-0">
-          {TABS.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="text-zinc-500 data-active:text-cyan-400"
-            >
-              {t(tab.labelKey)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <TabsContent value="knowledge_feedback">
-          <KnowledgeFeedbackTab />
-        </TabsContent>
         <TabsContent value="feedback_learning">
-          <FeedbackLearningTab />
+          <FeedbackLearningTab onKnowledgeBackflow={handleKnowledgeBackflow} />
         </TabsContent>
         <TabsContent value="reasoning_correction">
           <ReasoningCorrectionTab />

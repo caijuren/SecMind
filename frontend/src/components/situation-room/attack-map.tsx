@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface AttackPoint {
   name: string
@@ -42,6 +43,7 @@ const CONTINENT_PATHS = [
 
 export function AttackMap({ attacks }: AttackMapProps) {
   const [animPhase, setAnimPhase] = useState(0)
+  const { t } = useLocaleStore()
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -69,8 +71,8 @@ export function AttackMap({ attacks }: AttackMapProps) {
     >
       <defs>
         <radialGradient id="mapGlow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.08" />
-          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
         </radialGradient>
         <filter id="pointGlow">
           <feGaussianBlur stdDeviation="3" result="blur" />
@@ -95,8 +97,8 @@ export function AttackMap({ attacks }: AttackMapProps) {
         <path
           key={i}
           d={d}
-          fill="rgba(34,211,238,0.06)"
-          stroke="rgba(34,211,238,0.15)"
+          fill="rgba(37,99,235,0.06)"
+          stroke="rgba(37,99,235,0.15)"
           strokeWidth={0.5}
         />
       ))}
@@ -108,7 +110,7 @@ export function AttackMap({ attacks }: AttackMapProps) {
           y1={MAP_HEIGHT * (0.2 + i * 0.2)}
           x2={MAP_WIDTH}
           y2={MAP_HEIGHT * (0.2 + i * 0.2)}
-          stroke="rgba(255,255,255,0.03)"
+          stroke="var(--border)"
           strokeDasharray="4,8"
         />
       ))}
@@ -119,7 +121,7 @@ export function AttackMap({ attacks }: AttackMapProps) {
           y1={0}
           x2={MAP_WIDTH * (0.1 + i * 0.12)}
           y2={MAP_HEIGHT}
-          stroke="rgba(255,255,255,0.03)"
+          stroke="var(--border)"
           strokeDasharray="4,8"
         />
       ))}
@@ -191,7 +193,7 @@ export function AttackMap({ attacks }: AttackMapProps) {
               x={x}
               y={y - (isSource ? 10 : 8)}
               textAnchor="middle"
-              fill="rgba(255,255,255,0.5)"
+              fill="var(--muted-foreground)"
               fontSize="8"
             >
               {point.name}
@@ -202,12 +204,12 @@ export function AttackMap({ attacks }: AttackMapProps) {
 
       <g transform={`translate(20, ${MAP_HEIGHT - 30})`}>
         <circle cx={0} cy={0} r={4} fill="#ef4444" />
-        <text x={8} y={3} fill="rgba(255,255,255,0.4)" fontSize="9">
-          攻击源
+        <text x={8} y={3} fill="var(--muted-foreground)" fontSize="9">
+          {t("situation.attackSource")}
         </text>
         <circle cx={60} cy={0} r={4} fill="#3b82f6" />
-        <text x={68} y={3} fill="rgba(255,255,255,0.4)" fontSize="9">
-          攻击目标
+        <text x={68} y={3} fill="var(--muted-foreground)" fontSize="9">
+          {t("situation.attackTarget")}
         </text>
       </g>
     </svg>

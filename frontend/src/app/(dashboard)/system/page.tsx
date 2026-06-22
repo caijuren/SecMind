@@ -48,12 +48,12 @@ function SimpleToggle({
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2",
-        checked ? "bg-primary" : "bg-white/[0.08]"
+        checked ? "bg-primary" : "bg-muted/60"
       )}
     >
       <span
         className={cn(
-          "pointer-events-none inline-block size-5 rounded-full bg-[#131316] shadow-lg ring-0 transition-transform duration-200 ease-in-out",
+          "pointer-events-none inline-block size-5 rounded-full bg-card shadow-lg ring-0 transition-transform duration-200 ease-in-out",
           checked ? "translate-x-5" : "translate-x-0"
         )}
       />
@@ -70,11 +70,11 @@ function SettingRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex items-start justify-between py-4 border-b border-white/4 last:border-b-0">
+    <div className="flex items-start justify-between py-4 border-b border-border/50 last:border-b-0">
       <div className="flex-1 pr-6">
-        <Label className={String(TYPOGRAPHY.h3) + " text-zinc-100 cursor-pointer"}>{label}</Label>
+        <Label className={String(TYPOGRAPHY.h3) + " text-foreground cursor-pointer"}>{label}</Label>
         {description && (
-          <p className={String(TYPOGRAPHY.caption) + " text-zinc-500 mt-1"}>{description}</p>
+          <p className={String(TYPOGRAPHY.caption) + " text-muted-foreground mt-1"}>{description}</p>
         )}
       </div>
       <div className="shrink-0">{children}</div>
@@ -104,12 +104,12 @@ function SettingSection({
           <div>
             <h2 className={String(TYPOGRAPHY.h2)}>{title}</h2>
             {description && (
-              <p className={String(TYPOGRAPHY.caption) + " text-zinc-500 mt-0.5"}>{description}</p>
+              <p className={String(TYPOGRAPHY.caption) + " text-muted-foreground mt-0.5"}>{description}</p>
             )}
           </div>
         </div>
 
-        <div className="divide-y divide-white/[0.04]">
+        <div className="divide-y divide-muted/50">
           {children}
         </div>
       </CardContent>
@@ -368,7 +368,7 @@ export default function SystemPage() {
               onChange={(e) => setSettings({ ...settings, confidenceThreshold: e.target.value })}
               className={`w-20 ${inputClass}`}
             />
-            <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>%</span>
+            <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>%</span>
           </div>
         </SettingRow>
 
@@ -483,7 +483,7 @@ export default function SystemPage() {
               onChange={(e) => setSettings({ ...settings, alertRetention: e.target.value })}
               className={`w-20 ${inputClass}`}
             />
-            <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>{t("settings.days")}</span>
+            <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>{t("settings.days")}</span>
           </div>
         </SettingRow>
 
@@ -502,7 +502,7 @@ export default function SystemPage() {
               onChange={(e) => setSettings({ ...settings, logRetention: e.target.value })}
               className={`w-20 ${inputClass}`}
             />
-            <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>{t("settings.days")}</span>
+            <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>{t("settings.days")}</span>
           </div>
         </SettingRow>
 
@@ -521,7 +521,7 @@ export default function SystemPage() {
               onChange={(e) => setSettings({ ...settings, caseRetention: e.target.value })}
               className={`w-20 ${inputClass}`}
             />
-            <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>{t("settings.days")}</span>
+            <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>{t("settings.days")}</span>
           </div>
         </SettingRow>
 
@@ -541,7 +541,7 @@ export default function SystemPage() {
       <Card className={CARD.default}>
         <CardContent className="p-5 flex items-center justify-between">
           <div>
-            <p className={String(TYPOGRAPHY.body) + "text-zinc-400"}>
+            <p className={String(TYPOGRAPHY.body) + "text-muted-foreground"}>
               {t("settings.changeWarning")}
             </p>
           </div>

@@ -33,6 +33,7 @@ import {
 import type { Node as RfNode, Edge as RfEdge } from "@xyflow/react"
 import { cn } from "@/lib/utils"
 import { api, formatDateTime } from "@/lib/api"
+import { useLocaleStore } from "@/store/locale-store"
 import { PlaybookEditor, convertPlaybookToFlow } from "@/components/playbook-editor"
 import { PageHeader } from "@/components/layout/page-header"
 import { inputClass, pageCardClass, softCardClass } from "@/lib/admin-ui"
@@ -151,11 +152,11 @@ const executionHistory: ExecutionRecord[] = [
   { id: "EX-20260507-010", playbookName: "权限提升自动遏制", triggerTime: "2026-05-06 11:30:52", status: "success", duration: "7.9s" },
 ]
 
-const NODE_TYPE_CONFIG: Record<NodeType, { color: string; bgColor: string; borderColor: string; icon: typeof Zap; label: string }> = {
-  trigger: { color: "#ef4444", bgColor: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)", icon: Zap, label: "触发器" },
-  condition: { color: "#eab308", bgColor: "rgba(234,179,8,0.08)", borderColor: "rgba(234,179,8,0.25)", icon: GitBranch, label: "条件判断" },
-  action: { color: "#06b6d4", bgColor: "rgba(6,182,212,0.08)", borderColor: "rgba(6,182,212,0.25)", icon: Play, label: "执行动作" },
-  approval: { color: "#a855f7", bgColor: "rgba(168,85,247,0.08)", borderColor: "rgba(168,85,247,0.25)", icon: UserCheck, label: "人工审批" },
+const NODE_TYPE_CONFIG: Record<NodeType, { color: string; bgColor: string; borderColor: string; icon: typeof Zap; labelKey: string }> = {
+  trigger: { color: "#ef4444", bgColor: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.25)", icon: Zap, labelKey: "workflows.nodeTrigger" },
+  condition: { color: "#eab308", bgColor: "rgba(234,179,8,0.08)", borderColor: "rgba(234,179,8,0.25)", icon: GitBranch, labelKey: "workflows.nodeCondition" },
+  action: { color: "#06b6d4", bgColor: "rgba(6,182,212,0.08)", borderColor: "rgba(6,182,212,0.25)", icon: Play, labelKey: "workflows.nodeAction" },
+  approval: { color: "#a855f7", bgColor: "rgba(168,85,247,0.08)", borderColor: "rgba(168,85,247,0.25)", icon: UserCheck, labelKey: "workflows.nodeApproval" },
 }
 
 interface TemplateItem {
@@ -192,13 +193,14 @@ const TEMPLATE_ICONS: Record<string, typeof Zap> = {
   delay: Clock,
 }
 
-const EXECUTION_STATUS_CONFIG: Record<ExecutionStatus, { color: string; icon: typeof CheckCircle2; label: string }> = {
-  success: { color: "#22c55e", icon: CheckCircle2, label: "成功" },
-  failed: { color: "#ff4d4f", icon: XCircle, label: "失败" },
-  running: { color: "#22d3ee", icon: Loader2, label: "执行中" },
+const EXECUTION_STATUS_CONFIG: Record<ExecutionStatus, { color: string; icon: typeof CheckCircle2; labelKey: string }> = {
+  success: { color: "#22c55e", icon: CheckCircle2, labelKey: "workflows.statusSuccess" },
+  failed: { color: "#ff4d4f", icon: XCircle, labelKey: "workflows.statusFailed" },
+  running: { color: "#22d3ee", icon: Loader2, labelKey: "workflows.statusRunning" },
 }
 
 export default function WorkflowsPage() {
+  const { t } = useLocaleStore()
   const router = useRouter()
   const [playbooks, setPlaybooks] = useState<Playbook[]>([])
   const [loading, setLoading] = useState(true)
@@ -281,7 +283,7 @@ export default function WorkflowsPage() {
       await api.post(`/playbooks/${id}/toggle`)
       await fetchPlaybooks()
     } catch {
-      setError("切换剧本状态失败")
+      setError(t("workflows.errorToggleStatus"))
     }
   }
 
@@ -291,7 +293,7 @@ export default function WorkflowsPage() {
       if (selectedPlaybook?.id === id) setSelectedPlaybook(null)
       await fetchPlaybooks()
     } catch {
-      setError("删除剧本失败")
+      setError(t("workflows.errorDelete"))
     }
   }
 
@@ -312,7 +314,7 @@ export default function WorkflowsPage() {
       setCreateDialogOpen(false)
       setCreateForm({ name: "", description: "", trigger: "" })
     } catch {
-      setError("创建剧本失败")
+      setError(t("workflows.errorCreate"))
     } finally {
       setSubmitting(false)
     }
@@ -363,7 +365,7 @@ export default function WorkflowsPage() {
       setEditingPlaybook((prev) => prev ? { ...prev, nodes: pbNodes, edges: pbEdges, steps: pbNodes.length } : null)
       setError(null)
     } catch {
-      setError("保存剧本失败")
+      setError(t("workflows.errorSave"))
     } finally {
       setSaving(false)
     }
@@ -390,17 +392,17 @@ export default function WorkflowsPage() {
   }
 
   const filterCards = [
-    { key: "all" as const, label: "全部剧本", count: playbooks.length, color: "#06b6d4" },
-    { key: "enabled" as const, label: "已启用", count: enabledCount, color: "#22c55e" },
-    { key: "disabled" as const, label: "已停用", count: disabledCount, color: "#64748b" },
+    { key: "all" as const, label: t("workflows.filterAll"), count: playbooks.length, color: "#06b6d4" },
+    { key: "enabled" as const, label: t("workflows.filterEnabled"), count: enabledCount, color: "#22c55e" },
+    { key: "disabled" as const, label: t("workflows.filterDisabled"), count: disabledCount, color: "#64748b" },
   ]
 
   return (
     <div className="space-y-6 p-1">
       <PageHeader
         icon={Workflow}
-        title="自动化编排"
-        subtitle="安全响应剧本与工作流自动化引擎"
+        title={t("workflows.title")}
+        subtitle={t("workflows.subtitle")}
       />
 
       {error && (
@@ -408,7 +410,7 @@ export default function WorkflowsPage() {
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
           <button className="ml-auto text-xs underline" onClick={() => setError(null)}>
-            关闭
+            {t("workflows.close")}
           </button>
         </div>
       )}
@@ -432,7 +434,7 @@ export default function WorkflowsPage() {
             <div className="flex items-center justify-between">
               <span className="text-xs" style={{ color: `${card.color}80` }}>{card.label}</span>
             </div>
-            <p className="text-2xl font-bold text-zinc-100 mt-1">{card.count}</p>
+            <p className="text-2xl font-bold text-foreground mt-1">{card.count}</p>
           </button>
         ))}
       </div>
@@ -445,15 +447,15 @@ export default function WorkflowsPage() {
                 <Link
                   href="/workflows"
                   onClick={closeEditor}
-                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-zinc-600 hover:text-zinc-300"
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-muted-foreground/60 hover:text-muted-foreground"
                 >
                   <ArrowRight className="h-4 w-4 rotate-180" />
-                  返回列表
+                  {t("workflows.backToList")}
                 </Link>
-                <div className="h-4 w-px bg-white/[0.06]" />
+                <div className="h-4 w-px bg-muted/50" />
                 <div className="flex items-center gap-2">
                   <Workflow className="h-4 w-4 text-cyan-500" />
-                  <span className="text-sm font-semibold text-zinc-100">{editingPlaybook?.name}</span>
+                  <span className="text-sm font-semibold text-foreground">{editingPlaybook?.name}</span>
                   <Badge
                     variant="outline"
                     className="text-[10px]"
@@ -462,16 +464,16 @@ export default function WorkflowsPage() {
                       color: editingPlaybook?.status === "enabled" ? "#22c55e" : "#64748b",
                     }}
                   >
-                    {editingPlaybook?.status === "enabled" ? "已启用" : "已停用"}
+                    {editingPlaybook?.status === "enabled" ? t("workflows.statusEnabled") : t("workflows.statusDisabled")}
                   </Badge>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-600">
-                  {flowNodes.length} 个节点 · {flowEdges.length} 条连线
+                <span className="text-xs text-muted-foreground/60">
+                  {flowNodes.length} {t("workflows.nodeEdgeCount")} {t("workflows.nodeEdgeCountSeparator")} {flowEdges.length} {t("workflows.nodeEdgeCountEdges")}
                 </span>
                 <Button
-                  className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+                  className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
                   disabled={saving}
                   onClick={savePlaybook}
                 >
@@ -480,7 +482,7 @@ export default function WorkflowsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  保存
+                  {t("workflows.save")}
                 </Button>
               </div>
             </div>
@@ -494,10 +496,10 @@ export default function WorkflowsPage() {
             </div>
           </div>
 
-          <div className="w-64 shrink-0 flex flex-col rounded-xl border border-white/[0.06] bg-[#131316] overflow-hidden">
-            <div className="px-3 py-2.5 border-b border-white/[0.04] bg-white/[0.03]">
-              <h4 className="text-xs font-semibold text-zinc-200">节点模板</h4>
-              <p className="text-[10px] text-zinc-600 mt-0.5">点击添加到画布</p>
+          <div className="w-64 shrink-0 flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+            <div className="px-3 py-2.5 border-b border-border/40 bg-muted/50">
+              <h4 className="text-xs font-semibold text-foreground">{t("workflows.nodeTemplates")}</h4>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{t("workflows.clickToAdd")}</p>
             </div>
             <ScrollArea className="flex-1">
               <div className="p-2 space-y-1">
@@ -506,9 +508,9 @@ export default function WorkflowsPage() {
                   const Icon = TEMPLATE_ICONS[category.type] || Shield
                   const isExpanded = expandedCategories.has(category.type)
                   return (
-                    <div key={category.type} className="rounded-lg border border-white/[0.04] overflow-hidden">
+                    <div key={category.type} className="rounded-lg border border-border/40 overflow-hidden">
                       <button
-                        className="w-full flex items-center gap-2 px-2.5 py-2 text-left hover:bg-white/[0.03] transition-colors"
+                        className="w-full flex items-center gap-2 px-2.5 py-2 text-left hover:bg-muted/50 transition-colors"
                         aria-expanded={isExpanded}
                         onClick={() => toggleCategory(category.type)}
                       >
@@ -518,23 +520,23 @@ export default function WorkflowsPage() {
                         >
                           <Icon className="h-3 w-3" style={{ color: colors.text }} />
                         </div>
-                        <span className="text-xs font-medium text-zinc-200 flex-1">{category.category}</span>
+                        <span className="text-xs font-medium text-foreground flex-1">{category.category}</span>
                         <ChevronDown
-                          className={cn("h-3 w-3 text-zinc-600 transition-transform", isExpanded && "rotate-180")}
+                          className={cn("h-3 w-3 text-muted-foreground/60 transition-transform", isExpanded && "rotate-180")}
                         />
                       </button>
                       {isExpanded && (
-                        <div className="border-t border-white/[0.04] bg-white/[0.03]">
+                        <div className="border-t border-border/40 bg-muted/50">
                           {category.templates.map((template) => (
                             <button
                               key={template.id}
-                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-white/[0.06] transition-colors group"
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-muted/50 transition-colors group"
                               onClick={() => addNodeFromTemplate(template)}
                             >
-                              <GripVertical className="h-3 w-3 text-zinc-700 group-hover:text-zinc-500 shrink-0" />
+                              <GripVertical className="h-3 w-3 text-muted-foreground/70 group-hover:text-muted-foreground shrink-0" />
                               <div className="min-w-0 flex-1">
-                                <p className="text-[11px] font-medium text-zinc-400 truncate">{template.label}</p>
-                                <p className="text-[10px] text-zinc-600 truncate">{template.detail}</p>
+                                <p className="text-[11px] font-medium text-muted-foreground truncate">{template.label}</p>
+                                <p className="text-[10px] text-muted-foreground/60 truncate">{template.detail}</p>
                               </div>
                             </button>
                           ))}
@@ -551,39 +553,39 @@ export default function WorkflowsPage() {
       <>
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
           <Input
               name="search"
               autoComplete="off"
-              placeholder="搜索剧本名称或描述…"
+              placeholder={t("workflows.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`pl-9 ${inputClass}`}
           />
         </div>
         <Button
-          className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+          className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={() => setCreateDialogOpen(true)}
         >
           <Plus className="h-4 w-4" />
-          创建剧本
+          {t("workflows.createPlaybook")}
         </Button>
         <Button
           variant="outline"
-          className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-cyan-700"
+          className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-primary"
           onClick={() => router.push("/playbooks/editor")}
         >
           <PenTool className="h-4 w-4" />
-          可视化编辑器
+          {t("workflows.visualEditor")}
         </Button>
         {selectedPlaybook && viewMode === "list" && (
           <Button
             variant="outline"
-            className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-cyan-700"
+            className="gap-1.5 border-cyan-200 text-cyan-600 hover:bg-cyan-50 hover:text-primary"
             onClick={() => router.push(`/playbooks/editor?id=${selectedPlaybook.id}`)}
           >
             <Edit3 className="h-4 w-4" />
-            可视化编辑
+            {t("workflows.visualEdit")}
           </Button>
         )}
       </div>
@@ -592,11 +594,11 @@ export default function WorkflowsPage() {
         <div className="lg:col-span-2 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+              <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
             </div>
           ) : filteredPlaybooks.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-xs text-zinc-700">
-              暂无剧本数据
+            <div className="flex items-center justify-center py-20 text-xs text-muted-foreground/70">
+              {t("workflows.noPlaybookData")}
             </div>
           ) : (
             <>
@@ -614,7 +616,7 @@ export default function WorkflowsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-sm font-semibold text-zinc-100 truncate">{playbook.name}</span>
+                      <span className="text-sm font-semibold text-foreground truncate">{playbook.name}</span>
                       <Badge
                         variant="outline"
                         className="text-[10px] shrink-0"
@@ -623,10 +625,10 @@ export default function WorkflowsPage() {
                           color: isEnabled ? "#22c55e" : "#64748b",
                         }}
                       >
-                        {isEnabled ? "已启用" : "已停用"}
+                        {isEnabled ? t("workflows.statusEnabled") : t("workflows.statusDisabled")}
                       </Badge>
                     </div>
-                    <p className="text-xs text-zinc-600 leading-relaxed mb-2 line-clamp-2">{playbook.description}</p>
+                    <p className="text-xs text-muted-foreground/60 leading-relaxed mb-2 line-clamp-2">{playbook.description}</p>
                     <div className="flex items-center gap-2 mb-2">
                       <span
                         className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium"
@@ -640,14 +642,14 @@ export default function WorkflowsPage() {
                         {playbook.trigger}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs text-zinc-600">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
                       <span className="flex items-center gap-1">
                         <GitBranch className="h-3 w-3" />
-                        {playbook.steps} 步骤
+                        {playbook.steps} {t("workflows.steps")}
                       </span>
                       <span className="flex items-center gap-1">
                         <Activity className="h-3 w-3" />
-                        {playbook.executions} 次执行
+                        {playbook.executions} {t("workflows.executions")}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
@@ -666,17 +668,17 @@ export default function WorkflowsPage() {
                       className="transition-colors"
                     >
                       {isEnabled ? (
-                        <ToggleRight className="h-6 w-6 text-emerald-400" />
+                        <ToggleRight className="h-6 w-6 text-emerald-600" />
                       ) : (
-                        <ToggleLeft className="h-6 w-6 text-zinc-700" />
+                        <ToggleLeft className="h-6 w-6 text-muted-foreground/70" />
                       )}
                     </button>
                     <div className="flex items-center gap-1">
                       <Button
                         size="icon-xs"
                         variant="ghost"
-                        aria-label="编辑剧本"
-                        className="text-zinc-700 hover:text-cyan-500"
+                        aria-label={t("workflows.editPlaybook")}
+                        className="text-muted-foreground/70 hover:text-cyan-500"
                         onClick={(e) => {
                           e.stopPropagation()
                           openEditor(playbook)
@@ -687,8 +689,8 @@ export default function WorkflowsPage() {
                       <Button
                         size="icon-xs"
                         variant="ghost"
-                        aria-label="运行剧本"
-                        className="text-zinc-700 hover:text-cyan-500"
+                        aria-label={t("workflows.runPlaybook")}
+                        className="text-muted-foreground/70 hover:text-cyan-500"
                         onClick={(e) => {
                           e.stopPropagation()
                         }}
@@ -698,8 +700,8 @@ export default function WorkflowsPage() {
                       <Button
                         size="icon-xs"
                         variant="ghost"
-                        aria-label="删除剧本"
-                        className="text-zinc-700 hover:text-red-500"
+                        aria-label={t("workflows.deletePlaybook")}
+                        className="text-muted-foreground/70 hover:text-red-600"
                         onClick={(e) => {
                           e.stopPropagation()
                           setDeleteTarget({id: playbook.id, name: playbook.name})
@@ -724,7 +726,7 @@ export default function WorkflowsPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <Workflow className="h-4 w-4 text-cyan-500" />
-                    <h3 className="text-sm font-semibold text-zinc-100">{selectedPlaybook.name}</h3>
+                    <h3 className="text-sm font-semibold text-foreground">{selectedPlaybook.name}</h3>
                     <Badge
                       variant="outline"
                       className="text-[10px]"
@@ -733,24 +735,24 @@ export default function WorkflowsPage() {
                         color: selectedPlaybook.status === "enabled" ? "#22c55e" : "#64748b",
                       }}
                     >
-                      {selectedPlaybook.status === "enabled" ? "已启用" : "已停用"}
+                      {selectedPlaybook.status === "enabled" ? t("workflows.statusEnabled") : t("workflows.statusDisabled")}
                     </Badge>
                   </div>
-                  <span className="text-xs text-zinc-600 font-mono">{selectedPlaybook.id}</span>
+                  <span className="text-xs text-muted-foreground/60 font-mono">{selectedPlaybook.id}</span>
                 </div>
 
-                <div className="flex items-center gap-6 mb-5 text-xs text-zinc-600">
+                <div className="flex items-center gap-6 mb-5 text-xs text-muted-foreground/60">
                   <span className="flex items-center gap-1">
-                    <Zap className="h-3 w-3 text-red-400" />
-                    触发: {selectedPlaybook.trigger}
+                    <Zap className="h-3 w-3 text-red-600" />
+                    {t("workflows.trigger")}: {selectedPlaybook.trigger}
                   </span>
                   <span className="flex items-center gap-1">
-                    <GitBranch className="h-3 w-3 text-cyan-400" />
-                    {selectedPlaybook.steps} 个步骤
+                    <GitBranch className="h-3 w-3 text-cyan-600" />
+                    {selectedPlaybook.steps} {t("workflows.stepCount")}
                   </span>
                   <span className="flex items-center gap-1">
-                    <Activity className="h-3 w-3 text-emerald-400" />
-                    累计执行 {selectedPlaybook.executions} 次
+                    <Activity className="h-3 w-3 text-emerald-600" />
+                    {t("workflows.totalExecutionsPrefix")} {selectedPlaybook.executions} {t("workflows.totalExecutionsSuffix")}
                   </span>
                 </div>
 
@@ -771,7 +773,7 @@ export default function WorkflowsPage() {
                         }}
                       >
                         <Icon className="h-3 w-3" />
-                        {config.label} ×{count}
+                        {t(config.labelKey)} ×{count}
                       </span>
                     )
                   })}
@@ -798,7 +800,7 @@ export default function WorkflowsPage() {
                                 {node.label}
                               </span>
                             </div>
-                            <p className="text-[10px] text-zinc-600 leading-tight">{node.detail}</p>
+                            <p className="text-[10px] text-muted-foreground/60 leading-tight">{node.detail}</p>
                           </div>
                           {idx < selectedPlaybook.nodes.length - 1 && (
                             <div className="flex items-center mx-1 relative">
@@ -822,9 +824,9 @@ export default function WorkflowsPage() {
               </div>
 
               <div className={`${pageCardClass} p-5`}>
-                <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2 mb-4">
-                  <Clock className="h-4 w-4 text-cyan-400" />
-                  执行历史
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+                  <Clock className="h-4 w-4 text-cyan-600" />
+                  {t("workflows.executionHistory")}
                 </h3>
                 <div className="space-y-2">
                   {executionHistory
@@ -835,11 +837,11 @@ export default function WorkflowsPage() {
                       return (
                         <div
                           key={record.id}
-                          className="flex items-center gap-4 rounded-lg bg-white/[0.03] border border-white/[0.04] px-4 py-2.5"
+                          className="flex items-center gap-4 rounded-lg bg-muted/50 border border-border/40 px-4 py-2.5"
                         >
-                          <span className="text-xs font-mono text-zinc-600 shrink-0">{record.id}</span>
-                          <span className="text-xs text-zinc-500 flex-1 truncate">{record.playbookName}</span>
-                          <span className="text-xs font-mono text-zinc-600 shrink-0">{record.triggerTime}</span>
+                          <span className="text-xs font-mono text-muted-foreground/60 shrink-0">{record.id}</span>
+                          <span className="text-xs text-muted-foreground flex-1 truncate">{record.playbookName}</span>
+                          <span className="text-xs font-mono text-muted-foreground/60 shrink-0">{record.triggerTime}</span>
                           <span
                             className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0"
                             style={{
@@ -849,15 +851,15 @@ export default function WorkflowsPage() {
                             }}
                           >
                             <StatusIcon className={cn("h-2.5 w-2.5", record.status === "running" && "animate-spin")} />
-                            {statusConfig.label}
+                            {t(statusConfig.labelKey)}
                           </span>
-                          <span className="text-xs font-mono text-zinc-600 shrink-0 w-14 text-right">{record.duration}</span>
+                          <span className="text-xs font-mono text-muted-foreground/60 shrink-0 w-14 text-right">{record.duration}</span>
                         </div>
                       )
                     })}
                   {executionHistory.filter((r) => r.playbookName === selectedPlaybook.name).length === 0 && (
-                    <div className="flex items-center justify-center py-8 text-xs text-zinc-700">
-                      暂无执行记录
+                    <div className="flex items-center justify-center py-8 text-xs text-muted-foreground/70">
+                      {t("workflows.noExecutionRecords")}
                     </div>
                   )}
                 </div>
@@ -866,17 +868,17 @@ export default function WorkflowsPage() {
           ) : (
             <div className={`${softCardClass} p-12 flex flex-col items-center justify-center text-center min-h-[400px]`}>
               <Workflow className="h-12 w-12 text-zinc-800 mb-4" />
-              <p className="text-sm text-zinc-600">选择左侧剧本查看可视化流程</p>
-              <p className="text-xs text-zinc-700 mt-1">点击任意剧本卡片以展示编排流程图</p>
+              <p className="text-sm text-muted-foreground/60">{t("workflows.selectPlaybookHint")}</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">{t("workflows.selectPlaybookHintSub")}</p>
             </div>
           )}
         </div>
       </div>
 
       <div className={`${pageCardClass} p-5`}>
-        <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2 mb-4">
-          <Activity className="h-4 w-4 text-cyan-400" />
-          最近执行记录
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
+          <Activity className="h-4 w-4 text-cyan-600" />
+          {t("workflows.recentExecutions")}
         </h3>
         <div className="space-y-2">
           {executionHistory.map((record) => {
@@ -885,11 +887,11 @@ export default function WorkflowsPage() {
             return (
               <div
                 key={record.id}
-                className="flex items-center gap-4 rounded-lg bg-white/[0.03] border border-white/[0.04] px-4 py-2.5 hover:border-white/[0.08] transition-colors"
+                className="flex items-center gap-4 rounded-lg bg-muted/50 border border-border/40 px-4 py-2.5 hover:border-border transition-colors"
               >
-                <span className="text-xs font-mono text-zinc-600 shrink-0 w-36">{record.id}</span>
-                <span className="text-xs text-zinc-500 flex-1 truncate">{record.playbookName}</span>
-                <span className="text-xs font-mono text-zinc-600 shrink-0">{record.triggerTime}</span>
+                <span className="text-xs font-mono text-muted-foreground/60 shrink-0 w-36">{record.id}</span>
+                <span className="text-xs text-muted-foreground flex-1 truncate">{record.playbookName}</span>
+                <span className="text-xs font-mono text-muted-foreground/60 shrink-0">{record.triggerTime}</span>
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0"
                   style={{
@@ -899,9 +901,9 @@ export default function WorkflowsPage() {
                   }}
                 >
                   <StatusIcon className={cn("h-2.5 w-2.5", record.status === "running" && "animate-spin")} />
-                  {statusConfig.label}
+                  {t(statusConfig.labelKey)}
                 </span>
-                <span className="text-xs font-mono text-zinc-600 shrink-0 w-14 text-right">{record.duration}</span>
+                <span className="text-xs font-mono text-muted-foreground/60 shrink-0 w-14 text-right">{record.duration}</span>
               </div>
             )
           })}
@@ -911,59 +913,59 @@ export default function WorkflowsPage() {
       )}
 
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="sm:max-w-lg bg-[#131316] border-white/[0.06]">
+        <DialogContent className="sm:max-w-lg bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">创建新剧本</DialogTitle>
-            <DialogDescription className="text-zinc-600">
-              配置安全响应剧本的触发条件、执行步骤和审批流程
+            <DialogTitle className="text-foreground">{t("workflows.createNewPlaybook")}</DialogTitle>
+            <DialogDescription className="text-muted-foreground/60">
+              {t("workflows.createNewPlaybookDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <label htmlFor="playbook-name" className="text-xs text-zinc-600 mb-1.5 block">剧本名称</label>
+              <label htmlFor="playbook-name" className="text-xs text-muted-foreground/60 mb-1.5 block">{t("workflows.playbookName")}</label>
               <Input
                 id="playbook-name"
                 name="name"
                 autoComplete="off"
-                placeholder="输入剧本名称"
+                placeholder={t("workflows.playbookNamePlaceholder")}
                 value={createForm.name}
                 onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
-                className="border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700"
+                className="border-border bg-card text-muted-foreground placeholder:text-muted-foreground/50"
               />
             </div>
             <div>
-              <label htmlFor="playbook-description" className="text-xs text-zinc-600 mb-1.5 block">剧本描述</label>
+              <label htmlFor="playbook-description" className="text-xs text-muted-foreground/60 mb-1.5 block">{t("workflows.playbookDescription")}</label>
               <Input
                 id="playbook-description"
                 name="description"
                 autoComplete="off"
-                placeholder="输入剧本描述"
+                placeholder={t("workflows.playbookDescriptionPlaceholder")}
                 value={createForm.description}
                 onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
-                className="border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700"
+                className="border-border bg-card text-muted-foreground placeholder:text-muted-foreground/50"
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-600 mb-1.5 block">触发条件</label>
+              <label className="text-xs text-muted-foreground/60 mb-1.5 block">{t("workflows.triggerCondition")}</label>
               <Select
                 value={createForm.trigger}
                 onValueChange={(v) => setCreateForm((f) => ({ ...f, trigger: v ?? "" }))}
               >
-                <SelectTrigger className="w-full border-white/[0.06] bg-[#131316] text-zinc-300">
-                  <SelectValue placeholder="选择触发条件类型" />
+                <SelectTrigger className="w-full border-border bg-card text-muted-foreground">
+                  <SelectValue placeholder={t("workflows.selectTriggerType")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="confidence">AI研判置信度触发</SelectItem>
-                  <SelectItem value="threshold">阈值触发</SelectItem>
-                  <SelectItem value="signature">特征匹配触发</SelectItem>
-                  <SelectItem value="behavior">行为检测触发</SelectItem>
-                  <SelectItem value="schedule">定时调度触发</SelectItem>
+                  <SelectItem value="confidence">{t("workflows.triggerAiConfidence")}</SelectItem>
+                  <SelectItem value="threshold">{t("workflows.triggerThreshold")}</SelectItem>
+                  <SelectItem value="signature">{t("workflows.triggerSignature")}</SelectItem>
+                  <SelectItem value="behavior">{t("workflows.triggerBehavior")}</SelectItem>
+                  <SelectItem value="schedule">{t("workflows.triggerSchedule")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex items-center gap-3 pt-2">
               <Button
-                className="flex-1 bg-cyan-600 text-white hover:bg-cyan-700 gap-1.5"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 gap-1.5"
                 disabled={submitting}
                 onClick={handleCreate}
               >
@@ -972,14 +974,14 @@ export default function WorkflowsPage() {
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                创建剧本
+                {t("workflows.createPlaybook")}
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-white/[0.06] text-zinc-600 hover:bg-white/[0.04] hover:text-zinc-300"
+                className="flex-1 border-border text-muted-foreground/60 hover:bg-muted/50 hover:text-muted-foreground"
                 onClick={() => setCreateDialogOpen(false)}
               >
-                取消
+                {t("workflows.cancel")}
               </Button>
             </div>
           </div>
@@ -989,8 +991,8 @@ export default function WorkflowsPage() {
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
-        title="删除剧本"
-        description={`确定要删除剧本 ${deleteTarget?.name} 吗？此操作不可撤销。`}
+        title={t("workflows.deletePlaybookTitle")}
+        description={t("workflows.deletePlaybookConfirmPrefix") + " " + (deleteTarget?.name ?? "") + t("workflows.deletePlaybookConfirmSuffix")}
         level="danger"
         onConfirm={() => {
           if (deleteTarget) {

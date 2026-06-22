@@ -1,0 +1,13 @@
+{
+  "name": "secmind-email-mcp",
+  "version": "1.0.0",
+  "description": "SecMind 邮件日志查询 MCP 服务器（Resend API）",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  }
+}

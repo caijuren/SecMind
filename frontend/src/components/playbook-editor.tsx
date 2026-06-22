@@ -33,6 +33,7 @@ import {
   Settings,
   type LucideIcon,
 } from "lucide-react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface NodeData {
   label: string
@@ -50,47 +51,41 @@ const iconMap: Record<string, LucideIcon> = {
   delay: Clock,
 }
 
-const colorMap: Record<string, { bg: string; border: string; text: string; glow: string; accent: string }> = {
+const colorMap: Record<string, { bg: string; border: string; text: string; accent: string }> = {
   trigger: {
-    bg: "bg-cyan-500/10",
-    border: "border-cyan-500/40",
-    text: "text-cyan-400",
-    glow: "shadow-[0_0_20px_rgba(6,182,212,0.15)]",
-    accent: "cyan",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+    text: "text-blue-600",
+    accent: "blue",
   },
   condition: {
     bg: "bg-amber-500/10",
-    border: "border-amber-500/40",
-    text: "text-amber-400",
-    glow: "shadow-[0_0_20px_rgba(245,158,11,0.15)]",
+    border: "border-amber-500/30",
+    text: "text-amber-600",
     accent: "amber",
   },
   action: {
     bg: "bg-red-500/10",
-    border: "border-red-500/40",
-    text: "text-red-400",
-    glow: "shadow-[0_0_20px_rgba(239,68,68,0.15)]",
+    border: "border-red-500/30",
+    text: "text-red-600",
     accent: "red",
   },
   approval: {
     bg: "bg-purple-500/10",
-    border: "border-purple-500/40",
-    text: "text-purple-400",
-    glow: "shadow-[0_0_20px_rgba(168,85,247,0.15)]",
+    border: "border-purple-500/30",
+    text: "text-purple-600",
     accent: "purple",
   },
   notify: {
     bg: "bg-blue-500/10",
-    border: "border-blue-500/40",
-    text: "text-blue-400",
-    glow: "shadow-[0_0_20px_rgba(59,130,246,0.15)]",
+    border: "border-blue-500/30",
+    text: "text-blue-600",
     accent: "blue",
   },
   delay: {
-    bg: "bg-slate-500/10",
-    border: "border-slate-500/40",
-    text: "text-slate-400",
-    glow: "",
+    bg: "bg-muted",
+    border: "border-border",
+    text: "text-muted-foreground",
     accent: "slate",
   },
 }
@@ -101,29 +96,29 @@ function BaseNode({ data, nodeType }: { data: NodeData; nodeType: string }) {
 
   return (
     <div
-      className={`px-4 py-3 rounded-xl border ${colors.border} ${colors.bg} backdrop-blur-sm ${colors.glow} min-w-[180px] max-w-[240px] transition-shadow duration-200 hover:shadow-[0_0_24px_rgba(6,182,212,0.25)]`}
+      className={`px-4 py-3 rounded-lg border ${colors.border} ${colors.bg} min-w-[180px] max-w-[240px] transition-colors duration-200 hover:border-primary/30`}
     >
       {nodeType !== "trigger" && (
         <Handle
           type="target"
           position={Position.Top}
-          className="!w-3 !h-3 !bg-zinc-800 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
+          className="!w-3 !h-3 !bg-card !border-2 !border-blue-500/40 !transition-colors hover:!border-blue-400 hover:!bg-blue-500/20"
         />
       )}
       <div className="flex items-center gap-2.5 mb-1">
         <div className={`flex items-center justify-center w-7 h-7 rounded-lg ${colors.bg} border ${colors.border}`}>
           <Icon className={`w-3.5 h-3.5 ${colors.text}`} />
         </div>
-        <span className="text-sm font-semibold text-white/90">{data.label}</span>
+        <span className="text-sm font-semibold text-foreground">{data.label}</span>
       </div>
       {data.detail && (
-        <p className="text-xs text-white/40 leading-relaxed pl-[38px]">{data.detail}</p>
+        <p className="text-xs text-muted-foreground leading-relaxed pl-[38px]">{data.detail}</p>
       )}
       {nodeType !== "delay" && (
         <Handle
           type="source"
           position={Position.Bottom}
-          className="!w-3 !h-3 !bg-zinc-800 !border-2 !border-cyan-500/50 !transition-colors hover:!border-cyan-400 hover:!bg-cyan-500/30"
+          className="!w-3 !h-3 !bg-card !border-2 !border-blue-500/40 !transition-colors hover:!border-blue-400 hover:!bg-blue-500/20"
         />
       )}
     </div>
@@ -200,19 +195,19 @@ function validateConnection(sourceType: string, targetType: string): boolean {
   return allowed.includes(targetType)
 }
 
-function getValidationErrors(nodes: Node[], edges: Edge[]): string[] {
+function getValidationErrors(nodes: Node[], edges: Edge[], t: (key: string) => string): string[] {
   const errors: string[] = []
 
   for (const node of nodes) {
     const data = node.data as NodeData
     if (!data.label || data.label.trim() === "") {
-      errors.push(`节点 "${node.id}" 缺少名称`)
+      errors.push(t("playbook.nodeMissingName").replace("{id}", node.id))
     }
   }
 
   const triggerCount = nodes.filter((n) => (n.data as NodeData).icon === "trigger").length
   if (triggerCount === 0) {
-    errors.push("剧本至少需要一个触发器节点")
+    errors.push(t("playbook.needTrigger"))
   }
 
   const nodesWithNoOutput = nodes.filter((n) => {
@@ -221,13 +216,14 @@ function getValidationErrors(nodes: Node[], edges: Edge[]): string[] {
     return !edges.some((e) => e.source === n.id)
   })
   if (nodesWithNoOutput.length > 1) {
-    errors.push(`有 ${nodesWithNoOutput.length} 个非触发节点没有下游连线`)
+    errors.push(t("playbook.noDownstreamCount").replace("{count}", String(nodesWithNoOutput.length)))
   }
 
   return errors
 }
 
 export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onChange, readOnly = false }: PlaybookEditorProps) {
+  const { t } = useLocaleStore()
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [selectedNodes, setSelectedNodes] = useState<string[]>([])
@@ -248,8 +244,8 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
   })
 
   const validationErrors = useMemo(
-    () => getValidationErrors(nodes, edges),
-    [nodes, edges]
+    () => getValidationErrors(nodes, edges, t),
+    [nodes, edges, t]
   )
 
   const pushHistory = useCallback((n: Node[], e: Edge[]) => {
@@ -353,7 +349,7 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
           {
             ...connection,
             animated: true,
-            style: { stroke: "#22d3ee", strokeWidth: 2 },
+            style: { stroke: "#3b82f6", strokeWidth: 2 },
           },
           eds
         )
@@ -368,7 +364,7 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
   const defaultEdgeOptions = useMemo(
     () => ({
       animated: true,
-      style: { stroke: "#22d3ee55", strokeWidth: 2 },
+      style: { stroke: "#3b82f655", strokeWidth: 2 },
       type: "smoothstep",
     }),
     []
@@ -516,7 +512,7 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
     : null
 
   return (
-    <div className="h-full w-full rounded-xl border border-cyan-500/10 bg-[#0a1628]/80 overflow-hidden relative">
+    <div className="h-full w-full rounded-lg border border-border bg-card overflow-hidden relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -535,14 +531,14 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
         onSelectionChange={onSelectionChange}
         deleteKeyCode={readOnly ? null : ["Delete", "Backspace"]}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#1e3a5f" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d4d4d8" />
         <Controls
-          aria-label="流程图控制"
-          className="!bg-[#0a1628] !border-cyan-500/20 [&>button]:!bg-[#0a1628] [&>button]:!border-cyan-500/20 [&>button]:!text-cyan-400 [&>button:hover]:!bg-cyan-500/10"
+          aria-label={t("playbook.flowControls")}
+          className="!bg-card !border-border [&>button]:!bg-card [&>button]:!border-border [&>button]:!text-foreground [&>button:hover]:!bg-accent"
         />
         <MiniMap
-          aria-label="流程图缩略图"
-          className="!bg-[#0a1628] !border-cyan-500/20"
+          aria-label={t("playbook.flowMinimap")}
+          className="!bg-card !border-border"
           nodeColor={(n) => {
             const nodeType = (n.data as NodeData)?.icon as string
             const colorMap2: Record<string, string> = {
@@ -555,7 +551,7 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
             }
             return colorMap2[nodeType] || "#22d3ee"
           }}
-          maskColor="rgba(0,0,0,0.7)"
+          maskColor="rgba(0,0,0,0.15)"
           pannable
           zoomable
         />
@@ -563,10 +559,10 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
 
       {!readOnly && validationErrors.length > 0 && (
         <div className="absolute top-3 right-3 max-w-[260px]">
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2.5 backdrop-blur-sm">
-            <p className="text-xs font-semibold text-red-400 mb-1.5">验证警告</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 ">
+            <p className="text-xs font-semibold text-red-600 mb-1.5">{t("playbook.validationWarning")}</p>
             {validationErrors.map((err, i) => (
-              <p key={i} className="text-[11px] text-red-300/80 leading-relaxed">
+              <p key={i} className="text-[11px] text-red-500/80 leading-relaxed">
                 {err}
               </p>
             ))}
@@ -579,79 +575,79 @@ export function PlaybookEditor({ nodes: initialNodes, edges: initialEdges, onCha
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="px-2 py-1 text-[11px] rounded border border-cyan-500/20 bg-[#0a1628] text-cyan-400 hover:bg-cyan-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="撤销 (Ctrl+Z)"
+            className="px-2 py-1 text-[11px] rounded border border-border bg-card text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title={t("playbook.undoShortcut")}
           >
-            撤销
+            {t("playbook.undo")}
           </button>
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="px-2 py-1 text-[11px] rounded border border-cyan-500/20 bg-[#0a1628] text-cyan-400 hover:bg-cyan-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            title="重做 (Ctrl+Y)"
+            className="px-2 py-1 text-[11px] rounded border border-border bg-card text-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            title={t("playbook.redoShortcut")}
           >
-            重做
+            {t("playbook.redo")}
           </button>
         </div>
       )}
 
       {contextMenu.visible && (
         <div
-          className="fixed z-50 min-w-[160px] rounded-lg border border-cyan-500/20 bg-[#0a1628] shadow-lg shadow-black/40 backdrop-blur-md py-1"
+          className="fixed z-50 min-w-[160px] rounded-lg border border-border bg-popover shadow-lg py-1"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}
         >
           {contextMenu.nodeId && (
             <>
-              <div className="px-3 py-1.5 text-[11px] text-cyan-400/60 font-semibold border-b border-cyan-500/10 mb-1">
-                {contextMenuNode ? (contextMenuNode.data as NodeData)?.label || "节点" : "节点"}
+              <div className="px-3 py-1.5 text-[11px] text-muted-foreground font-semibold border-b border-border mb-1">
+                {contextMenuNode ? (contextMenuNode.data as NodeData)?.label || t("playbook.node") : t("playbook.node")}
               </div>
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-white/80 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                 onClick={() => {
                   handleDuplicateNode(contextMenu.nodeId!)
                   closeContextMenu()
                 }}
               >
                 <Copy className="w-3.5 h-3.5" />
-                复制节点
+                {t("playbook.duplicateNode")}
               </button>
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-white/80 hover:bg-cyan-500/10 hover:text-cyan-400 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                 onClick={() => {
                   closeContextMenu()
                 }}
               >
                 <Settings className="w-3.5 h-3.5" />
-                配置节点
+                {t("playbook.configNode")}
               </button>
-              <div className="border-t border-cyan-500/10 my-1" />
+              <div className="border-t border-border my-1" />
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-500/10 transition-colors"
                 onClick={() => {
                   handleDeleteNode(contextMenu.nodeId!)
                   closeContextMenu()
                 }}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                删除节点
+                {t("playbook.deleteNode")}
               </button>
             </>
           )}
           {contextMenu.edgeId && (
             <>
-              <div className="px-3 py-1.5 text-[11px] text-cyan-400/60 font-semibold border-b border-cyan-500/10 mb-1">
-                连线
+              <div className="px-3 py-1.5 text-[11px] text-muted-foreground font-semibold border-b border-border mb-1">
+                {t("playbook.connection")}
               </div>
               <button
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-500/10 transition-colors"
                 onClick={() => {
                   handleDeleteEdge(contextMenu.edgeId!)
                   closeContextMenu()
                 }}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                删除连线
+                {t("playbook.deleteConnection")}
               </button>
             </>
           )}

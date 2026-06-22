@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { cn } from "@/lib/utils"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface ConfidenceGaugeProps {
   value: number
@@ -20,12 +21,12 @@ function getConfidenceColor(value: number): string {
   return "#ef4444"
 }
 
-function getConfidenceLabel(value: number): string {
-  if (value >= 80) return "高置信"
-  if (value >= 65) return "较高"
-  if (value >= 50) return "中等"
-  if (value >= 35) return "较低"
-  return "低置信"
+function getConfidenceLabelKey(value: number): string {
+  if (value >= 80) return "confidenceGauge.highConfidence"
+  if (value >= 65) return "confidenceGauge.fairlyHigh"
+  if (value >= 50) return "confidenceGauge.medium"
+  if (value >= 35) return "confidenceGauge.fairlyLow"
+  return "confidenceGauge.lowConfidence"
 }
 
 export default function ConfidenceGauge({
@@ -39,6 +40,7 @@ export default function ConfidenceGauge({
   const [displayValue, setDisplayValue] = useState(animate ? 0 : value)
   const hasAnimated = useRef(false)
   const prevValue = useRef(value)
+  const { t } = useLocaleStore()
 
   const startAnimation = useCallback(() => {
     hasAnimated.current = true
@@ -78,7 +80,7 @@ export default function ConfidenceGauge({
   }, [value, animate, startAnimation])
 
   const color = getConfidenceColor(value)
-  const label = getConfidenceLabel(value)
+  const labelKey = getConfidenceLabelKey(value)
 
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
@@ -96,7 +98,7 @@ export default function ConfidenceGauge({
       aria-valuenow={value}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={`AI 置信度: ${value}%`}
+      aria-label={`${t("confidenceGauge.ariaLabel")}: ${value}%`}
     >
       <svg width={size} height={size} className="-rotate-90">
         <circle
@@ -136,7 +138,7 @@ export default function ConfidenceGauge({
             className={cn("font-medium tracking-wide opacity-70", fontSize)}
             style={{ color }}
           >
-            {label}
+            {t(labelKey)}
           </span>
         )}
       </div>

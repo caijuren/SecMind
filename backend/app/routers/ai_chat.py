@@ -13,6 +13,9 @@ from app.schemas.ai_chat import (
     ReportUpdate,
     ReportRead,
     ReportListResponse,
+    NextStepRequest,
+    NextStepResponse,
+    NextStepSuggestion,
 )
 from typing import List as TypingList
 from pydantic import BaseModel
@@ -35,6 +38,7 @@ from app.services.ai_chat_service import (
     create_report,
     update_report,
     delete_report,
+    suggest_next_steps,
 )
 from app.database import get_db
 from app.services.permissions import get_current_user
@@ -73,7 +77,7 @@ async def send_message(session_id: int, body: ChatMessageCreate, current_user: U
     if not session:
         raise HTTPException(status_code=404, detail="对话不存在")
     user_msg = add_message(db, session_id, "user", body.content)
-    ai_msg = await process_ai_response(db, session_id, body.content)
+    ai_msg = await process_ai_response(db, session_id, body.content, context=body.context)
     return ai_msg
 
 
@@ -94,6 +98,12 @@ async def generate_session_report(session_id: int, db: Session = Depends(get_db)
 @router.get("/tools")
 def list_tools():
     return {"tools": AI_TOOLS}
+
+
+@router.post("/suggest-next-steps", response_model=NextStepResponse)
+async def get_next_step_suggestions(body: NextStepRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    suggestions = await suggest_next_steps(db, body.context, body.conversation_id)
+    return NextStepResponse(suggestions=[NextStepSuggestion(**s) for s in suggestions])
 
 
 @router.get("/reports", response_model=ReportListResponse)

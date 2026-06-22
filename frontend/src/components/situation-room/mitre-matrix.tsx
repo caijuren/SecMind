@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface MitreTechnique {
   id: string
@@ -15,18 +16,18 @@ interface MitreMatrixProps {
 }
 
 const TACTICS = [
-  { id: "reconnaissance", name: "侦察", short: "侦察" },
-  { id: "resource-dev", name: "资源开发", short: "资源开发" },
-  { id: "initial-access", name: "初始访问", short: "初始访问" },
-  { id: "execution", name: "执行", short: "执行" },
-  { id: "persistence", name: "持久化", short: "持久化" },
-  { id: "priv-escalation", name: "权限提升", short: "权限提升" },
-  { id: "defense-evasion", name: "防御规避", short: "防御规避" },
-  { id: "credential-access", name: "凭证访问", short: "凭证访问" },
-  { id: "discovery", name: "发现", short: "发现" },
-  { id: "lateral-movement", name: "横向移动", short: "横向移动" },
-  { id: "collection", name: "收集", short: "收集" },
-  { id: "exfiltration", name: "数据外泄", short: "数据外泄" },
+  { id: "reconnaissance", nameKey: "situation.tacticReconnaissance", shortKey: "situation.tacticReconnaissance" },
+  { id: "resource-dev", nameKey: "situation.tacticResourceDev", shortKey: "situation.tacticResourceDev" },
+  { id: "initial-access", nameKey: "situation.tacticInitialAccess", shortKey: "situation.tacticInitialAccess" },
+  { id: "execution", nameKey: "situation.tacticExecution", shortKey: "situation.tacticExecution" },
+  { id: "persistence", nameKey: "situation.tacticPersistence", shortKey: "situation.tacticPersistence" },
+  { id: "priv-escalation", nameKey: "situation.tacticPrivEscalation", shortKey: "situation.tacticPrivEscalation" },
+  { id: "defense-evasion", nameKey: "situation.tacticDefenseEvasion", shortKey: "situation.tacticDefenseEvasion" },
+  { id: "credential-access", nameKey: "situation.tacticCredentialAccess", shortKey: "situation.tacticCredentialAccess" },
+  { id: "discovery", nameKey: "situation.tacticDiscovery", shortKey: "situation.tacticDiscovery" },
+  { id: "lateral-movement", nameKey: "situation.tacticLateralMovement", shortKey: "situation.tacticLateralMovement" },
+  { id: "collection", nameKey: "situation.tacticCollection", shortKey: "situation.tacticCollection" },
+  { id: "exfiltration", nameKey: "situation.tacticExfiltration", shortKey: "situation.tacticExfiltration" },
 ]
 
 const ROWS = 4
@@ -34,6 +35,7 @@ const ROWS = 4
 export function MitreMatrix({ techniques }: MitreMatrixProps) {
   const [hoveredCell, setHoveredCell] = useState<string | null>(null)
   const [pulseActive, setPulseActive] = useState(true)
+  const { t } = useLocaleStore()
 
   const pulseCells = useMemo(() => {
     return new Set(techniques.filter((t) => t.hasAlert).map((t) => t.id))
@@ -47,10 +49,10 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
   }, [])
 
   const techniquesByTactic = new Map<string, MitreTechnique[]>()
-  techniques.forEach((t) => {
-    const list = techniquesByTactic.get(t.tactic) || []
-    list.push(t)
-    techniquesByTactic.set(t.tactic, list)
+  techniques.forEach((tech) => {
+    const list = techniquesByTactic.get(tech.tactic) || []
+    list.push(tech)
+    techniquesByTactic.set(tech.tactic, list)
   })
 
   return (
@@ -67,15 +69,15 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
             key={tactic.id}
             className="flex items-center justify-center px-1 py-1.5 rounded-t"
             style={{
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              backgroundColor: "var(--muted)",
+              borderBottom: "1px solid var(--border)",
             }}
           >
             <span
               className="text-[9px] font-medium text-center leading-tight"
-              style={{ color: "rgba(255,255,255,0.35)" }}
+              style={{ color: "var(--muted-foreground)" }}
             >
-              {tactic.short}
+              {t(tactic.shortKey)}
             </span>
           </div>
         ))}
@@ -90,20 +92,20 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
             const isHovered = hoveredCell === cellId
             const isPulsing = pulseCells.has(cellId)
 
-            let bgColor = "rgba(255,255,255,0.02)"
-            let borderColor = "rgba(255,255,255,0.04)"
-            let textColor = "rgba(255,255,255,0.2)"
+            let bgColor = "var(--muted)"
+            let borderColor = "var(--border)"
+            let textColor = "var(--muted-foreground)"
 
             if (hasAlert) {
               const count = technique?.alertCount ?? 1
               if (count >= 5) {
-                bgColor = "rgba(239,68,68,0.2)"
-                borderColor = "rgba(239,68,68,0.4)"
-                textColor = "rgba(239,68,68,0.9)"
+                bgColor = "rgba(255,45,85,0.2)"
+                borderColor = "rgba(255,45,85,0.4)"
+                textColor = "rgba(255,45,85,0.9)"
               } else if (count >= 3) {
-                bgColor = "rgba(249,115,22,0.15)"
-                borderColor = "rgba(249,115,22,0.3)"
-                textColor = "rgba(249,115,22,0.9)"
+                bgColor = "rgba(255,149,0,0.15)"
+                borderColor = "rgba(255,149,0,0.3)"
+                textColor = "rgba(255,149,0,0.9)"
               } else {
                 bgColor = "rgba(251,191,36,0.12)"
                 borderColor = "rgba(251,191,36,0.25)"
@@ -112,14 +114,14 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
             }
 
             if (isHovered) {
-              bgColor = hasAlert ? bgColor : "rgba(255,255,255,0.04)"
-              borderColor = "rgba(34,211,238,0.3)"
+              bgColor = hasAlert ? bgColor : "var(--muted)"
+              borderColor = "rgba(0,212,255,0.3)"
             }
 
             return (
               <div
                 key={`${colIdx}-${rowIdx}`}
-                className="flex flex-col items-center justify-center px-0.5 py-0.5 rounded-sm cursor-default transition-all duration-200 relative"
+                className="flex flex-col items-center justify-center px-0.5 py-0.5 rounded-sm cursor-default transition-colors duration-200 relative"
                 style={{
                   backgroundColor: bgColor,
                   border: `1px solid ${borderColor}`,
@@ -148,7 +150,7 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
                     )}
                   </>
                 ) : (
-                  <span className="text-[8px]" style={{ color: "rgba(255,255,255,0.1)" }}>
+                  <span className="text-[8px]" style={{ color: "var(--muted-foreground)" }}>
                     -
                   </span>
                 )}
@@ -158,7 +160,7 @@ export function MitreMatrix({ techniques }: MitreMatrixProps) {
                     className="absolute inset-0 rounded-sm pointer-events-none"
                     style={{
                       animation: "mitrePulse 2s ease-in-out infinite",
-                      border: `1px solid rgba(239,68,68,0.3)`,
+                      border: `1px solid rgba(255,45,85,0.3)`,
                     }}
                   />
                 )}

@@ -42,7 +42,9 @@ function buildConnectSrc(): string {
   return Array.from(allowedOrigins).join(" ");
 }
 
-const scriptSrc = "'self' 'unsafe-inline'";
+const scriptSrc = isDev
+  ? "'self' 'unsafe-inline' 'unsafe-eval'"
+  : "'self' 'unsafe-inline'";
 
 const cspValue = `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://trae-api-cn.mchost.guru; font-src 'self' data:; connect-src ${buildConnectSrc()}; frame-ancestors 'none'; form-action 'self'; object-src 'none'; base-uri 'self'`;
 
@@ -77,7 +79,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+      source: "/((?!api|favicon.ico|sitemap.xml|robots.txt).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "next-action" },

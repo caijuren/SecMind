@@ -33,10 +33,10 @@ import { softCardClass } from "@/lib/admin-ui"
 const TENANT_ID = 1
 
 const PLAN_LABELS: Record<string, string> = {
-  free: "免费试用",
-  starter: "入门版",
-  professional: "专业版",
-  enterprise: "企业版",
+  free: "billing.planFreeTrial",
+  starter: "billing.planStarter",
+  professional: "billing.planProfessional",
+  enterprise: "billing.planEnterprise",
 }
 
 const PLAN_PRICES: Record<string, number> = {
@@ -46,11 +46,11 @@ const PLAN_PRICES: Record<string, number> = {
   enterprise: 9999,
 }
 
-const PLAN_LIMITS: Record<string, { users: number; alerts: string; storage: string }> = {
-  free: { users: 5, alerts: "100/天", storage: "1GB" },
-  starter: { users: 10, alerts: "1,000/天", storage: "10GB" },
-  professional: { users: 20, alerts: "无限", storage: "100GB" },
-  enterprise: { users: Infinity, alerts: "无限", storage: "无限" },
+const PLAN_LIMITS: Record<string, { users: number; alertsPerDay: number; storageGB: number }> = {
+  free: { users: 5, alertsPerDay: 100, storageGB: 1 },
+  starter: { users: 10, alertsPerDay: 1000, storageGB: 10 },
+  professional: { users: 20, alertsPerDay: Infinity, storageGB: 100 },
+  enterprise: { users: Infinity, alertsPerDay: Infinity, storageGB: Infinity },
 }
 
 interface TrialStatusData {
@@ -140,9 +140,9 @@ export function SubscriptionTab() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 text-zinc-400">
+      <div className="flex items-center justify-center py-20 text-muted-foreground">
         <Loader2 className="mr-2 size-5 animate-spin" />
-        加载中...
+        {t("billing.loading")}
       </div>
     )
   }
@@ -156,8 +156,8 @@ export function SubscriptionTab() {
     : 0
 
   const userPercent = currentLimits.users === Infinity ? 0 : Math.min(100, (usage.users / currentLimits.users) * 100)
-  const alertPercent = currentLimits.alerts === "无限" ? 0 : Math.min(100, (usage.alerts_today / 100) * 100)
-  const storagePercent = currentLimits.storage === "无限" ? 0 : Math.min(100, (usage.storage_used_gb / 1) * 100)
+  const alertPercent = currentLimits.alertsPerDay === Infinity ? 0 : Math.min(100, (usage.alerts_today / currentLimits.alertsPerDay) * 100)
+  const storagePercent = currentLimits.storageGB === Infinity ? 0 : Math.min(100, (usage.storage_used_gb / currentLimits.storageGB) * 100)
 
   return (
     <div className="space-y-6">
@@ -166,12 +166,12 @@ export function SubscriptionTab() {
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className={`flex size-10 items-center justify-center ${RADIUS.lg} bg-cyan-500/15 ring-1 ring-cyan-500/20`}>
-                <Crown className="size-5 text-cyan-300" />
+                <Crown className="size-5 text-primary" />
               </div>
               <div>
-                <h2 className={String(TYPOGRAPHY.h2)}>当前套餐</h2>
-                <p className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>
-                  {PLAN_LABELS[currentPlan] ?? currentPlan}
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("billing.currentPlan")}</h2>
+                <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>
+                  {t(PLAN_LABELS[currentPlan] ?? currentPlan)}
                 </p>
               </div>
             </div>
@@ -179,33 +179,33 @@ export function SubscriptionTab() {
             <div className="space-y-4">
               <div className={`${softCardClass} p-4 space-y-3`}>
                 <div className="flex items-center justify-between">
-                  <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>套餐名称</span>
-                  <Badge variant="outline" className="border-cyan-500/20 bg-cyan-500/15 text-cyan-300">
-                    {PLAN_LABELS[currentPlan] ?? currentPlan}
+                  <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.planName")}</span>
+                  <Badge variant="outline" className="border-cyan-500/20 bg-cyan-500/15 text-primary">
+                    {t(PLAN_LABELS[currentPlan] ?? currentPlan)}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>月费</span>
-                  <span className={cn(TYPOGRAPHY.h3, "font-bold font-mono text-zinc-100")}>
-                    {PLAN_PRICES[currentPlan] === 0 ? "免费" : `¥${PLAN_PRICES[currentPlan].toLocaleString()}/月`}
+                  <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.monthlyFee")}</span>
+                  <span className={cn(TYPOGRAPHY.h3, "font-bold font-mono text-foreground")}>
+                    {PLAN_PRICES[currentPlan] === 0 ? t("billing.free") : `¥${PLAN_PRICES[currentPlan].toLocaleString()}${t("billing.planPerMonth")}`}
                   </span>
                 </div>
                 {trialStatus?.is_trial && (
                   <>
-                    <div className="h-px bg-white/[0.08]" />
+                    <div className="h-px bg-muted/60" />
                     <div className="flex items-center justify-between">
-                      <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>试用到期</span>
-                      <span className={cn(TYPOGRAPHY.body, "text-zinc-100")}>
+                      <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.trialExpiry")}</span>
+                      <span className={cn(TYPOGRAPHY.body, "text-foreground")}>
                         {trialStatus.trial_ends_at ? formatDateTime(trialStatus.trial_ends_at) : "-"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>剩余天数</span>
-                      <span className={cn(TYPOGRAPHY.h3, "font-bold", trialStatus.is_expired ? "text-red-400" : trialStatus.days_remaining <= 7 ? "text-amber-400" : "text-zinc-100")}>
-                        {trialStatus.is_expired ? "已过期" : `${trialStatus.days_remaining} 天`}
+                      <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.remainingDays")}</span>
+                      <span className={cn(TYPOGRAPHY.h3, "font-bold", trialStatus.is_expired ? "text-red-600" : trialStatus.days_remaining <= 7 ? "text-amber-600" : "text-foreground")}>
+                        {trialStatus.is_expired ? t("billing.expired") : `${trialStatus.days_remaining}${t("billing.days")}`}
                       </span>
                     </div>
-                    <div className="w-full h-2 rounded-full bg-white/[0.05] overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-muted/50 overflow-hidden">
                       <div
                         className={cn(
                           "h-full rounded-full transition-all duration-500",
@@ -216,27 +216,27 @@ export function SubscriptionTab() {
                     </div>
                     {trialStatus.is_expired && (
                       <div className="flex items-center gap-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
-                        <AlertTriangle className="size-3.5 text-red-400 shrink-0" />
-                        <span className={cn(TYPOGRAPHY.micro, "text-red-400")}>试用已过期，请升级套餐以继续使用</span>
+                        <AlertTriangle className="size-3.5 text-red-600 shrink-0" />
+                        <span className={cn(TYPOGRAPHY.micro, "text-red-600")}>{t("billing.trialExpiredUpgrade")}</span>
                       </div>
                     )}
                     {!trialStatus.is_expired && trialStatus.days_remaining <= 7 && (
                       <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                         <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
-                        <span className={cn(TYPOGRAPHY.micro, "text-amber-400")}>试用即将到期，建议尽快升级</span>
+                        <span className={cn(TYPOGRAPHY.micro, "text-amber-600")}>{t("billing.trialAlmostExpiredUpgrade")}</span>
                       </div>
                     )}
                   </>
                 )}
                 {!trialStatus?.is_trial && currentPlan !== "free" && (
                   <>
-                    <div className="h-px bg-white/[0.08]" />
+                    <div className="h-px bg-muted/60" />
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="border-emerald-200 bg-emerald-500/10 text-emerald-300">
                         <CheckCircle2 className="mr-1 size-3" />
                         {t("billing.activeSubscription")}
                       </Badge>
-                      <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>
+                      <p className={cn(TYPOGRAPHY.micro, "text-muted-foreground")}>
                         {t("billing.activeSubscriptionDesc")}
                       </p>
                     </div>
@@ -254,8 +254,8 @@ export function SubscriptionTab() {
                 <HardDrive className="size-5 text-emerald-300" />
               </div>
               <div>
-                <h2 className={String(TYPOGRAPHY.h2)}>用量统计</h2>
-                <p className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>当前周期的资源使用情况</p>
+                <h2 className={String(TYPOGRAPHY.h2)}>{t("billing.usageStatistics")}</h2>
+                <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>{t("billing.currentPeriodUsage")}</p>
               </div>
             </div>
 
@@ -263,14 +263,14 @@ export function SubscriptionTab() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Users className="size-3.5 text-zinc-400" />
-                    <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>用户数</span>
+                    <Users className="size-3.5 text-muted-foreground" />
+                    <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.userCount")}</span>
                   </div>
-                  <span className={cn(TYPOGRAPHY.caption, "text-zinc-100 font-medium")}>
-                    {usage.users} / {currentLimits.users === Infinity ? "无限" : currentLimits.users}
+                  <span className={cn(TYPOGRAPHY.caption, "text-foreground font-medium")}>
+                    {usage.users} / {currentLimits.users === Infinity ? t("billing.unlimited") : currentLimits.users}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-muted/50 overflow-hidden">
                   <div
                     className={cn("h-full rounded-full transition-all", userPercent > 80 ? "bg-amber-500" : "bg-cyan-500")}
                     style={{ width: `${userPercent}%` }}
@@ -281,14 +281,14 @@ export function SubscriptionTab() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Bell className="size-3.5 text-zinc-400" />
-                    <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>今日告警</span>
+                    <Bell className="size-3.5 text-muted-foreground" />
+                    <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.todayAlerts")}</span>
                   </div>
-                  <span className={cn(TYPOGRAPHY.caption, "text-zinc-100 font-medium")}>
-                    {usage.alerts_today} / {currentLimits.alerts}
+                  <span className={cn(TYPOGRAPHY.caption, "text-foreground font-medium")}>
+                    {usage.alerts_today} / {currentLimits.alertsPerDay === Infinity ? t("billing.unlimited") : `${currentLimits.alertsPerDay.toLocaleString()}${t("billing.perDay")}`}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-muted/50 overflow-hidden">
                   <div
                     className={cn("h-full rounded-full transition-all", alertPercent > 80 ? "bg-amber-500" : "bg-cyan-500")}
                     style={{ width: `${alertPercent}%` }}
@@ -299,14 +299,14 @@ export function SubscriptionTab() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <HardDrive className="size-3.5 text-zinc-400" />
-                    <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>存储用量</span>
+                    <HardDrive className="size-3.5 text-muted-foreground" />
+                    <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.storageUsage")}</span>
                   </div>
-                  <span className={cn(TYPOGRAPHY.caption, "text-zinc-100 font-medium")}>
-                    {usage.storage_used_gb}GB / {currentLimits.storage}
+                  <span className={cn(TYPOGRAPHY.caption, "text-foreground font-medium")}>
+                    {usage.storage_used_gb}GB / {currentLimits.storageGB === Infinity ? t("billing.unlimited") : `${currentLimits.storageGB}GB`}
                   </span>
                 </div>
-                <div className="w-full h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
+                <div className="w-full h-1.5 rounded-full bg-muted/50 overflow-hidden">
                   <div
                     className={cn("h-full rounded-full transition-all", storagePercent > 80 ? "bg-amber-500" : "bg-cyan-500")}
                     style={{ width: `${storagePercent}%` }}
@@ -325,14 +325,14 @@ export function SubscriptionTab() {
               <ArrowUpCircle className="size-5 text-amber-300" />
             </div>
             <div>
-              <h2 className={String(TYPOGRAPHY.h2)}>变更套餐</h2>
-              <p className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>升级获取更多功能，或降级至适合的方案</p>
+              <h2 className={String(TYPOGRAPHY.h2)}>{t("billing.changePlan")}</h2>
+              <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>{t("billing.changePlanDesc")}</p>
             </div>
           </div>
 
           {upgrades.length > 0 && (
             <div className="space-y-3 mb-5">
-              <Label className={cn(TYPOGRAPHY.caption, "text-zinc-400 font-medium")}>升级选项</Label>
+              <Label className={cn(TYPOGRAPHY.caption, "text-muted-foreground font-medium")}>{t("billing.upgradeOptions")}</Label>
               <div className="grid gap-3 sm:grid-cols-2">
                 {upgrades.map((planId) => {
                   const price = PLAN_PRICES[planId]
@@ -342,18 +342,18 @@ export function SubscriptionTab() {
                       className={`${softCardClass} p-4 flex items-center justify-between`}
                     >
                       <div>
-                        <p className={cn(TYPOGRAPHY.h3, "text-zinc-100")}>{PLAN_LABELS[planId]}</p>
-                        <p className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>
-                          ¥{price.toLocaleString()}/月
+                        <p className={cn(TYPOGRAPHY.h3, "text-foreground")}>{t(PLAN_LABELS[planId] ?? planId)}</p>
+                        <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>
+                          ¥{price.toLocaleString()}{t("billing.planPerMonth")}
                         </p>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => openUpgradeDialog(planId)}
-                        className="gap-1 bg-cyan-600 text-white hover:bg-cyan-700"
+                        className="gap-1 bg-primary text-primary-foreground hover:bg-primary/90"
                       >
                         <ArrowUpCircle className="size-3.5" />
-                        升级
+                        {t("billing.upgrade")}
                       </Button>
                     </div>
                   )
@@ -364,7 +364,7 @@ export function SubscriptionTab() {
 
           {downgrades.length > 0 && (
             <div className="space-y-3">
-              <Label className={cn(TYPOGRAPHY.caption, "text-zinc-400 font-medium")}>降级选项</Label>
+              <Label className={cn(TYPOGRAPHY.caption, "text-muted-foreground font-medium")}>{t("billing.downgradeOptions")}</Label>
               <div className="grid gap-3 sm:grid-cols-2">
                 {downgrades.map((planId) => {
                   const price = PLAN_PRICES[planId]
@@ -374,19 +374,19 @@ export function SubscriptionTab() {
                       className={`${softCardClass} p-4 flex items-center justify-between`}
                     >
                       <div>
-                        <p className={cn(TYPOGRAPHY.h3, "text-zinc-100")}>{PLAN_LABELS[planId]}</p>
-                        <p className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>
-                          {price === 0 ? "免费" : `¥${price.toLocaleString()}/月`}
+                        <p className={cn(TYPOGRAPHY.h3, "text-foreground")}>{t(PLAN_LABELS[planId] ?? planId)}</p>
+                        <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>
+                          {price === 0 ? t("billing.free") : `¥${price.toLocaleString()}${t("billing.planPerMonth")}`}
                         </p>
                       </div>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => openUpgradeDialog(planId)}
-                        className="gap-1 border-white/[0.06] text-zinc-400 hover:bg-white/[0.04]"
+                        className="gap-1 border-border text-muted-foreground hover:bg-muted/50"
                       >
                         <ArrowDownCircle className="size-3.5" />
-                        降级
+                        {t("billing.downgrade")}
                       </Button>
                     </div>
                   )
@@ -398,19 +398,19 @@ export function SubscriptionTab() {
       </Card>
 
       {currentPlan !== "free" && (
-        <div className="flex items-center justify-between p-4 rounded-xl border border-white/[0.06] bg-[#131316]">
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
           <div className="flex items-center gap-3">
-            <XCircle className="size-5 text-zinc-400" />
+            <XCircle className="size-5 text-muted-foreground" />
             <div>
-              <p className={cn(TYPOGRAPHY.h3, "text-zinc-200")}>{t("billing.cancelSubscription")}</p>
-              <p className={cn(TYPOGRAPHY.micro, "text-zinc-400")}>{t("billing.cancelSubscriptionDesc")}</p>
+              <p className={cn(TYPOGRAPHY.h3, "text-foreground")}>{t("billing.cancelSubscription")}</p>
+              <p className={cn(TYPOGRAPHY.micro, "text-muted-foreground")}>{t("billing.cancelSubscriptionDesc")}</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setCancelDialogOpen(true)}
-            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+            className="text-red-600 hover:text-red-300 hover:bg-red-500/10"
           >
 {t("billing.cancelSubscription")}
           </Button>
@@ -425,50 +425,50 @@ export function SubscriptionTab() {
       />
 
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-        <DialogContent className="bg-[#131316] border-white/[0.06] text-zinc-100 sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">{t("billing.confirmCancelSubscription")}</DialogTitle>
-            <DialogDescription className="text-zinc-500">
+            <DialogTitle className="text-foreground">{t("billing.confirmCancelSubscription")}</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               {t("billing.confirmCancelSubscriptionDesc")}
             </DialogDescription>
           </DialogHeader>
 
           <div className={`${softCardClass} p-4 space-y-3 mt-2`}>
             <div className="flex items-center justify-between">
-              <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>当前套餐</span>
-              <span className={cn(TYPOGRAPHY.body, "font-medium text-zinc-100")}>{PLAN_LABELS[currentPlan]}</span>
+              <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.currentPlan")}</span>
+              <span className={cn(TYPOGRAPHY.body, "font-medium text-foreground")}>{t(PLAN_LABELS[currentPlan] ?? currentPlan)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className={cn(TYPOGRAPHY.body, "text-zinc-500")}>降级至</span>
-              <span className={cn(TYPOGRAPHY.body, "font-medium text-zinc-100")}>免费版</span>
+              <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("billing.downgradeTo")}</span>
+              <span className={cn(TYPOGRAPHY.body, "font-medium text-foreground")}>{t("billing.planFree")}</span>
             </div>
-            <div className="h-px bg-white/[0.08]" />
+            <div className="h-px bg-muted/60" />
             <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
               <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
-              <span className={cn(TYPOGRAPHY.micro, "text-amber-400")}>
-                降级后：5个用户、100条告警/天、1GB存储
+              <span className={cn(TYPOGRAPHY.micro, "text-amber-600")}>
+                {t("billing.downgradeLimits")}
               </span>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
-              保留订阅
+              {t("billing.keepSubscription")}
             </Button>
             <Button
               onClick={handleCancelSubscription}
               disabled={cancelling}
-              className="bg-red-600 text-white hover:bg-red-700 gap-1.5"
+              className="bg-red-600 text-foreground hover:bg-red-700 gap-1.5"
             >
               {cancelling ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  处理中...
+                  {t("billing.processing")}
                 </>
               ) : (
                 <>
                   <XCircle className="size-4" />
-                  确认取消
+                  {t("billing.confirmCancel")}
                 </>
               )}
             </Button>

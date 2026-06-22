@@ -345,30 +345,30 @@ function PlaybookEditorContent() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-white/[0.06] bg-[#131316] shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card shrink-0">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-zinc-500 hover:text-zinc-400"
+            className="gap-1.5 text-muted-foreground hover:text-muted-foreground"
             onClick={() => router.push("/workflows")}
           >
             <ArrowLeft className="h-4 w-4" />
             返回
           </Button>
-          <div className="h-4 w-px bg-white/[0.06]" />
+          <div className="h-4 w-px bg-muted/50" />
           <div className="flex items-center gap-2">
             <Workflow className="h-4 w-4 text-cyan-600" />
             <Input
               value={playbookName}
               onChange={(e) => setPlaybookName(e.target.value)}
-              className="h-7 w-48 text-sm font-semibold border-transparent bg-transparent hover:border-white/[0.06] focus:border-cyan-400/60 focus:bg-white/[0.03] px-1 text-zinc-100"
+              className="h-7 w-48 text-sm font-semibold border-transparent bg-transparent hover:border-border focus:border-primary/60 focus:bg-muted/50 px-1 text-foreground"
             />
           </div>
           {playbookId && (
             <Badge
               variant="outline"
-              className="text-[10px] border-white/[0.06] text-zinc-500"
+              className="text-[10px] border-border text-muted-foreground"
             >
               ID: {playbookId}
             </Badge>
@@ -377,13 +377,13 @@ function PlaybookEditorContent() {
 
         <div className="flex items-center gap-3">
           {error && (
-            <span className="text-xs text-red-500">{error}</span>
+            <span className="text-xs text-red-600">{error}</span>
           )}
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-muted-foreground">
             {graph.nodes.length} 个节点 · {graph.edges.length} 条连线
           </span>
           <Button
-            className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+            className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
             disabled={saving}
             onClick={handleSave}
           >
@@ -396,7 +396,7 @@ function PlaybookEditorContent() {
           </Button>
           <Button
             variant="outline"
-            className="gap-1.5 border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+            className="gap-1.5 border-cyan-500/30 text-cyan-600 hover:bg-primary/10"
             disabled={testing || graph.nodes.length === 0}
             onClick={handleTestRun}
           >
@@ -421,11 +421,11 @@ function PlaybookEditorContent() {
           }`}
         >
           {testResult.status === "success" ? (
-            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           ) : testResult.status === "error" ? (
-            <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+            <XCircle className="h-4 w-4 text-red-600 shrink-0" />
           ) : (
-            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+            <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
           )}
           <div className="flex-1 min-w-0">
             <p
@@ -446,10 +446,10 @@ function PlaybookEditorContent() {
                       key={i}
                       className={`text-[11px] ${
                         testResult.status === "success"
-                          ? "text-emerald-400/70"
+                          ? "text-emerald-600/70"
                           : testResult.status === "error"
-                            ? "text-red-400/70"
-                            : "text-amber-400/70"
+                            ? "text-red-600/70"
+                            : "text-amber-600/70"
                       }`}
                     >
                     {d}
@@ -461,10 +461,10 @@ function PlaybookEditorContent() {
           <button
             className={`text-xs shrink-0 hover:underline ${
               testResult.status === "success"
-                ? "text-emerald-400"
+                ? "text-emerald-600"
                 : testResult.status === "error"
-                  ? "text-red-400"
-                  : "text-amber-400"
+                  ? "text-red-600"
+                  : "text-amber-600"
             }`}
             onClick={() => setTestResult(null)}
           >

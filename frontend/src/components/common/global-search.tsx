@@ -9,6 +9,7 @@ import {
   BookOpen,
   User,
 } from "lucide-react";
+import { useLocaleStore } from "@/store/locale-store";
 
 interface SearchResult {
   id: string;
@@ -34,6 +35,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { t } = useLocaleStore();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -72,37 +74,37 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     <Command.Dialog
       open={open}
       onOpenChange={onOpenChange}
-      label="全局搜索"
+      label={t("globalSearch.dialogLabel")}
       className="fixed inset-0 z-50"
     >
       <div className="fixed inset-0 bg-black/60" onClick={() => onOpenChange(false)} />
-      <div className="fixed left-1/2 top-[20%] w-full max-w-lg -translate-x-1/2 overflow-hidden rounded-xl border border-white/8 bg-[#18181b] shadow-2xl">
-        <div className="flex items-center border-b border-white/8 px-3">
-          <Search className="mr-2 size-4 shrink-0 text-zinc-500" />
+      <div className="fixed left-1/2 top-[20%] w-full max-w-lg -translate-x-1/2 overflow-hidden rounded-xl border border-primary/10 bg-card shadow-2xl shadow-primary/5">
+        <div className="flex items-center border-b border-border px-3">
+          <Search className="mr-2 size-4 shrink-0 text-muted-foreground" />
           <Command.Input
             value={query}
             onValueChange={setQuery}
-            placeholder="搜索告警、案件、知识、用户..."
-            className="flex h-12 w-full bg-transparent text-sm text-zinc-200 outline-none placeholder:text-zinc-500"
+            placeholder={t("globalSearch.placeholder")}
+            className="flex h-12 w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/50"
           />
-          <kbd className="ml-2 hidden rounded border border-white/10 px-1.5 py-0.5 text-[10px] text-zinc-500 sm:inline-block">
+          <kbd className="ml-2 hidden rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground sm:inline-block">
             Esc
           </kbd>
         </div>
         <Command.List className="max-h-80 overflow-y-auto p-2">
           {loading && (
-            <div className="py-6 text-center text-sm text-zinc-500">
-              搜索中...
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              {t("globalSearch.searching")}
             </div>
           )}
           {!loading && query.length > 0 && results.length === 0 && (
-            <Command.Empty className="py-6 text-center text-sm text-zinc-500">
-              未找到相关结果
+            <Command.Empty className="py-6 text-center text-sm text-muted-foreground">
+              {t("globalSearch.noResults")}
             </Command.Empty>
           )}
           {!loading && query.length === 0 && (
-            <div className="py-6 text-center text-sm text-zinc-500">
-              输入关键词开始搜索 (Cmd+K)
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              {t("globalSearch.startSearch")}
             </div>
           )}
           {results.map((result) => {
@@ -116,21 +118,21 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                   onOpenChange(false);
                   setQuery("");
                 }}
-                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm aria-selected:bg-white/5"
+                className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-3 text-sm aria-selected:bg-muted/50"
               >
-                <Icon className="size-4 shrink-0 text-zinc-500" />
+                <Icon className="size-4 shrink-0 text-muted-foreground" />
                 <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-zinc-200">{result.title}</span>
-                  <span className="truncate text-xs text-zinc-500">
+                  <span className="truncate text-foreground">{result.title}</span>
+                  <span className="truncate text-xs text-muted-foreground">
                     {result.subtitle}
                   </span>
                 </div>
-                <span className="ml-auto shrink-0 text-[10px] uppercase text-zinc-600">
+                <span className="ml-auto shrink-0 text-[10px] uppercase text-muted-foreground/60">
                   {result.type === "alert"
-                    ? "告警"
+                    ? t("globalSearch.typeAlert")
                     : result.type === "knowledge"
-                      ? "知识"
-                      : "用户"}
+                      ? t("globalSearch.typeKnowledge")
+                      : t("globalSearch.typeUser")}
                 </span>
               </Command.Item>
             );

@@ -22,6 +22,7 @@ class ChatSessionRead(BaseModel):
 
 class ChatMessageCreate(BaseModel):
     content: str
+    context: Optional[dict] = None
 
 
 class ChatMessageRead(BaseModel):
@@ -80,3 +81,19 @@ class ReportRead(BaseModel):
 class ReportListResponse(BaseModel):
     total: int
     items: List[ReportRead]
+
+
+class NextStepSuggestion(BaseModel):
+    action: str
+    description: str
+    skill_id: str
+    parameters: dict = {}
+
+
+class NextStepRequest(BaseModel):
+    context: dict = {}
+    conversation_id: str = ""
+
+
+class NextStepResponse(BaseModel):
+    suggestions: List[NextStepSuggestion]

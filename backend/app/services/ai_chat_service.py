@@ -209,11 +209,11 @@ TOOL_EXECUTORS = {
 }
 
 
-def _build_chat_system_prompt() -> str:
+def _build_chat_system_prompt(context: Optional[dict] = None) -> str:
     tools_desc = "\n".join(
         f"- {t['name']}: {t['description']}" for t in AI_TOOLS
     )
-    return (
+    prompt = (
         "你是 SecMind 安全运营AI助手，专注于网络安全分析和运营支持。\n"
         "你的职责包括：\n"
         "1. 帮助安全分析师研判告警和事件\n"
@@ -226,6 +226,19 @@ def _build_chat_system_prompt() -> str:
         "请用中文回答，保持专业、简洁。如果用户的问题涉及安全操作，"
         "请先评估风险再给出建议。"
     )
+    if context:
+        context_parts = []
+        if context.get("alert_id"):
+            context_parts.append(f"当前关联告警ID: {context['alert_id']}")
+        if context.get("investigation_id"):
+            context_parts.append(f"当前调查任务ID: {context['investigation_id']}")
+        if context.get("device"):
+            context_parts.append(f"当前关注设备: {context['device']}")
+        if context.get("ioc"):
+            context_parts.append(f"当前关注IOC: {context['ioc']}")
+        if context_parts:
+            prompt += "\n\n当前调查上下文：\n" + "\n".join(f"- {p}" for p in context_parts)
+    return prompt
 
 
 def _fallback_response(user_message: str) -> tuple:
@@ -238,14 +251,14 @@ def _fallback_response(user_message: str) -> tuple:
     )
 
 
-async def process_ai_response(db: Session, session_id: int, user_message: str) -> ChatMessage:
+async def process_ai_response(db: Session, session_id: int, user_message: str, context: Optional[dict] = None) -> ChatMessage:
     history_messages = db.query(ChatMessage).filter(
         ChatMessage.session_id == session_id
     ).order_by(ChatMessage.id.desc()).limit(20).all()
 
     history_messages = list(reversed(history_messages))
 
-    chat_messages = [{"role": "system", "content": _build_chat_system_prompt()}]
+    chat_messages = [{"role": "system", "content": _build_chat_system_prompt(context)}]
     for h in history_messages:
         chat_messages.append({"role": h.role, "content": h.content})
     chat_messages.append({"role": "user", "content": user_message})
@@ -417,3 +430,121 @@ def delete_report(db: Session, report_id: int) -> bool:
     db.delete(report)
     db.commit()
     return True
+
+
+# --- Next Step Suggestions ---
+
+_NEXT_STEP_TEMPLATES: List[dict] = [
+    {
+        "keywords": ["告警", "alert", "异常", "可疑"],
+        "suggestions": [
+            {"action": "深入分析告警", "description": "查看告警详情、关联事件和攻击链路", "skill_id": "query_alerts", "parameters": {"action": "analyze"}},
+            {"action": "查询关联IOC", "description": "提取告警中的IOC指标并查询威胁情报", "skill_id": "search_threat_intel", "parameters": {"action": "lookup"}},
+            {"action": "查看受影响设备", "description": "列出告警涉及的设备及其安全状态", "skill_id": "query_devices", "parameters": {"action": "check"}},
+        ],
+    },
+    {
+        "keywords": ["横向", "移动", "lateral", "扩散"],
+        "suggestions": [
+            {"action": "绘制攻击路径", "description": "基于当前证据还原横向移动路径", "skill_id": "query_alerts", "parameters": {"action": "attack_path"}},
+            {"action": "隔离受影响终端", "description": "对确认失陷的终端执行网络隔离", "skill_id": "execute_response", "parameters": {"action": "isolate"}},
+            {"action": "检查域控日志", "description": "审查域控制器Kerberos和认证日志", "skill_id": "query_alerts", "parameters": {"action": "dc_logs"}},
+        ],
+    },
+    {
+        "keywords": ["ip", "域名", "ioc", "威胁情报", "c2"],
+        "suggestions": [
+            {"action": "封禁恶意IP", "description": "将确认恶意的IP加入防火墙黑名单", "skill_id": "execute_response", "parameters": {"action": "block_ip"}},
+            {"action": "搜索内部关联", "description": "查找内网中与该IOC通信的其他设备", "skill_id": "query_devices", "parameters": {"action": "correlate"}},
+            {"action": "生成IOC报告", "description": "生成该IOC的详细威胁情报分析报告", "skill_id": "generate_report", "parameters": {"report_type": "ioc_analysis"}},
+        ],
+    },
+    {
+        "keywords": ["文件", "访问", "数据", "外泄", "dlp"],
+        "suggestions": [
+            {"action": "追溯文件访问链", "description": "追踪敏感文件的完整访问和传播路径", "skill_id": "query_alerts", "parameters": {"action": "file_trace"}},
+            {"action": "检查DLP策略", "description": "审查当前DLP策略是否覆盖此类数据外泄场景", "skill_id": "query_alerts", "parameters": {"action": "dlp_check"}},
+            {"action": "生成数据外泄报告", "description": "汇总数据外泄事件的完整分析报告", "skill_id": "generate_report", "parameters": {"report_type": "data_exfiltration"}},
+        ],
+    },
+]
+
+
+async def suggest_next_steps(db: Session, context: dict, conversation_id: str) -> List[dict]:
+    """Based on conversation context, suggest next investigation steps."""
+    # Gather recent conversation content for keyword matching
+    conversation_text = ""
+    if conversation_id:
+        try:
+            session_id = int(conversation_id)
+            recent = db.query(ChatMessage).filter(
+                ChatMessage.session_id == session_id
+            ).order_by(ChatMessage.id.desc()).limit(10).all()
+            conversation_text = " ".join(m.content for m in reversed(recent)).lower()
+        except (ValueError, Exception):
+            pass
+
+    # Also include context fields in keyword matching
+    context_text = " ".join(str(v) for v in context.values()).lower()
+    combined_text = f"{conversation_text} {context_text}"
+
+    matched: List[dict] = []
+    seen_actions: set = set()
+
+    for template in _NEXT_STEP_TEMPLATES:
+        if any(kw in combined_text for kw in template["keywords"]):
+            for s in template["suggestions"]:
+                if s["action"] not in seen_actions:
+                    matched.append(s)
+                    seen_actions.add(s["action"])
+
+    # If no keyword match, provide default generic suggestions
+    if not matched:
+        matched = [
+            {"action": "分析最新告警", "description": "查看最近的高危告警并给出研判结论", "skill_id": "query_alerts", "parameters": {"action": "analyze_latest"}},
+            {"action": "查询IOC信誉", "description": "对当前关注的IOC指标进行威胁情报查询", "skill_id": "search_threat_intel", "parameters": {"action": "lookup"}},
+            {"action": "生成调查报告", "description": "基于当前对话内容生成调查分析报告", "skill_id": "generate_report", "parameters": {"report_type": "investigation"}},
+        ]
+
+    # If LLM is available, try to enhance suggestions via AI
+    if model_router.is_available or llm_provider.is_available:
+        try:
+            prompt_messages = [
+                {"role": "system", "content": (
+                    "你是安全运营AI助手。根据当前调查上下文，推荐3-5个下一步调查动作。\n"
+                    "返回JSON数组，每个元素包含: action(动作名称), description(简短描述), "
+                    "skill_id(对应工具ID: query_alerts/query_devices/search_threat_intel/execute_response/generate_report), "
+                    "parameters(参数字典)。\n"
+                    "只返回JSON数组，不要其他文字。"
+                )},
+                {"role": "user", "content": f"上下文: {context}\n最近对话摘要: {conversation_text[:500]}"},
+            ]
+            result = await model_router.route_request_messages(
+                task_type="alert_triage",
+                messages=prompt_messages,
+                temperature=0.5,
+                max_tokens=1024,
+            )
+            content = result.get("content", "")
+            if content:
+                import re
+                json_match = re.search(r'\[.*\]', content, re.DOTALL)
+                if json_match:
+                    ai_suggestions = json.loads(json_match.group())
+                    if isinstance(ai_suggestions, list) and len(ai_suggestions) > 0:
+                        # Validate structure and use AI suggestions
+                        valid = []
+                        for s in ai_suggestions:
+                            if isinstance(s, dict) and "action" in s and "description" in s:
+                                valid.append({
+                                    "action": s["action"],
+                                    "description": s["description"],
+                                    "skill_id": s.get("skill_id", "query_alerts"),
+                                    "parameters": s.get("parameters", {}),
+                                })
+                        if valid:
+                            return valid
+        except Exception as e:
+            logger.warning("AI增强建议失败，使用模板建议: %s", str(e))
+
+    return matched

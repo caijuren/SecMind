@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface DisposalStatsData {
   totalActions: number
@@ -64,8 +65,8 @@ function StatCard({ label, value, unit, icon, color, trend }: StatCardProps) {
     <div
       className="flex flex-col gap-2 p-3 rounded-lg"
       style={{
-        backgroundColor: "rgba(255,255,255,0.03)",
-        border: `1px solid rgba(255,255,255,0.06)`,
+        backgroundColor: "var(--muted)",
+        border: `1px solid var(--border)`,
       }}
     >
       <div className="flex items-center justify-between">
@@ -79,8 +80,8 @@ function StatCard({ label, value, unit, icon, color, trend }: StatCardProps) {
           <span
             className="text-[10px] font-medium px-1.5 py-0.5 rounded"
             style={{
-              color: trend.startsWith("+") ? "#ef4444" : "#22d3ee",
-              backgroundColor: trend.startsWith("+") ? "rgba(239,68,68,0.1)" : "rgba(34,211,238,0.1)",
+              color: trend.startsWith("+") ? "#ff2d55" : "#00d4ff",
+              backgroundColor: trend.startsWith("+") ? "rgba(255,45,85,0.1)" : "rgba(0,212,255,0.1)",
             }}
           >
             {trend}
@@ -91,18 +92,18 @@ function StatCard({ label, value, unit, icon, color, trend }: StatCardProps) {
       <div className="flex items-baseline gap-1">
         <span
           className="text-xl font-bold font-mono tabular-nums"
-          style={{ color: "rgba(255,255,255,0.9)" }}
+          style={{ color: "var(--foreground)" }}
         >
           {finalDisplay}
         </span>
         {unit && (
-          <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>
             {unit}
           </span>
         )}
       </div>
 
-      <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+      <span className="text-[10px]" style={{ color: "var(--muted-foreground)" }}>
         {label}
       </span>
     </div>
@@ -110,17 +111,18 @@ function StatCard({ label, value, unit, icon, color, trend }: StatCardProps) {
 }
 
 export function DisposalStats({ data }: DisposalStatsProps) {
+  const { t } = useLocaleStore()
   const stats: StatCardProps[] = [
     {
-      label: "今日处置动作",
+      label: t("situation.todayDisposalActions"),
       value: String(data.totalActions),
-      unit: "次",
+      unit: t("situation.times"),
       icon: "⚡",
-      color: "#22d3ee",
+      color: "#0066ff",
       trend: "+12",
     },
     {
-      label: "自动处置率",
+      label: t("situation.autoDisposalRate"),
       value: String(data.autoRate),
       unit: "%",
       icon: "🤖",
@@ -128,19 +130,19 @@ export function DisposalStats({ data }: DisposalStatsProps) {
       trend: "+3.2",
     },
     {
-      label: "平均响应时间",
+      label: t("situation.avgResponseTime"),
       value: String(data.avgResponseTime),
-      unit: "分钟",
+      unit: t("situation.minutes"),
       icon: "⏱",
       color: "#fbbf24",
       trend: "-0.8",
     },
     {
-      label: "处置成功率",
+      label: t("situation.disposalSuccessRate"),
       value: String(data.successRate),
       unit: "%",
       icon: "✓",
-      color: "#34d399",
+      color: "#00ff88",
       trend: "+1.5",
     },
   ]

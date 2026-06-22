@@ -1,0 +1,23 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "secmind-auth",
+          "value": "{\"state\":{\"user\":{\"id\":\"DEMO001\",\"name\":\"体验用户\",\"email\":\"demo@secmind.com\",\"role\":\"viewer\",\"isDemo\":true,\"isNewUser\":false},\"isAuthenticated\":true,\"token\":\"mock-jwt-token-demo\",\"rememberMe\":false,\"refreshToken\":null,\"permissions\":[\"*:*\"]},\"version\":0}"
+        },
+        {
+          "name": "secmind-trial-start",
+          "value": "1781791940375"
+        },
+        {
+          "name": "secmind-onboarded",
+          "value": "1"
+        }
+      ],
+      "sessionStorage": []
+    }
+  ]
+}

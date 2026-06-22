@@ -49,16 +49,16 @@ function getPasswordStrength(password: string): { score: number; label: string; 
   if (/\d/.test(password)) score++
   if (/[^A-Za-z0-9]/.test(password)) score++
 
-  if (score <= 1) return { score, label: '弱', color: 'text-red-400', barColor: 'bg-red-500' }
-  if (score === 2) return { score, label: '中', color: 'text-amber-400', barColor: 'bg-amber-500' }
+  if (score <= 1) return { score, label: '弱', color: 'text-red-600', barColor: 'bg-red-500' }
+  if (score === 2) return { score, label: '中', color: 'text-amber-600', barColor: 'bg-amber-500' }
   if (score === 3 || score === 4) return { score, label: '强', color: 'text-green-400', barColor: 'bg-green-500' }
-  return { score, label: '非常强', color: 'text-emerald-400', barColor: 'bg-emerald-500' }
+  return { score, label: '非常强', color: 'text-emerald-600', barColor: 'bg-emerald-500' }
 }
 
 const SSO_PROVIDERS = [
   { id: 'wecom', name: '企微', color: 'hover:border-[#07c160]/40 hover:bg-[#07c160]/[0.06] hover:text-[#07c160]' },
-  { id: 'dingtalk', name: '钉钉', color: 'hover:border-blue-400/40 hover:bg-blue-400/[0.06] hover:text-blue-400' },
-  { id: 'feishu', name: '飞书', color: 'hover:border-purple-400/40 hover:bg-purple-400/[0.06] hover:text-purple-400' },
+  { id: 'dingtalk', name: '钉钉', color: 'hover:border-blue-400/40 hover:bg-blue-400/[0.06] hover:text-blue-600' },
+  { id: 'feishu', name: '飞书', color: 'hover:border-purple-400/40 hover:bg-purple-400/[0.06] hover:text-purple-600' },
   { id: 'microsoft', name: 'MS', color: 'hover:border-sky-400/40 hover:bg-sky-400/[0.06] hover:text-sky-400' },
 ]
 
@@ -241,29 +241,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-white/[0.06] bg-[#131316] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+    <div className="space-y-5 rounded-lg border border-border bg-card p-6 shadow-sm">
       {registeredEmail ? (
         <div className="flex flex-col items-center text-center py-6 gap-5">
-          <div className="flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-[0_0_24px_rgba(59,130,246,0.3)]">
-            <Sparkles className="size-8 text-white" />
+          <div className="flex size-16 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+            <Sparkles className="size-8 text-primary" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-white">注册成功！</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-2xl font-bold text-foreground">注册成功！</h1>
+            <p className="text-sm text-muted-foreground">
               欢迎加入 SecMind，您的 14 天免费试用已开启
             </p>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-muted-foreground">
               账号：{registeredEmail}
             </p>
           </div>
           <div className="space-y-2 w-full max-w-xs">
             <div className="rounded-lg border border-blue-500/15 bg-blue-500/[0.04] p-3">
-              <p className="text-xs text-blue-300 leading-relaxed">
+              <p className="text-xs text-primary leading-relaxed">
                 <strong>接下来：</strong>完成新手引导，连接您的安全数据源，体验 AI 自主研判
               </p>
             </div>
             <Button
-              className="h-11 w-full rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] hover:-translate-y-0.5"
+              className="h-11 w-full rounded-lg bg-primary font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
               onClick={() => router.push('/dashboard')}
             >
               进入工作台
@@ -274,23 +274,23 @@ export default function RegisterPage() {
       ) : (
         <>
           <div className="space-y-1.5">
-            <h1 className="text-2xl font-bold text-white">
+            <h1 className="text-2xl font-bold text-foreground">
               创建 SecMind 账号
             </h1>
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               开启AI自主安全研判之旅
             </p>
           </div>
 
-          <div className="flex rounded-lg bg-white/[0.04] p-1" role="tablist">
+          <div className="flex rounded-lg bg-muted/50 p-1" role="tablist">
             <button
               role="tab"
               aria-selected={mode === 'email'}
               onClick={() => setMode('email')}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-all ${
                 mode === 'email'
-                  ? 'bg-blue-500/15 text-blue-300 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-muted-foreground'
               }`}
             >
               <Mail className="size-3.5" />
@@ -302,8 +302,8 @@ export default function RegisterPage() {
               onClick={() => setMode('phone')}
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-md py-2 text-sm font-medium transition-all ${
                 mode === 'phone'
-                  ? 'bg-blue-500/15 text-blue-300 shadow-sm'
-                  : 'text-zinc-500 hover:text-zinc-300'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-muted-foreground'
               }`}
             >
               <Phone className="size-3.5" />
@@ -313,12 +313,12 @@ export default function RegisterPage() {
 
           <div className="space-y-4" onKeyDown={handleKeyDown}>
             <div className="space-y-1.5">
-              <Label className="text-sm text-zinc-400">企业名称</Label>
+              <Label className="text-sm text-muted-foreground">企业名称</Label>
               <div className="relative">
-                <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   ref={companyRef}
-                  className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                  className="h-11 border-border bg-muted/40 pl-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                   placeholder="请输入企业名称"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
@@ -329,13 +329,13 @@ export default function RegisterPage() {
             {mode === 'phone' ? (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-zinc-400">手机号</Label>
+                  <Label className="text-sm text-muted-foreground">手机号</Label>
                   <div className="relative">
-                    <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                    <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       name="phone"
                       autoComplete="tel"
-                      className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                      className="h-11 border-border bg-muted/40 pl-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                       placeholder="请输入手机号"
                       type="tel"
                       maxLength={11}
@@ -345,19 +345,19 @@ export default function RegisterPage() {
                     />
                   </div>
                   {phoneError && (
-                    <p className="text-xs text-red-400">{phoneError}</p>
+                    <p className="text-xs text-red-600">{phoneError}</p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-zinc-400">验证码</Label>
+                  <Label className="text-sm text-muted-foreground">验证码</Label>
                   <div className="flex gap-3">
                     <div className="relative flex-1">
-                      <ShieldCheck className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                      <ShieldCheck className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         autoComplete="one-time-code"
                         inputMode="numeric"
-                        className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                        className="h-11 border-border bg-muted/40 pl-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                         placeholder="请输入6位验证码"
                         type="text"
                         maxLength={6}
@@ -367,7 +367,7 @@ export default function RegisterPage() {
                     </div>
                     <Button
                       variant="outline"
-                      className="h-11 shrink-0 px-4 border-blue-500/25 bg-blue-500/[0.04] text-blue-300 hover:bg-blue-500/10 hover:text-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-11 shrink-0 px-4 border-primary/25 bg-primary/[0.04] text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                       onClick={handleSendCode}
                       disabled={isCounting || phone.length < 11}
                     >
@@ -379,15 +379,15 @@ export default function RegisterPage() {
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-zinc-400">邮箱</Label>
+                  <Label className="text-sm text-muted-foreground">邮箱</Label>
                   <div className="relative">
-                    <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type="email"
                       name="email"
                       autoComplete="email"
                       spellCheck={false}
-                      className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                      className="h-11 border-border bg-muted/40 pl-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                       placeholder="请输入邮箱地址"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -395,19 +395,19 @@ export default function RegisterPage() {
                     />
                   </div>
                   {emailError && (
-                    <p className="text-xs text-red-400">{emailError}</p>
+                    <p className="text-xs text-red-600">{emailError}</p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-zinc-400">密码</Label>
+                  <Label className="text-sm text-muted-foreground">密码</Label>
                   <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type={showPassword ? 'text' : 'password'}
                       name="new-password"
                       autoComplete="new-password"
-                      className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 pr-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                      className="h-11 border-border bg-muted/40 pl-10 pr-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                       placeholder="至少6位字符"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -416,7 +416,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                       tabIndex={-1}
                       aria-label={showPassword ? '隐藏密码' : '显示密码'}
                     >
@@ -426,7 +426,7 @@ export default function RegisterPage() {
                   {password.length > 0 && (
                     <div className="space-y-1">
                       <Progress value={passwordStrength.score * 20} className="flex-wrap gap-1">
-                        <ProgressTrack className="h-1.5 bg-white/[0.06]">
+                        <ProgressTrack className="h-1.5 bg-muted/50">
                           <ProgressIndicator className={passwordStrength.barColor} />
                         </ProgressTrack>
                       </Progress>
@@ -435,24 +435,24 @@ export default function RegisterPage() {
                           密码强度：{passwordStrength.label}
                         </span>
                         {password.length < 6 && touched.password && (
-                          <span className="text-xs text-red-400">至少6位字符</span>
+                          <span className="text-xs text-red-600">至少6位字符</span>
                         )}
                       </div>
                     </div>
                   )}
                   {passwordError && (
-                    <p className="text-xs text-red-400">{passwordError}</p>
+                    <p className="text-xs text-red-600">{passwordError}</p>
                   )}
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-sm text-zinc-400">确认密码</Label>
+                  <Label className="text-sm text-muted-foreground">确认密码</Label>
                   <div className="relative">
-                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       type={showConfirmPassword ? 'text' : 'password'}
                       autoComplete="new-password"
-                      className="h-11 border-white/[0.08] bg-white/[0.04] pl-10 pr-10 text-zinc-100 placeholder:text-zinc-600 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+                      className="h-11 border-border bg-muted/40 pl-10 pr-10 text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary/50 focus-visible:ring-primary/20"
                       placeholder="请再次输入密码"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -461,7 +461,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword((prev) => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground transition-colors"
                       tabIndex={-1}
                       aria-label={showConfirmPassword ? '隐藏密码' : '显示密码'}
                     >
@@ -469,7 +469,7 @@ export default function RegisterPage() {
                     </button>
                   </div>
                   {confirmPasswordError && (
-                    <p className="text-xs text-red-400">{confirmPasswordError}</p>
+                    <p className="text-xs text-red-600">{confirmPasswordError}</p>
                   )}
                 </div>
               </>
@@ -481,22 +481,22 @@ export default function RegisterPage() {
                 id="terms"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-white/[0.12] bg-white/[0.04] text-blue-600 focus:ring-blue-500/30"
+                className="mt-1 h-4 w-4 shrink-0 rounded border-input bg-muted/40 text-blue-600 focus:ring-blue-500/30"
               />
-              <Label htmlFor="terms" className="text-xs text-zinc-500 leading-relaxed cursor-pointer">
+              <Label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                 我已阅读并同意{' '}
-                <Link href="/terms" className="text-blue-400 hover:text-blue-300 transition-colors">《服务条款》</Link>
+                <Link href="/terms" className="text-primary hover:text-primary/80 transition-colors">《服务条款》</Link>
                 {' '}和{' '}
-                <Link href="/privacy" className="text-blue-400 hover:text-blue-300 transition-colors">《隐私政策》</Link>
+                <Link href="/privacy" className="text-primary hover:text-primary/80 transition-colors">《隐私政策》</Link>
               </Label>
             </div>
 
             {error && (
-              <p className="text-center text-sm text-red-400" role="alert">{error}</p>
+              <p className="text-center text-sm text-red-600" role="alert">{error}</p>
             )}
 
             <Button
-              className="h-11 w-full rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-600 to-violet-600 font-semibold text-white shadow-[0_10px_26px_rgba(59,130,246,0.30)] transition-all hover:shadow-[0_14px_32px_rgba(59,130,246,0.38)] hover:-translate-y-0.5"
+              className="h-11 w-full rounded-lg bg-primary font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
               onClick={handleSubmit}
               disabled={loading || !acceptedTerms}
             >
@@ -505,9 +505,9 @@ export default function RegisterPage() {
           </div>
 
           <div className="relative flex items-center">
-            <div className="flex-1 border-t border-white/[0.06]" />
-            <span className="px-3 text-xs text-zinc-500">SSO 注册</span>
-            <div className="flex-1 border-t border-white/[0.06]" />
+            <div className="flex-1 border-t border-border" />
+            <span className="px-3 text-xs text-muted-foreground">SSO 注册</span>
+            <div className="flex-1 border-t border-border" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -522,18 +522,18 @@ export default function RegisterPage() {
                     : 'Microsoft登录'
                 }
                 onClick={() => handleSSOLogin(provider.id)}
-                className={`flex-1 flex items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] py-2.5 text-sm font-medium text-zinc-400 transition-all ${provider.color}`}
+                className={`flex-1 flex items-center justify-center rounded-lg border border-border bg-muted/50 py-2.5 text-sm font-medium text-muted-foreground transition-all ${provider.color}`}
               >
                 {provider.name}
               </button>
             ))}
           </div>
 
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-muted-foreground">
             已有账号？{' '}
             <Link
               href="/login"
-              className="text-blue-400 transition-colors hover:text-blue-300"
+              className="text-primary transition-colors hover:text-primary/80"
             >
               立即登录
             </Link>

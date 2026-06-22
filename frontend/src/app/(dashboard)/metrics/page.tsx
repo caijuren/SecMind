@@ -46,16 +46,16 @@ import {
 // ==================== 数据定义 ====================
 
 const summaryStats = [
-  { id: 'total-cases', label: '本月处理告警', value: 1234, icon: Zap, color: '#3b82f6', trend: '+18.2%' },
-  { id: 'resolution-rate', label: '处置完成率', value: '94.7%', icon: ShieldCheck, color: '#16a34a', trend: '+2.3%' },
-  { id: 'avg-score', label: '分析准确率', value: '96.8%', icon: Gauge, color: '#8b5cf6', trend: '+1.5%' },
-  { id: 'sla-compliance', label: 'SLA达标率', value: '98.2%', icon: CheckCircle2, color: '#0891b2', trend: '+0.8%' },
+  { id: 'total-cases', labelKey: 'metrics.monthlyAlerts', value: 1234, icon: Zap, color: '#3b82f6', trend: '+18.2%' },
+  { id: 'resolution-rate', labelKey: 'metrics.resolutionRate', value: '94.7%', icon: ShieldCheck, color: '#16a34a', trend: '+2.3%' },
+  { id: 'avg-score', labelKey: 'metrics.analysisAccuracy', value: '96.8%', icon: Gauge, color: '#8b5cf6', trend: '+1.5%' },
+  { id: 'sla-compliance', labelKey: 'metrics.slaCompliance', value: '98.2%', icon: CheckCircle2, color: '#0891b2', trend: '+0.8%' },
 ]
 
 const efficiencyMetrics = [
   {
     id: 'mttd',
-    label: 'MTTD 平均检测时间',
+    labelKey: 'metrics.mttdLabel',
     value: 4.2,
     unit: 'min',
     icon: Timer,
@@ -63,11 +63,11 @@ const efficiencyMetrics = [
     trend: { direction: 'down' as const, value: '-15.2%', isGood: true },
     target: 5.0,
     achievement: 119,
-    description: '从告警产生到首次检测的平均时间',
+    descriptionKey: 'metrics.mttdDesc',
   },
   {
     id: 'mttr',
-    label: 'MTTR 平均响应时间',
+    labelKey: 'metrics.mttrLabel',
     value: 18.7,
     unit: 'min',
     icon: Wrench,
@@ -75,11 +75,11 @@ const efficiencyMetrics = [
     trend: { direction: 'down' as const, value: '-8.6%', isGood: true },
     target: 20.0,
     achievement: 107,
-    description: '从确认到处置完成的平均时间',
+    descriptionKey: 'metrics.mttrDesc',
   },
   {
     id: 'alert-fatigue',
-    label: '告警疲劳指数',
+    labelKey: 'metrics.alertFatigueIndex',
     value: 23,
     unit: '%',
     icon: AlertTriangle,
@@ -87,11 +87,11 @@ const efficiencyMetrics = [
     trend: { direction: 'down' as const, value: '-5.1%', isGood: true },
     target: 30,
     achievement: 130,
-    description: '无效告警占比（越低越好）',
+    descriptionKey: 'metrics.alertFatigueDesc',
   },
   {
     id: 'false-positive',
-    label: '误报率',
+    labelKey: 'metrics.falsePositiveRate',
     value: 15.3,
     unit: '%',
     icon: ShieldX,
@@ -99,11 +99,11 @@ const efficiencyMetrics = [
     trend: { direction: 'down' as const, value: '-3.2%', isGood: true },
     target: 20,
     achievement: 131,
-    description: '误报占所有告警的比例（越低越好）',
+    descriptionKey: 'metrics.falsePositiveDesc',
   },
   {
     id: 'auto-remediation',
-    label: '自动处置率',
+    labelKey: 'metrics.autoRemediationRate',
     value: 68.5,
     unit: '%',
     icon: Bot,
@@ -111,11 +111,11 @@ const efficiencyMetrics = [
     trend: { direction: 'up' as const, value: '+12.4%', isGood: true },
     target: 60,
     achievement: 114,
-    description: 'AI自动处置的告警比例（越高越好）',
+    descriptionKey: 'metrics.autoRemediationDesc',
   },
   {
     id: 'knowledge-hit',
-    label: '知识库命中率',
+    labelKey: 'metrics.knowledgeHitRate',
     value: 96.8,
     unit: '%',
     icon: Target,
@@ -123,46 +123,46 @@ const efficiencyMetrics = [
     trend: { direction: 'up' as const, value: '+2.1%', isGood: true },
     target: 95,
     achievement: 102,
-    description: 'AI匹配到已知攻击模式的比率',
+    descriptionKey: 'metrics.knowledgeHitDesc',
   },
 ]
 
 const industryBenchmark = [
   { metric: 'MTTD', current: 4.2, industry: 8.5, unit: 'min', better: 'lower', improvement: '50.6%' },
   { metric: 'MTTR', current: 18.7, industry: 35.0, unit: 'min', better: 'lower', improvement: '46.6%' },
-  { metric: '误报率', current: 15.3, industry: 25.0, unit: '%', better: 'lower', improvement: '38.8%' },
-  { metric: '自动处置率', current: 68.5, industry: 45.0, unit: '%', better: 'higher', improvement: '52.2%' },
+  { metricKey: 'metrics.falsePositiveRate', current: 15.3, industry: 25.0, unit: '%', better: 'lower', improvement: '38.8%' },
+  { metricKey: 'metrics.autoRemediationRate', current: 68.5, industry: 45.0, unit: '%', better: 'higher', improvement: '52.2%' },
 ]
 
 const improvementSuggestions = [
   {
     id: 'suggestion-1',
     priority: 'high' as const,
-    category: '检测能力',
-    title: 'EDR规则优化可降低MTTD至3分钟内',
-    description: '当前PowerShell编码执行检测延迟较高，建议增加行为基线规则',
-    impact: '预计MTTD改善28%',
-    effort: '中等 (2周)',
+    categoryKey: 'metrics.suggestion1Category',
+    titleKey: 'metrics.suggestion1Title',
+    descriptionKey: 'metrics.suggestion1Desc',
+    impactKey: 'metrics.suggestion1Impact',
+    effortKey: 'metrics.suggestion1Effort',
     owner: '张明远',
   },
   {
     id: 'suggestion-2',
     priority: 'medium' as const,
-    category: '自动化',
-    title: '钓鱼邮件自动处置率可提升至85%',
-    description: '新增URL信誉检查和附件沙箱联动，可实现钓鱼邮件全自动隔离',
-    impact: '自动处置率+16.5%',
-    effort: '高 (1个月)',
+    categoryKey: 'metrics.suggestion2Category',
+    titleKey: 'metrics.suggestion2Title',
+    descriptionKey: 'metrics.suggestion2Desc',
+    impactKey: 'metrics.suggestion2Impact',
+    effortKey: 'metrics.suggestion2Effort',
     owner: '李思涵',
   },
   {
     id: 'suggestion-3',
     priority: 'low' as const,
-    category: '知识库',
-    title: 'IOC库更新频率提升至实时可提高命中率至98%+',
-    description: '接入威胁情报联盟API，实现IOC自动同步（当前每日手动更新）',
-    impact: '知识命中率+1.2%',
-    effort: '低 (3天)',
+    categoryKey: 'metrics.suggestion3Category',
+    titleKey: 'metrics.suggestion3Title',
+    descriptionKey: 'metrics.suggestion3Desc',
+    impactKey: 'metrics.suggestion3Impact',
+    effortKey: 'metrics.suggestion3Effort',
     owner: '王建国',
   },
 ]
@@ -179,30 +179,30 @@ const teamPerformance = [
 
 const priorityConfig = {
   high: {
-    bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-400',
-    badge: 'bg-red-500/20 text-red-400 border-red-500/30',
+    bg: 'bg-red-500/10', border: 'border-red-500/20', text: 'text-red-600',
+    badge: 'bg-red-500/20 text-red-600 border-red-500/30',
     glow: 'shadow-[0_0_20px_rgba(239,68,68,0.08)]',
     accent: '#ef4444',
   },
   medium: {
-    bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400',
-    badge: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-600',
+    badge: 'bg-yellow-500/20 text-yellow-600 border-yellow-500/30',
     glow: 'shadow-[0_0_20px_rgba(234,179,8,0.06)]',
     accent: '#eab308',
   },
   low: {
-    bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400',
-    badge: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-600',
+    badge: 'bg-blue-500/20 text-blue-600 border-blue-500/30',
     glow: 'shadow-[0_0_20px_rgba(59,130,246,0.05)]',
     accent: '#3b82f6',
   },
 }
 
 const efficiencyColors: Record<string, string> = {
-  'A+': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  'A': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  'B+': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  'B': 'bg-white/[0.04] text-zinc-400 border-white/[0.08]',
+  'A+': 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30',
+  'A': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+  'B+': 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+  'B': 'bg-muted/50 text-muted-foreground border-border',
 }
 
 const efficiencyDotColors: Record<string, string> = {
@@ -222,31 +222,32 @@ function SectionLabel({ icon: Icon, label, accent, className }: {
 }) {
   return (
     <div className={cn("flex items-center gap-2.5 mb-4", className)}>
-      <div className="flex size-7 items-center justify-center rounded-lg bg-white/[0.06] ring-1 ring-white/[0.08]">
+      <div className="flex size-7 items-center justify-center rounded-lg bg-muted/50 ring-1 ring-border">
         <Icon className="size-3.5" style={{ color: accent ?? '#a1a1aa' }} />
       </div>
-      <span className="text-sm font-semibold tracking-tight text-zinc-200">{label}</span>
+      <span className="text-sm font-semibold tracking-tight text-foreground">{label}</span>
     </div>
   )
 }
 
 function SummaryStatCard({ stat }: { stat: typeof summaryStats[number] }) {
+  const { t } = useLocaleStore()
   const Icon = stat.icon
   return (
-    <div className={cn(CARD.base, "p-4 hover:border-white/10 hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200")}>
+    <div className={cn(CARD.base, "p-4 hover:border-border hover:shadow-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200")}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: `${stat.color}12` }}>
             <Icon className="size-4" style={{ color: stat.color }} />
           </div>
-          <span className="text-xs font-medium text-zinc-400">{stat.label}</span>
+          <span className="text-xs font-medium text-muted-foreground">{t(stat.labelKey)}</span>
         </div>
-        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-400">
+        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-600">
           <TrendingUp className="size-3" />
           {stat.trend}
         </span>
       </div>
-      <div className="text-2xl font-bold font-mono tabular-nums tracking-tight text-zinc-100">
+      <div className="text-2xl font-bold font-mono tabular-nums tracking-tight text-foreground">
         {stat.value}
       </div>
     </div>
@@ -254,6 +255,7 @@ function SummaryStatCard({ stat }: { stat: typeof summaryStats[number] }) {
 }
 
 function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
+  const { t } = useLocaleStore()
   const Icon = item.icon
   const circleRadius = 22
   const circumference = 2 * Math.PI * circleRadius
@@ -265,7 +267,7 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
   const dashOffset = circumference * (1 - clampedRatio)
 
   return (
-    <Card className={cn(CARD.elevated, "group hover:border-white/[0.12] hover:shadow-xl hover:shadow-black/40 transition-all duration-300")}>
+    <Card className={cn(CARD.elevated, "group hover:border-border hover:shadow-xl hover:shadow-black/40 transition-all duration-300")}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -280,14 +282,14 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
               <Icon className="size-5" style={{ color: item.color }} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium text-zinc-200 truncate">{item.label}</p>
-              <p className="text-[11px] text-zinc-500 mt-0.5 line-clamp-1">{item.description}</p>
+              <p className="text-sm font-medium text-foreground truncate">{t(item.labelKey)}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">{t(item.descriptionKey)}</p>
             </div>
           </div>
 
           <span className={cn(
             "shrink-0 ml-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold",
-            item.trend.isGood ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+            item.trend.isGood ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
           )}>
             {item.trend.direction === 'down' ? <TrendingDown className="size-3" /> : <TrendingUp className="size-3" />}
             {item.trend.value}
@@ -296,10 +298,10 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
 
         <div className="flex items-end justify-between mb-4">
           <div className="flex items-end gap-1.5">
-            <span className="text-[28px] font-bold font-mono tracking-tight text-zinc-100 leading-none">
+            <span className="text-[28px] font-bold font-mono tracking-tight text-foreground leading-none">
               {item.value}
             </span>
-            <span className="text-xs text-zinc-500 mb-0.5">{item.unit}</span>
+            <span className="text-xs text-muted-foreground mb-0.5">{item.unit}</span>
           </div>
 
           <div className="relative flex items-center justify-center">
@@ -322,24 +324,24 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
                 style={{ filter: `drop-shadow(0 0 4px ${item.achievement >= 100 ? '#22c55e40' : '#f9731640'})` }}
               />
             </svg>
-            <span className="absolute text-[11px] font-bold font-mono tabular-nums text-zinc-300">
+            <span className="absolute text-[11px] font-bold font-mono tabular-nums text-muted-foreground">
               {item.achievement}%
             </span>
           </div>
         </div>
 
-        <div className="pt-3 border-t border-white/[0.05]">
+        <div className="pt-3 border-t border-border/50">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-zinc-500">
-              目标 <span className="font-mono font-semibold text-zinc-400">{item.target}{item.unit}</span>
+            <span className="text-[11px] text-muted-foreground">
+              {t("metrics.target")} <span className="font-mono font-semibold text-muted-foreground">{item.target}{item.unit}</span>
             </span>
             <Badge variant="outline" className={cn(
               "text-[10px] font-semibold",
               item.achievement >= 100
-                ? "border-emerald-500/25 text-emerald-400 bg-emerald-500/8"
-                : "border-orange-500/25 text-orange-400 bg-orange-500/8"
+                ? "border-emerald-500/25 text-emerald-600 bg-emerald-500/8"
+                : "border-orange-500/25 text-orange-600 bg-orange-500/8"
             )}>
-              达成率 {item.achievement}%
+              {t("metrics.achievementRate")} {item.achievement}%
             </Badge>
           </div>
         </div>
@@ -349,21 +351,22 @@ function MetricCard({ item }: { item: typeof efficiencyMetrics[number] }) {
 }
 
 function BenchmarkComparison() {
+  const { t } = useLocaleStore()
   return (
     <Card className={cn(CARD.elevated, "h-full")}>
       <CardContent className="p-5">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2.5">
             <div className="flex size-8 items-center justify-center rounded-lg bg-yellow-500/12 ring-1 ring-yellow-500/20">
-              <Award className="size-4 text-yellow-400" />
+              <Award className="size-4 text-yellow-600" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-200">行业基准对比</h2>
-              <p className="text-[11px] text-zinc-500 mt-0.5">与同行业SOC团队比较</p>
+              <h2 className="text-sm font-semibold text-foreground">{t("metrics.benchmarkComparison")}</h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{t("metrics.benchmarkSubtitle")}</p>
             </div>
           </div>
-          <Badge variant="outline" className="text-[10px] text-zinc-500 border-white/8 bg-white/[0.03]">
-            数据来源: Gartner SOC Benchmark 2024
+          <Badge variant="outline" className="text-[10px] text-muted-foreground border-border bg-muted/50">
+            {t("metrics.dataSource")}
           </Badge>
         </div>
 
@@ -372,30 +375,31 @@ function BenchmarkComparison() {
             const isBetter = (benchmark.better === 'lower' && benchmark.current < benchmark.industry)
               || (benchmark.better === 'higher' && benchmark.current > benchmark.industry)
             const ourWidth = Math.min((benchmark.current / benchmark.industry) * 100, 100)
+            const metricLabel = benchmark.metric ?? t(benchmark.metricKey!)
 
             return (
-              <div key={benchmark.metric} className="space-y-3">
+              <div key={metricLabel} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-zinc-300">{benchmark.metric}</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{metricLabel}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-[11px] text-zinc-500">
-                      我们 <span className="font-mono font-semibold text-zinc-200">{benchmark.current}{benchmark.unit}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {t("metrics.ours")} <span className="font-mono font-semibold text-foreground">{benchmark.current}{benchmark.unit}</span>
                     </span>
-                    <span className="text-[11px] text-zinc-500">
-                      行业 <span className="font-mono text-zinc-500">{benchmark.industry}{benchmark.unit}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      {t("metrics.industry")} <span className="font-mono text-muted-foreground">{benchmark.industry}{benchmark.unit}</span>
                     </span>
                     <span className={cn(
                       "inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold",
-                      isBetter ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+                      isBetter ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
                     )}>
-                      {isBetter ? '领先' : '落后'} {benchmark.improvement}
+                      {isBetter ? t("metrics.leading") : t("metrics.lagging")} {benchmark.improvement}
                     </span>
                   </div>
                 </div>
 
-                <div className="relative h-10 rounded-lg bg-white/[0.04] overflow-hidden">
+                <div className="relative h-10 rounded-lg bg-muted/50 overflow-hidden">
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-[10px] font-medium text-zinc-600">行业基线</span>
+                    <span className="text-[10px] font-medium text-muted-foreground/60">{t("metrics.industryBaseline")}</span>
                   </div>
 
                   <div
@@ -421,42 +425,43 @@ function BenchmarkComparison() {
 }
 
 function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggestions[number] }) {
+  const { t } = useLocaleStore()
   const colors = priorityConfig[suggestion.priority as keyof typeof priorityConfig]
 
   return (
     <div className={cn(
       CARD.base, "p-4 cursor-pointer transition-all duration-200",
       colors.border, colors.glow,
-      "hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5",
+      "hover:shadow-lg hover:shadow-lg hover:-translate-y-0.5",
     )} style={{ backgroundColor: `${colors.accent}06` }}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex size-7 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${colors.accent}12` }}>
             <Lightbulb className="size-3.5" style={{ color: colors.accent }} />
           </div>
-          <h4 className="text-sm font-medium text-zinc-200 truncate">{suggestion.title}</h4>
+          <h4 className="text-sm font-medium text-foreground truncate">{t(suggestion.titleKey)}</h4>
         </div>
         <Badge className={cn("shrink-0 ml-2 text-[10px] font-semibold border", colors.badge)}>
-          {suggestion.priority === 'high' ? '高优先级' : suggestion.priority === 'medium' ? '中优先级' : '低优先级'}
+          {suggestion.priority === 'high' ? t("metrics.highPriority") : suggestion.priority === 'medium' ? t("metrics.mediumPriority") : t("metrics.lowPriority")}
         </Badge>
       </div>
 
-      <p className="text-xs text-zinc-400 leading-relaxed mb-3 line-clamp-2">{suggestion.description}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed mb-3 line-clamp-2">{t(suggestion.descriptionKey)}</p>
 
-      <div className="flex items-center justify-between pt-3 border-t border-white/[0.05]">
+      <div className="flex items-center justify-between pt-3 border-t border-border/50">
         <div className="flex items-center gap-4">
           <div>
-            <span className="text-[10px] text-zinc-500">预期影响</span>
-            <p className="text-[11px] font-semibold text-emerald-400 mt-0.5">{suggestion.impact}</p>
+            <span className="text-[10px] text-muted-foreground">{t("metrics.expectedImpact")}</span>
+            <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">{t(suggestion.impactKey)}</p>
           </div>
           <div>
-            <span className="text-[10px] text-zinc-500">实施难度</span>
-            <p className="text-[11px] font-semibold text-zinc-300 mt-0.5">{suggestion.effort}</p>
+            <span className="text-[10px] text-muted-foreground">{t("metrics.implementationEffort")}</span>
+            <p className="text-[11px] font-semibold text-muted-foreground mt-0.5">{t(suggestion.effortKey)}</p>
           </div>
         </div>
 
-        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-medium border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/15">
-          分配给 {suggestion.owner}
+        <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px] font-medium border-border bg-muted/50 hover:bg-muted/50 hover:border-border">
+          {t("metrics.assignTo")} {suggestion.owner}
           <ArrowRight className="size-3" />
         </Button>
       </div>
@@ -465,11 +470,12 @@ function SuggestionCard({ suggestion }: { suggestion: typeof improvementSuggesti
 }
 
 function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) {
+  const { t } = useLocaleStore()
   const hasTopBadge = member.efficiency === 'A+' || member.efficiency === 'A'
 
   return (
     <Card className={cn(
-      CARD.base, "p-4 hover:shadow-md hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200",
+      CARD.base, "p-4 hover:shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200",
       hasTopBadge && "ring-1 ring-yellow-500/15"
     )}>
       <div className="flex items-center gap-3 mb-3">
@@ -495,34 +501,34 @@ function TeamMemberCard({ member }: { member: typeof teamPerformance[number] }) 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-medium text-zinc-200 truncate">{member.name}</h4>
+            <h4 className="text-sm font-medium text-foreground truncate">{member.name}</h4>
             <Badge className={cn("text-[10px] font-semibold border shrink-0", efficiencyColors[member.efficiency])}>
               {member.efficiency}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 mt-1">
             <span className="flex size-1.5 rounded-full" style={{ backgroundColor: efficiencyDotColors[member.efficiency] }} />
-            <span className="text-[11px] text-zinc-500">
-              准确率 {member.accuracy}
+            <span className="text-[11px] text-muted-foreground">
+              {t("metrics.accuracy")} {member.accuracy}
             </span>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <div className={cn(RADIUS.sm, "bg-white/[0.03] p-2.5 border border-white/[0.04]")}>
+        <div className={cn(RADIUS.sm, "bg-muted/50 p-2.5 border border-border/40")}>
           <div className="flex items-center gap-1 mb-1">
-            <BarChart3 className="size-3 text-zinc-500" />
-            <span className="text-[10px] text-zinc-500">处理案件</span>
+            <BarChart3 className="size-3 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">{t("metrics.casesHandled")}</span>
           </div>
-          <span className="text-base font-bold font-mono tabular-nums text-zinc-100">{member.cases}</span>
+          <span className="text-base font-bold font-mono tabular-nums text-foreground">{member.cases}</span>
         </div>
-        <div className={cn(RADIUS.sm, "bg-white/[0.03] p-2.5 border border-white/[0.04]")}>
+        <div className={cn(RADIUS.sm, "bg-muted/50 p-2.5 border border-border/40")}>
           <div className="flex items-center gap-1 mb-1">
-            <Clock className="size-3 text-zinc-500" />
-            <span className="text-[10px] text-zinc-500">平均响应</span>
+            <Clock className="size-3 text-muted-foreground" />
+            <span className="text-[10px] text-muted-foreground">{t("metrics.avgResponse")}</span>
           </div>
-          <span className="text-base font-bold font-mono tabular-nums text-zinc-100">{member.avgTime}</span>
+          <span className="text-base font-bold font-mono tabular-nums text-foreground">{member.avgTime}</span>
         </div>
       </div>
     </Card>
@@ -537,9 +543,9 @@ export default function MetricsPage() {
     <PermissionGate resource="dashboard_metrics" action="read" fallback={
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <ShieldX className="mx-auto size-12 text-zinc-600 mb-4" />
-          <h2 className="text-lg font-semibold text-zinc-300">{t("common.forbidden")}</h2>
-          <p className="text-sm text-zinc-500 mt-1">{t("error.forbidden")}</p>
+          <ShieldX className="mx-auto size-12 text-muted-foreground/60 mb-4" />
+          <h2 className="text-lg font-semibold text-muted-foreground">{t("common.forbidden")}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{t("error.forbidden")}</p>
         </div>
       </div>
     }>
@@ -571,7 +577,7 @@ function MetricsContent() {
                 <SelectItem value="quarter">{t("metrics.thisQuarter")}</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" className="gap-2 border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/15">
+            <Button variant="outline" className="gap-2 border-border bg-muted/50 hover:bg-muted/50 hover:border-border">
               <Activity className="size-4" />
               {t("metrics.exportReport")}
             </Button>
@@ -588,8 +594,8 @@ function MetricsContent() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <SectionLabel icon={Target} label={t("metrics.coreEfficiencyMetrics")} accent="#3b82f6" />
-          <span className="text-[11px] text-zinc-500">
-            {t("metrics.targetAchievement")}: <strong className="text-emerald-400 text-xs">114%</strong> ({t("metrics.average")})
+          <span className="text-[11px] text-muted-foreground">
+            {t("metrics.targetAchievement")}: <strong className="text-emerald-600 text-xs">114%</strong> ({t("metrics.average")})
           </span>
         </div>
         <div className="grid grid-cols-3 gap-4">
@@ -620,9 +626,9 @@ function MetricsContent() {
           <div className="flex items-center justify-between mb-4">
             <SectionLabel icon={Users} label={t("metrics.teamPerformance")} accent="#8b5cf6" className="mb-0" />
             <div className="flex items-center gap-3">
-              <span className="text-[11px] text-zinc-500">{t("metrics.topPerformers")}</span>
-              <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/25 text-[10px] font-semibold">
-                <Star className="size-3 mr-1 fill-yellow-400" /> 张明远 (A+)
+              <span className="text-[11px] text-muted-foreground">{t("metrics.topPerformers")}</span>
+              <Badge className="bg-yellow-500/15 text-yellow-600 border-yellow-500/25 text-[10px] font-semibold">
+                <Star className="size-3 mr-1 fill-yellow-400" /> {t("metrics.topPerformerName")}
               </Badge>
             </div>
           </div>

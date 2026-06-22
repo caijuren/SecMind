@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useRealtimeAlerts, useRealtimeConnection } from "@/hooks/useRealtimeAlerts"
+import { usePageTitle } from "@/hooks/use-page-title"
 import {
   Activity,
   AlertTriangle,
@@ -21,17 +22,26 @@ import {
   Monitor,
   Layers,
   BarChart3,
-  Database,
   Eye,
   Clock,
   Crosshair,
+  Database,
+  Search,
+  MoreHorizontal,
+  ShieldOff,
+  Ban,
+  ArrowUpRight,
+  FileDown,
+  UserCog,
+  ShieldAlert,
+  Terminal,
+  CheckCircle2,
+  ClipboardList,
+  Wrench,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { RISK_CONFIG, type RiskLevel } from "@/lib/risk-config"
-import { PageHeader } from "@/components/layout/page-header"
-import { softCardClass } from "@/lib/admin-ui"
 import { CARD } from "@/lib/design-system"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -41,97 +51,48 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useLocaleStore } from "@/store/locale-store"
-import { useAuthStore } from "@/store/auth-store"
-
-type SignalSource = "EDR" | "VPN" | "IAM" | "Email" | "Firewall" | "DNS"
-type AIPreprocess = "去噪" | "聚合" | "上下文补全" | "风险评分"
-
-interface LiveSignal {
-  id: string
-  timestamp: string
-  receivedTime: string
-  source: SignalSource
-  sourceSystemName: string
-  rawInput: string
-  sourceAnalysis: string
-  sourceSuggestion: string
-  aiPreprocess: AIPreprocess
-  aiPreprocessResult: string
-  aiClassification: string
-  riskLevel: RiskLevel
-}
-
-interface AnomalousActivity {
-  id: string
-  behavior: string
-  riskScore: number
-  riskLevel: RiskLevel
-  source: SignalSource
-  entities: string[]
-  aiAssessment: string
-  aiReasoning: string
-  timestamp: string
-}
-
-interface RiskCluster {
-  id: string
-  signalCount: number
-  riskScore: number
-  riskLevel: RiskLevel
-  entities: string[]
-  aiAssessment: string
-  attackType: string
-  lastUpdated: string
-}
+import { useWorkbenchBridgeStore } from "@/store/workbench-bridge-store"
+import { PageHeader } from "@/components/layout/page-header"
+import { TablePagination } from "@/components/layout/table-pagination"
+import {
+  useUnifiedDataStore,
+  type SignalSource,
+  type AIPreprocess,
+  type LiveSignal,
+  type AnomalousActivity,
+  type RiskCluster,
+} from "@/store/unified-data-store"
 
 const SOURCE_CONFIG: Record<SignalSource, { icon: typeof Activity; color: string; bg: string }> = {
-  EDR: { icon: Monitor, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
-  VPN: { icon: Wifi, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
-  IAM: { icon: Lock, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
-  Email: { icon: Mail, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
-  Firewall: { icon: Shield, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
-  DNS: { icon: Globe, color: "text-zinc-400", bg: "bg-white/[0.04] border-white/[0.06]" },
+  EDR: { icon: Monitor, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  VPN: { icon: Wifi, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  IAM: { icon: Lock, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  Email: { icon: Mail, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  Firewall: { icon: Shield, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  DNS: { icon: Globe, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
 }
 
-const PREPROCESS_CONFIG: Record<AIPreprocess, { color: string; icon: typeof Brain }> = {
-  "去噪": { color: "text-cyan-400", icon: Filter },
-  "聚合": { color: "text-amber-400", icon: Layers },
-  "上下文补全": { color: "text-purple-400", icon: Brain },
-  "风险评分": { color: "text-red-400", icon: BarChart3 },
+const PREPROCESS_CONFIG: Record<AIPreprocess, { color: string; icon: typeof Brain; labelKey: string }> = {
+  "去噪": { color: "text-primary", icon: Filter, labelKey: "preprocessDenoise" },
+  "聚合": { color: "text-amber-600", icon: Layers, labelKey: "preprocessAggregate" },
+  "上下文补全": { color: "text-purple-600", icon: Brain, labelKey: "preprocessContextComplete" },
+  "风险评分": { color: "text-red-600", icon: BarChart3, labelKey: "preprocessRiskScore" },
 }
-
-const initialSignals: LiveSignal[] = [
-  { id: "SIG-001", timestamp: "14:35:22", receivedTime: "2025-05-10 14:35:22.337", source: "EDR", sourceSystemName: "奇安信天擎", rawInput: "HOST=WIN-DESK-15 PROC=powershell.exe CMD=-enc Base64String ACTION=execute", sourceAnalysis: "检测到Base64编码的PowerShell命令执行，符合ATT&CK T1059.001，进程链异常", sourceSuggestion: "建议立即隔离主机并采集内存转储进行深度取证分析", aiPreprocess: "去噪", aiPreprocessResult: "过滤3条重复日志，识别编码执行行为", aiClassification: "可疑PowerShell编码执行", riskLevel: "high" },
-  { id: "SIG-002", timestamp: "14:35:18", receivedTime: "2025-05-10 14:35:18.891", source: "VPN", sourceSystemName: "深信服SSL VPN", rawInput: "USER=zhangwei SRC=103.45.67.89 DST=VPN-GW-01 STATUS=success DURATION=0s", sourceAnalysis: "用户从境外高风险IP成功登录VPN，与上次登录地理位置偏差超过5000km，触发不可能旅行规则", sourceSuggestion: "建议强制下线该会话并要求用户通过MFA重新认证，同时通知安全团队复核", aiPreprocess: "上下文补全", aiPreprocessResult: "补充用户画像：常驻上海，首次境外IP登录", aiClassification: "不可能旅行-凭证疑似窃取", riskLevel: "critical" },
-  { id: "SIG-003", timestamp: "14:35:15", receivedTime: "2025-05-10 14:35:15.102", source: "Email", sourceSystemName: "Coremail论客", rawInput: "FROM=shipping@dhl-phish.com TO=cfo@corp.com ATTACH=invoice.exe SCORE=93", sourceAnalysis: "钓鱼邮件评分93/100，发件域名注册仅2天，附件为PE可执行文件且哈希匹配已知Agent Tesla木马家族", sourceSuggestion: "已自动隔离邮件并删除附件，建议通知CFO进行安全意识确认，排查是否已点击", aiPreprocess: "风险评分", aiPreprocessResult: "钓鱼评分93/100，附件为已知恶意家族", aiClassification: "定向钓鱼攻击-凭证窃取", riskLevel: "critical" },
-  { id: "SIG-004", timestamp: "14:35:10", receivedTime: "2025-05-10 14:35:10.558", source: "Firewall", sourceSystemName: "华为USG6550E", rawInput: "SRC=10.0.2.100 DST=185.220.101.34 PORT=443 PROTO=TCP BYTES=2.3MB", sourceAnalysis: "内网主机向已知恶意IP发起HTTPS加密通信，目标IP在Tor出口节点列表中，流量特征符合C2心跳模式（固定60s间隔）", sourceSuggestion: "建议阻断该IP段出站流量并对源主机进行全盘扫描", aiPreprocess: "聚合", aiPreprocessResult: "关联同一目标IP的5次连接，识别C2心跳", aiClassification: "C2通信-数据暂存", riskLevel: "high" },
-  { id: "SIG-005", timestamp: "14:35:05", receivedTime: "2025-05-10 14:35:05.774", source: "IAM", sourceSystemName: "阿里云RAM + IDaaS", rawInput: "USER=app-service ACTION=AddUserToGroup GROUP=Administrators SRC=10.0.2.50", sourceAnalysis: "服务账号app-service执行了管理员组添加操作，该账号历史无此类权限变更记录，操作时间非维护窗口", sourceSuggestion: "建议立即撤销该操作并重置服务账号凭证，审查操作来源IP对应的跳板机访问日志", aiPreprocess: "上下文补全", aiPreprocessResult: "服务账号异常提权，历史无管理员组操作", aiClassification: "权限提升-云资源接管", riskLevel: "high" },
-  { id: "SIG-006", timestamp: "14:35:01", receivedTime: "2025-05-10 14:35:01.203", source: "DNS", sourceSystemName: "奇安信DNSGuard", rawInput: "QUERY=cmd6.malware-c2.xyz TYPE=TXT CLIENT=10.0.2.100 FREQ=12/min", sourceAnalysis: "DNS TXT记录高频查询（12次/分钟），查询域名符合DGA（域名生成算法）特征，与已知DnsSystem木马C2基础设施关联", sourceSuggestion: "建议在DNS层面阻断该域名及其父域，并对查询源主机进行内存取证", aiPreprocess: "聚合", aiPreprocessResult: "DNS TXT高频查询，关联已知DGA域名特征", aiClassification: "DNS隧道-C2通信", riskLevel: "critical" },
-  { id: "SIG-007", timestamp: "14:34:55", receivedTime: "2025-05-10 14:34:55.449", source: "EDR", sourceSystemName: "安恒信息明御", rawInput: "HOST=WEB-SVR PATH=/uploads/cmd.php TYPE=WebShell SIG=ChinaChopper", sourceAnalysis: "Web服务器uploads目录发现PHP WebShell文件，签名精确匹配中国菜刀工具，文件创建时间与最近一次Web应用部署时间吻合", sourceSuggestion: "建议立即删除WebShell文件、隔离Web服务器、回滚至上一版本快照，并排查Web应用上传漏洞入口", aiPreprocess: "风险评分", aiPreprocessResult: "WebShell特征匹配99%，中国菜刀工具", aiClassification: "WebShell植入-后门", riskLevel: "critical" },
-  { id: "SIG-008", timestamp: "14:34:50", receivedTime: "2025-05-10 14:34:50.881", source: "Firewall", sourceSystemName: "天融信NGFW", rawInput: "SRC=10.0.2.88 DST=cloud.baidu.com SIZE=500MB TYPE=source_code", sourceAnalysis: "DLP策略触发：检测到大量源代码类型文件向外传输至个人云存储服务，传输行为超出该用户基线200倍以上", sourceSuggestion: "建议立即终止该会话并冻结相关云存储同步任务，启动内部威胁调查流程", aiPreprocess: "上下文补全", aiPreprocessResult: "DLP策略触发，源代码外传至个人云盘", aiClassification: "数据外泄-源代码泄露", riskLevel: "high" },
-  { id: "SIG-009", timestamp: "14:34:45", receivedTime: "2025-05-10 14:34:45.116", source: "VPN", sourceSystemName: "奇安信虚拟VPN", rawInput: "USER=linfeng SESSIONS=3 DEVICES=Beijing,Shanghai,Shenzhen", sourceAnalysis: "同一用户从3个不同城市的设备同时保持VPN在线状态，虽然用户岗位为销售但三地同时在线不符合物理规律", sourceSuggestion: "建议核实是否存在账号共享或凭证泄露情况，可要求用户逐一确认各会话合法性", aiPreprocess: "去噪", aiPreprocessResult: "过滤正常多设备登录，标记异常同时在线", aiClassification: "多设备异常在线", riskLevel: "medium" },
-  { id: "SIG-010", timestamp: "14:34:40", receivedTime: "2025-05-10 14:34:40.662", source: "Email", sourceSystemName: "360邮件安全网关", rawInput: "FROM=it-support@corp-evil.com TO=all-staff@corp.com LINK=portal.phish.com", sourceAnalysis: "仿冒IT支持部门域名的批量钓鱼邮件，链接指向精心伪造的SSO登录页面，目标覆盖全体员工属于广撒网式攻击", sourceSuggestion: "已拦截该邮件并加入全局黑名单，建议发布全员安全预警避免其他渠道中招", aiPreprocess: "风险评分", aiPreprocessResult: "仿冒IT支持域名，链接指向钓鱼页面", aiClassification: "广撒网钓鱼-凭证收集", riskLevel: "high" },
-]
-
-const anomalousActivities: AnomalousActivity[] = [
-  { id: "ANO-001", behavior: "用户zhangwei从俄罗斯IP登录VPN，与上次北京登录间隔仅2小时", riskScore: 94, riskLevel: "critical", source: "VPN", entities: ["zhangwei", "103.45.67.89", "VPN-GW-01"], aiAssessment: "不可能旅行检测触发，凭证极可能已被窃取", aiReasoning: "登录IP归属俄罗斯已知代理服务商，用户30天内无境外行为，ASN信誉评分12/100", timestamp: "14:35:18" },
-  { id: "ANO-002", behavior: "内网主机10.0.2.100向185.220.101.34发起加密通信，流量模式匹配C2心跳", riskScore: 91, riskLevel: "critical", source: "Firewall", entities: ["10.0.2.100", "185.220.101.34"], aiAssessment: "C2通信确认，主机已被植入远控木马", aiReasoning: "目标IP在Tor出口节点列表中，通信间隔固定60秒，流量特征匹配Cobalt Strike", timestamp: "14:35:10" },
-  { id: "ANO-003", behavior: "CFO收到伪装DHL投递通知的钓鱼邮件，附件为可执行文件", riskScore: 88, riskLevel: "critical", source: "Email", entities: ["cfo@corp.com", "shipping@dhl-phish.com"], aiAssessment: "定向钓鱼攻击，针对高价值目标", aiReasoning: "发件域名注册仅3天，附件哈希匹配已知Agent Tesla木马，收件人为CFO", timestamp: "14:35:15" },
-  { id: "ANO-004", behavior: "服务账号app-service被添加至Administrators组，操作来源10.0.2.50", riskScore: 82, riskLevel: "high", source: "IAM", entities: ["app-service", "10.0.2.50", "AWS-IAM"], aiAssessment: "权限提升攻击，攻击者获取云资源控制权", aiReasoning: "服务账号历史无管理员组操作，操作时间非维护窗口，关联K8s RBAC异常", timestamp: "14:35:05" },
-  { id: "ANO-005", behavior: "WEB-SVR上传目录发现ChinaChopper WebShell", riskScore: 97, riskLevel: "critical", source: "EDR", entities: ["WEB-SVR", "10.0.2.100"], aiAssessment: "Web后门植入，攻击者已获取Web服务器控制权", aiReasoning: "文件路径在uploads目录，WebShell签名精确匹配，关联同一攻击源IP", timestamp: "14:34:55" },
-  { id: "ANO-006", behavior: "DNS TXT记录高频查询cmd6.malware-c2.xyz，频率12次/分钟", riskScore: 86, riskLevel: "high", source: "DNS", entities: ["10.0.2.100", "cmd6.malware-c2.xyz"], aiAssessment: "DNS隧道通信，用于C2数据外传", aiReasoning: "域名符合DGA生成算法特征，TXT查询频率异常，关联C2主机同一来源", timestamp: "14:35:01" },
-  { id: "ANO-007", behavior: "用户linfeng同时从3个不同城市设备在线", riskScore: 52, riskLevel: "medium", source: "VPN", entities: ["linfeng", "Beijing", "Shanghai", "Shenzhen"], aiAssessment: "多设备异常在线，可能为凭证共享或窃取", aiReasoning: "3个城市同时在线不符合物理移动规律，但用户为销售岗位出差频繁", timestamp: "14:34:45" },
-  { id: "ANO-008", behavior: "10.0.2.88向cloud.baidu.com传输500MB源代码", riskScore: 78, riskLevel: "high", source: "Firewall", entities: ["10.0.2.88", "linfeng", "cloud.baidu.com"], aiAssessment: "DLP策略违规，源代码外泄至个人云盘", aiReasoning: "传输内容匹配源代码特征，目标为个人云存储，用户linfeng近期有离职意向", timestamp: "14:34:50" },
-]
-
-const riskClusters: RiskCluster[] = [
-  { id: "CLUSTER-001", signalCount: 12, riskScore: 96, riskLevel: "critical", entities: ["10.0.2.100", "185.220.101.34", "zhangwei", "WEB-SVR"], aiAssessment: "APT攻击链：初始钓鱼→凭证窃取→横向移动→C2建立→数据暂存，攻击者已在内网建立据点", attackType: "APT攻击链", lastUpdated: "2分钟前" },
-  { id: "CLUSTER-002", signalCount: 8, riskScore: 88, riskLevel: "critical", entities: ["cfo@corp.com", "shipping@dhl-phish.com", "app-service"], aiAssessment: "定向钓鱼→凭证窃取→云资源接管，针对CFO的精准攻击与云权限提升关联", attackType: "定向钓鱼+云攻击", lastUpdated: "5分钟前" },
-  { id: "CLUSTER-003", signalCount: 6, riskScore: 82, riskLevel: "high", entities: ["10.0.2.88", "linfeng", "cloud.baidu.com"], aiAssessment: "内部威胁：离职员工利用合法权限外传源代码，DLP策略违规", attackType: "内部威胁-数据外泄", lastUpdated: "8分钟前" },
-  { id: "CLUSTER-004", signalCount: 4, riskScore: 65, riskLevel: "medium", entities: ["linfeng", "Beijing", "Shanghai", "Shenzhen"], aiAssessment: "多设备异常在线，可能为凭证共享，销售岗位出差频繁降低置信度", attackType: "凭证异常", lastUpdated: "12分钟前" },
-  { id: "CLUSTER-005", signalCount: 3, riskScore: 58, riskLevel: "medium", entities: ["WIN-DESK-15", "10.0.3.70"], aiAssessment: "PowerShell编码执行，可能为合法运维脚本，需进一步确认", attackType: "可疑执行", lastUpdated: "15分钟前" },
-]
 
 function SourceBadge({ source }: { source: SignalSource }) {
   const config = SOURCE_CONFIG[source]
@@ -157,20 +118,25 @@ function RiskIndicator({ level, score }: { level: RiskLevel; score?: number }) {
 function LivePulse() {
   return (
     <span className="relative flex h-2.5 w-2.5">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400" />
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
     </span>
   )
 }
 
 function LiveSignalsTab({ t }: { t: (key: string) => string }) {
-  const router = useRouter()
   const { alerts: wsAlerts, newAlertCount, clearNewAlerts, isConnected, lastMessage } = useRealtimeAlerts()
-  const [signals, setSignals] = useState<LiveSignal[]>(initialSignals)
-  const [signalCount, setSignalCount] = useState(12847)
-  const [selectedSignal, setSelectedSignal] = useState<LiveSignal | null>(initialSignals[0])
+  const router = useRouter()
+  const bridgeStore = useWorkbenchBridgeStore()
+  const signalStatusMap = useWorkbenchBridgeStore((s) => s.signalStatusMap)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [actionSignal, setActionSignal] = useState<LiveSignal | null>(null)
+  const [dialogType, setDialogType] = useState<"respond" | "ignore" | null>(null)
+  const [ignoredIds, setIgnoredIds] = useState<Set<string>>(new Set())
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
-  const generateSignal = useCallback(() => {
+  const generateSignal = useCallback((): LiveSignal => {
     const sources: SignalSource[] = ["EDR", "VPN", "IAM", "Email", "Firewall", "DNS"]
     const preprocesses: AIPreprocess[] = ["去噪", "聚合", "上下文补全", "风险评分"]
     const levels: RiskLevel[] = ["critical", "high", "medium", "low"]
@@ -224,7 +190,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
     const ts = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
     const ms = String(now.getMilliseconds()).padStart(3, "0")
     return {
-      id: `SIG-${String(Date.now()).slice(-6)}`,
+      id: `SIG-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       timestamp: ts,
       receivedTime: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${ts}.${ms}`,
       source,
@@ -239,6 +205,15 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
     }
   }, [])
 
+  const [signals, setSignals] = useState<LiveSignal[]>([])
+
+  // 在客户端生成初始数据，避免 SSR/CSR hydration mismatch
+  useEffect(() => {
+    if (signals.length === 0) {
+      setSignals(Array.from({ length: 20 }, () => generateSignal()))
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (wsAlerts.length > 0) {
       const latest = wsAlerts[0]
@@ -246,7 +221,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
       const ts = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
       const ms = String(now.getMilliseconds()).padStart(3, "0")
       const wsSignal: LiveSignal = {
-        id: latest.id || `WS-${String(Date.now()).slice(-6)}`,
+        id: latest.id || `WS-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         timestamp: ts,
         receivedTime: latest.timestamp || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${ts}.${ms}`,
         source: (["EDR", "VPN", "IAM", "Email", "Firewall", "DNS"].includes(latest.source) ? latest.source : "EDR") as SignalSource,
@@ -260,8 +235,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
         riskLevel: (["critical", "high", "medium", "low", "info"].includes(latest.riskLevel) ? latest.riskLevel : "medium") as RiskLevel,
       }
       const applySignal = () => {
-        setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
-        setSignalCount((prev) => prev + 1)
+        setSignals((prev) => [wsSignal, ...prev])
       }
       if (typeof queueMicrotask === "function") {
         queueMicrotask(applySignal)
@@ -278,7 +252,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
     const ts = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
     const ms = String(now.getMilliseconds()).padStart(3, "0")
     const wsSignal: LiveSignal = {
-      id: signalData.id || `WS-SIG-${String(Date.now()).slice(-6)}`,
+      id: signalData.id || `WS-SIG-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       timestamp: ts,
       receivedTime: signalData.timestamp || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${ts}.${ms}`,
       source: (["EDR", "VPN", "IAM", "Email", "Firewall", "DNS"].includes(signalData.source) ? signalData.source : "EDR") as SignalSource,
@@ -292,8 +266,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
       riskLevel: (["critical", "high", "medium", "low", "info"].includes(signalData.riskLevel) ? signalData.riskLevel : "medium") as RiskLevel,
     }
     const applySignal = () => {
-      setSignals((prev) => [wsSignal, ...prev.slice(0, 19)])
-      setSignalCount((prev) => prev + 1)
+      setSignals((prev) => [wsSignal, ...prev])
     }
     if (typeof queueMicrotask === "function") {
       queueMicrotask(applySignal)
@@ -305,202 +278,372 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
   useEffect(() => {
     const interval = setInterval(() => {
       const newSignal = generateSignal()
-      setSignals((prev) => [newSignal, ...prev.slice(0, 19)])
-      setSignalCount((prev) => prev + 1)
-      setSelectedSignal((prev) => prev || newSignal)
+      setSignals((prev) => [newSignal, ...prev])
     }, 5000)
     return () => clearInterval(interval)
   }, [generateSignal])
 
-  const aiDenoised = Math.round(signalCount * 0.62)
-  const anomalies = Math.round(signalCount * 0.08)
-  const riskSignals = Math.round(signalCount * 0.03)
+  const totalCount = signals.length
+  const aiDenoised = signals.filter((s) => s.aiPreprocess === "去噪").length
+  const manualIntervention = signals.filter((s) => s.riskLevel === "high" || s.riskLevel === "critical").length
+  const aiNotInvestigated = signals.filter((s) => !s.aiPreprocess || s.aiPreprocess === "风险评分").length
+
+  const filteredSignals = signals.filter((s) => {
+    if (ignoredIds.has(s.id)) return false
+    if (!searchQuery) return true
+    const q = searchQuery.toLowerCase()
+    return s.aiClassification.toLowerCase().includes(q) ||
+      s.rawInput.toLowerCase().includes(q) ||
+      s.sourceSystemName.toLowerCase().includes(q) ||
+      s.id.toLowerCase().includes(q)
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filteredSignals.length / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedSignals = filteredSignals.slice((safePage - 1) * pageSize, safePage * pageSize)
+
+  const navigateToInvestigation = (signal: LiveSignal) => {
+    // 保存当前信号列表到 sessionStorage，供详情页上一条/下一条导航使用
+    try {
+      sessionStorage.setItem("secmind_signal_list", JSON.stringify(signals))
+    } catch { /* ignore quota errors */ }
+    router.push(`/signals/${encodeURIComponent(signal.id)}`)
+  }
+
+  const openDialog = (signal: LiveSignal, type: "respond" | "ignore") => {
+    setActionSignal(signal)
+    setDialogType(type)
+  }
+
+  const closeDialog = () => {
+    setActionSignal(null)
+    setDialogType(null)
+  }
+
+  const confirmIgnore = () => {
+    if (actionSignal) {
+      setIgnoredIds((prev) => new Set(prev).add(actionSignal.id))
+    }
+    closeDialog()
+  }
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-3">
-        <div className={cn(CARD.base, "p-4 hover:border-white/10 hover:shadow-md hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 hover:border-border transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-white/[0.06] ring-1 ring-white/[0.08]"><Activity className="size-3.5 text-zinc-400" /></div>
-            <span className="text-[11px] text-zinc-500">总事件量</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/50 ring-1 ring-border"><Activity className="size-3.5 text-muted-foreground" /></div>
+            <span className="text-[11px] text-muted-foreground">{t("signals.totalEvents")}</span>
           </div>
-          <p className="text-xl font-bold text-zinc-100 font-mono tabular-nums">{signalCount.toLocaleString()}</p>
+          <p className="text-xl font-bold text-foreground font-mono tabular-nums">{totalCount.toLocaleString()}</p>
         </div>
-        <div className={cn(CARD.base, "p-4 border-cyan-500/20 bg-cyan-500/[0.06] hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 border-primary/20 bg-primary/[0.06] hover:border-primary/30 transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-cyan-500/15 ring-1 ring-cyan-500/20"><Filter className="size-3.5 text-cyan-400" /></div>
-            <span className="text-[11px] text-cyan-500/70">AI去噪后</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/20"><Filter className="size-3.5 text-primary" /></div>
+            <span className="text-[11px] text-primary/70">{t("signals.aiDenoised")}</span>
           </div>
-          <p className="text-xl font-bold text-cyan-400 font-mono tabular-nums">{aiDenoised.toLocaleString()}</p>
+          <p className="text-xl font-bold text-primary font-mono tabular-nums">{aiDenoised.toLocaleString()}</p>
         </div>
-        <div className={cn(CARD.base, "p-4 border-amber-500/20 bg-amber-500/[0.06] hover:border-amber-500/30 hover:shadow-md hover:shadow-amber-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 border-orange-500/20 bg-orange-500/[0.06] hover:border-orange-500/30 transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-amber-500/15 ring-1 ring-amber-500/20"><AlertTriangle className="size-3.5 text-amber-400" /></div>
-            <span className="text-[11px] text-amber-500/70">异常行为</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-orange-500/15 ring-1 ring-orange-500/20"><UserCog className="size-3.5 text-orange-600" /></div>
+            <span className="text-[11px] text-orange-500/70">{t("signals.manualIntervention")}</span>
           </div>
-          <p className="text-xl font-bold text-amber-400 font-mono tabular-nums">{anomalies.toLocaleString()}</p>
+          <p className="text-xl font-bold text-orange-600 font-mono tabular-nums">{manualIntervention.toLocaleString()}</p>
         </div>
-        <div className={cn(CARD.base, "p-4 border-red-500/20 bg-red-500/[0.06] hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 border-violet-500/20 bg-violet-500/[0.06] hover:border-violet-500/30 transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-red-500/15 ring-1 ring-red-500/20"><Zap className="size-3.5 text-red-400" /></div>
-            <span className="text-[11px] text-red-500/70">风险事件</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-violet-500/15 ring-1 ring-violet-500/20"><Brain className="size-3.5 text-violet-600" /></div>
+            <span className="text-[11px] text-violet-500/70">{t("signals.aiNotInvestigated")}</span>
           </div>
-          <p className="text-xl font-bold text-red-400 font-mono tabular-nums">{riskSignals.toLocaleString()}</p>
+          <p className="text-xl font-bold text-violet-600 font-mono tabular-nums">{aiNotInvestigated.toLocaleString()}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
-        <div className="col-span-2 space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            <LivePulse />
-            <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase">{t("signals.live")}</span>
-            {isConnected ? (
-              <Wifi className="size-3 text-emerald-500" />
-            ) : (
-              <WifiOff className="size-3 text-slate-400" />
-            )}
-            {newAlertCount > 0 && (
-              <button
-                onClick={clearNewAlerts}
-                className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-400 font-semibold animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors"
-              >
-                +{newAlertCount}
-              </button>
-            )}
-            <span className="text-[10px] text-zinc-500 ml-auto">{signals.length} 条信号</span>
+      <div className="relative overflow-hidden rounded-lg border border-border/50 bg-card shadow-sm">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,212,255,0.04)_0%,transparent_50%)]" />
+        <div className="relative">
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <LivePulse />
+              <span className="text-xs font-bold text-primary tracking-wider uppercase">{t("signals.live")}</span>
+              {isConnected ? (
+                <Wifi className="size-3 text-emerald-600" />
+              ) : (
+                <WifiOff className="size-3 text-slate-400" />
+              )}
+              {newAlertCount > 0 && (
+                <button
+                  onClick={clearNewAlerts}
+                  className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-600 font-semibold animate-pulse cursor-pointer hover:bg-red-500/20 transition-colors"
+                >
+                  +{newAlertCount}
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1) }}
+                  placeholder={t("signals.filterPlaceholder")}
+                  className="h-7 w-48 rounded-md border border-border/50 bg-muted/30 pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/40 focus:ring-1 focus:ring-primary/20 focus:outline-none transition-colors"
+                />
+              </div>
+              <span className="text-[10px] text-muted-foreground">{filteredSignals.length} {t("signals.signalCountUnit")}</span>
+            </div>
           </div>
-          <div className="space-y-1.5 max-h-[calc(100vh-360px)] overflow-y-auto pr-0.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          {signals.map((signal, idx) => {
-            const isSelected = selectedSignal?.id === signal.id
+
+          <div className="grid grid-cols-[110px_120px_80px_1fr_130px_85px_150px] gap-x-4 px-5 py-2.5 border-b border-border/40 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider bg-muted/20">
+            <span>{t("signals.alertId")}</span>
+            <span>{t("signals.sourceSystem")}</span>
+            <span>{t("signals.riskLevel")}</span>
+            <span>{t("signals.classification")}</span>
+            <span>{t("signals.preprocess")}</span>
+            <span className="text-right">{t("signals.receivedTime")}</span>
+            <span className="text-right">{t("signals.more")}</span>
+          </div>
+
+          <div>
+          {paginatedSignals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Eye className="size-8 text-muted-foreground/70 mb-2" />
+              <p className="text-xs text-muted-foreground/60">{t("signals.noSignalsMatch")}</p>
+            </div>
+          ) : paginatedSignals.map((signal, idx) => {
+            const ppConfig = PREPROCESS_CONFIG[signal.aiPreprocess]
+            const PPIcon = ppConfig.icon
             return (
               <div
                 key={signal.id}
                 className={cn(
-                  "relative rounded-lg border p-2.5 cursor-pointer transition-all duration-200 group",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
+                  "group relative grid grid-cols-[110px_120px_80px_1fr_130px_85px_150px] gap-x-4 items-center px-5 py-3 border-b border-border/60 transition-colors duration-200",
+                  signal.riskLevel === "critical" ? "bg-red-500/[0.03] hover:bg-red-500/[0.07]" : "hover:bg-muted/40",
                   idx === 0 && "animate-in slide-in-from-top-2 duration-500",
-                  signal.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
-                onClick={() => setSelectedSignal(signal)}
               >
-                {isSelected && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />
+                {signal.riskLevel === "critical" && (
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-red-500/60" />
                 )}
-                {!isSelected && signal.riskLevel === "critical" && (
-                  <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />
+                {signal.riskLevel === "high" && (
+                  <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-amber-500/40" />
                 )}
-                <div className="flex items-center gap-2 mb-1.5">
-                  <SourceBadge source={signal.source} />
-                  <RiskIndicator level={signal.riskLevel} />
-                  <span className="text-[10px] font-mono text-zinc-500 ml-auto">{signal.timestamp}</span>
+                <div className="min-w-0">
+                  <span className="text-[11px] font-mono text-muted-foreground truncate block">{signal.id}</span>
+                  {signalStatusMap[signal.id] && (
+                    <span className={cn(
+                      "inline-flex items-center gap-1 mt-0.5 rounded px-1 py-px text-[8px] font-medium border",
+                      signalStatusMap[signal.id].status === "investigating" && "text-primary bg-primary/10 border-cyan-500/20",
+                      signalStatusMap[signal.id].status === "pending_review" && "text-amber-600 bg-amber-500/10 border-amber-500/20",
+                      signalStatusMap[signal.id].status === "disposing" && "text-purple-600 bg-purple-500/10 border-purple-500/20",
+                      signalStatusMap[signal.id].status === "closed" && "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
+                    )}>
+                      {signalStatusMap[signal.id].status === "investigating" && <><Brain className="size-2" />研判中</>}
+                      {signalStatusMap[signal.id].status === "pending_review" && <><ClipboardList className="size-2" />待复核</>}
+                      {signalStatusMap[signal.id].status === "disposing" && <><Wrench className="size-2" />处置中</>}
+                      {signalStatusMap[signal.id].status === "closed" && <><CheckCircle2 className="size-2" />已闭环</>}
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-zinc-300 font-medium leading-snug line-clamp-1">{signal.aiClassification}</p>
-                <p className="text-[10px] text-zinc-500 font-mono leading-relaxed mt-1 line-clamp-1">{signal.rawInput}</p>
+                <div className="min-w-0">
+                  <SourceBadge source={signal.source} />
+                  <p className="text-[10px] text-muted-foreground/60 truncate mt-1">{signal.sourceSystemName}</p>
+                </div>
+                <div>
+                  <RiskIndicator level={signal.riskLevel} />
+                </div>
+                <div className="min-w-0 pr-2">
+                  <p className="text-xs font-medium text-foreground truncate">{signal.aiClassification}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono leading-relaxed truncate mt-0.5">{signal.rawInput}</p>
+                </div>
+                <div className="min-w-0">
+                  <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded", ppConfig.color, "bg-muted/40")}>
+                    <PPIcon className="size-3" />
+                    {t("signals." + ppConfig.labelKey)}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-mono text-muted-foreground">{signal.timestamp}</span>
+                </div>
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigateToInvestigation(signal)
+                    }}
+                    className={cn(
+                      "inline-flex size-7 items-center justify-center rounded-md transition-colors",
+                      signalStatusMap[signal.id]
+                        ? "text-primary bg-primary/10 hover:bg-primary/20"
+                        : "text-muted-foreground/50 hover:text-primary hover:bg-primary/10"
+                    )}
+                    title={signalStatusMap[signal.id] ? "查看研判详情" : t("signals.investigate")}
+                  >
+                    <Crosshair className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openDialog(signal, "respond") }}
+                    className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-amber-600 hover:bg-amber-500/10 transition-colors"
+                    title={t("signals.respond")}
+                  >
+                    <ShieldAlert className="size-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openDialog(signal, "ignore") }}
+                    className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+                    title={t("signals.ignore")}
+                  >
+                    <Ban className="size-3.5" />
+                  </button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                      render={<button type="button" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+                    >
+                      <MoreHorizontal className="size-3.5" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => openDialog(signal, "ignore")}>
+                        <ShieldOff className="size-3.5" />{t("signals.markAsFalsePositive")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => openDialog(signal, "respond")}>
+                        <ArrowUpRight className="size-3.5" />{t("signals.escalate")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => openDialog(signal, "respond")}>
+                        <UserCog className="size-3.5" />{t("signals.assign")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="cursor-pointer gap-2 text-xs" onClick={() => openDialog(signal, "respond")}>
+                        <FileDown className="size-3.5" />{t("signals.exportAlert")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             )
           })}
           </div>
-        </div>
 
-        <div className="col-span-3">
-          {selectedSignal ? (
-            <div className={cn(CARD.elevated, "p-5 space-y-4")}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <SourceBadge source={selectedSignal.source} />
-                  <RiskIndicator level={selectedSignal.riskLevel} />
-                  <span className="text-xs font-mono text-zinc-500">{selectedSignal.id}</span>
-                </div>
-                <span className="text-[10px] text-zinc-500 font-mono flex items-center gap-1"><Clock className="size-3" />{selectedSignal.receivedTime}</span>
-              </div>
-
-              <h3 className="text-sm font-semibold text-zinc-100 leading-snug">{selectedSignal.aiClassification}</h3>
-
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 space-y-3">
-                <div className="flex items-center gap-2 pb-2 border-b border-white/[0.06]">
-                  <Radio className="size-3.5 text-zinc-400" />
-                  <span className="text-xs font-semibold text-zinc-400">来自 {selectedSignal.sourceSystemName} 的原始事件</span>
-                </div>
-                <div className="space-y-2.5">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <span className="text-[10px] text-zinc-500 block mb-0.5">接收时间</span>
-                      <span className="text-xs text-zinc-400 font-mono">{selectedSignal.receivedTime}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-500 block mb-0.5">来源系统</span>
-                      <span className="text-xs text-zinc-400">{selectedSignal.sourceSystemName}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-500 block mb-1">原始推送内容</span>
-                    <div className="rounded-md bg-white/[0.04] p-2.5 border border-white/[0.06]">
-                      <p className="text-[11px] text-zinc-400 font-mono leading-relaxed break-all">{selectedSignal.rawInput}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-500 block mb-1 flex items-center gap-1"><AlertTriangle className="size-2.5 text-amber-400/60" />来源系统分析判定</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.sourceAnalysis}</p>
-                  </div>
-                  <div className="rounded-md border border-amber-500/20 bg-amber-500/10 p-2.5">
-                    <span className="text-[10px] text-amber-400 block mb-1 flex items-center gap-1"><Zap className="size-2.5" />来源系统处置建议</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.sourceSuggestion}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-4 space-y-3">
-                <div className="flex items-center gap-2 pb-2 border-b border-cyan-500/20">
-                  <Brain className="size-3.5 text-cyan-400" />
-                  <span className="text-xs font-semibold text-cyan-400">SecMind AI 分析增强</span>
-                </div>
-                <div className="space-y-2.5">
-                  <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-1.5">
-                    {(() => {
-                      const ppConfig = PREPROCESS_CONFIG[selectedSignal.aiPreprocess]
-                      const PPIcon = ppConfig.icon
-                      return (
-                        <>
-                          <div className="flex items-center gap-1.5 text-[11px]"><PPIcon className="size-3 text-cyan-400" /><span className="text-cyan-400 font-medium">AI{selectedSignal.aiPreprocess}</span></div>
-                          <p className="text-xs text-zinc-400 leading-relaxed">{selectedSignal.aiPreprocessResult}</p>
-                        </>
-                      )
-                    })()}
-                  </div>
-                  <div className="rounded-md border border-white/[0.06] bg-white/[0.02] p-2.5 space-y-1.5">
-                    <div className="flex items-center gap-1.5 text-[11px]"><Brain className="size-3 text-cyan-400" /><span className="text-cyan-400 font-medium">AI 预分类结论</span></div>
-                    <p className="text-xs text-zinc-300 font-medium leading-relaxed">{selectedSignal.aiClassification}</p>
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 hover:text-cyan-300 hover:border-cyan-500/40 gap-2 text-xs"
-                onClick={() => router.push(`/investigate?from=signal&id=${selectedSignal.id}&source=${selectedSignal.source}&classification=${encodeURIComponent(selectedSignal.aiClassification)}&risk=${selectedSignal.riskLevel}`)}
-              >
-                <Crosshair className="size-3.5" />
-                AI 研判
-              </Button>
-            </div>
-          ) : (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <Eye className="size-8 text-zinc-600 mx-auto" />
-                <p className="text-xs text-zinc-600">点击左侧事件查看详情</p>
-              </div>
-            </div>
-          )}
+          <TablePagination
+            totalItems={filteredSignals.length}
+            pageSize={pageSize}
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1) }}
+            resultsLabel={t("signals.signalCountUnit")}
+            perPageLabel={t("signals.paginationPerPage")}
+          />
         </div>
       </div>
+
+      <Dialog open={dialogType !== null && actionSignal !== null} onOpenChange={(open) => { if (!open) closeDialog() }}>
+        <DialogContent className="sm:max-w-lg">
+          {actionSignal && dialogType === "respond" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ShieldAlert className="size-4 text-amber-600" />
+                  {t("signals.respond")}
+                </DialogTitle>
+                <DialogDescription>{t("signals.respondDesc")}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-3 mb-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-mono text-muted-foreground">{actionSignal.id}</span>
+                    <RiskIndicator level={actionSignal.riskLevel} />
+                  </div>
+                  <p className="text-xs text-foreground">{actionSignal.aiClassification}</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider">{t("signals.responseActions")}</span>
+                {[
+                  { icon: Monitor, label: t("signals.isolateHost"), desc: actionSignal.source === "EDR" ? actionSignal.rawInput.match(/HOST=(\S+)/)?.[1] || "—" : "—" },
+                  { icon: Ban, label: t("signals.blockIP"), desc: actionSignal.rawInput.match(/SRC=(\S+)/)?.[1] || actionSignal.rawInput.match(/DST=(\S+)/)?.[1] || "—" },
+                  { icon: UserCog, label: t("signals.disableUser"), desc: actionSignal.rawInput.match(/USER=(\S+)/)?.[1] || "—" },
+                  { icon: Terminal, label: t("signals.killProcess"), desc: actionSignal.rawInput.match(/PROC=(\S+)/)?.[1] || "—" },
+                ].map((action) => {
+                  const ActionIcon = action.icon
+                  return (
+                    <button
+                      key={action.label}
+                      onClick={() => {
+                        if (actionSignal && action.desc !== "—") {
+                          const now = new Date()
+                          const ts = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
+                          bridgeStore.addQuickAction(actionSignal.id, {
+                            id: `qa-${Date.now()}`,
+                            action: action.label,
+                            target: action.desc,
+                            timestamp: ts,
+                            source: 'signal',
+                          })
+                        }
+                        closeDialog()
+                      }}
+                      className="group flex w-full items-center gap-3 rounded-lg border border-border/50 bg-card p-3 text-left transition-colors hover:border-amber-500/30 hover:bg-amber-500/[0.04]"
+                    >
+                      <div className="flex size-8 items-center justify-center rounded-md bg-amber-500/10 ring-1 ring-amber-500/20">
+                        <ActionIcon className="size-4 text-amber-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground">{action.label}</p>
+                        <p className="text-[10px] text-muted-foreground font-mono truncate">{action.desc}</p>
+                      </div>
+                      <ArrowUpRight className="size-3.5 text-muted-foreground/70 group-hover:text-amber-600 transition-colors" />
+                    </button>
+                  )
+                })}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeDialog} className="text-xs">取消</Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {actionSignal && dialogType === "ignore" && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Ban className="size-4 text-red-600" />
+                  {t("signals.ignore")}
+                </DialogTitle>
+                <DialogDescription>{t("signals.ignoreDesc")}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 py-2">
+                <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[11px] font-mono text-muted-foreground">{actionSignal.id}</span>
+                    <RiskIndicator level={actionSignal.riskLevel} />
+                  </div>
+                  <p className="text-xs text-foreground">{actionSignal.aiClassification}</p>
+                  <p className="text-[10px] text-muted-foreground font-mono mt-1 truncate">{actionSignal.rawInput}</p>
+                </div>
+                <div className="rounded-lg border border-red-500/20 bg-red-500/[0.06] p-3 flex items-start gap-2">
+                  <AlertTriangle className="size-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t("signals.ignoreConfirm")}</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeDialog} className="text-xs">取消</Button>
+                <Button onClick={confirmIgnore} className="bg-red-600 text-white hover:bg-red-700 text-xs gap-1.5">
+                  <Ban className="size-3.5" />{t("signals.ignore")}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
-function AnomalousActivityTab() {
+export function AnomalousActivityTab({ t }: { t: (key: string) => string }) {
+  const anomalousActivities = useUnifiedDataStore((s) => s.anomalousActivities)
   const [sourceFilter, setSourceFilter] = useState<string>("all")
   const [riskFilter, setRiskFilter] = useState<string>("all")
-  const [selectedActivity, setSelectedActivity] = useState<AnomalousActivity | null>(anomalousActivities[0])
+  const [selectedActivity, setSelectedActivity] = useState<AnomalousActivity | null>(() => anomalousActivities[0] || null)
 
   const filtered = anomalousActivities.filter((a) => {
     if (sourceFilter !== "all" && a.source !== sourceFilter) return false
@@ -512,12 +655,12 @@ function AnomalousActivityTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={sourceFilter} onValueChange={(v) => v && setSourceFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-white/[0.06] bg-white/[0.02] text-zinc-400"><SelectValue placeholder="来源类型" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">全部来源</SelectItem><SelectItem value="EDR">EDR</SelectItem><SelectItem value="VPN">VPN</SelectItem><SelectItem value="IAM">IAM</SelectItem><SelectItem value="Email">Email</SelectItem><SelectItem value="Firewall">Firewall</SelectItem><SelectItem value="DNS">DNS</SelectItem></SelectContent>
+          <SelectTrigger size="sm" className="w-32 border-border bg-muted/30 text-muted-foreground"><SelectValue placeholder={t("signals.sourceType")} /></SelectTrigger>
+          <SelectContent><SelectItem value="all">{t("signals.allSources")}</SelectItem><SelectItem value="EDR">EDR</SelectItem><SelectItem value="VPN">VPN</SelectItem><SelectItem value="IAM">IAM</SelectItem><SelectItem value="Email">Email</SelectItem><SelectItem value="Firewall">Firewall</SelectItem><SelectItem value="DNS">DNS</SelectItem></SelectContent>
         </Select>
         <Select value={riskFilter} onValueChange={(v) => v && setRiskFilter(v)}>
-          <SelectTrigger size="sm" className="w-32 border-white/[0.06] bg-white/[0.02] text-zinc-400"><SelectValue placeholder="风险等级" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">全部等级</SelectItem><SelectItem value="critical">严重</SelectItem><SelectItem value="high">高危</SelectItem><SelectItem value="medium">中危</SelectItem><SelectItem value="low">低危</SelectItem></SelectContent>
+          <SelectTrigger size="sm" className="w-32 border-border bg-muted/30 text-muted-foreground"><SelectValue placeholder={t("signals.riskLevel")} /></SelectTrigger>
+          <SelectContent><SelectItem value="all">{t("signals.allLevels")}</SelectItem><SelectItem value="critical">{t("signals.criticalLevel")}</SelectItem><SelectItem value="high">{t("signals.highRisk")}</SelectItem><SelectItem value="medium">{t("signals.mediumRisk")}</SelectItem><SelectItem value="low">{t("signals.lowRisk")}</SelectItem></SelectContent>
         </Select>
       </div>
 
@@ -529,20 +672,20 @@ function AnomalousActivityTab() {
               <div
                 key={activity.id}
                 className={cn(
-                  "relative rounded-lg border p-3 cursor-pointer transition-all duration-200",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
+                  "relative rounded-lg border p-3 cursor-pointer transition-colors duration-200",
+                  isSelected ? "border-primary/30 bg-primary/[0.08] shadow-sm shadow-primary/10" : "border-border bg-muted/20 hover:border-border hover:bg-muted/50",
                   activity.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
                 onClick={() => setSelectedActivity(activity)}
               >
-                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />}
+                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-primary" />}
                 {!isSelected && activity.riskLevel === "critical" && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />}
                 <div className="flex items-center gap-2 mb-1.5">
                   <SourceBadge source={activity.source} />
                   <RiskIndicator level={activity.riskLevel} score={activity.riskScore} />
-                  <span className="text-[10px] font-mono text-zinc-500">{activity.timestamp}</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">{activity.timestamp}</span>
                 </div>
-                <p className="text-xs text-zinc-400 line-clamp-2">{activity.behavior}</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">{activity.behavior}</p>
               </div>
             )
           })}
@@ -556,30 +699,30 @@ function AnomalousActivityTab() {
                   <SourceBadge source={selectedActivity.source} />
                   <RiskIndicator level={selectedActivity.riskLevel} score={selectedActivity.riskScore} />
                 </div>
-                <span className="text-xs text-zinc-500 flex items-center gap-1"><Clock className="size-3" />{selectedActivity.timestamp}</span>
+                <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="size-3" />{selectedActivity.timestamp}</span>
               </div>
 
-              <p className="text-sm text-zinc-300 leading-relaxed">{selectedActivity.behavior}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">{selectedActivity.behavior}</p>
 
               <div className="flex items-center gap-1.5 flex-wrap">
                 {selectedActivity.entities.map((entity) => (
-                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-2 py-0.5 text-xs text-zinc-400 font-mono"><Link2 className="size-2.5" />{entity}</span>
+                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground font-mono"><Link2 className="size-2.5" />{entity}</span>
                 ))}
               </div>
 
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-400" /><span className="text-xs font-medium text-cyan-400">AI评估</span></div>
-                <p className="text-xs text-zinc-400 leading-relaxed">{selectedActivity.aiAssessment}</p>
+              <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-primary" /><span className="text-xs font-medium text-primary">{t("signals.aiAssessment")}</span></div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{selectedActivity.aiAssessment}</p>
               </div>
 
-              <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-zinc-500" /><span className="text-xs font-medium text-zinc-500">推理依据</span></div>
-                <p className="text-xs text-zinc-400 leading-relaxed">{selectedActivity.aiReasoning}</p>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-muted-foreground" /><span className="text-xs font-medium text-muted-foreground">{t("signals.reasoningBasis")}</span></div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{selectedActivity.aiReasoning}</p>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
-              <div className="text-center space-y-2"><Eye className="size-8 text-zinc-600 mx-auto" /><p className="text-xs text-zinc-600">点击左侧活动查看详情</p></div>
+            <div className="rounded-lg border border-border bg-muted/30 h-full flex items-center justify-center">
+              <div className="text-center space-y-2"><Eye className="size-8 text-muted-foreground/60 mx-auto" /><p className="text-xs text-muted-foreground/60">{t("signals.clickActivityToView")}</p></div>
             </div>
           )}
         </div>
@@ -588,32 +731,33 @@ function AnomalousActivityTab() {
   )
 }
 
-function RiskAggregationTab() {
-  const [selectedCluster, setSelectedCluster] = useState<RiskCluster | null>(riskClusters[0])
+export function RiskAggregationTab({ t }: { t: (key: string) => string }) {
+  const riskClusters = useUnifiedDataStore((s) => s.riskClusters)
+  const [selectedCluster, setSelectedCluster] = useState<RiskCluster | null>(() => riskClusters[0] || null)
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <div className={cn(CARD.base, "p-4 hover:border-white/10 hover:shadow-md hover:shadow-black/30 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 hover:border-border transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-white/[0.06] ring-1 ring-white/[0.08]"><Layers className="size-3.5 text-zinc-400" /></div>
-            <span className="text-[11px] text-zinc-500">活跃风险集群</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-muted/50 ring-1 ring-border"><Layers className="size-3.5 text-muted-foreground" /></div>
+            <span className="text-[11px] text-muted-foreground">{t("signals.activeRiskClusters")}</span>
           </div>
-          <p className="text-xl font-bold text-zinc-100 font-mono tabular-nums">{riskClusters.length}</p>
+          <p className="text-xl font-bold text-foreground font-mono tabular-nums">{riskClusters.length}</p>
         </div>
-        <div className={cn(CARD.base, "p-4 border-red-500/20 bg-red-500/[0.06] hover:border-red-500/30 hover:shadow-md hover:shadow-red-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 border-red-500/20 bg-red-500/[0.06] hover:border-red-500/30 transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-red-500/15 ring-1 ring-red-500/20"><AlertTriangle className="size-3.5 text-red-400" /></div>
-            <span className="text-[11px] text-red-500/70">严重集群</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-red-500/15 ring-1 ring-red-500/20"><AlertTriangle className="size-3.5 text-red-600" /></div>
+            <span className="text-[11px] text-red-600/70">{t("signals.criticalClusters")}</span>
           </div>
-          <p className="text-xl font-bold text-red-400 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p>
+          <p className="text-xl font-bold text-red-600 font-mono tabular-nums">{riskClusters.filter(c => c.riskLevel === "critical").length}</p>
         </div>
-        <div className={cn(CARD.base, "p-4 border-cyan-500/20 bg-cyan-500/[0.06] hover:border-cyan-500/30 hover:shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5 transition-all duration-200")}>
+        <div className={cn(CARD.base, "p-4 border-primary/20 bg-primary/[0.06] hover:border-primary/30 transition-colors duration-200")}>
           <div className="flex items-center justify-between mb-2">
-            <div className="flex size-7 items-center justify-center rounded-md bg-cyan-500/15 ring-1 ring-cyan-500/20"><Activity className="size-3.5 text-cyan-400" /></div>
-            <span className="text-[11px] text-cyan-500/70">关联事件总数</span>
+            <div className="flex size-7 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/20"><Activity className="size-3.5 text-primary" /></div>
+            <span className="text-[11px] text-primary/70">{t("signals.correlatedEventTotal")}</span>
           </div>
-          <p className="text-xl font-bold text-cyan-400 font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p>
+          <p className="text-xl font-bold text-primary font-mono tabular-nums">{riskClusters.reduce((s, c) => s + c.signalCount, 0)}</p>
         </div>
       </div>
 
@@ -625,24 +769,24 @@ function RiskAggregationTab() {
               <div
                 key={cluster.id}
                 className={cn(
-                  "relative rounded-lg border p-3 cursor-pointer transition-all duration-200",
-                  isSelected ? "border-cyan-500/30 bg-cyan-500/[0.08] shadow-sm shadow-cyan-500/10" : "border-white/[0.05] bg-white/[0.01] hover:border-white/[0.1] hover:bg-white/[0.03]",
+                  "relative rounded-lg border p-3 cursor-pointer transition-colors duration-200",
+                  isSelected ? "border-primary/30 bg-primary/[0.08] shadow-sm shadow-primary/10" : "border-border bg-muted/20 hover:border-border hover:bg-muted/50",
                   cluster.riskLevel === "critical" && !isSelected && "border-red-500/15",
                 )}
                 onClick={() => setSelectedCluster(cluster)}
               >
-                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-cyan-400" />}
+                {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-primary" />}
                 {!isSelected && cluster.riskLevel === "critical" && <div className="absolute left-0 top-0 bottom-0 w-0.5 rounded-l-lg bg-red-500/60" />}
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <RiskIndicator level={cluster.riskLevel} score={cluster.riskScore} />
-                    <span className="text-[10px] font-mono text-zinc-500">{cluster.id}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">{cluster.id}</span>
                   </div>
-                  <span className="text-[10px] text-zinc-500">{cluster.lastUpdated}</span>
+                  <span className="text-[10px] text-muted-foreground">{cluster.lastUpdated}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-1.5 py-0.5 text-[10px] text-zinc-400"><Zap className="size-2.5 text-amber-400" />{cluster.attackType}</span>
-                  <Badge variant="outline" className="border-white/[0.06] text-zinc-400 text-[10px] h-4"><Activity className="size-2.5 mr-0.5" />{cluster.signalCount}</Badge>
+                  <span className="inline-flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground"><Zap className="size-2.5 text-amber-600" />{cluster.attackType}</span>
+                  <Badge variant="outline" className="border-border text-muted-foreground text-[10px] h-4"><Activity className="size-2.5 mr-0.5" />{cluster.signalCount}</Badge>
                 </div>
               </div>
             )
@@ -655,37 +799,37 @@ function RiskAggregationTab() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <RiskIndicator level={selectedCluster.riskLevel} score={selectedCluster.riskScore} />
-                  <span className="text-xs font-mono text-zinc-500">{selectedCluster.id}</span>
+                  <span className="text-xs font-mono text-muted-foreground">{selectedCluster.id}</span>
                 </div>
-                <span className="text-xs text-zinc-500">{selectedCluster.lastUpdated}</span>
+                <span className="text-xs text-muted-foreground">{selectedCluster.lastUpdated}</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.04] px-2.5 py-1 text-xs text-zinc-400"><Zap className="size-3 text-amber-400" />{selectedCluster.attackType}</span>
-                <Badge variant="outline" className="border-white/[0.06] text-zinc-400 text-[10px]"><Activity className="size-3 mr-1" />{selectedCluster.signalCount} 事件</Badge>
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted/50 px-2.5 py-1 text-xs text-muted-foreground"><Zap className="size-3 text-amber-600" />{selectedCluster.attackType}</span>
+                <Badge variant="outline" className="border-border text-muted-foreground text-[10px]"><Activity className="size-3 mr-1" />{selectedCluster.signalCount} {t("signals.events")}</Badge>
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
                 {selectedCluster.entities.map((entity) => (
-                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-white/[0.04] px-2 py-0.5 text-xs text-zinc-400 font-mono"><Link2 className="size-2.5" />{entity}</span>
+                  <span key={entity} className="inline-flex items-center gap-1 rounded bg-muted/50 px-2 py-0.5 text-xs text-muted-foreground font-mono"><Link2 className="size-2.5" />{entity}</span>
                 ))}
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 rounded-full bg-white/[0.04] overflow-hidden">
-                  <div className={cn("h-full rounded-full", selectedCluster.riskLevel === "critical" && "bg-red-500", selectedCluster.riskLevel === "high" && "bg-amber-500", selectedCluster.riskLevel === "medium" && "bg-cyan-500")} style={{ width: `${selectedCluster.riskScore}%` }} />
+                <div className="flex-1 h-2 rounded-full bg-muted/50 overflow-hidden">
+                  <div className={cn("h-full rounded-full", selectedCluster.riskLevel === "critical" && "bg-red-500", selectedCluster.riskLevel === "high" && "bg-amber-500", selectedCluster.riskLevel === "medium" && "bg-primary")} style={{ width: `${selectedCluster.riskScore}%` }} />
                 </div>
                 <span className={cn("text-sm font-mono tabular-nums font-bold", RISK_CONFIG[selectedCluster.riskLevel].color)}>{selectedCluster.riskScore}</span>
               </div>
 
-              <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-3 space-y-2">
-                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-cyan-400" /><span className="text-xs font-medium text-cyan-400">AI评估</span></div>
-                <p className="text-xs text-zinc-400 leading-relaxed">{selectedCluster.aiAssessment}</p>
+              <div className="rounded-lg border border-primary/20 bg-primary/10 p-3 space-y-2">
+                <div className="flex items-center gap-1.5"><Brain className="size-3.5 text-primary" /><span className="text-xs font-medium text-primary">{t("signals.aiAssessment")}</span></div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{selectedCluster.aiAssessment}</p>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] h-full flex items-center justify-center">
-              <div className="text-center space-y-2"><Eye className="size-8 text-zinc-600 mx-auto" /><p className="text-xs text-zinc-600">点击左侧集群查看详情</p></div>
+            <div className="rounded-lg border border-border bg-muted/30 h-full flex items-center justify-center">
+              <div className="text-center space-y-2"><Eye className="size-8 text-muted-foreground/60 mx-auto" /><p className="text-xs text-muted-foreground/60">{t("signals.clickClusterToView")}</p></div>
             </div>
           )}
         </div>
@@ -695,84 +839,35 @@ function RiskAggregationTab() {
 }
 
 export default function SignalsPage() {
-  const isDemo = useAuthStore(s => s.user?.isDemo)
+  usePageTitle("signals")
   const { t } = useLocaleStore()
   const { isConnected: rawConnected } = useRealtimeConnection()
-  const wsConnected = isDemo ? true : rawConnected
-  const [activeTab, setActiveTab] = useState("live")
-
-  if (!isDemo) {
-    return (
-      <div className="space-y-4">
-        <PageHeader
-          icon={Radio}
-          title={t("signals.title")}
-          subtitle={<span className="flex items-center gap-1.5"><LivePulse />LIVE</span>}
-        />
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-20">
-            <Database className="size-12 text-zinc-700 mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-400 mb-2">暂无信号数据</h3>
-            <p className="text-sm text-zinc-600 text-center max-w-md">
-              你还没有接入任何安全数据源。
-              <br />
-              接入数据源后，实时信号将自动显示在此处。
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const wsConnected = rawConnected || true
 
   return (
     <div className="space-y-4">
       <PageHeader
         icon={Radio}
         title={t("signals.title")}
-        subtitle={<span className="flex items-center gap-1.5"><LivePulse />LIVE</span>}
+        subtitle={t("signals.subtitle")}
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <span className={cn("size-2 rounded-full", wsConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
-              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-400" : "text-red-400")}>
-                {wsConnected ? "已连接" : "连接断开"}
+              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-600" : "text-red-600")}>
+                {wsConnected ? t("signals.connected") : t("signals.disconnected")}
               </span>
             </div>
             <Link href="/datasource">
-            <Button variant="outline" className="border-white/[0.06] bg-white/[0.02] text-zinc-400 hover:text-cyan-400 hover:border-cyan-500/25 hover:bg-cyan-500/10 gap-2">
-              <Database className="size-4" />数据源管理
-            </Button>
-          </Link>
+              <Button variant="outline" className="border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/30 gap-2">
+                <Database className="size-4" />{t("signals.datasourceManagement")}
+              </Button>
+            </Link>
           </div>
         }
       />
 
-      <div className={`${softCardClass} flex items-center gap-1 border-b border-white/[0.06] px-2`}>
-        {[
-          { value: "live", label: t("nav.tabLiveSignals"), icon: Activity, color: "text-cyan-400" },
-          { value: "anomalous", label: t("nav.tabAnomalousActivity"), icon: AlertTriangle, color: "text-amber-400" },
-          { value: "risk", label: t("nav.tabRiskAggregation"), icon: Layers, color: "text-red-400" },
-        ].map((tab) => (
-          <button
-            key={tab.value}
-            type="button"
-            onClick={() => setActiveTab(tab.value)}
-            className={cn(
-              "flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors",
-              activeTab === tab.value
-                ? `${tab.color} border-current`
-                : "text-zinc-500 border-transparent hover:text-zinc-400"
-            )}
-          >
-            <tab.icon className="size-3.5" />
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "live" && <LiveSignalsTab t={t} />}
-      {activeTab === "anomalous" && <AnomalousActivityTab />}
-      {activeTab === "risk" && <RiskAggregationTab />}
+      <LiveSignalsTab t={t} />
     </div>
   )
 }

@@ -9,7 +9,7 @@ export const DynamicECharts = dynamic(() => import("echarts-for-react"), {
     <div className="flex items-center justify-center h-full min-h-[200px]" role="status" aria-label="加载中">
       <div className="flex flex-col items-center gap-2">
         <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-        <span className="text-xs text-slate-400">加载图表...</span>
+        <span className="text-xs text-muted-foreground">加载图表...</span>
       </div>
     </div>
   ),
@@ -23,7 +23,7 @@ export const DynamicPlaybookEditor = dynamic(
       <div className="flex items-center justify-center h-full min-h-[400px]" role="status" aria-label="加载中">
         <div className="flex flex-col items-center gap-2">
           <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <span className="text-xs text-slate-400">加载编辑器...</span>
+          <span className="text-xs text-muted-foreground">加载编辑器...</span>
         </div>
       </div>
     ),
@@ -38,7 +38,7 @@ export const DynamicOnboardingGuide = dynamic(
       <div className="flex items-center justify-center h-full min-h-[300px]" role="status" aria-label="加载中">
         <div className="flex flex-col items-center gap-2">
           <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <span className="text-xs text-slate-400">加载引导...</span>
+          <span className="text-xs text-muted-foreground">加载引导...</span>
         </div>
       </div>
     ),
@@ -53,7 +53,7 @@ export const DynamicContactFormDialog = dynamic(
       <Button
         variant="outline"
         size="lg"
-        className="rounded-xl border-white/10 bg-transparent text-zinc-300 hover:bg-white/5 hover:text-zinc-100 text-base px-6 h-11 opacity-60 cursor-wait"
+        className="rounded-xl border-border bg-transparent text-muted-foreground hover:bg-muted/50 hover:text-foreground text-base px-6 h-11 opacity-60 cursor-wait"
         disabled
       >
         预约演示
@@ -70,7 +70,7 @@ export const DynamicPaymentDialog = dynamic(
       <div className="flex items-center justify-center h-full min-h-[200px]" role="status" aria-label="加载中">
         <div className="flex flex-col items-center gap-2">
           <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin" />
-          <span className="text-xs text-slate-400">加载支付...</span>
+          <span className="text-xs text-muted-foreground">加载支付...</span>
         </div>
       </div>
     ),

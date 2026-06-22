@@ -14,18 +14,24 @@ interface AlertTrendChartProps {
 }
 
 const COLORS = {
-  high: "#ef4444",
+  high: "#ff2d55",
   medium: "#fbbf24",
-  low: "#22d3ee",
+  low: "#00d4ff",
 }
 
-function buildPath(points: [number, number][], width: number, height: number, data: number[]): string {
+const LEGEND_LABELS: Record<string, string> = {
+  high: "高危",
+  medium: "中危",
+  low: "低危",
+}
+
+function buildPath(width: number, height: number, data: number[]): string {
   if (data.length < 2) return ""
   const maxVal = Math.max(...data, 1)
   const stepX = width / (data.length - 1)
 
-  return points
-    .map(([, val], i) => {
+  return data
+    .map((val, i) => {
       const x = i * stepX
       const y = height - (val / maxVal) * (height - 10) - 5
       return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`
@@ -33,8 +39,8 @@ function buildPath(points: [number, number][], width: number, height: number, da
     .join(" ")
 }
 
-function buildAreaPath(points: [number, number][], width: number, height: number, data: number[]): string {
-  const linePath = buildPath(points, width, height, data)
+function buildAreaPath(width: number, height: number, data: number[]): string {
+  const linePath = buildPath(width, height, data)
   if (!linePath) return ""
   const stepX = width / (data.length - 1)
   const lastX = (data.length - 1) * stepX
@@ -42,9 +48,9 @@ function buildAreaPath(points: [number, number][], width: number, height: number
 }
 
 export function AlertTrendChart({ data }: AlertTrendChartProps) {
-  const width = 420
-  const height = 180
-  const padding = { top: 10, right: 10, bottom: 24, left: 35 }
+  const width = 500
+  const height = 160
+  const padding = { top: 8, right: 8, bottom: 20, left: 30 }
   const chartW = width - padding.left - padding.right
   const chartH = height - padding.top - padding.bottom
 
@@ -58,31 +64,26 @@ export function AlertTrendChart({ data }: AlertTrendChartProps) {
     return Array.from({ length: 5 }, (_, i) => i * step)
   }, [maxVal])
 
-  function toPoints(key: "high" | "medium" | "low") {
-    return data.map((d) => [0, d[key]] as [number, number])
-  }
-
   function renderLine(key: "high" | "medium" | "low") {
     const values = data.map((d) => d[key])
-    const points = toPoints(key)
-    const linePath = buildPath(points, chartW, chartH, values)
-    const areaPath = buildAreaPath(points, chartW, chartH, values)
+    const linePath = buildPath(chartW, chartH, values)
+    const areaPath = buildAreaPath(chartW, chartH, values)
     const color = COLORS[key]
 
     return (
       <g transform={`translate(${padding.left}, ${padding.top})`}>
         <defs>
-          <linearGradient id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+          <linearGradient id={`trend-grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.2" />
             <stop offset="100%" stopColor={color} stopOpacity="0.02" />
           </linearGradient>
         </defs>
-        <path d={areaPath} fill={`url(#grad-${key})`} />
+        <path d={areaPath} fill={`url(#trend-grad-${key})`} />
         <path
           d={linePath}
           fill="none"
           stroke={color}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinejoin="round"
           strokeLinecap="round"
         />
@@ -95,10 +96,10 @@ export function AlertTrendChart({ data }: AlertTrendChartProps) {
               key={i}
               cx={x}
               cy={y}
-              r={2.5}
+              r={2}
               fill={color}
-              stroke="#050508"
-              strokeWidth={1.5}
+              stroke="var(--background)"
+              strokeWidth={1}
             />
           )
         })}
@@ -106,80 +107,80 @@ export function AlertTrendChart({ data }: AlertTrendChartProps) {
     )
   }
 
+  // X轴标签：每隔3个显示一次，避免重叠
+  const xLabelInterval = 3
+
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="w-full h-full"
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <g transform={`translate(${padding.left}, ${padding.top})`}>
-        {yTicks.map((tick) => {
-          const y = chartH - (tick / maxVal) * (chartH - 10) - 5
-          return (
-            <g key={tick}>
-              <line
-                x1={0}
-                y1={y}
-                x2={chartW}
-                y2={y}
-                stroke="rgba(255,255,255,0.06)"
-                strokeDasharray="3,3"
-              />
+    <div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full"
+        style={{ minHeight: "140px" }}
+        preserveAspectRatio="xMidYMid meet"
+      >
+        <g transform={`translate(${padding.left}, ${padding.top})`}>
+          {/* Y轴网格线 */}
+          {yTicks.map((tick) => {
+            const y = chartH - (tick / maxVal) * (chartH - 10) - 5
+            return (
+              <g key={tick}>
+                <line
+                  x1={0}
+                  y1={y}
+                  x2={chartW}
+                  y2={y}
+                  stroke="var(--border)"
+                  strokeDasharray="3,3"
+                />
+                <text
+                  x={-6}
+                  y={y + 3}
+                  textAnchor="end"
+                  fill="var(--muted-foreground)"
+                  fontSize="9"
+                  fontFamily="monospace"
+                >
+                  {tick}
+                </text>
+              </g>
+            )
+          })}
+
+          {/* X轴时间标签 — 间隔显示 */}
+          {data.map((d, i) => {
+            if (i % xLabelInterval !== 0 && i !== data.length - 1) return null
+            const stepX = chartW / (data.length - 1)
+            const x = i * stepX
+            return (
               <text
-                x={-8}
-                y={y + 4}
-                textAnchor="end"
-                fill="rgba(255,255,255,0.35)"
-                fontSize="10"
+                key={d.hour}
+                x={x}
+                y={chartH + 14}
+                textAnchor="middle"
+                fill="var(--muted-foreground)"
+                fontSize="9"
                 fontFamily="monospace"
               >
-                {tick}
+                {d.hour}
               </text>
-            </g>
-          )
-        })}
+            )
+          })}
+        </g>
 
-        {data.map((d, i) => {
-          const stepX = chartW / (data.length - 1)
-          const x = i * stepX
-          return (
-            <text
-              key={d.hour}
-              x={x}
-              y={chartH + 16}
-              textAnchor="middle"
-              fill="rgba(255,255,255,0.35)"
-              fontSize="9"
-              fontFamily="monospace"
-            >
-              {d.hour}
-            </text>
-          )
-        })}
-      </g>
+        {renderLine("low")}
+        {renderLine("medium")}
+        {renderLine("high")}
+      </svg>
 
-      {renderLine("low")}
-      {renderLine("medium")}
-      {renderLine("high")}
-
-      <g transform={`translate(${padding.left}, ${height - 2})`}>
-        {["高危", "中危", "低危"].map((label, i) => {
-          const colorKey = (["high", "medium", "low"] as const)[i]
-          return (
-            <g key={label} transform={`translate(${i * 70}, 0)`}>
-              <circle cx={0} cy={-2} r={3} fill={COLORS[colorKey]} />
-              <text
-                x={7}
-                y={1}
-                fill="rgba(255,255,255,0.5)"
-                fontSize="10"
-              >
-                {label}
-              </text>
-            </g>
-          )
-        })}
-      </g>
-    </svg>
+      {/* 图例 — HTML 渲染 */}
+      <div className="flex items-center gap-4 mt-2 pl-8">
+        {(["high", "medium", "low"] as const).map((key) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[key], boxShadow: `0 0 4px ${COLORS[key]}40` }} />
+            <span className="text-[10px] text-muted-foreground">{LEGEND_LABELS[key]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

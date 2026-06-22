@@ -62,7 +62,7 @@ function CallbackContent() {
         )
         setStatus('success')
         redirectTimer = setTimeout(() => {
-          router.push('/investigate')
+          router.push('/dashboard')
         }, 800)
       } catch {
         setStatus('error')
@@ -88,18 +88,18 @@ function CallbackContent() {
                 {providerInfo ? (
                   <span className="text-2xl" role="img" aria-label={providerInfo.name}>{providerInfo.icon}</span>
                 ) : (
-                  <Shield className="size-7 text-cyan-400" />
+                  <Shield className="size-7 text-primary" />
                 )}
               </div>
-              <div className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-[#0a1628] border border-white/10">
-                <Loader2 className="size-3.5 text-cyan-400 animate-spin" />
+              <div className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-[#0a1628] border border-border">
+                <Loader2 className="size-3.5 text-primary animate-spin" />
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 正在通过{providerInfo?.name || 'SSO'}登录
               </h2>
-              <p className="text-sm text-white/40">
+              <p className="text-sm text-foreground/70">
                 正在验证身份信息，请稍候...
               </p>
             </div>
@@ -110,14 +110,14 @@ function CallbackContent() {
           <>
             <div className="relative">
               <div className="flex size-16 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.06]">
-                <CheckCircle2 className="size-8 text-emerald-400" />
+                <CheckCircle2 className="size-8 text-emerald-600" />
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 登录成功
               </h2>
-              <p className="text-sm text-white/40">
+              <p className="text-sm text-foreground/70">
                 正在跳转到工作台...
               </p>
             </div>
@@ -128,18 +128,18 @@ function CallbackContent() {
           <>
             <div className="relative">
               <div className="flex size-16 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/[0.06]">
-                <XCircle className="size-8 text-red-400" />
+                <XCircle className="size-8 text-red-600" />
               </div>
             </div>
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 登录失败
               </h2>
-              <p className="text-sm text-white/40">{errorMsg}</p>
+              <p className="text-sm text-foreground/70">{errorMsg}</p>
             </div>
             <Link
               href="/login"
-              className="mt-2 text-sm text-cyan-400/70 hover:text-cyan-400 transition-colors"
+              className="mt-2 text-sm text-cyan-600/70 hover:text-cyan-600 transition-colors"
             >
               返回登录
             </Link>
@@ -155,8 +155,8 @@ export default function AuthCallbackPage() {
     <Suspense
       fallback={
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <Loader2 className="size-8 text-cyan-400 animate-spin" />
-          <p className="text-sm text-white/40">加载中…</p>
+          <Loader2 className="size-8 text-primary animate-spin" />
+          <p className="text-sm text-foreground/70">加载中…</p>
         </div>
       }
     >

@@ -10,6 +10,8 @@ from app.models.contact import ContactSubmission
 from app.models.device import Device
 from app.models.document import Document
 from app.models.hunting_hypothesis import HuntingHypothesis
+from app.models.investigation_report import InvestigationReportDB
+from app.models.knowledge import KnowledgeEntry
 from app.models.integration import IntegrationApp, Webhook
 from app.models.integration_adapter import IntegrationAdapter, WebhookInbound
 from app.models.itsm import ITSMTicket
@@ -19,6 +21,8 @@ from app.models.response_action import ResponseAction
 from app.models.system_setting import SystemSetting
 from app.models.strategy import Strategy, StrategyEvolution, StrategyFeedback, StrategyAdjustment
 from app.models.tenant import Tenant, TenantMember, Subscription, UsageRecord
+from app.models.provider_config import ProviderConfig
+from app.models.mcp_skill import MCPConnector, SkillDefinition, SkillExecution
 from app.models.user import User
 
 __all__ = [
@@ -43,6 +47,8 @@ __all__ = [
     "Device",
     "Document",
     "HuntingHypothesis",
+    "InvestigationReportDB",
+    "KnowledgeEntry",
     "IntegrationApp",
     "Webhook",
     "IntegrationAdapter",
@@ -63,5 +69,9 @@ __all__ = [
     "TenantMember",
     "Subscription",
     "UsageRecord",
+    "MCPConnector",
+    "SkillDefinition",
+    "SkillExecution",
+    "ProviderConfig",
     "User",
 ]

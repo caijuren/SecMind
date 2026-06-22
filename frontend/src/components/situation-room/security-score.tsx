@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface SecurityScoreProps {
   score: number
@@ -8,23 +9,24 @@ interface SecurityScoreProps {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return "#22d3ee"
+  if (score >= 80) return "#00ff88"
   if (score >= 60) return "#fbbf24"
-  if (score >= 40) return "#f97316"
-  return "#ef4444"
+  if (score >= 40) return "#ff9500"
+  return "#ff2d55"
 }
 
-function getScoreLabel(score: number): string {
-  if (score >= 80) return "安全"
-  if (score >= 60) return "一般"
-  if (score >= 40) return "风险"
-  return "危险"
+function getScoreLabel(score: number, t: (key: string) => string): string {
+  if (score >= 80) return t("situation.scoreSafe")
+  if (score >= 60) return t("situation.scoreFair")
+  if (score >= 40) return t("situation.scoreRisk")
+  return t("situation.scoreDanger")
 }
 
 export function SecurityScore({ score, size = 120 }: SecurityScoreProps) {
   const [animatedScore, setAnimatedScore] = useState(0)
+  const { t } = useLocaleStore()
   const color = getScoreColor(score)
-  const label = getScoreLabel(score)
+  const label = getScoreLabel(score, t)
 
   useEffect(() => {
     let start = 0
@@ -59,7 +61,7 @@ export function SecurityScore({ score, size = 120 }: SecurityScoreProps) {
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.08)"
+          stroke="var(--border)"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -80,12 +82,12 @@ export function SecurityScore({ score, size = 120 }: SecurityScoreProps) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
-          className="font-mono text-2xl font-bold tabular-nums"
+          className="font-bold text-2xl tabular-nums font-[family-name:var(--font-space-grotesk)]"
           style={{ color }}
         >
           {animatedScore}
         </span>
-        <span className="text-[10px] font-medium tracking-wider text-white/50 uppercase">
+        <span className="text-[10px] font-medium tracking-wider text-muted-foreground/50 uppercase">
           {label}
         </span>
       </div>

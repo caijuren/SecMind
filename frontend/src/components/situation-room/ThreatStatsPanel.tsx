@@ -9,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface StatCardData {
   id: string
@@ -58,15 +59,15 @@ function AnimatedStatCard({ data }: { data: StatCardData }) {
     }
   }, [value])
 
-  const trendColor = trend === "up" ? "#ef4444" : trend === "down" ? "#22d3ee" : "rgba(255,255,255,0.3)"
-  const trendBg = trend === "up" ? "rgba(239,68,68,0.1)" : trend === "down" ? "rgba(34,211,238,0.1)" : "rgba(255,255,255,0.05)"
+  const trendColor = trend === "up" ? "#ff2d55" : trend === "down" ? "#00d4ff" : "var(--muted-foreground)"
+  const trendBg = trend === "up" ? "rgba(255,45,85,0.1)" : trend === "down" ? "rgba(0,212,255,0.1)" : "var(--muted)"
 
   return (
     <div
-      className="flex flex-col gap-2.5 p-4 rounded-lg relative overflow-hidden group transition-all duration-300"
+      className="flex flex-col gap-2.5 p-4 rounded-lg relative overflow-hidden group transition-colors duration-200"
       style={{
-        backgroundColor: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(255,255,255,0.04)",
+        backgroundColor: "var(--muted)",
+        border: "1px solid var(--border)",
       }}
     >
       <div
@@ -102,16 +103,16 @@ function AnimatedStatCard({ data }: { data: StatCardData }) {
         <div className="flex items-baseline gap-1">
           <span
             className="text-2xl font-bold font-mono tabular-nums"
-            style={{ color: "rgba(255,255,255,0.95)" }}
+            style={{ color: "var(--foreground)" }}
           >
             {displayValue}
           </span>
-          <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
             {unit}
           </span>
         </div>
         <div className="flex items-center gap-2 mt-1">
-          <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <span className="text-[11px]" style={{ color: "var(--muted-foreground)" }}>
             {label}
           </span>
         </div>
@@ -138,25 +139,26 @@ export function ThreatStatsPanel({ data }: ThreatStatsPanelProps) {
 }
 
 export function createDefaultStats(): StatCardData[] {
+  const t = useLocaleStore.getState().t
   return [
     {
       id: "active-threats",
-      label: "活跃威胁",
+      label: t("situation.activeThreats"),
       value: 23,
-      unit: "个",
+      unit: t("situation.times"),
       icon: <ShieldAlert size={18} />,
-      color: "#ef4444",
+      color: "#ff2d55",
       previousValue: 18,
       trend: "up",
       trendLabel: "+27.8%",
     },
     {
       id: "blocked-attacks",
-      label: "已阻断攻击",
+      label: t("situation.blockedAttacks"),
       value: 1847,
-      unit: "次",
+      unit: t("situation.times"),
       icon: <ShieldCheck size={18} />,
-      color: "#22d3ee",
+      color: "#0066ff",
       previousValue: 1520,
       trend: "up",
       trendLabel: "+21.5%",
@@ -165,7 +167,7 @@ export function createDefaultStats(): StatCardData[] {
       id: "mttr",
       label: "MTTR",
       value: 4.2,
-      unit: "分钟",
+      unit: t("situation.minutes"),
       icon: <Clock size={18} />,
       color: "#fbbf24",
       previousValue: 5.8,
@@ -174,7 +176,7 @@ export function createDefaultStats(): StatCardData[] {
     },
     {
       id: "noise-reduction",
-      label: "告警降噪",
+      label: t("situation.alertNoiseReduction"),
       value: 87.5,
       unit: "%",
       icon: <BellOff size={18} />,

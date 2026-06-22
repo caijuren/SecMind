@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   Bell,
   ShieldAlert,
@@ -20,11 +20,10 @@ import {
   Brain,
   Wifi,
   Globe,
-  Database,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { usePageTitle } from "@/hooks/use-page-title"
 import { PageHeader } from "@/components/layout/page-header"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,7 +36,9 @@ import {
 } from "@/components/ui/select"
 import { inputClass } from "@/lib/admin-ui"
 import { CARD } from "@/lib/design-system"
-import { useAuthStore } from "@/store/auth-store"
+import { useLocaleStore } from "@/store/locale-store"
+import { useMockDataStore } from "@/store/mock-data-store"
+import type { Alert } from "@/types"
 
 type AlertLevel = "P0" | "P1" | "P2" | "P3"
 type AlertSource = "防火墙" | "IDS" | "EDR" | "SIEM" | "态势感知"
@@ -55,7 +56,7 @@ interface AlertRecord {
 
 interface NotificationChannel {
   id: string
-  name: string
+  nameKey: string
   icon: typeof Mail
   enabled: boolean
   summary: string
@@ -63,34 +64,28 @@ interface NotificationChannel {
   bg: string
 }
 
-const LEVEL_CONFIG: Record<AlertLevel, { color: string; bg: string; border: string; label: string; hex: string }> = {
-  P0: { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/25", label: "P0紧急", hex: "#dc2626" },
-  P1: { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/25", label: "P1高危", hex: "#d97706" },
-  P2: { color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/25", label: "P2中危", hex: "#ca8a04" },
-  P3: { color: "text-zinc-400", bg: "bg-white/[0.03]", border: "border-white/[0.06]", label: "P3低危", hex: "#64748b" },
+const LEVEL_CONFIG: Record<AlertLevel, { color: string; bg: string; border: string; labelKey: string; hex: string }> = {
+  P0: { color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/25", labelKey: "notifications.levelP0", hex: "#dc2626" },
+  P1: { color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/25", labelKey: "notifications.levelP1", hex: "#d97706" },
+  P2: { color: "text-yellow-600", bg: "bg-yellow-500/10", border: "border-yellow-500/25", labelKey: "notifications.levelP2", hex: "#ca8a04" },
+  P3: { color: "text-muted-foreground", bg: "bg-muted/50", border: "border-border", labelKey: "notifications.levelP3", hex: "#64748b" },
 }
 
 const SOURCE_CONFIG: Record<AlertSource, { icon: typeof Shield; color: string; bg: string }> = {
-  "防火墙": { icon: Shield, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
-  "IDS": { icon: Radio, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
-  "EDR": { icon: Monitor, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
-  "SIEM": { icon: Brain, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
-  "态势感知": { icon: Globe, color: "text-zinc-400", bg: "bg-white/[0.05] border-white/[0.06]" },
+  "防火墙": { icon: Shield, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  "IDS": { icon: Radio, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  "EDR": { icon: Monitor, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  "SIEM": { icon: Brain, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
+  "态势感知": { icon: Globe, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
 }
 
 const STATUS_CONFIG: Record<AlertStatus, { color: string; bg: string; border: string }> = {
-  "待处理": { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/25" },
-  "处理中": { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/25" },
-  "已确认": { color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/25" },
-  "已静默": { color: "text-zinc-400", bg: "bg-white/[0.03]", border: "border-white/[0.06]" },
+  "待处理": { color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/25" },
+  "处理中": { color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/25" },
+  "已确认": { color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/25" },
+  "已静默": { color: "text-muted-foreground", bg: "bg-muted/50", border: "border-border" },
 }
 
-const LEVEL_COUNTS: Record<AlertLevel, number> = {
-  P0: 12,
-  P1: 47,
-  P2: 156,
-  P3: 432,
-}
 
 const LEVEL_ICONS: Record<AlertLevel, typeof Flame> = {
   P0: Flame,
@@ -119,40 +114,120 @@ const mockAlerts: AlertRecord[] = [
   { id: "ALT-017", time: "2026-05-10 13:08:11", level: "P2", source: "IDS", title: "异常DNS查询-DGA域名检测", description: "内网主机10.0.3.20发起异常DNS查询，域名update.evil-c2.net符合DGA特征", status: "处理中" },
 ]
 
+/* ========= Store Alert → AlertRecord mapping ========= */
+
+function mapRiskLevel(level: Alert["riskLevel"]): AlertLevel {
+  switch (level) {
+    case "critical": return "P0"
+    case "high": return "P1"
+    case "medium": return "P2"
+    case "low":
+    case "info": return "P3"
+    default: return "P3"
+  }
+}
+
+function mapStatus(status: Alert["status"]): AlertStatus {
+  switch (status) {
+    case "new": return "待处理"
+    case "investigating":
+    case "escalated": return "处理中"
+    case "resolved": return "已确认"
+    case "false_positive": return "已静默"
+    default: return "待处理"
+  }
+}
+
+function mapSource(source: string): AlertSource {
+  const sourceMap: Record<string, AlertSource> = {
+    "防火墙": "防火墙",
+    "IDS": "IDS",
+    "入侵检测系统": "IDS",
+    "EDR": "EDR",
+    "SIEM": "SIEM",
+    "态势感知": "态势感知",
+    "邮件网关": "SIEM",
+    "VPN网关": "防火墙",
+    "DLP": "SIEM",
+  }
+  return sourceMap[source] ?? "SIEM"
+}
+
+function formatTimestamp(ts: string): string {
+  const d = new Date(ts)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
+function transformAlert(alert: Alert): AlertRecord {
+  return {
+    id: alert.id,
+    time: formatTimestamp(alert.timestamp),
+    level: mapRiskLevel(alert.riskLevel),
+    source: mapSource(alert.source),
+    title: alert.title,
+    description: alert.description,
+    status: mapStatus(alert.status),
+  }
+}
+
+const STATUS_LABEL_KEYS: Record<AlertStatus, string> = {
+  "待处理": "notifications.statusPending",
+  "处理中": "notifications.statusProcessing",
+  "已确认": "notifications.statusConfirmed",
+  "已静默": "notifications.statusMuted",
+}
+
+const SOURCE_LABEL_KEYS: Partial<Record<AlertSource, string>> = {
+  "防火墙": "notifications.sourceFirewall",
+  "态势感知": "notifications.sourceSituationalAwareness",
+}
+
 const notificationChannels: NotificationChannel[] = [
-  { id: "email", name: "邮件通知", icon: Mail, enabled: true, summary: "已配置3个接收组，P0/P1告警实时推送，P2/P3每日汇总", color: "text-blue-400", bg: "bg-blue-400/10 border-blue-400/20" },
-  { id: "wecom", name: "企微通知", icon: MessageSquare, enabled: true, summary: "已配置5个群组机器人，P0告警@全员，P1告警@安全组", color: "text-emerald-400", bg: "bg-emerald-400/10 border-emerald-400/20" },
-  { id: "dingtalk", name: "钉钉通知", icon: Phone, enabled: false, summary: "未配置接收群组，需在设置中添加钉钉机器人Webhook", color: "text-cyan-400", bg: "bg-cyan-400/10 border-cyan-400/20" },
-  { id: "sms", name: "短信通知", icon: Phone, enabled: true, summary: "已配置8个手机号，仅P0紧急告警触发短信通知", color: "text-amber-400", bg: "bg-amber-400/10 border-amber-400/20" },
+  { id: "email", nameKey: "notifications.channelEmail", icon: Mail, enabled: true, summary: "已配置3个接收组，P0/P1告警实时推送，P2/P3每日汇总", color: "text-blue-600", bg: "bg-blue-400/10 border-blue-400/20" },
+  { id: "wecom", nameKey: "notifications.channelWecom", icon: MessageSquare, enabled: true, summary: "已配置5个群组机器人，P0告警@全员，P1告警@安全组", color: "text-emerald-600", bg: "bg-emerald-500/10 border-emerald-400/20" },
+  { id: "dingtalk", nameKey: "notifications.channelDingtalk", icon: Phone, enabled: false, summary: "未配置接收群组，需在设置中添加钉钉机器人Webhook", color: "text-cyan-600", bg: "bg-cyan-400/10 border-cyan-400/20" },
+  { id: "sms", nameKey: "notifications.channelSms", icon: Phone, enabled: true, summary: "已配置8个手机号，仅P0紧急告警触发短信通知", color: "text-amber-600", bg: "bg-amber-400/10 border-amber-400/20" },
 ]
 
 export default function NotificationsPage() {
-  const isDemo = useAuthStore(s => s.user?.isDemo)
+  usePageTitle("notifications")
+  const { t } = useLocaleStore()
+  const storeAlerts = useMockDataStore((s) => s.alerts)
+  const initializeStore = useMockDataStore((s) => s.initialize)
+
+  useEffect(() => {
+    initializeStore()
+  }, [initializeStore])
+
+  const transformedAlerts = useMemo<AlertRecord[]>(() => {
+    if (storeAlerts.length === 0) return mockAlerts
+    return storeAlerts.map(transformAlert)
+  }, [storeAlerts])
+
+  const levelCounts = useMemo<Record<AlertLevel, number>>(() => {
+    const counts: Record<AlertLevel, number> = { P0: 0, P1: 0, P2: 0, P3: 0 }
+    for (const a of transformedAlerts) {
+      counts[a.level]++
+    }
+    return counts
+  }, [transformedAlerts])
+
   const [selectedLevel, setSelectedLevel] = useState<AlertLevel | null>(null)
   const [sourceFilter, setSourceFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [channels, setChannels] = useState<NotificationChannel[]>(notificationChannels)
-  const [alerts, setAlerts] = useState<AlertRecord[]>(mockAlerts)
+  const [localOverrides, setLocalOverrides] = useState<Record<string, AlertStatus>>({})
 
-  if (!isDemo) {
-    return (
-      <div className="space-y-6">
-        <PageHeader icon={Bell} title="告警中心" />
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-20">
-            <Database className="size-12 text-zinc-700 mb-4" />
-            <h3 className="text-lg font-semibold text-zinc-400 mb-2">暂无告警记录</h3>
-            <p className="text-sm text-zinc-600 text-center max-w-md">
-              你还没有接入任何安全数据源。
-              <br />
-              接入数据源后，告警将自动显示在此处。
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const alerts = useMemo<AlertRecord[]>(() => {
+    return transformedAlerts.map((a) => {
+      if (localOverrides[a.id]) {
+        return { ...a, status: localOverrides[a.id] }
+      }
+      return a
+    })
+  }, [transformedAlerts, localOverrides])
 
   const filteredAlerts = alerts.filter((alert) => {
     if (selectedLevel && alert.level !== selectedLevel) return false
@@ -174,15 +249,11 @@ export default function NotificationsPage() {
   }
 
   const handleConfirm = (id: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "已确认" as AlertStatus } : a))
-    )
+    setLocalOverrides((prev) => ({ ...prev, [id]: "已确认" as AlertStatus }))
   }
 
   const handleMute = (id: string) => {
-    setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "已静默" as AlertStatus } : a))
-    )
+    setLocalOverrides((prev) => ({ ...prev, [id]: "已静默" as AlertStatus }))
   }
 
   const toggleChannel = (id: string) => {
@@ -195,7 +266,7 @@ export default function NotificationsPage() {
     <div className="space-y-6">
       <PageHeader
         icon={Bell}
-        title="告警中心"
+        title={t("notifications.title")}
       />
 
       <div className="grid grid-cols-4 gap-4">
@@ -208,10 +279,10 @@ export default function NotificationsPage() {
               key={level}
               className={cn(
                 CARD.base,
-                "p-4 text-left cursor-pointer transition-all duration-200",
+                "p-4 text-left cursor-pointer transition-colors duration-200",
                 isSelected
-                  ? "shadow-sm shadow-black/30 -translate-y-0.5"
-                  : "hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
+                  ? "border-primary/25 shadow-sm"
+                  : "hover:border-primary/20",
               )}
               style={{
                 borderColor: isSelected ? `${config.hex}40` : undefined,
@@ -229,12 +300,12 @@ export default function NotificationsPage() {
                 >
                   <LevelIcon className="size-3.5" style={{ color: isSelected ? config.hex : '#71717a' }} />
                 </div>
-                <span className={cn("text-[11px] font-semibold", isSelected ? "text-zinc-400" : "text-zinc-500")}>
-                  {config.label}
+                <span className={cn("text-[11px] font-semibold", isSelected ? "text-muted-foreground" : "text-muted-foreground")}>
+                  {t(config.labelKey)}
                 </span>
               </div>
-              <p className={cn("text-2xl font-bold font-mono tabular-nums", isSelected ? "text-zinc-100" : "text-zinc-300")}>
-                {LEVEL_COUNTS[level]}
+              <p className={cn("text-2xl font-bold font-mono tabular-nums", isSelected ? "text-foreground" : "text-muted-foreground")}>
+                {levelCounts[level]}
               </p>
             </button>
           )
@@ -243,48 +314,48 @@ export default function NotificationsPage() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 min-w-[200px] max-w-[360px]">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="搜索告警标题、描述或ID..."
+            placeholder={t("notifications.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={`pl-9 ${inputClass}`}
-            aria-label="搜索告警"
+            aria-label={t("notifications.searchAriaLabel")}
             name="search"
             type="search"
             autoComplete="off"
           />
         </div>
         <Select value={sourceFilter} onValueChange={(v) => v && setSourceFilter(v)}>
-          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="告警来源筛选">
-            <SelectValue placeholder="告警来源" />
+          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label={t("notifications.sourceFilterAriaLabel")}>
+            <SelectValue placeholder={t("notifications.sourceFilter")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部来源</SelectItem>
-            <SelectItem value="防火墙">防火墙</SelectItem>
+            <SelectItem value="all">{t("notifications.allSources")}</SelectItem>
+            <SelectItem value="防火墙">{t("notifications.sourceFirewall")}</SelectItem>
             <SelectItem value="IDS">IDS</SelectItem>
             <SelectItem value="EDR">EDR</SelectItem>
             <SelectItem value="SIEM">SIEM</SelectItem>
-            <SelectItem value="态势感知">态势感知</SelectItem>
+            <SelectItem value="态势感知">{t("notifications.sourceSituationalAwareness")}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label="告警状态筛选">
-            <SelectValue placeholder="告警状态" />
+          <SelectTrigger size="sm" className={`w-32 ${inputClass}`} aria-label={t("notifications.statusFilterAriaLabel")}>
+            <SelectValue placeholder={t("notifications.statusFilter")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部状态</SelectItem>
-            <SelectItem value="待处理">待处理</SelectItem>
-            <SelectItem value="处理中">处理中</SelectItem>
-            <SelectItem value="已确认">已确认</SelectItem>
-            <SelectItem value="已静默">已静默</SelectItem>
+            <SelectItem value="all">{t("notifications.allStatus")}</SelectItem>
+            <SelectItem value="待处理">{t("notifications.statusPending")}</SelectItem>
+            <SelectItem value="处理中">{t("notifications.statusProcessing")}</SelectItem>
+            <SelectItem value="已确认">{t("notifications.statusConfirmed")}</SelectItem>
+            <SelectItem value="已静默">{t("notifications.statusMuted")}</SelectItem>
           </SelectContent>
         </Select>
         {(selectedLevel || sourceFilter !== "all" || statusFilter !== "all" || searchQuery) && (
           <Button
             size="sm"
             variant="ghost"
-            className="text-zinc-500 hover:text-cyan-400"
+            className="text-muted-foreground hover:text-cyan-600"
             onClick={() => {
               setSelectedLevel(null)
               setSourceFilter("all")
@@ -292,15 +363,15 @@ export default function NotificationsPage() {
               setSearchQuery("")
             }}
           >
-            清除筛选
+            {t("notifications.clearFilters")}
           </Button>
         )}
       </div>
 
       <div className="space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {filteredAlerts.length === 0 && (
-          <div className="flex items-center justify-center py-16 text-zinc-500 text-sm">
-            没有匹配的告警记录
+          <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+            {t("notifications.noMatchingAlerts")}
           </div>
         )}
         {filteredAlerts.map((alert) => {
@@ -313,7 +384,7 @@ export default function NotificationsPage() {
               key={alert.id}
               className={cn(
                 CARD.base,
-                "relative p-3.5 transition-all duration-200 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
+              "group relative p-3.5 transition-colors duration-200 hover:border-primary/20 hover:bg-muted/20",
               )}
             >
               <div
@@ -323,7 +394,7 @@ export default function NotificationsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono tabular-nums text-zinc-500">{alert.time}</span>
+                    <span className="text-xs font-mono tabular-nums text-muted-foreground">{alert.time}</span>
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold",
@@ -341,7 +412,7 @@ export default function NotificationsPage() {
                       )}
                     >
                       <SourceIcon className="size-3" />
-                      {alert.source}
+                      {SOURCE_LABEL_KEYS[alert.source] ? t(SOURCE_LABEL_KEYS[alert.source]!) : alert.source}
                     </span>
                     <span
                       className={cn(
@@ -351,45 +422,45 @@ export default function NotificationsPage() {
                         statusConfig.color
                       )}
                     >
-                      {alert.status}
+                      {t(STATUS_LABEL_KEYS[alert.status])}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-zinc-200 leading-snug">{alert.title}</p>
-                  <p className="text-xs text-zinc-400 leading-relaxed line-clamp-2">{alert.description}</p>
+                  <p className="text-sm font-medium text-foreground leading-snug">{alert.title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{alert.description}</p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0 opacity-70 transition-opacity group-hover:opacity-100">
                   {alert.status !== "已确认" && (
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 gap-1"
+                      className="text-emerald-600 hover:bg-emerald-500/10 gap-1"
                       onClick={() => handleConfirm(alert.id)}
-                      aria-label="确认告警"
+                      aria-label={t("notifications.ariaConfirmAlert")}
                     >
                       <CheckCircle2 className="size-3" />
-                      确认
+                      {t("notifications.confirm")}
                     </Button>
                   )}
                   {alert.status !== "已静默" && (
                     <Button
                       size="xs"
                       variant="ghost"
-                      className="text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.06] gap-1"
+                      className="text-muted-foreground hover:bg-muted/50 gap-1"
                       onClick={() => handleMute(alert.id)}
-                      aria-label="静默告警"
+                      aria-label={t("notifications.ariaMuteAlert")}
                     >
                       <VolumeX className="size-3" />
-                      静默
+                      {t("notifications.mute")}
                     </Button>
                   )}
                   <Button
                     size="xs"
                     variant="ghost"
-                    className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 gap-1"
-                    aria-label="查看告警详情"
+                    className="text-primary hover:bg-primary/10 gap-1"
+                    aria-label={t("notifications.ariaViewAlert")}
                   >
                     <Eye className="size-3" />
-                    查看
+                    {t("notifications.view")}
                   </Button>
                 </div>
               </div>
@@ -400,8 +471,8 @@ export default function NotificationsPage() {
 
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Wifi className="size-4 text-cyan-400" />
-          <span className="text-sm font-bold text-zinc-200">通知渠道配置</span>
+          <Wifi className="size-4 text-cyan-600" />
+          <span className="text-sm font-bold text-foreground">{t("notifications.channelConfig")}</span>
         </div>
         <div className="grid grid-cols-4 gap-4">
           {channels.map((channel) => {
@@ -411,36 +482,36 @@ export default function NotificationsPage() {
                 key={channel.id}
                 className={cn(
                   CARD.base,
-                  "p-4 space-y-3 transition-all duration-200 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5",
+                  "p-4 space-y-3 transition-colors duration-200 hover:border-primary/20",
                   channel.enabled && channel.bg,
                 )}
               >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <ChannelIcon className={cn("size-4", channel.enabled ? channel.color : "text-zinc-600")} />
-                      <span className={cn("text-sm font-medium", channel.enabled ? "text-zinc-200" : "text-zinc-400")}>
-                        {channel.name}
+                      <ChannelIcon className={cn("size-4", channel.enabled ? channel.color : "text-muted-foreground/60")} />
+                      <span className={cn("text-sm font-medium", channel.enabled ? "text-foreground" : "text-muted-foreground")}>
+                        {t(channel.nameKey)}
                       </span>
                     </div>
                     <button
                       onClick={() => toggleChannel(channel.id)}
                       className={cn(
                         "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200",
-                        channel.enabled ? "bg-cyan-500/60" : "bg-white/[0.1]"
+                        channel.enabled ? "bg-cyan-500/60" : "bg-muted/70"
                       )}
                       role="switch"
                       aria-checked={channel.enabled}
-                      aria-label={`切换${channel.name}`}
+                      aria-label={t(channel.nameKey)}
                     >
                       <span
                         className={cn(
-                          "pointer-events-none inline-block size-3.5 rounded-full bg-[#131316] shadow-sm transition-transform duration-200",
+                          "pointer-events-none inline-block size-3.5 rounded-full bg-card shadow-sm transition-transform duration-200",
                           channel.enabled ? "translate-x-4" : "translate-x-0.5"
                         )}
                       />
                     </button>
                   </div>
-                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-zinc-500" : "text-zinc-600")}>
+                  <p className={cn("text-xs leading-relaxed", channel.enabled ? "text-muted-foreground" : "text-muted-foreground/60")}>
                     {channel.summary}
                   </p>
                   <Badge
@@ -448,11 +519,11 @@ export default function NotificationsPage() {
                     className={cn(
                       "text-[10px]",
                       channel.enabled
-                        ? "border-cyan-400/25 text-cyan-400/70"
-                        : "border-white/[0.08] text-zinc-600"
+                        ? "border-cyan-400/25 text-cyan-600/70"
+                        : "border-border text-muted-foreground/60"
                     )}
                   >
-                    {channel.enabled ? "已启用" : "未启用"}</Badge>
+                    {channel.enabled ? t("notifications.enabled") : t("notifications.disabled")}</Badge>
                 </div>
             )
           })}

@@ -11,16 +11,16 @@ export default function DemoEntryPage() {
   useEffect(() => {
     startDemoSession()
     if (typeof window !== "undefined") {
-      window.location.replace("/investigate")
+      window.location.replace("/dashboard")
       return
     }
-    router.replace("/investigate")
+    router.replace("/dashboard")
   }, [router])
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
-      <Loader2 className="size-8 animate-spin text-cyan-400" />
-      <p className="text-sm text-zinc-500">正在进入演示环境...</p>
+      <Loader2 className="size-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">正在进入演示环境...</p>
     </div>
   )
 }

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { AlertTriangle, Trash2, ShieldOff } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useLocaleStore } from "@/store/locale-store"
 
 type DangerLevel = "warning" | "danger" | "critical"
 
@@ -27,19 +28,19 @@ const dangerConfig: Record<
   warning: {
     icon: AlertTriangle,
     iconBg: "bg-amber-500/[0.08] ring-amber-500/[0.15]",
-    iconColor: "text-amber-400",
+    iconColor: "text-amber-600",
     buttonVariant: "outline",
   },
   danger: {
     icon: Trash2,
     iconBg: "bg-red-500/[0.08] ring-red-500/[0.15]",
-    iconColor: "text-red-400",
+    iconColor: "text-red-600",
     buttonVariant: "destructive",
   },
   critical: {
     icon: ShieldOff,
     iconBg: "bg-red-600/[0.10] ring-red-500/[0.20]",
-    iconColor: "text-red-400",
+    iconColor: "text-red-600",
     buttonVariant: "destructive",
   },
 }
@@ -62,13 +63,16 @@ export function ConfirmDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "确认",
-  cancelLabel = "取消",
+  confirmLabel,
+  cancelLabel,
   level = "danger",
   onConfirm,
   loading = false,
   children,
 }: ConfirmDialogProps) {
+  const { t } = useLocaleStore()
+  const resolvedConfirmLabel = confirmLabel ?? t("common.confirm")
+  const resolvedCancelLabel = cancelLabel ?? t("common.cancel")
   const config = dangerConfig[level]
 
   return (
@@ -85,28 +89,28 @@ export function ConfirmDialog({
               <config.icon className={cn("h-5 w-5", config.iconColor)} strokeWidth={1.5} />
             </div>
             <div className="flex-1 pt-0.5">
-              <DialogTitle className="text-base text-white">{title}</DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm leading-relaxed text-zinc-400">
+              <DialogTitle className="text-base text-foreground">{title}</DialogTitle>
+              <DialogDescription className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                 {description}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
-        {children && <div className="text-sm text-zinc-300">{children}</div>}
+        {children && <div className="text-sm text-muted-foreground">{children}</div>}
         <DialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             variant={config.buttonVariant}
             onClick={onConfirm}
             disabled={loading}
           >
-            {loading ? "处理中..." : confirmLabel}
+            {loading ? t("common.loading") : resolvedConfirmLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

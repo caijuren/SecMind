@@ -1,0 +1,14 @@
+{
+  "name": "secmind-aliyun-mail-mcp",
+  "version": "1.0.0",
+  "description": "SecMind 阿里云邮件网关日志查询 MCP（DirectMail + 企业邮箱）",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.22.0"
+  }
+}

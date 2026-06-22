@@ -1,29 +1,22 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import {
   Brain,
   Search,
-  Shield,
-  CheckCircle2,
   Sparkles,
   Target,
   Server,
   User,
   ArrowRight,
-  ArrowLeft,
   Zap,
   ArrowUpRight,
   ThumbsUp,
   ThumbsDown,
-  Eye,
   Link2,
   GitBranch,
-  Activity,
-  Globe,
   MoveRight,
-  FileText,
-  ClipboardList,
   Wrench,
   Plus,
   UserCircle,
@@ -33,9 +26,8 @@ import {
   FileCheck,
   Inbox,
   ArrowRightLeft,
-  Database,
+  ChevronRight,
 } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,1128 +40,30 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
-import type { RiskLevel } from "@/lib/risk-config"
 import { PageHeader } from "@/components/layout/page-header"
 import { inputClass, pageCardClass } from "@/lib/admin-ui"
-import { useAuthStore } from "@/store/auth-store"
-
-type InvestigationStatus = "investigating" | "pending_review" | "disposing" | "closed"
-type InvestigationTab = InvestigationStatus | "all"
-
-interface SourceEvent {
-  eventId: string
-  source: string
-  sourceSystemName: string
-  classification: string
-  riskLevel: RiskLevel
-  rawInput: string
-  receivedTime: string
-}
-
-interface EvidenceItem {
-  source: string
-  type: "log" | "network" | "endpoint" | "identity" | "behavioral" | "threat_intel" | "baseline" | "external"
-  content: string
-  raw?: string
-  severity: "critical" | "high" | "medium" | "low" | "info"
-  timestamp: string
-  ioc?: string
-}
-
-interface PersonProfile {
-  name: string
-  email: string
-  employeeId: string
-  department: string
-  position: string
-  jobTitle: string
-  level: string
-  workStatus: "on_duty" | "off_duty" | "vacation" | "sick_leave" | "business_trip" | "remote"
-  location: string
-  lastLogin: string
-  deviceCount: number
-  riskScore: number
-  notes: string
-}
-
-interface BaselineDeviation {
-  metric: string
-  normalValue: string
-  actualValue: string
-  deviationDegree: "slight" | "moderate" | "severe" | "extreme"
-  timeWindow: string
-  sampleSize: number
-}
-
-interface MITREMapping {
-  tactic: string
-  techniqueId: string
-  techniqueName: string
-  subTechnique?: string
-  confidence: number
-}
-
-interface CorrelationDetail {
-  relatedSystem: string
-  relationType: "temporal" | "spatial" | "identity" | "causal" | "pattern"
-  description: string
-  strength: "weak" | "moderate" | "strong" | "confirmed"
-}
-
-interface AIReasoningStep {
-  time: string
-  step: string
-  detail: string
-  type: "discover" | "correlate" | "judge"
-  evidence: EvidenceItem[]
-  personProfile?: PersonProfile
-  baselineDeviation?: BaselineDeviation
-  mitreMapping?: MITREMapping
-  correlations?: CorrelationDetail[]
-  confidenceContribution: number
-  reasoning: string
-}
-
-interface FeedbackData {
-  rating: "thumbs_up" | "thumbs_down" | null
-  comment: string | null
-  feedbackType: string | null
-  timestamp: string | null
-}
-
-interface DisposalAction {
-  time: string
-  action: string
-  result: string
-}
-
-interface InvestigationRecord {
-  id: string
-  title: string
-  description: string
-  asset: string
-  status: InvestigationStatus
-  sourceEvent: SourceEvent
-  triggerType: "auto" | "manual"
-  aiReasoningSteps: AIReasoningStep[]
-  confidence: number
-  aiConclusion: string | null
-  disposalSuggestion: string | null
-  conclusion?: string
-  handler?: string
-  deadline?: string
-  duration?: string
-  currentAction?: string
-  reviewer?: string
-  reviewedAt?: string
-  reviewAction?: "approve" | "modify" | "reject"
-  reviewComment?: string
-  disposalMethod?: "ai_auto" | "manual"
-  disposalExecutor?: string
-  disposalStartedAt?: string
-  disposalActions?: DisposalAction[]
-  disposalCompletedAt?: string | null
-  feedback?: FeedbackData
-  closedAt?: string | null
-  closeReason?: string | null
-  entities: string[]
-  involvedAssets?: string[]
-  involvedAccounts?: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-const TABS: { value: InvestigationTab; label: string; icon: React.ElementType; countKey: keyof TabCounts }[] = [
-  { value: "investigating", label: "研判中", icon: Activity, countKey: "investigating" },
-  { value: "pending_review", label: "待复核", icon: ClipboardList, countKey: "pendingReview" },
-  { value: "disposing", label: "处置中", icon: Wrench, countKey: "disposing" },
-  { value: "closed", label: "已闭环", icon: CheckCircle2, countKey: "closed" },
-  { value: "all", label: "全部", icon: GridIcon, countKey: "total" },
-]
-
-interface TabCounts {
-  total: number
-  investigating: number
-  pendingReview: number
-  disposing: number
-  closed: number
-}
-
-function GridIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
-    </svg>
-  )
-}
-
-const STATUS_CONFIG: Record<InvestigationStatus, { color: string; bg: string; border: string; pulseColor: string; label: string }> = {
-  investigating: { color: "text-cyan-300", bg: "bg-cyan-500/10", border: "border-cyan-500/20", pulseColor: "bg-cyan-400", label: "研判中" },
-  pending_review: { color: "text-amber-300", bg: "bg-amber-500/10", border: "border-amber-500/20", pulseColor: "bg-amber-400", label: "待复核" },
-  disposing: { color: "text-purple-300", bg: "bg-purple-500/10", border: "border-purple-500/20", pulseColor: "bg-purple-400", label: "处置中" },
-  closed: { color: "text-emerald-300", bg: "bg-emerald-500/10", border: "border-emerald-500/20", pulseColor: "bg-emerald-400", label: "已闭环" },
-}
-
-const STEP_TYPE_CONFIG: Record<AIReasoningStep["type"], { icon: React.ElementType; color: string; label: string }> = {
-  discover: { icon: Eye, color: "text-cyan-600", label: "发现" },
-  correlate: { icon: Link2, color: "text-amber-600", label: "关联" },
-  judge: { icon: Brain, color: "text-[#ff4d4f]", label: "判断" },
-}
-
-const EVIDENCE_TYPE_CONFIG: Record<EvidenceItem["type"], { icon: React.ElementType; label: string; color: string }> = {
-  log: { icon: FileText, label: "日志", color: "#22d3ee" },
-  network: { icon: Globe, label: "网络", color: "#a78bfa" },
-  endpoint: { icon: Server, label: "终端", color: "#fbbf24" },
-  identity: { icon: User, label: "身份", color: "#34d399" },
-  behavioral: { icon: Activity, label: "行为", color: "#f97316" },
-  threat_intel: { icon: Shield, label: "威胁情报", color: "#ff4d4f" },
-  baseline: { icon: BarChart3, label: "基线", color: "#06b6d4" },
-  external: { icon: Globe, label: "外部", color: "#64748b" },
-}
-
-const SEVERITY_CONFIG: Record<EvidenceItem["severity"], { color: string; bg: string; label: string }> = {
-  critical: { color: "#ff4d4f", bg: "rgba(255,77,79,0.10)", label: "严重" },
-  high: { color: "#f97316", bg: "rgba(249,115,22,0.10)", label: "高危" },
-  medium: { color: "#fbbf24", bg: "rgba(251,191,36,0.10)", label: "中危" },
-  low: { color: "#22d3ee", bg: "rgba(34,211,238,0.10)", label: "低危" },
-  info: { color: "#6b7280", bg: "rgba(107,114,128,0.10)", label: "信息" },
-}
-
-const DEVIATION_CONFIG: Record<BaselineDeviation["deviationDegree"], { color: string; label: string }> = {
-  slight: { color: "#22d3ee", label: "轻微偏差" },
-  moderate: { color: "#fbbf24", label: "中度偏差" },
-  severe: { color: "#f97316", label: "严重偏差" },
-  extreme: { color: "#ff4d4f", label: "极端偏差" },
-}
-
-const CORRELATION_STRENGTH_CONFIG: Record<CorrelationDetail["strength"], { color: string; label: string }> = {
-  weak: { color: "#6b7280", label: "弱" },
-  moderate: { color: "#fbbf24", label: "中等" },
-  strong: { color: "#f97316", label: "强" },
-  confirmed: { color: "#22c55e", label: "已确认" },
-}
-
-const WORK_STATUS_CONFIG: Record<PersonProfile["workStatus"], { color: string; label: string }> = {
-  on_duty: { color: "#22c55e", label: "在岗" },
-  off_duty: { color: "#6b7280", label: "离岗" },
-  vacation: { color: "#3b82f6", label: "休假" },
-  sick_leave: { color: "#f97316", label: "病假" },
-  business_trip: { color: "#a855f7", label: "出差" },
-  remote: { color: "#06b6d4", label: "远程" },
-}
-
-const FEEDBACK_TYPE_OPTIONS = [
-  { value: "investigation_correct", label: "调查结论正确" },
-  { value: "investigation_wrong", label: "调查结论有误" },
-  { value: "judgment_correct", label: "AI判断准确" },
-  { value: "judgment_wrong", label: "AI判断偏差" },
-  { value: "disposal_effective", label: "处置措施有效" },
-  { value: "disposal_ineffective", label: "处置措施无效" },
-]
-
-const FEEDBACK_TYPE_COLORS: Record<string, string> = {
-  investigation_correct: "#22c55e",
-  investigation_wrong: "#ff4d4f",
-  judgment_correct: "#22d3ee",
-  judgment_wrong: "#f97316",
-  disposal_effective: "#34d399",
-  disposal_ineffective: "#ef4444",
-}
-
-const mockRecords: InvestigationRecord[] = [
-  {
-    id: "INV-2026-0054",
-    title: "VPN异常登录调查",
-    description: "检测到来自境外IP的VPN登录，触发不可能旅行规则",
-    asset: "VPN-GW-01",
-    status: "investigating",
-    sourceEvent: {
-      eventId: "ALT003", source: "VPN", sourceSystemName: "深信服SSL VPN",
-      classification: "不可能旅行-凭证疑似窃取", riskLevel: "critical",
-      rawInput: "USER=zhangwei SRC=103.45.67.89 DST=VPN-GW-01 STATUS=success DURATION=0s",
-      receivedTime: "2026-05-10 14:35:18",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "14:35:18", step: "信号发现", detail: "AI检测到异常VPN登录，源IP位于境外高风险区域", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "该账号历史342次VPN登录100%来自上海本地IP段，本次首次出现境外IP，地理位置偏移超过4500km，触发不可能旅行规则",
-        evidence: [
-          { source: "深信服SSL VPN", type: "log", content: "USER=zhangwei SRC=103.45.67.89 DST=VPN-GW-01 PROTOCOL=IKEv2 STATUS=login_success AUTH=MFA_PASSED", severity: "critical", timestamp: "2026-05-10 14:35:18", ioc: "103.45.67.89", raw: "[SSL-VPN][AUTH] user=zhangwei src_ip=103.45.67.89 proto=ikev2 status=success mfa=passed session_id=sess-a3f9c2" },
-          { source: "GeoIP数据库", type: "network", content: "103.45.67.89 → 新加坡 · ASN AS3758 SingTel · 坐标1.3521°N 103.8198°E", severity: "high", timestamp: "2026-05-10 14:35:18", ioc: "103.45.67.89" },
-          { source: "VPN基线系统", type: "baseline", content: "zhangwei历史342次登录100%来自 10.0.0.0/8 和 192.168.0.0/16 内网段，无境外登录记录", severity: "medium", timestamp: "2026-05-10 14:35:18" },
-        ],
-        personProfile: {
-          name: "张伟", email: "zhangwei@corp.com", employeeId: "E20210815",
-          department: "技术研发部", position: "开发工程师", jobTitle: "高级开发工程师", level: "P7",
-          workStatus: "on_duty", location: "上海张江园区A座12层", lastLogin: "2026-05-09 09:15:22",
-          deviceCount: 1, riskScore: 12, notes: "无异常记录",
-        },
-        baselineDeviation: {
-          metric: "登录地理位置", normalValue: "上海市浦东新区张江园区", actualValue: "新加坡(SingTel ASN3758)",
-          deviationDegree: "extreme", timeWindow: "近180天", sampleSize: 342,
-        },
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1078.003", techniqueName: "Valid Accounts", subTechnique: "Local Accounts", confidence: 95 },
-      },
-      {
-        time: "14:35:22", step: "行为关联", detail: "关联到终端WIN-DESK-15的PowerShell编码执行行为", type: "correlate",
-        confidenceContribution: 25,
-        reasoning: "VPN异常登录后10分钟内，同一用户归属终端出现PowerShell编码执行行为，时间窗口高度吻合，存在因果关联",
-        evidence: [
-          { source: "安恒信息明御EDR", type: "endpoint", content: "HOST=WIN-DESK-15 PROCESS=powershell.exe ARGS=-enc JABjACA... PID=4892 PPID=3521 USER=zhangwei", severity: "critical", timestamp: "2026-05-10 14:45:33", ioc: "powershell.exe" },
-          { source: "CMDB资产管理系统", type: "identity", content: "WIN-DESK-15 资产归属人确认为 zhangwei(E20210815)，部门技术研发部，资产标签dev-workstation", severity: "info", timestamp: "2026-05-10 14:35:25" },
-          { source: "华为USG6550E防火墙", type: "network", content: "SRC=WIN-DESK-10.0.4.22 DST=185.220.101.34 PORT=443 BYTES_OUT=2.3MB 加密出站流量异常", severity: "high", timestamp: "2026-05-10 14:46:00", ioc: "185.220.101.34" },
-        ],
-        correlations: [
-          { relatedSystem: "VPN ↔ EDR", relationType: "temporal", description: "VPN登录事件与终端PowerShell执行间隔10分15秒，处于典型攻击链时间窗口内", strength: "strong" },
-          { relatedSystem: "终端 ↔ 网络流量", relationType: "causal", description: "PowerShell进程启动后60秒内产生2.3MB加密出站流量至已知恶意IP", strength: "strong" },
-        ],
-        mitreMapping: { tactic: "Execution", techniqueId: "T1059.001", techniqueName: "Command and Scripting Interpreter", subTechnique: "PowerShell", confidence: 88 },
-      },
-      {
-        time: "14:35:45", step: "深度分析", detail: "交叉验证人员物理位置与网络行为矛盾", type: "correlate",
-        confidenceContribution: 20,
-        reasoning: "人员在物理上位于上海办公场所（门禁+考勤双重证明），但VPN会话来自境外IP，且终端出现攻击工具特征行为",
-        evidence: [
-          { source: "OA考勤系统", type: "behavioral", content: "张伟 2026-05-10 08:52:15 入园打卡(上海张江A座) · 17:32:08 离园打卡 · 在岗时长8h40m", severity: "info", timestamp: "2026-05-10 08:52:15" },
-          { source: "HR管理系统", type: "identity", content: "张伟(E20210815)：当前状态在职在岗，无出差申请、无休假审批、无病假记录", severity: "info", timestamp: "2026-05-10 14:35:45" },
-          { source: "奇安信威胁情报中心", type: "threat_intel", content: "103.45.67.89 在Tor出口节点列表和商业代理池中出现，信誉评分18/100，关联APT-C-35组织基础设施", severity: "critical", timestamp: "2026-05-10 14:35:45", ioc: "103.45.67.89" },
-        ],
-        baselineDeviation: {
-          metric: "单会话出站加密流量", normalValue: "<500KB/会话(均值180KB)", actualValue: "2.3MB/会话",
-          deviationDegree: "severe", timeWindow: "近30天", sampleSize: 89,
-        },
-      },
-      {
-        time: "14:36:10", step: "最终判断", detail: "综合判定为凭证窃取后的远程访问攻击", type: "judge",
-        confidenceContribution: 20,
-        reasoning: "综合置信度计算：地理异常(35%) + 进程异常(25%) + 流量异常(20%) + 身份矛盾(20%) = 加权综合92%。攻击者可能已获得初始立足点",
-        evidence: [
-          { source: "SecMind-AI推理引擎", type: "baseline", content: "综合置信度92% = 地理异常权重0.35 + 进程异常权重0.25 + 流量异常权重0.20 + 身份矛盾权重0.20", severity: "high", timestamp: "2026-05-10 14:36:10" },
-        ],
-        mitreMapping: { tactic: "Credential Access", techniqueId: "T1552.001", techniqueName: "Credentials in Files", subTechnique: "Web Config", confidence: 82 },
-      },
-    ],
-    confidence: 92,
-    aiConclusion: null,
-    disposalSuggestion: null,
-    entities: ["user-zhangwei", "10.0.4.22"],
-    involvedAssets: ["WIN-DESK-15", "VPN-GW-01"],
-    involvedAccounts: ["zhangwei"],
-    createdAt: "2026-05-10 14:35:18",
-    updatedAt: "2026-05-10 14:36:10",
-  },
-  {
-    id: "INV-2026-0055",
-    title: "WebShell植入调查",
-    description: "EDR检测到Web服务器上的ChinaChopper特征WebShell文件",
-    asset: "WEB-SVR",
-    status: "investigating",
-    sourceEvent: {
-      eventId: "ALT004", source: "EDR", sourceSystemName: "安恒信息明御",
-      classification: "WebShell植入-后门", riskLevel: "critical",
-      rawInput: "HOST=WEB-SVR PATH=/uploads/cmd.php TYPE=WebShell SIG=ChinaChopper",
-      receivedTime: "2026-05-10 14:28:45",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "14:28:45", step: "信号发现", detail: "EDR检测到Web服务器上的ChinaChopper特征WebShell文件", type: "discover",
-        confidenceContribution: 40,
-        reasoning: "文件上传目录中发现经混淆的PHP WebShell，特征码匹配ChinaChopper家族，属于典型Web应用层后门",
-        evidence: [
-          { source: "安恒信息明御EDR", type: "endpoint", content: "FILE=/var/www/html/uploads/cmd.php MD5=e8f3a9c2d4b1 SIZE=2.3KB TYPE=PHP SIG_MATCH=ChinaChopper_OBFUSCATED CREATE_TIME=2026-05-10 14:28:41", severity: "critical", timestamp: "2026-05-10 14:28:45", ioc: "cmd.php" },
-          { source: "WEB-SVR访问日志", type: "log", content: '14:28:38 POST /upload/api.php HTTP/1.1 200 2340 SRC=10.0.2.55 UAG="Mozilla/5.0 (compatible)"', severity: "high", timestamp: "2026-05-10 14:28:38", ioc: "10.0.2.55" },
-          { source: "WAF规则引擎", type: "network", content: "上传请求绕过文件类型检测：Content-Type=image/jpeg 实际为application/x-php，利用Apache解析漏洞", severity: "high", timestamp: "2026-05-10 14:28:40" },
-        ],
-        baselineDeviation: {
-          metric: "uploads目录文件变更频率", normalValue: "平均2-3个/天(办公文档)", actualValue: "突发新增1个可执行脚本",
-          deviationDegree: "extreme", timeWindow: "近7天", sampleSize: 18,
-        },
-        mitreMapping: { tactic: "Persistence", techniqueId: "T1505.003", techniqueName: "Server Software Component", subTechnique: "Web Shell", confidence: 93 },
-      },
-      {
-        time: "14:29:10", step: "行为关联", detail: "追踪到上传源IP的异常访问模式和历史攻击痕迹", type: "correlate",
-        confidenceContribution: 31,
-        reasoning: "上传WebShell的源IP在近24小时内对Web服务器进行了目录扫描和敏感路径探测，呈现典型的侦察-利用攻击链",
-        evidence: [
-          { source: "WEB-SVR访问日志", type: "log", content: '10.0.2.55 近24h：GET /admin 403×23 GET /phpmyadmin 404×8 GET /.env 404×5 GET /backup 403×12', severity: "high", timestamp: "2026-05-10 14:29:10", ioc: "10.0.2.55" },
-          { source: "奇安信天擎", type: "endpoint", content: "DEV-WKSTN-07 检测到 sqlmap.py 执行痕迹(PID=8921) --url=http://web-srv.corp.com/upload --level=3", severity: "critical", timestamp: "2026-05-10 14:27:15", ioc: "sqlmap.py" },
-        ],
-        personProfile: {
-          name: "周杰", email: "dev.zhou@corp.com", employeeId: "E20200322",
-          department: "技术研发部", position: "开发工程师", jobTitle: "中级开发工程师", level: "P5",
-          workStatus: "on_duty", location: "上海张江园区B座8层", lastLogin: "2026-05-10 09:02:11",
-          deviceCount: 2, riskScore: 28, notes: "近期参与文件上传功能开发，有生产环境调试权限",
-        },
-        correlations: [
-          { relatedSystem: "EDR ↔ 访问日志", relationType: "causal", description: "WebShell创建时间与上传API请求时间仅差3秒，确认因果关系", strength: "confirmed" },
-        ],
-      },
-      {
-        time: "14:29:45", step: "初步判断", detail: "疑似开发人员终端失陷后被利用进行Web后门投递", type: "judge",
-        confidenceContribution: 29,
-        reasoning: "综合置信度71%：WebShell特征匹配(40%) + 攻击链完整性(31%) + 终端异常工具(29%)。开发人员终端可能已被控制并作为跳板",
-        evidence: [
-          { source: "SecMind-AI推理引擎", type: "baseline", content: "综合置信度71% = 特征匹配权重0.40 + 攻击链权重0.31 + 终端异常权重0.29", severity: "medium", timestamp: "2026-05-10 14:29:45" },
-        ],
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1190", techniqueName: "Exploit Public-Facing Application", confidence: 76 },
-      },
-    ],
-    confidence: 71,
-    aiConclusion: null,
-    disposalSuggestion: null,
-    entities: ["web-app-02", "db-server-01"],
-    involvedAssets: ["WEB-SVR", "web-app-02"],
-    involvedAccounts: ["www-data"],
-    createdAt: "2026-05-10 14:28:45",
-    updatedAt: "2026-05-10 14:29:45",
-  },
-  {
-    id: "INV-2026-0056",
-    title: "钓鱼邮件调查",
-    description: "检测到广撒网钓鱼邮件，试图收集员工凭证",
-    asset: "Email-GW",
-    status: "investigating",
-    sourceEvent: {
-      eventId: "ALT001", source: "Email", sourceSystemName: "360邮件安全网关",
-      classification: "广撒网钓鱼-凭证收集", riskLevel: "high",
-      rawInput: "FROM=it-support@corp-evil.com TO=all-staff@corp.com LINK=portal.phish.com",
-      receivedTime: "2026-05-10 14:15:30",
-    },
-    triggerType: "manual",
-    aiReasoningSteps: [
-      {
-        time: "14:15:30", step: "信号发现", detail: "安全分析师手动标记可疑钓鱼邮件，目标为全体员工凭证收集", type: "discover",
-        confidenceContribution: 30,
-        reasoning: "钓鱼邮件伪装成IT支持通知，使用域名变体欺骗技术，目标覆盖全体员工，属于大规模凭证收集攻击",
-        evidence: [
-          { source: "360邮件安全网关", type: "log", content: 'FROM="IT Support"<it-support@corp-evil.com> SUBJECT="紧急：密码即将过期请立即更新" ATTACHMENT=update_credentials.html LINK=portal.phish.com SCORE=88', severity: "high", timestamp: "2026-05-10 14:15:30", ioc: "portal.phish.com" },
-          { source: "域名情报服务", type: "threat_intel", content: "portal.phish.com 注册时间2026-05-09(昨日) · WHOIS隐私保护 · 信誉分12/100", severity: "critical", timestamp: "2026-05-10 14:15:32", ioc: "portal.phish.com" },
-          { source: "邮件内容分析", type: "behavioral", content: "HTML附件含伪造的公司SSO登录页面，表单action指向portal.phish.com/auth/collect，收集字段：用户名+密码+MFA验证码", severity: "critical", timestamp: "2026-05-10 14:15:35" },
-        ],
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1566.001", techniqueName: "Phishing", subTechnique: "Spearphishing Attachment", confidence: 91 },
-      },
-      {
-        time: "14:16:05", step: "行为关联", detail: "AI关联到3个已点击链接的用户终端存在异常进程", type: "correlate",
-        confidenceContribution: 24,
-        reasoning: "钓鱼邮件发送后50分钟内，3名员工点击了恶意链接，其终端均出现可疑进程活动",
-        evidence: [
-          { source: "360邮件安全网关", type: "log", content: "点击统计：li.chen(14:22:11), wang.security(14:28:45), ops-team-wang(14:35:02) — 共3人/总收件856人 点击率0.35%", severity: "high", timestamp: "2026-05-10 14:35:02" },
-          { source: "CrowdStrike Falcon", type: "endpoint", content: "WS-HR-08(li.chen): 异常进程 cmd.exe → powershell.exe(编码) → certutil.exe -decode 远程下载", severity: "critical", timestamp: "2026-05-10 14:23:45", ioc: "certutil.exe" },
-        ],
-        personProfile: {
-          name: "李晨", email: "li.chen@corp.com", employeeId: "E20190520",
-          department: "信息安全部", position: "安全工程师", jobTitle: "高级安全工程师", level: "P6",
-          workStatus: "on_duty", location: "北京望京SOHO T3座", lastLogin: "2026-05-10 08:45:00",
-          deviceCount: 2, riskScore: 45, notes: "作为安全人员却点击钓鱼链接，可能为测试或社会工程学针对性攻击",
-        },
-        correlations: [
-          { relatedSystem: "邮件网关 ↔ EDR", relationType: "temporal", description: "点击链接后1.5-5分钟内终端出现恶意进程，时间窗口吻合", strength: "strong" },
-        ],
-      },
-      {
-        time: "14:16:42", step: "初步判断", detail: "疑似内部人员利用钓鱼进行凭证收集攻击", type: "judge",
-        confidenceContribution: 26,
-        reasoning: "综合置信度54%：钓鱼特征明确(30%) + 受害终端异常(24%) + 攻击模式一致性(26%)。需进一步确认是否为内部人员作案或外部定向攻击",
-        evidence: [
-          { source: "SecMind-AI推理引擎", type: "baseline", content: "综合置信度54% = 钓鱼特征权重0.30 + 受害终端权重0.24 + 模式分析权重0.26", severity: "medium", timestamp: "2026-05-10 14:16:42" },
-        ],
-        mitreMapping: { tactic: "Credential Access", techniqueId: "T1110.003", techniqueName: "Brute Force", subTechnique: "Password Guessing", confidence: 62 },
-      },
-      {
-        time: "14:17:20", step: "补充取证", detail: "提取钓鱼页面截图和受害者凭据泄露风险评估", type: "correlate",
-        confidenceContribution: 20,
-        reasoning: "通过沙箱动态分析还原钓鱼页面，评估已泄露凭据的范围和严重程度",
-        evidence: [
-          { source: "沙箱动态分析", type: "behavioral", content: "钓鱼页面完美复刻公司SSO登录界面，DOM结构相似度98%，包含公司Logo和品牌色", severity: "high", timestamp: "2026-05-10 14:17:20" },
-          { source: "凭证监控", type: "identity", content: "暂未检测到公司AD域出现异常认证失败激增，推测大部分员工未输入真实凭据或已识别为钓鱼", severity: "low", timestamp: "2026-05-10 14:17:25" },
-        ],
-      },
-    ],
-    confidence: 54,
-    aiConclusion: null,
-    disposalSuggestion: null,
-    entities: ["admin-wang", "fileserver-01"],
-    involvedAssets: ["MAIL-GW-01", "fileserver-01"],
-    involvedAccounts: ["admin-wang"],
-    createdAt: "2026-05-10 14:15:30",
-    updatedAt: "2026-05-10 14:17:20",
-  },
-    {
-    id: "INV-2026-0048",
-    title: "IAM越权提权调查",
-    description: "检测到应用服务账号尝试将自身加入管理员组，存在云资源接管风险",
-    asset: "APP-SVC-01",
-    status: "pending_review",
-    sourceEvent: {
-      eventId: "ALT021", source: "IAM", sourceSystemName: "阿里云RAM + IDaaS",
-      classification: "权限提升-云资源接管", riskLevel: "high",
-      rawInput: "USER=app-service ACTION=AddUserToGroup GROUP=Administrators SRC=10.0.2.50",
-      receivedTime: "2026-05-10 13:42:18",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "13:42:18", step: "信号发现", detail: "IAM系统检测到服务账号被添加至管理员组", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "非交互式服务账号app-service被提升至云平台管理员组，该操作未经变更审批流程，违反最小权限原则",
-        evidence: [
-          { source: "阿里云RAM审计日志", type: "log", content: "ACTION=iam:AddUserToGroup USERNAME=app-service GROUP_NAME=Administrators SRC_IP=10.0.2.50 MFA=FALSE EVENT_TIME=2026-05-10 13:42:18", severity: "critical", timestamp: "2026-05-10 13:42:18", ioc: "10.0.2.50" },
-          { source: "IAM基线策略", type: "baseline", content: "策略违规：服务账号禁止加入特权组。当前违规账号数：1/0基准", severity: "critical", timestamp: "2026-05-10 13:42:18" },
-        ],
-        baselineDeviation: {
-          metric: "服务账号特权操作频率", normalValue: "0次/月(服务账号无特权操作)", actualValue: "1次(管理员组添加)",
-          deviationDegree: "extreme", timeWindow: "近90天", sampleSize: 0,
-        },
-        mitreMapping: { tactic: "Privilege Escalation", techniqueId: "T1098.001", techniqueName: "Account Manipulation", subTechnique: "Add Account to Group", confidence: 94 },
-      },
-      {
-        time: "13:42:35", step: "行为关联", detail: "关联到域控DC-01的LSASS内存读取事件", type: "correlate",
-        confidenceContribution: 27,
-        reasoning: "IAM提权操作前8分钟，源IP对应的主机对域控发起LSASS进程内存读取，符合凭证转储后利用的时间线",
-        evidence: [
-          { source: "Splunk Enterprise Security", type: "log", content: "EVENT_ID=4656 HOST=DC-01 OBJECT=LSASS.exe ACCESS=ReadMemory PROCESS=unknown.exe PID=7823 SRC=10.0.2.50 TIME=13:34:22", severity: "critical", timestamp: "2026-05-10 13:34:22", ioc: "unknown.exe" },
-          { source: "CrowdStrike Falcon", type: "endpoint", content: "10.0.2.50 → APP-SRV-03: 检测到Mimikatz特征命令行(sekurlsa::logonpasswords)进程快照残留", severity: "critical", timestamp: "2026-05-10 13:34:45", ioc: "Mimikatz" },
-        ],
-        correlations: [
-          { relatedSystem: "IAM ↔ 域控", relationType: "temporal", description: "LSASS读取(13:34)与IAM提权(13:42)间隔8分钟，符合'窃取凭证→利用凭证'攻击时序", strength: "strong" },
-        ],
-        mitreMapping: { tactic: "Credential Access", techniqueId: "T1003.001", techniqueName: "OS Credential Dumping", subTechnique: "LSASS Memory", confidence: 91 },
-      },
-      {
-        time: "13:43:10", step: "AI判断", detail: "置信度87%，判定为账号失陷后的权限提升攻击", type: "judge",
-        confidenceContribution: 38,
-        reasoning: "综合置信度87%：IAM违规操作(35%) + 凭证转储证据(27%) + 攻击链完整性(38%)。攻击者已获得云资源完全控制权",
-        evidence: [
-          { source: "SecMind-AI推理引擎", type: "baseline", content: "综合置信度87% = IAM违规权重0.35 + 凭证转储权重0.27 + 链路完整权重0.38", severity: "high", timestamp: "2026-05-10 13:43:10" },
-          { source: "阿里云资源清单", type: "identity", content: "Administrators组权限范围：全部ECS实例(47台)、全部OSS Bucket(23个)、全部RDS实例(12个)、VPC全管理权限", severity: "critical", timestamp: "2026-05-10 13:43:12" },
-        ],
-        mitreMapping: { tactic: "Impact", techniqueId: "T1486", techniqueName: "Data Encrypted for Impact", confidence: 72 },
-      },
-    ],
-    confidence: 87,
-    aiConclusion: "账号凭证被盗用后，攻击者通过IAM接口将服务账号提升至管理员组，已具备云资源完全控制权",
-    disposalSuggestion: "立即撤销管理员权限 + 重置服务账号凭证 + 审计所有IAM变更日志",
-    entities: ["DC-01", "lsass.exe"],
-    involvedAssets: ["ADM-SRV01", "DC-PRIMARY", "AWS-MGMT"],
-    involvedAccounts: ["app-service", "admin.svc"],
-    createdAt: "2026-05-10 13:42:18",
-    updatedAt: "2026-05-10 13:43:15",
-  },
-    {
-    id: "INV-2026-0049",
-    title: "C2异常通信调查",
-    description: "内网主机向已知恶意C2地址发起加密流量，疑似数据外泄",
-    asset: "HOST-10.0.2.100",
-    status: "pending_review",
-    sourceEvent: {
-      eventId: "ALT005", source: "Firewall", sourceSystemName: "华为USG6550E",
-      classification: "C2通信-数据暂存", riskLevel: "critical",
-      rawInput: "SRC=10.0.2.100 DST=185.220.101.34 PORT=443 PROTO=TCP BYTES=2.3MB",
-      receivedTime: "2026-05-10 12:55:33",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "12:55:33", step: "信号发现", detail: "防火墙检测到内网主机向已知C2 IP的高频加密通信", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "内网主机host-srv-03向已知APT-C2基础设施IP发起高频HTTPS加密通信，目标IP在多份威胁情报报告中标记为Cobalt Strike团队服务器",
-        evidence: [
-          { source: "华为USG6550E防火墙", type: "network", content: "SRC=10.0.2.100 DST=185.220.101.34:443 TLS1.3 JA3=abc123 BYTES_OUT=2.3MB SESSIONS=47 DURATION=3600s", severity: "critical", timestamp: "2026-05-10 12:55:33", ioc: "185.220.101.34" },
-          { source: "奇安信威胁情报中心", type: "threat_intel", content: "185.220.101.34 → APT29(Cozy Bear) C2基础设施 · IOC置信度98%", severity: "critical", timestamp: "2026-05-10 12:55:35", ioc: "185.220.101.34" },
-        ],
-        baselineDeviation: {
-          metric: "单目标外站HTTPS流量", normalValue: "<500KB/天(正常业务)", actualValue: "2.3MB/3.6h(持续增长)",
-          deviationDegree: "extreme", timeWindow: "近7天", sampleSize: 168,
-        },
-        mitreMapping: { tactic: "Command & Control", techniqueId: "T1071.001", techniqueName: "Application Layer Protocol", subTechnique: "Web Protocols", confidence: 96 },
-      },
-      {
-        time: "12:56:01", step: "行为关联", detail: "DNS日志显示同一主机存在DGA域名查询模式", type: "correlate",
-        confidenceContribution: 30,
-        reasoning: "host-srv-03在C2通信的同时生成大量算法生成的域名(DGA)查询，这是典型的DNS隧道+C2双通道隐蔽通信模式",
-        evidence: [
-          { source: "奇安信DNSGuard", type: "log", content: "CLIENT=10.0.2.100 QUERY_COUNT=234/h ALGO_PATTERN=DGA_MERLINE DOMAIN_TLD=.xyz/.top/.click NXDOMAIN_RATE=94%", severity: "critical", timestamp: "2026-05-10 12:56:01" },
-        ],
-        personProfile: {
-          name: "运维备份账号", email: "svc-backup@corp.com", employeeId: "SVC-001",
-          department: "运维部", position: "服务账号", jobTitle: "自动化备份服务", level: "SYSTEM",
-          workStatus: "on_duty", location: "上海数据中心IDC-A机柜U12", lastLogin: "2026-05-10 00:00:05",
-          deviceCount: 1, riskScore: 68, notes: "运行定时备份任务，拥有文件服务器和数据库的读写权限",
-        },
-        correlations: [
-          { relatedSystem: "防火墙 ↔ DNS", relationType: "pattern", description: "HTTPS C2通信与DGA DNS查询同时发生且频率同步，构成双通道隐蔽通信", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Command & Control", techniqueId: "T1008.002", techniqueName: "Fallback Channels", subTechnique: "DNS", confidence: 89 },
-      },
-      {
-        time: "12:56:48", step: "AI判断", detail: "置信度94%，确认为APT组织的C2数据外泄通道", type: "judge",
-        confidenceContribution: 35,
-        reasoning: "综合置信度94%：C2通信特征(35%) + DNS隧道证据(30%) + 数据敏感性(35%)。受控主机已被APT组织建立持久化后门",
-        evidence: [
-          { source: "数据防泄漏DLP", type: "behavioral", content: "host-srv-03 近3h外传文件类型分布：.xlsx(45%)、.docx(30%)、.pdf(15%)，匹配财务报表+合同文档特征", severity: "critical", timestamp: "2026-05-10 12:57:00" },
-        ],
-        mitreMapping: { tactic: "Exfiltration", techniqueId: "T1048.002", techniqueName: "Exfiltration Over Alternative Protocol", subTechnique: "Exfiltration over C2 Channel", confidence: 92 },
-      },
-    ],
-    confidence: 94,
-    aiConclusion: "受控主机host-srv-03已被APT组织植入持久化后门，正在通过HTTPS加密信道向C2服务器外传敏感数据",
-    disposalSuggestion: "立即隔离主机 + 阻断C2 IP段流量 + 提取内存镜像取证 + 通知法务团队",
-    entities: ["host-srv-03", "evil-domain.xyz"],
-    involvedAssets: ["host-srv-03", "PROXY-GW", "FIN-DB-01"],
-    involvedAccounts: ["svc-backup"],
-    createdAt: "2026-05-10 12:55:33",
-    updatedAt: "2026-05-10 12:57:00",
-  },
-    {
-    id: "INV-2026-0050",
-    title: "BEC定向钓鱼调查",
-    description: "针对CFO的商务邮件钓鱼攻击，携带RedLine窃密木马",
-    asset: "MAIL-GW",
-    status: "pending_review",
-    sourceEvent: {
-      eventId: "ALT002", source: "Email", sourceSystemName: "Coremail论客",
-      classification: "定向钓鱼攻击-凭证窃取", riskLevel: "high",
-      rawInput: "FROM=shipping@dhl-phish.com TO=cfo@corp.com ATTACH=invoice.exe SCORE=93",
-      receivedTime: "2026-05-10 11:20:15",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "11:20:15", step: "信号发现", detail: "邮件网关拦截定向钓鱼邮件，目标为CFO财务高管", type: "discover",
-        confidenceContribution: 32,
-        reasoning: "针对CFO的BEC(商务邮件入侵)定向钓鱼，使用DHL物流主题作为诱饵，附件为经过多层加壳的可执行文件",
-        evidence: [
-          { source: "Coremail论客", type: "log", content: 'FROM="DHL Express"<shipping@dhl-phish.com> ATTACH=invoice.exe(2.1MB) SPAM_SCORE=93/100', severity: "high", timestamp: "2026-05-10 11:20:15", ioc: "invoice.exe" },
-          { source: "域名情报", type: "threat_intel", content: "dhl-phish.com 注册2026-05-08 · SPF记录缺失 · DKIM未配置 · 与已知BEC钓鱼团伙共享NS基础设施", severity: "critical", timestamp: "2026-05-10 11:20:18", ioc: "dhl-phish.com" },
-          { source: "静态文件分析", type: "endpoint", content: "invoice.exe → UPX壳(3层)+VMProtect → 最终payload: RedLine Stealer v2.3 · 数字签名伪造(过期证书)", severity: "critical", timestamp: "2026-05-10 11:20:25", ioc: "RedLine Stealer" },
-        ],
-        personProfile: {
-          name: "王建国", email: "cfo.wang@corp.com", employeeId: "E20080101",
-          department: "财务管理部", position: "首席财务官", jobTitle: "CFO", level: "VP",
-          workStatus: "on_duty", location: "上海总部大厦28层", lastLogin: "2026-05-10 08:30:00",
-          deviceCount: 3, riskScore: 55, notes: "公司核心高管，拥有ERP系统和银行接口的审批权限，BEC高价值目标",
-        },
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1566.001", techniqueName: "Phasing", subTechnique: "Spearphishing Attachment", confidence: 93 },
-      },
-      {
-        time: "11:20:40", step: "行为关联", detail: "沙箱分析确认附件invoice.exe为RedLine窃密木马", type: "correlate",
-        confidenceContribution: 28,
-        reasoning: "沙箱动态执行确认payload为RedLine Stealer，具备浏览器凭证窃取、键盘记录、剪贴板监控等全面信息窃取能力",
-        evidence: [
-          { source: "沙箱动态分析报告", type: "behavioral", content: "RedLine Stealer v2.3 行为特征：(1)Chrome/Firefox/Edge cookie+密码dump (2)键盘记录 (3)剪贴板监控 (4)桌面截图(每5min) (5)C2:185.220.101.34:443 AES-256回传", severity: "critical", timestamp: "2026-05-10 11:21:00", ioc: "185.220.101.34" },
-        ],
-        baselineDeviation: {
-          metric: "高管定向钓鱼频率", normalValue: "平均0-1次/月", actualValue: "本月第3次针对CFO级别",
-          deviationDegree: "severe", timeWindow: "近6个月", sampleSize: 12,
-        },
-        mitreMapping: { tactic: "Credential Access", techniqueId: "T1555.003", techniqueName: "Credentials from Web Browsers", confidence: 87 },
-      },
-      {
-        time: "11:21:15", step: "AI判断", detail: "置信度85%，判定为BEC商业诈骗的前置钓鱼阶段", type: "judge",
-        confidenceContribution: 25,
-        reasoning: "综合置信度85%：定向钓鱼特征(32%) + payload确认(28%) + 目标价值(25%)。若CFO不慎执行将直接威胁财务系统安全",
-        evidence: [
-          { source: "权限影响评估", type: "identity", content: "cfo.wang权限范围：ERP-SAP审批(≥500万)、银行U盾授权、工资系统查看、合同印章管理", severity: "critical", timestamp: "2026-05-10 11:21:20" },
-        ],
-        mitreMapping: { tactic: "Impact", techniqueId: "T1498", techniqueName: "Network Denial of Service", confidence: 58 },
-      },
-    ],
-    confidence: 85,
-    aiConclusion: "针对财务高管的BEC诈骗钓鱼攻击，附件经沙箱确认为RedLine信息窃取木马，若执行将导致财务系统凭证泄露",
-    disposalSuggestion: "隔离收件人终端 + 重置CFO及关联账号密码 + 追踪钓鱼域名WHOIS信息",
-    entities: ["finance@corp.com", "WIN-DESK-15"],
-    involvedAssets: ["WS-FINANCE-01", "EXCH-01", "O365-TENANT"],
-    involvedAccounts: ["cfo.wang", "finance-team"],
-    createdAt: "2026-05-10 11:20:15",
-    updatedAt: "2026-05-10 11:21:20",
-  },
-    {
-    id: "INV-2026-0045",
-    title: "DNS隧道检测调查",
-    description: "内网DNS查询异常，存在DNS隧道数据外泄特征",
-    asset: "DNS-SRV-01",
-    status: "investigating",
-    sourceEvent: {
-      eventId: "ALT009", source: "DNS", sourceSystemName: "奇安信DNSGuard",
-      classification: "DNS隧道-C2通信", riskLevel: "critical",
-      rawInput: "QUERY=cmd6.malware-c2.xyz TYPE=TXT CLIENT=10.0.2.100 FREQ=12/min",
-      receivedTime: "2026-05-10 09:30:00",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "09:30:00", step: "信号发现", detail: "DNSGuard检测到高频TXT查询，匹配DNS隧道特征", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "DEV-WKST-07向cmd6子域发起高频DNS TXT记录查询，查询模式匹配Iodine/Dnscat2 DNS隧道工具特征",
-        evidence: [
-          { source: "奇安信DNSGuard", type: "log", content: "CLIENT=10.0.2.100 QUERY_PATTERN=*.cmd6.malware-c2.xyz TYPE=TXT FREQ=12/min TUNNEL_BANDWIDTH_EST=4.2KB/s", severity: "critical", timestamp: "2026-05-10 09:30:00", ioc: "malware-c2.xyz" },
-          { source: "威胁情报", type: "threat_intel", content: "malware-c2.xyz → DGA家族Merline · 关联样本SHA256:a3f9... · 首次活跃2026-05-08", severity: "critical", timestamp: "2026-05-10 09:30:05", ioc: "malware-c2.xyz" },
-        ],
-        personProfile: {
-          name: "周杰", email: "dev.zhou@corp.com", employeeId: "E20200322",
-          department: "技术研发部", position: "开发工程师", jobTitle: "中级开发工程师", level: "P5",
-          workStatus: "on_duty", location: "上海张江园区B座8层", lastLogin: "2026-05-10 09:02:11",
-          deviceCount: 2, riskScore: 38, notes: "负责前端开发工作，终端安装有Node.js/Python/Go等多语言开发环境",
-        },
-        baselineDeviation: {
-          metric: "DNS TXT查询频率", normalValue: "<5次/天/TXT类型", actualValue: "720次/天(TXT类型,12/min)",
-          deviationDegree: "extreme", timeWindow: "近7天", sampleSize: 1400,
-        },
-        mitreMapping: { tactic: "Command & Control", techniqueId: "T1008.002", techniqueName: "Fallback Channels", subTechnique: "DNS", confidence: 91 },
-      },
-      {
-        time: "09:30:25", step: "行为关联", detail: "关联到同源IP的异常进程创建和注册表修改", type: "correlate",
-        confidenceContribution: 30,
-        reasoning: "DNS隧道激活的同时，终端出现计划任务创建和Run键注册表写入，表明攻击者正在建立持久化机制",
-        evidence: [
-          { source: "安恒信息明御EDR", type: "endpoint", content: "REG_WRITE: HKLM\\Run VALUE=dnsupdater DATA=C:\\ProgramData\\dnsupd.exe PID=3892", severity: "critical", timestamp: "2026-05-10 09:30:25" },
-          { source: "Sysmon日志", type: "log", content: "ProcessCreate: dnsupd.exe Parent=svchost.exe CMDLINE=/quiet /background HASH=sha256:e4f5a6b7...", severity: "critical", timestamp: "2026-05-10 09:30:22", ioc: "dnsupd.exe" },
-        ],
-        correlations: [
-          { relatedSystem: "DNS ↔ EDR", relationType: "temporal", description: "DNS隧道查询(09:30:00)与恶意进程创建(09:30:22)间隔22秒，属同一攻击阶段", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Persistence", techniqueId: "T1053.005", techniqueName: "Scheduled Task/Job", subTechnique: "Scheduled Task", confidence: 85 },
-      },
-      {
-        time: "09:31:00", step: "AI判断", detail: "置信度91%，判定为DNS隧道C2通信，建议立即阻断", type: "judge",
-        confidenceContribution: 35,
-        reasoning: "综合置信度91%：DNS隧道特征(35%) + 持久化证据(30%) + 攻击成熟度(35%)。攻击者已完成初始入侵并建立隐蔽C2通道",
-        evidence: [
-          { source: "网络侧取证", type: "network", content: "估算DNS隧道已运行约48h(自2026-05-08 09:00起)，累计外传数据约720KB，以base64编码文本为主", severity: "high", timestamp: "2026-05-10 09:31:05" },
-        ],
-        mitreMapping: { tactic: "Exfiltration", techniqueId: "T1048.003", techniqueName: "Exfiltration Over Unencrypted Non-C2 Protocol", subTechnique: "Exfiltration over DNS", confidence: 83 },
-      },
-    ],
-    confidence: 91,
-    aiConclusion: "攻击者利用DNS隧道建立隐蔽C2通道，绕过传统防火墙检测，正在外传数据库敏感记录",
-    disposalSuggestion: "封禁恶意域名 + 部署DNS sinkhole + 隔离受控主机 + 全面审计出站DNS流量",
-    reviewer: "li.chen",
-    reviewedAt: "2026-05-10 09:32:00",
-    reviewAction: "approve",
-    reviewComment: "同意AI判断，立即执行自动阻断",
-    disposalMethod: "ai_auto",
-    disposalExecutor: "SecMind-AI-Engine",
-    disposalStartedAt: "2026-05-10 09:33:00",
-    disposalActions: [
-      { time: "09:33:05", action: "DNS Sinkhole部署", result: "成功 - 已劫持malware-c2.xyz解析" },
-      { time: "09:33:20", action: "防火墙规则下发", result: "成功 - 已阻断53端口异常流量" },
-      { time: "09:34:10", action: "主机隔离指令", result: "执行中 - EDR响应中" },
-    ],
-    disposalCompletedAt: null,
-    entities: ["DEV-WKST-07", "cmd6.malware-c2.xyz"],
-    involvedAssets: ["DEV-WKST-07", "PROXY-GW", "DB-PRIMARY"],
-    involvedAccounts: ["dev.zhou"],
-    feedback: { rating: null, comment: null, feedbackType: null, timestamp: null },
-    createdAt: "2026-05-10 09:30:00",
-    updatedAt: "2026-05-10 09:34:15",
-  },
-    {
-    id: "INV-2026-0044",
-    title: "多设备异常登录",
-    description: "同一账号短时间内在多地多设备同时在线，行为异常",
-    asset: "EAP-SYS",
-    status: "disposing",
-    sourceEvent: {
-      eventId: "ALT019", source: "VPN", sourceSystemName: "奇安信虚拟VPN",
-      classification: "多设备异常在线", riskLevel: "medium",
-      rawInput: "USER=linfeng SESSIONS=3 DEVICES=Beijing,Shanghai,Shenzhen",
-      receivedTime: "2026-05-10 08:15:00",
-    },
-    triggerType: "manual",
-    aiReasoningSteps: [
-      {
-        time: "08:15:00", step: "信号发现", detail: "安全分析师报告用户linfeng同时从3个地理位置登录VPN", type: "discover",
-        confidenceContribution: 30,
-        reasoning: "linfeng账号在同一时刻保持3个活跃VPN会话，分别来自北京、上海、深圳三地IP，触发并发会话异常规则",
-        evidence: [
-          { source: "奇安信虚拟VPN", type: "log", content: "USER=linfeng ACTIVE_SESSIONS=3 [SESSION-1]Beijing电信 08:10:22 [SESSION-2]Shanghai联通 08:12:45 [SESSION-3]深圳移动 08:14:33", severity: "high", timestamp: "2026-05-10 08:15:00" },
-          { source: "VPN策略基线", type: "baseline", content: "策略限制：单账号最大并发会话数=1，当前违规超限3倍", severity: "high", timestamp: "2026-05-10 08:15:02" },
-        ],
-        personProfile: {
-          name: "林峰", email: "linfeng@corp.com", employeeId: "E20170618",
-          department: "销售部", position: "区域销售经理", jobTitle: "高级销售经理", level: "P6",
-          workStatus: "business_trip", location: "出差中(华东区)", lastLogin: "2026-05-09 22:15:00",
-          deviceCount: 3, riskScore: 35, notes: "频繁出差，常驻华东区域，本月已申请4次出差(上海×2 杭州 苏州)",
-        },
-        baselineDeviation: {
-          metric: "VPN并发会话数", normalValue: "≤1个(策略限制)", actualValue: "3个(北京+上海+深圳)",
-          deviationDegree: "extreme", timeWindow: "近90天", sampleSize: 89,
-        },
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1078.004", techniqueName: "Valid Accounts", subTechnique: "Cloud Accounts", confidence: 72 },
-      },
-      {
-        time: "08:15:30", step: "行为关联", detail: "AI关联到该账号在非工作时间的大文件下载行为", type: "correlate",
-        confidenceContribution: 20,
-        reasoning: "其中深圳会话在凌晨时段产生了大文件下载行为，与正常工作时间模式不符",
-        evidence: [
-          { source: "文件服务器审计日志", type: "log", content: "USER=linfeng DOWNLOAD PATH=/sales/2026Q2/ TARGET=深圳会话IP FILES=47 TOTAL_SIZE=2.8GB TIME=02:03-03:52", severity: "high", timestamp: "2026-05-10 04:00:00" },
-        ],
-        baselineDeviation: {
-          metric: "非工作时间文件下载量", normalValue: "<50MB/非工作时段", actualValue: "2.8GB/凌晨2-4点",
-          deviationDegree: "extreme", timeWindow: "近30天", sampleSize: 15,
-        },
-        correlations: [
-          { relatedSystem: "VPN ↔ 文件服务器", relationType: "temporal", description: "深圳VPN会话与大文件下载时间完全重叠，确认同一会话所为", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Collection", techniqueId: "T1005", techniqueName: "Data from Local System", confidence: 65 },
-      },
-      {
-        time: "08:16:10", step: "AI判断", detail: "置信度65%，疑似账号共享或凭证泄露导致的数据外泄风险", type: "judge",
-        confidenceContribution: 35,
-        reasoning: "综合置信度65%：并发异常(30%) + 非工作时间下载(20%) + 数据敏感性(35%)。考虑到用户正在出差，需人工核实",
-        evidence: [
-          { source: "HR系统", type: "identity", content: "林峰当前出差申请：上海(05/09-05/11) 已批准。深圳无出差记录", severity: "info", timestamp: "2026-05-10 08:16:15" },
-        ],
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1078.001", techniqueName: "Valid Accounts", subTechnique: "Default Accounts", confidence: 58 },
-      },
-    ],
-    confidence: 65,
-    aiConclusion: "用户linfeng的VPN账号可能已被泄露或共享使用，存在数据外泄风险，需人工介入核实身份",
-    disposalSuggestion: "强制下线所有会话 + 要求MFA重新认证 + 联系用户本人确认 + 审计近期访问记录",
-    reviewer: "wang.security",
-    reviewedAt: "2026-05-10 08:20:00",
-    reviewAction: "modify",
-    reviewComment: "置信度偏低，先走人工核实流程，暂不自动处置",
-    disposalMethod: "manual",
-    disposalExecutor: "ops-team-wang",
-    disposalStartedAt: "2026-05-10 08:25:00",
-    disposalActions: [
-      { time: "08:25:10", action: "强制下线VPN会话", result: "成功 - 3个会话已终止" },
-      { time: "08:26:00", action: "联系用户本人", result: "等待回复 - 已发送验证短信" },
-      { time: "08:30:00", action: "审计访问日志", result: "进行中 - 已导出近7天日志" },
-    ],
-    disposalCompletedAt: null,
-    entities: ["vpn-user-liuchen", "103.45.67.89"],
-    involvedAssets: ["VPN-GW-01", "FILE-SRV-02"],
-    involvedAccounts: ["linfeng"],
-    feedback: { rating: null, comment: null, feedbackType: null, timestamp: null },
-    createdAt: "2026-05-10 08:15:00",
-    updatedAt: "2026-05-10 08:30:05",
-  },
-    {
-    id: "INV-2026-0043",
-    title: "勒索软件响应",
-    description: "检测到LockBit勒索软件攻击特征，涉及vssadmin shadow copy删除",
-    asset: "FILE-SVR-02",
-    status: "closed",
-    sourceEvent: {
-      eventId: "ALT011", source: "SIEM", sourceSystemName: "Splunk Enterprise Security",
-      classification: "勒索软件-加密行为检测", riskLevel: "critical",
-      rawInput: "HOST=FILE-SRV-01 PROCESS=vssadmin.exe ARGS='delete shadows /all /quiet'",
-      receivedTime: "2026-05-10 07:00:00",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "07:00:00", step: "信号发现", detail: "SIEM检测到vssadmin删除卷影副本命令，典型勒索前兆", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "FILE-SRV-01上vssadmin.exe以system权限执行'delete shadows /all /quiet'，这是LockBit/BlackCat等勒索软件在加密前的标准反恢复步骤",
-        evidence: [
-          { source: "Splunk Enterprise Security", type: "log", content: "ProcessCreate: vssadmin.exe CMD='delete shadows /all /quiet' PID=8912 PPID=svchost.exe USER=NT AUTHORITY\\SYSTEM FILE-SRV-01", severity: "critical", timestamp: "2026-05-10 07:00:00", ioc: "vssadmin.exe" },
-          { source: "勒索软件特征库", type: "threat_intel", content: "vssadmin delete shadows → LockBit 3.0 BlackCat ALPHV Conti 全部采用此技术消除卷影副本阻止系统恢复，MITRE T1490", severity: "critical", timestamp: "2026-05-10 07:00:02" },
-        ],
-        personProfile: {
-          name: "运维备份账号", email: "svc-backup@corp.com", employeeId: "SVC-001",
-          department: "运维部", position: "服务账号", jobTitle: "Windows备份服务", level: "SYSTEM",
-          workStatus: "on_duty", location: "上海数据中心IDC-B机柜U05", lastLogin: "2026-05-10 00:00:00",
-          deviceCount: 1, riskScore: 72, notes: "运行Windows Server Backup任务，拥有域内文件服务器管理员权限",
-        },
-        baselineDeviation: {
-          metric: "vssadmin危险命令调用", normalValue: "0次/90天(delete shadows)", actualValue: "1次(07:00:00执行)",
-          deviationDegree: "extreme", timeWindow: "近90天", sampleSize: 8,
-        },
-        mitreMapping: { tactic: "Impact", techniqueId: "T1490", techniqueName: "Inhibit System Recovery", confidence: 96 },
-      },
-      {
-        time: "07:00:20", step: "行为关联", detail: "关联到RDP暴力破解成功记录和SMB横向扫描", type: "correlate",
-        confidenceContribution: 30,
-        reasoning: "勒索前兆出现前2小时，FILE-SRV-01遭受RDP暴力破解并成功认证，随后向内网发起SMB横向扫描",
-        evidence: [
-          { source: "Windows安全日志", type: "log", content: "EID=4625 RDP暴力破解 FILE-SRV-01 SRC=10.0.5.200 ATTEMPTS=1427 SUCCESS_AT=05:12:33 USERNAME=admin.local AUTH=NTLMv2", severity: "critical", timestamp: "2026-05-10 05:12:33", ioc: "10.0.5.200" },
-          { source: "网络流量分析", type: "network", content: "FILE-SRV-01 → 10.0.0.0/24 SMB扫描 TCP/445 SYN_SENT=47 hosts REACHABLE=23 含DC-01/DB-SRV-01", severity: "critical", timestamp: "2026-05-10 06:15:00" },
-        ],
-        correlations: [
-          { relatedSystem: "RDP ↔ 勒索前兆", relationType: "temporal", description: "RDP突破(05:12) → 横向扫描(06:15) → 删除卷影(07:00)，完整攻击链时间线", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Lateral Movement", techniqueId: "T1021.001", techniqueName: "Remote Services", subTechnique: "Remote Desktop Protocol", confidence: 89 },
-      },
-      {
-        time: "07:01:00", step: "AI判断", detail: "置信度96%，高度确认为LockBit勒索软件攻击的执行阶段", type: "judge",
-        confidenceContribution: 35,
-        reasoning: "综合置信度96%：勒索前兆(35%) + 入侵证据(30%) + 横向移动(35%)。攻击者已进入执行阶段，即将开始文件加密",
-        evidence: [
-          { source: "EDR实时监控", type: "endpoint", content: "FILE-SRV-01 新进程队列：robocopy.exe(枚举磁盘) → wmic.exe(查询进程) → wevtutil.exe(清除日志) — LockBit 3.0典型执行序列", severity: "critical", timestamp: "2026-05-10 07:01:15" },
-        ],
-        mitreMapping: { tactic: "Execution", techniqueId: "T1047", techniqueName: "Windows Management Instrumentation", confidence: 92 },
-      },
-    ],
-    confidence: 96,
-    aiConclusion: "LockBit勒索软件已在文件服务器进入执行阶段，攻击者已完成横向移动并开始清除备份以阻止恢复",
-    disposalSuggestion: "紧急断网隔离 + 快照保存虚拟机 + 启动DR应急预案 + 通知CISO和法务",
-    reviewer: "zhang.cto",
-    reviewedAt: "2026-05-10 07:02:00",
-    reviewAction: "approve",
-    reviewComment: "启动最高级别应急响应",
-    disposalMethod: "ai_auto",
-    disposalExecutor: "SecMind-AI-Engine + SOAR-Playbook-Lockbit",
-    disposalStartedAt: "2026-05-10 07:03:00",
-    disposalActions: [
-      { time: "07:03:05", action: "网络隔离（NAC）", result: "成功 - FILE-SRV-01已离线" },
-      { time: "07:03:15", action: "虚拟机快照", result: "成功 - 内存+磁盘快照已保存" },
-      { time: "07:04:00", action: "域控防护加固", result: "成功 - 已禁用受损账号Kerberos预认证" },
-      { time: "07:05:30", action: "威胁情报同步", result: "成功 - IOCs已推送至全部端点" },
-      { time: "07:06:00", action: "CISO通报", result: "成功 - 已发送紧急通知" },
-    ],
-    disposalCompletedAt: null,
-    entities: ["FILE-SRV-01", "10.0.4.0/24"],
-    involvedAssets: ["FILE-SVR-01", "DC-PRIMARY", "BACKUP-SRV"],
-    involvedAccounts: ["svc-backup", "admin.local"],
-    feedback: { rating: null, comment: null, feedbackType: null, timestamp: null },
-    createdAt: "2026-05-10 07:00:00",
-    updatedAt: "2026-05-10 07:06:05",
-  },
-    {
-    id: "INV-2026-0040",
-    title: "无文件攻击检测",
-    description: "USB设备+PowerShell无文件攻击链，检测到内存注入行为",
-    asset: "WS-03",
-    status: "closed",
-    sourceEvent: {
-      eventId: "ALT015", source: "EDR", sourceSystemName: "CrowdStrike Falcon",
-      classification: "无文件攻击-PowerShell注入", riskLevel: "high",
-      rawInput: "PROCESS=powershell.exe ARGS=-enc JABjACA... HOST=WS-HR-08",
-      receivedTime: "2026-05-09 16:00:00",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "16:00:00", step: "信号发现", detail: "Falcon检测到PowerShell编码注入攻击", type: "discover",
-        confidenceContribution: 32,
-        reasoning: "HR部门终端WS-HR-08检测到PowerShell -enc Base64编码命令执行，解码后为反射式DLL注入代码",
-        evidence: [
-          { source: "CrowdStrike Falcon", type: "endpoint", content: "PROCESS=powershell.exe ARGS=-enc JABjACA... PARENT=explorer.exe USER=hr.chen DETECTION=PS_Injection_ReflectiveDLL", severity: "critical", timestamp: "2026-05-09 16:00:00", ioc: "powershell.exe" },
-          { source: "解码分析", type: "baseline", content: "Base64解码结果：PowerShell反射加载.NET Assembly → VirtualAlloc+CreateThread → Shellcode执行 → Cobalt Strike Beacon Stager (x64)", severity: "critical", timestamp: "2026-05-09 16:00:15", ioc: "Cobalt Strike" },
-        ],
-        personProfile: {
-          name: "陈丽华", email: "hr.chen@corp.com", employeeId: "E20160315",
-          department: "人力资源部", position: "HR专员", jobTitle: "人事专员", level: "P4",
-          workStatus: "on_duty", location: "北京望京SOHO T2座", lastLogin: "2026-05-09 08:55:00",
-          deviceCount: 1, riskScore: 22, notes: "普通HR员工，无技术背景，非攻击者目标画像",
-        },
-        mitreMapping: { tactic: "Execution", techniqueId: "T1059.001", techniqueName: "Command and Scripting Interpreter", subTechnique: "PowerShell", confidence: 90 },
-      },
-      {
-        time: "16:00:30", step: "行为关联", detail: "关联到USB设备插入时间线和键盘记录器进程", type: "correlate",
-        confidenceContribution: 28,
-        reasoning: "PowerShell注入前3分钟，终端插入未知USB设备；注入后检测到键盘钩子进程，符合USB-HID攻击+无文件载荷投递模式",
-        evidence: [
-          { source: "Windows设备管理日志", type: "log", content: "EID=6416 USB_DEVICE_INSERT VID=0E0F PID=0003 CLASS=HID DESCRIPTION='USB Input Device' → 未登记USB白名单", severity: "high", timestamp: "2026-05-09 15:57:22" },
-          { source: "CrowdStrike Falcon", type: "endpoint", content: "DETECT=Keylogger_Hook SET_WINDOWS_HOOK_EX target=notepad.exe/chrome.exe/outlook.exe KEYLOG_BUFFER=4.2KB", severity: "critical", timestamp: "2026-05-09 16:02:15", ioc: "Keylogger" },
-        ],
-        correlations: [
-          { relatedSystem: "USB ↔ PowerShell", relationType: "temporal", description: "USB插入(15:57) → PowerShell注入(16:00) → 键盘记录器(16:02)，攻击链完整", strength: "confirmed" },
-        ],
-        baselineDeviation: {
-          metric: "USB非白名单设备插入", normalValue: "0次/月(策略拦截)", actualValue: "1次(策略被绕过)",
-          deviationDegree: "extreme", timeWindow: "近90天", sampleSize: 0,
-        },
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1091", techniqueName: "Replication Through Removable Media", confidence: 84 },
-      },
-      {
-        time: "16:01:15", step: "AI判断", detail: "置信度83%，判定为USB投放+无文件攻击链", type: "judge",
-        confidenceContribution: 40,
-        reasoning: "综合置信度83%：PowerShell注入(32%) + USB攻击向量(28%) + 键盘记录(23%)。攻击者通过物理接触投放USB HID设备加载无文件恶意代码",
-        evidence: [
-          { source: "物理访问日志", type: "identity", content: "WS-HR-08位于北京望京开放办公区，无门禁管控(刷卡仅限机房/会议室)，访客可自由进入，物理安全风险较高", severity: "medium", timestamp: "2026-05-09 16:01:20" },
-        ],
-        mitreMapping: { tactic: "Persistence", techniqueId: "T1547.009", techniqueName: "Shortcut Modification", confidence: 71 },
-      },
-    ],
-    confidence: 83,
-    aiConclusion: "HR部门终端遭受USB投放式无文件攻击，攻击者通过PowerShell注入加载内存驻留型恶意代码",
-    disposalSuggestion: "隔离终端 + USB策略收紧 + 全盘杀毒 + 审查物理访问日志",
-    reviewer: "li.chen",
-    reviewedAt: "2026-05-09 16:05:00",
-    reviewAction: "approve",
-    reviewComment: "同意处置方案",
-    disposalMethod: "ai_auto",
-    disposalExecutor: "SecMind-AI-Engine",
-    disposalStartedAt: "2026-05-09 16:06:00",
-    disposalActions: [
-      { time: "16:06:10", action: "EDR隔离", result: "成功 - WS-HR-08已隔离" },
-      { time: "16:07:00", action: "内存取证", result: "成功 - 提取到Cobalt Strike Beacon配置(C2:185.220.101.34:443 Sleep:45000ms)" },
-      { time: "16:10:00", action: "全盘扫描", result: "成功 - 清除3个持久化机制(注册表Run键+计划任务+WMI Event Consumer)" },
-      { time: "16:15:00", action: "恢复上线", result: "成功 - 终端已恢复正常" },
-    ],
-    disposalCompletedAt: "2026-05-09 16:15:30",
-    closedAt: "2026-05-09 16:20:00",
-    closeReason: "威胁已彻底清除，终端恢复正常运行",
-    entities: ["WS-HR-08", "hr.chen"],
-    involvedAssets: ["WS-HR-08"],
-    involvedAccounts: ["hr.chen"],
-    feedback: { rating: "thumbs_up", comment: "AI判断准确，处置流程高效，从发现到清除仅15分钟", feedbackType: "judgment_correct", timestamp: "2026-05-09 16:25:00" },
-    createdAt: "2026-05-09 16:00:00",
-    updatedAt: "2026-05-09 16:25:00",
-  },
-    {
-    id: "INV-2026-0039",
-    title: "云资源越权访问",
-    description: "GitLab泄露的AK/SK被用于创建云资源，涉及IAM越权",
-    asset: "CONSOLE-API",
-    status: "closed",
-    sourceEvent: {
-      eventId: "ALT012", source: "CloudTrail", sourceSystemName: "AWS CloudTrail + GuardDuty",
-      classification: "云资源未授权访问-IAM越权", riskLevel: "critical",
-      rawInput: "ACTION=AssumeRole ROLE=cross-account-admin SRC_IP=203.0.113.50 USER=anonymous",
-      receivedTime: "2026-05-10 10:00:00",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "10:00:00", step: "信号发现", detail: "GuardDuty检测到来自未知IP的跨账户角色 AssumeRole 调用", type: "discover",
-        confidenceContribution: 35,
-        reasoning: "未知IP 203.0.113.50 使用泄露的AK/SK调用AssumeRole获取跨账户管理员角色cross-account-admin，该角色拥有生产环境完全控制权",
-        evidence: [
-          { source: "AWS CloudTrail", type: "log", content: "eventName=AssumeRole userIdentity Arn=arn:aws:sts::acct-prod:assumed-role/cross-account-admin/session-hacker sourceIPAddress=203.0.113.50", severity: "critical", timestamp: "2026-05-10 10:00:00", ioc: "203.0.113.50" },
-          { source: "GuardDuty Finding", type: "threat_intel", content: "FindingSeverity=HIGH Confidence=95 IP_Reputation=Threat IP(俄罗斯莫斯科) GeoDistance=12000km AbuseIPDB Score:98/100", severity: "critical", timestamp: "2026-05-10 10:00:05", ioc: "203.0.113.50" },
-          { source: "IP情报", type: "threat_intel", content: "203.0.113.50 → ISP:RosTelecom(RU) · Tor出口节点 · 关联APT28基础设施", severity: "critical", timestamp: "2026-05-10 10:00:08", ioc: "203.0.113.50" },
-        ],
-        baselineDeviation: {
-          metric: "跨账户 AssumeRole 调用来源IP", normalValue: "仅允许 VPC端点 + 公司办公网段(3个CIDR)", actualValue: "俄罗斯VPS IP(不在白名单)",
-          deviationDegree: "extreme", timeWindow: "近180天", sampleSize: 1247,
-        },
-        mitreMapping: { tactic: "Initial Access", techniqueId: "T1078.004", techniqueName: "Valid Accounts", subTechnique: "Cloud Accounts", confidence: 95 },
-      },
-      {
-        time: "10:00:25", step: "行为关联", detail: "关联到后续的S3 bucket枚举和 DynamoDB 数据扫描操作", type: "correlate",
-        confidenceContribution: 30,
-        reasoning: "获取管理员角色后5分钟内，攻击者立即枚举所有S3存储桶并扫描DynamoDB表，行为模式高度自动化且目标导向",
-        evidence: [
-          { source: "AWS CloudTrail", type: "log", content: "(10:01:15) ListBuckets → 23 buckets (10:02:30) ListObjects s3://customer-data-prod → 14500 objects (10:03:45) GetObject s3://customer-data-prod/PII/export_202605.csv (size:890MB)", severity: "critical", timestamp: "2026-05-10 10:04:20" },
-          { source: "数据分类系统", type: "identity", content: "s3://customer-data-prod 标签：CONFIDENTIAL(机密) 包含：身份证号+手机号+住址+消费记录 · GDPR/PIPL合规要求", severity: "critical", timestamp: "2026-05-10 10:04:30" },
-        ],
-        correlations: [
-          { relatedSystem: "IAM ↔ S3", relationType: "temporal", description: "AssumeRole(10:00) → ListBuckets(10:01) → 下载数据(10:03)，攻击节奏紧凑无停顿", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Collection", techniqueId: "T1530", techniqueName: "Data from Cloud Storage", confidence: 92 },
-      },
-      {
-        time: "10:01:00", step: "AI判断", detail: "置信度95%，判定为API Key泄露导致的云资源未授权访问", type: "judge",
-        confidenceContribution: 35,
-        reasoning: "综合置信度95%：异常IAM调用(35%) + 数据访问证据(30%) + 攻击者画像(35%)。API Key很可能通过代码仓库泄露",
-        evidence: [
-          { source: "GitLab审计日志", type: "log", content: "repo=infra/deploy-scripts file=config/aws-credentials.env ADDED_LINE=+AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE (推送到main分支 2026-05-09 23:45)", severity: "critical", timestamp: "2026-05-10 10:01:10", ioc: "AKIAIOSFODNN7EXAMPLE" },
-        ],
-        mitreMapping: { tactic: "Credential Access", techniqueId: "T1552.007", techniqueName: "Credentials in Configuration Files", confidence: 88 },
-      },
-    ],
-    confidence: 95,
-    aiConclusion: "攻击者通过泄露的API Key获取跨账户管理员权限，已访问S3存储桶并扫描DynamoDB表，涉及PII数据暴露风险",
-    disposalSuggestion: "轮换所有AK/SK + 撤销跨账户角色信任策略 + S3 bucket加密审查 + 通知DPO",
-    reviewer: "zhang.cto",
-    reviewedAt: "2026-05-09 10:05:00",
-    reviewAction: "approve",
-    reviewComment: "立即执行",
-    disposalMethod: "manual",
-    disposalExecutor: "cloud-security-team",
-    disposalStartedAt: "2026-05-09 10:06:00",
-    disposalActions: [
-      { time: "10:06:30", action: "AK/SK轮换", result: "成功 - 所有密钥已轮换" },
-      { time: "10:08:00", action: "撤销角色信任", result: "成功 - cross-account-admin已禁用" },
-      { time: "10:12:00", action: "S3加密审查", result: "完成 - 3个bucket已启用SSE-KMS" },
-      { time: "10:20:00", action: "DPO通报", result: "完成 - 影响评估报告已提交" },
-    ],
-    disposalCompletedAt: "2026-05-09 10:22:00",
-    closedAt: "2026-05-09 10:30:00",
-    closeReason: "云侧威胁已全面消除，密钥已轮换，影响范围可控",
-    entities: ["AWS-PROD-ACCT", "203.0.113.50"],
-    involvedAssets: ["AWS-PROD-ACCT", "S3-CUSTOMER-DATA", "DYNDBO-PII"],
-    involvedAccounts: ["lambda-exec-role", "cross-account-admin"],
-    feedback: { rating: "thumbs_up", comment: "云安全团队响应迅速，AI提前预警争取了宝贵时间", feedbackType: "disposal_effective", timestamp: "2026-05-09 10:35:00" },
-    createdAt: "2026-05-09 10:00:00",
-    updatedAt: "2026-05-09 10:35:00",
-  },
-    {
-    id: "INV-2026-0038",
-    title: "误报核实-Nessus扫描",
-    description: "内网SYN端口扫描经AI多源确认为合规团队授权活动",
-    asset: "NESSUS-SCN",
-    status: "closed",
-    sourceEvent: {
-      eventId: "ALT008", source: "IDS", sourceSystemName: "Snort 3 + Suricata",
-      classification: "网络扫描-端口探测", riskLevel: "low",
-      rawInput: "SRC=192.168.1.200 DST=10.0.0.0/8 PORTS=22,80,443,3306,8080 TYPE=SYN Scan",
-      receivedTime: "2026-05-09 06:00:00",
-    },
-    triggerType: "auto",
-    aiReasoningSteps: [
-      {
-        time: "06:00:00", step: "信号发现", detail: "IDS检测到来自内网的SYN端口扫描行为", type: "discover",
-        confidenceContribution: 40,
-        reasoning: "内网主机192.168.1.200对10.0.0.0/8网段发起TCP SYN扫描，目标端口涵盖SSH/HTTP/HTTPS/MySQL/Proxy常见服务端口",
-        evidence: [
-          { source: "Suricata IDS", type: "network", content: "ALERTSid=2023018 SRC=192.168.1.200 SCAN_TYPE=TCP_SYN PORTS=[22,80,443,3306,8080,8443,9090] PACKET_COUNT=847 RATE=340pps DURATION=2.5s", severity: "medium", timestamp: "2026-05-09 06:00:00", ioc: "192.168.1.200" },
-          { source: "扫描指纹", type: "baseline", content: "SYN窗口大小=65535 TTL=64 MSS=1460 → Linux内核特征，与Nessus/OpenVAS默认扫描指纹匹配度98%", severity: "low", timestamp: "2026-05-09 06:00:05" },
-        ],
-        mitreMapping: { tactic: "Reconnaissance", techniqueId: "T1046", techniqueName: "Network Service Discovery", confidence: 85 },
-      },
-      {
-        time: "06:00:20", step: "行为关联", detail: "关联到该IP为合规团队的自动化漏洞扫描器", type: "correlate",
-        confidenceContribution: 35,
-        reasoning: "扫描源IP归属为合规团队管理的Nessus Professional扫描器，且扫描时间窗口匹配定期基线扫描排期",
-        evidence: [
-          { source: "CMDB资产管理系统", type: "identity", content: "192.168.1.200 → NESSUS-SCANNER-01 类型：安全扫描器 OS=RHEL 8.6 负责人：compliance-svc@corp.com 扫描授权：每周二/四 06:00-08:00", severity: "info", timestamp: "2026-05-09 06:00:20" },
-          { source: "扫描调度系统", type: "log", content: "JOB_ID=scan-weekly-2026w19 NAME=全网基线扫描 SCHEDULE=cron(0 6 * * 2,4) TRIGGERED=2026-05-09 06:00:00 ON_SCHEDULE=true", severity: "info", timestamp: "2026-05-09 06:00:00" },
-        ],
-        personProfile: {
-          name: "合规扫描服务", email: "compliance-svc@corp.com", employeeId: "SVC-COMP-001",
-          department: "信息安全部", position: "自动化服务", jobTitle: "合规基线扫描服务", level: "SYSTEM",
-          workStatus: "on_duty", location: "安全管理区-DMZ-VLAN100", lastLogin: "2026-05-09 06:00:00",
-          deviceCount: 1, riskScore: 2, notes: "授权的安全基线扫描服务，按周执行全网脆弱性评估",
-        },
-        correlations: [
-          { relatedSystem: "IDS ↔ CMDB", relationType: "identity", description: "扫描源IP与CMDB中登记的Nessus扫描器完全匹配，身份确认", strength: "confirmed" },
-          { relatedSystem: "调度系统", relationType: "temporal", description: "扫描触发时间与调度系统中预定的cron表达式精确匹配(误差<1秒)", strength: "confirmed" },
-        ],
-        mitreMapping: { tactic: "Reconnaissance", techniqueId: "T1595", techniqueName: "Active Scanning", confidence: 98 },
-      },
-      {
-        time: "06:00:50", step: "AI判断", detail: "置信度98%，判定为授权的安全基线扫描活动", type: "judge",
-        confidenceContribution: 25,
-        reasoning: "综合置信度98%：扫描特征(40%) + 身份确认(35%) + 调度验证(25%)。三项独立证据均指向授权活动，误报可能性极低",
-        evidence: [
-          { source: "SecMind-AI推理引擎", type: "baseline", content: "综合置信度98% = 扫描特征权重0.40 + 身份确认权重0.35 + 调度验证权重0.25", severity: "info", timestamp: "2026-05-09 06:00:50" },
-        ],
-      },
-    ],
-    confidence: 98,
-    aiConclusion: "内网SYN扫描来源确认为合规团队授权的自动化漏洞扫描器（Nessus），属于正常安全运维活动",
-    disposalSuggestion: "标记为误报 + 更新白名单规则 + 关闭案件",
-    reviewer: "li.chen",
-    reviewedAt: "2026-05-09 06:05:00",
-    reviewAction: "reject",
-    reviewComment: "确认为误报，是合规团队的定期扫描",
-    disposalMethod: "ai_auto",
-    disposalExecutor: "SecMind-AI-Engine",
-    disposalStartedAt: "2026-05-09 06:06:00",
-    disposalActions: [
-      { time: "06:06:05", action: "更新白名单", result: "成功 - Nessus扫描器IP已加入例外" },
-      { time: "06:06:10", action: "关闭案件", result: "成功" },
-    ],
-    disposalCompletedAt: "2026-05-09 06:07:00",
-    closedAt: "2026-05-09 06:07:30",
-    closeReason: "误报关闭 - 授权安全扫描活动",
-    entities: ["nessus-scanner", "192.168.1.200"],
-    involvedAssets: [],
-    involvedAccounts: ["compliance-svc"],
-    feedback: { rating: null, comment: null, feedbackType: null, timestamp: null },
-    createdAt: "2026-05-09 06:00:00",
-    updatedAt: "2026-05-09 06:07:30",
-  },
-]
+import { useLocaleStore } from "@/store/locale-store"
+import {
+  type InvestigationStatus,
+  type EvidenceItem,
+  type PersonProfile,
+  type BaselineDeviation,
+  type MITREMapping,
+  type CorrelationDetail,
+  type AIReasoningStep,
+  type InvestigationRecord,
+  TABS,
+  STATUS_CONFIG,
+  STEP_TYPE_CONFIG,
+  EVIDENCE_TYPE_CONFIG,
+  SEVERITY_CONFIG,
+  DEVIATION_CONFIG,
+  CORRELATION_STRENGTH_CONFIG,
+  WORK_STATUS_CONFIG,
+  FEEDBACK_TYPE_OPTIONS,
+  FEEDBACK_TYPE_COLORS,
+  mockRecords,
+} from "@/data/investigations"
 
 function StatPill({
   label,
@@ -1184,17 +78,17 @@ function StatPill({
 }) {
   const toneClass =
     tone === "cyan"
-      ? "border-cyan-500/20 bg-cyan-500/10 text-cyan-300"
+      ? "border-cyan-500/20 bg-primary/10 text-primary"
       : tone === "amber"
         ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
         : tone === "emerald"
           ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
           : tone === "red"
             ? "border-red-500/20 bg-red-500/10 text-red-300"
-            : "border-white/6 bg-[#131316] text-zinc-200"
+            : "border-border bg-card text-foreground"
 
   return (
-    <div className={cn("rounded-2xl border px-3 py-2.5", toneClass)}>
+    <div className={cn("rounded-lg border px-3 py-2.5", toneClass)}>
       <div className="text-[11px] opacity-80">{label}</div>
       <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
       {hint && <div className="mt-1 text-[10px] opacity-75">{hint}</div>}
@@ -1203,19 +97,21 @@ function StatPill({
 }
 
 function StatusBadge({ status }: { status: InvestigationStatus }) {
+  const { t } = useLocaleStore()
   const cfg = STATUS_CONFIG[status]
   return (
     <span className={cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium", cfg.color, cfg.bg, cfg.border)}>
       <span className={cn("h-1.5 w-1.5 rounded-full", cfg.pulseColor, status !== "closed" && "animate-pulse")} />
-      {cfg.label}
+      {t(`investigate.${cfg.labelKey}`)}
     </span>
   )
 }
 
 function TriggerBadge({ type }: { type: "auto" | "manual" }) {
+  const { t } = useLocaleStore()
   return (
-    <Badge variant="outline" className={cn("text-[8px] py-0 px-1", type === "auto" ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" : "text-cyan-300 bg-cyan-500/10 border-cyan-500/20")}>
-      {type === "auto" ? "AI自动" : "手动触发"}
+    <Badge variant="outline" className={cn("text-[8px] py-0 px-1", type === "auto" ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/20" : "text-primary bg-primary/10 border-cyan-500/20")}>
+      {type === "auto" ? t("investigate.autoByAi") : t("investigate.manualBy")}
     </Badge>
   )
 }
@@ -1232,14 +128,6 @@ function AssetTag({ name, type, vendor }: { name: string; type: "asset" | "accou
   )
 }
 
-function extractVendor(sourceSystemName: string): string {
-  const knownVendors = ["深信服", "安恒信息", "奇安信", "华为", "360", "阿里云", "Coremail", "Splunk", "CrowdStrike"]
-  for (const vendor of knownVendors) {
-    if (sourceSystemName.startsWith(vendor)) return vendor
-  }
-  return ""
-}
-
 function getAccountDisplay(account: string, steps: AIReasoningStep[]): string {
   for (const step of steps) {
     if (step.personProfile) {
@@ -1253,6 +141,7 @@ function getAccountDisplay(account: string, steps: AIReasoningStep[]): string {
 }
 
 function EvidenceItemCard({ item }: { item: EvidenceItem }) {
+  const { t } = useLocaleStore()
   const typeCfg = EVIDENCE_TYPE_CONFIG[item.type]
   const sevCfg = SEVERITY_CONFIG[item.severity]
   const Icon = typeCfg.icon
@@ -1261,58 +150,59 @@ function EvidenceItemCard({ item }: { item: EvidenceItem }) {
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3" style={{ color: typeCfg.color }} />
         <span className="text-[10px] font-semibold" style={{ color: typeCfg.color }}>{item.source}</span>
-        <span className="ml-auto inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: sevCfg.color, backgroundColor: sevCfg.bg }}>{sevCfg.label}</span>
+        <span className="ml-auto inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: sevCfg.color, backgroundColor: sevCfg.bg }}>{t(`investigate.${sevCfg.labelKey}`)}</span>
       </div>
-      <p className="text-[10px] text-zinc-500 leading-relaxed">{item.content}</p>
-      <div className="flex items-center gap-2 text-[9px] text-zinc-400">
+      <p className="text-[10px] text-muted-foreground leading-relaxed">{item.content}</p>
+      <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
         <span className="font-mono">{item.timestamp.slice(-8)}</span>
         {item.ioc && (
           <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] font-mono" style={{ color: "#f97316", backgroundColor: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.15)" }}>
             IOC: {item.ioc.length > 20 ? item.ioc.slice(0, 20) + ".." : item.ioc}
           </span>
         )}
-        <span className="ml-auto capitalize text-zinc-400">{item.type.replace("_", " ")}</span>
+        <span className="ml-auto capitalize text-muted-foreground">{item.type.replace("_", " ")}</span>
       </div>
     </div>
   )
 }
 
 function PersonProfileCard({ profile }: { profile: PersonProfile }) {
+  const { t } = useLocaleStore()
   const wsCfg = WORK_STATUS_CONFIG[profile.workStatus]
   return (
     <div className="rounded-lg border border-cyan-500/15 bg-cyan-500/[0.03] p-3 space-y-2">
       <div className="flex items-center gap-2">
         <UserCircle className="h-4 w-4 text-cyan-600" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">关联人员</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">{t("investigate.personnelProfile")}</span>
       </div>
-      <div className="rounded-md border border-white/6 bg-[#09090b] p-2.5 space-y-1.5">
+      <div className="rounded-md border border-border bg-background p-2.5 space-y-1.5">
         <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ backgroundColor: `${wsCfg.color}25`, color: wsCfg.color }}>
+          <div className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-foreground" style={{ backgroundColor: `${wsCfg.color}25`, color: wsCfg.color }}>
             {profile.name.charAt(0)}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-zinc-100">{profile.name}</span>
-              <span className="text-[10px] text-zinc-400 font-mono">{profile.email}</span>
+              <span className="text-xs font-semibold text-foreground">{profile.name}</span>
+              <span className="text-[10px] text-muted-foreground font-mono">{profile.email}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[10px] text-zinc-400">{profile.department} · {profile.jobTitle}({profile.level})</span>
+              <span className="text-[10px] text-muted-foreground">{profile.department} · {profile.jobTitle}({profile.level})</span>
               <span className="inline-flex items-center gap-1">
                 <span className="size-1.5 rounded-full" style={{ backgroundColor: wsCfg.color }} />
-                <span className="text-[10px]" style={{ color: wsCfg.color }}>{wsCfg.label}</span>
+                <span className="text-[10px]" style={{ color: wsCfg.color }}>{t(`investigate.${wsCfg.labelKey}`)}</span>
               </span>
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-white/4">
-          <span className="text-slate-400">工号 <span className="text-zinc-500 font-mono ml-1">{profile.employeeId}</span></span>
-          <span className="text-slate-400">位置 <span className="text-zinc-500 ml-1">{profile.location}</span></span>
-          <span className="text-slate-400">风险分 <span className={cn("font-mono tabular-nums ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
-          <span className="text-slate-400">在线设备 <span className="text-zinc-500 font-mono tabular-nums ml-1">{profile.deviceCount}</span></span>
-          <span className="text-slate-400">上次登录 <span className="text-zinc-400 font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] pt-1 border-t border-border/50">
+          <span className="text-slate-400">{t("investigate.investigationId")} <span className="text-muted-foreground font-mono ml-1">{profile.employeeId}</span></span>
+          <span className="text-slate-400">{t("investigate.lastActivity")} <span className="text-muted-foreground ml-1">{profile.location}</span></span>
+          <span className="text-slate-400">{t("investigate.riskScore")} <span className={cn("font-mono tabular-nums ml-1", profile.riskScore >= 60 ? "text-red-600" : profile.riskScore >= 30 ? "text-amber-600" : "text-cyan-600")}>{profile.riskScore}</span></span>
+          <span className="text-slate-400">{t("investigate.accessLevel")} <span className="text-muted-foreground font-mono tabular-nums ml-1">{profile.deviceCount}</span></span>
+          <span className="text-slate-400">{t("investigate.updated")} <span className="text-muted-foreground font-mono ml-1">{profile.lastLogin.slice(5).replace("-", "/")}</span></span>
         </div>
         {profile.notes && (
-          <p className="text-[9px] text-zinc-400 italic pt-1 border-t border-white/4">备注：{profile.notes}</p>
+          <p className="text-[9px] text-muted-foreground italic pt-1 border-t border-border/50">{profile.notes}</p>
         )}
       </div>
     </div>
@@ -1320,26 +210,27 @@ function PersonProfileCard({ profile }: { profile: PersonProfile }) {
 }
 
 function BaselineDeviationCard({ deviation }: { deviation: BaselineDeviation }) {
+  const { t } = useLocaleStore()
   const devCfg = DEVIATION_CONFIG[deviation.deviationDegree]
   return (
     <div className="rounded-lg border border-amber-500/15 bg-amber-500/[0.03] p-3 space-y-2">
       <div className="flex items-center gap-2">
         <BarChart3 className="h-4 w-4 text-amber-600" />
-        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/70">基线偏差</span>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600/70">{t("investigate.baselineDeviation")}</span>
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-zinc-400 min-w-[60px]">{deviation.metric}</span>
-          <ArrowRight className="h-3 w-3 text-zinc-400" />
-          <span className="text-[10px] text-zinc-400 line-clamp-1">{deviation.normalValue}</span>
+          <span className="text-[10px] text-muted-foreground min-w-[60px]">{deviation.metric}</span>
+          <ArrowRight className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[10px] text-muted-foreground line-clamp-1">{deviation.normalValue}</span>
           <MoveRight className="h-3 w-3 text-amber-600/50" />
           <span className={cn("text-[10px] font-medium line-clamp-1", devCfg.color)}>{deviation.actualValue}</span>
-          <span className="inline-flex items-center rounded px-1 py-[1px] text-[8px] font-medium ml-auto shrink-0" style={{ color: devCfg.color, backgroundColor: `${devCfg.color}15` }}>{devCfg.label}</span>
+          <span className="inline-flex items-center rounded px-1 py-[1px] text-[8px] font-medium ml-auto shrink-0" style={{ color: devCfg.color, backgroundColor: `${devCfg.color}15` }}>{t(`investigate.${devCfg.labelKey}`)}</span>
         </div>
-        <div className="flex items-center gap-3 text-[9px] text-zinc-400 pl-[68px]">
-          <span>统计窗口：{deviation.timeWindow}</span>
+        <div className="flex items-center gap-3 text-[9px] text-muted-foreground pl-[68px]">
+          <span>{deviation.timeWindow}</span>
           <span>·</span>
-          <span>样本量：{deviation.sampleSize.toLocaleString()}</span>
+          <span>{deviation.sampleSize.toLocaleString()}</span>
         </div>
       </div>
     </div>
@@ -1354,11 +245,11 @@ function MITREMappingCard({ mapping }: { mapping: MITREMapping }) {
         <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600/70">MITRE ATT&CK</span>
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[11px] text-zinc-400">{mapping.tactic}</span>
-        <span className="text-zinc-400">→</span>
+        <span className="text-[11px] text-muted-foreground">{mapping.tactic}</span>
+        <span className="text-muted-foreground">→</span>
         <span className="font-mono text-[11px] font-bold text-purple-600">{mapping.techniqueId}</span>
-        <span className="text-[11px] text-zinc-500">{mapping.techniqueName}</span>
-        {mapping.subTechnique && <span className="text-[10px] text-zinc-400">({mapping.subTechnique})</span>}
+        <span className="text-[11px] text-muted-foreground">{mapping.techniqueName}</span>
+        {mapping.subTechnique && <span className="text-[10px] text-muted-foreground">({mapping.subTechnique})</span>}
         <span className="ml-auto flex items-center gap-1">
           <span className={cn("text-[10px] font-mono font-bold", mapping.confidence >= 90 ? "text-red-600" : mapping.confidence >= 70 ? "text-amber-600" : "text-cyan-600")}>{mapping.confidence}%</span>
         </span>
@@ -1368,32 +259,34 @@ function MITREMappingCard({ mapping }: { mapping: MITREMapping }) {
 }
 
 function CorrelationCard({ corr }: { corr: CorrelationDetail }) {
+  const { t } = useLocaleStore()
   const strCfg = CORRELATION_STRENGTH_CONFIG[corr.strength]
   return (
-    <div className="rounded-md border border-white/6 bg-[#09090b] p-2 flex items-start gap-2">
+    <div className="rounded-md border border-border bg-background p-2 flex items-start gap-2">
       <ArrowRightLeft className="h-3.5 w-3.5 text-cyan-600/60 shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-0.5">
           <span className="text-[10px] font-medium text-cyan-600/80">{corr.relatedSystem}</span>
-          <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: strCfg.color, backgroundColor: `${strCfg.color}12` }}>{strCfg.label}</span>
+          <span className="inline-flex items-center gap-0.5 rounded px-1 py-[1px] text-[8px] font-medium" style={{ color: strCfg.color, backgroundColor: `${strCfg.color}12` }}>{t(`investigate.${strCfg.labelKey}`)}</span>
         </div>
-        <p className="text-[9px] text-white/45 leading-relaxed">{corr.description}</p>
+        <p className="text-[9px] text-foreground/45 leading-relaxed">{corr.description}</p>
       </div>
     </div>
   )
 }
 
 function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: number }) {
+  const { t } = useLocaleStore()
   const cfg = STEP_TYPE_CONFIG[step.type]
   const Icon = cfg.icon
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/6 bg-[#131316] shadow-sm shadow-slate-200/40">
-      <div className="flex items-center gap-2 border-b border-white/6 px-4 py-3" style={{ background: `linear-gradient(90deg, ${cfg.color}08, rgba(248,250,252,0.85))` }}>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3" style={{ background: `linear-gradient(90deg, ${cfg.color}08, var(--card))` }}>
         <div className="flex h-6 w-6 items-center justify-center rounded-full border" style={{ borderColor: `${cfg.color}40`, backgroundColor: `${cfg.color}15` }}>
           <Icon className={cn("h-3.5 w-3.5", cfg.color)} />
         </div>
-        <span className="text-xs font-semibold text-zinc-100">步骤{index + 1}：{cfg.label}</span>
-        <span className="font-mono text-[10px] text-zinc-400 ml-auto">{step.time}</span>
+        <span className="text-xs font-semibold text-foreground">{t("investigate.step")}{index + 1}：{t(`investigate.${cfg.labelKey}`)}</span>
+        <span className="font-mono text-[10px] text-muted-foreground ml-auto">{step.time}</span>
         {step.confidenceContribution > 0 && (
           <span className={cn("inline-flex items-center text-[10px] font-mono tabular-nums font-semibold", step.confidenceContribution >= 30 ? "text-red-600" : step.confidenceContribution >= 20 ? "text-amber-600" : "text-cyan-600")}>
             +{step.confidenceContribution}%
@@ -1402,15 +295,15 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
       </div>
 
       <div className="space-y-3 p-4">
-        <p className="text-sm text-zinc-200 leading-relaxed font-medium">{step.detail}</p>
+        <p className="text-sm text-foreground leading-relaxed font-medium">{step.detail}</p>
 
         {step.reasoning && (
           <div className="rounded-lg border border-cyan-500/10 bg-cyan-500/[0.03] p-3">
             <div className="flex items-center gap-1.5 mb-1.5">
               <Brain className="h-3.5 w-3.5 text-cyan-600" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">推理逻辑</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600/70">{t("investigate.aiReasoning")}</span>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed">{step.reasoning}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{step.reasoning}</p>
           </div>
         )}
 
@@ -1424,7 +317,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
               <Link2 className="h-3.5 w-3.5 text-cyan-600/60" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">跨系统关联 ({step.correlations.length}条)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("investigate.correlation")} ({step.correlations.length})</span>
             </div>
             <div className="space-y-1.5">
               {step.correlations.map((corr, cIdx) => <CorrelationCard key={cIdx} corr={corr} />)}
@@ -1436,7 +329,7 @@ function RichReasoningStepCard({ step, index }: { step: AIReasoningStep; index: 
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5">
               <FileSearch className="h-3.5 w-3.5 text-amber-600/70" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">证据链 ({step.evidence.length}条)</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{t("investigate.evidenceChain")} ({step.evidence.length})</span>
             </div>
             <div className="space-y-1.5">
               {step.evidence.map((item, eIdx) => <EvidenceItemCard key={eIdx} item={item} />)}
@@ -1459,6 +352,7 @@ function FeedbackDialog({
   rating: "thumbs_up" | "thumbs_down"
   onSubmit?: (data: { feedbackType: string; comment: string }) => void
 }) {
+  const { t } = useLocaleStore()
   const [feedbackType, setFeedbackType] = useState("")
   const [comment, setComment] = useState("")
   const isPositive = rating === "thumbs_up"
@@ -1477,22 +371,22 @@ function FeedbackDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-[#131316] border-white/6 text-white shadow-[0_22px_60px_rgba(0,0,0,0.35)]">
+      <DialogContent className="sm:max-w-md bg-card border-border text-foreground shadow-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-white">
+          <DialogTitle className="flex items-center gap-2 text-foreground">
             <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: isPositive ? "#22c55e15" : "#ff4d4f15" }}>
               {isPositive ? <ThumbsUp className="size-4 text-emerald-600" /> : <ThumbsDown className="size-4 text-red-600" />}
             </div>
-            {isPositive ? "好评反馈" : "差评反馈"}
+            {isPositive ? t("investigate.feedbackInvestigationCorrect") : t("investigate.feedbackInvestigationWrong")}
           </DialogTitle>
-          <DialogDescription className="text-zinc-400">
-            {isPositive ? "请选择您认可的具体方面，帮助我们持续优化AI研判能力" : "请告诉我们哪里有问题，您的反馈将帮助改进AI模型"}
+          <DialogDescription className="text-muted-foreground">
+            {isPositive ? t("investigate.noInvestigationsDesc") : t("investigate.noInvestigationsDesc")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
           <div className="space-y-2">
-            <span className="text-xs text-zinc-500 font-medium">反馈类型 <span className="text-red-600">*</span></span>
+            <span className="text-xs text-muted-foreground font-medium">{t("investigate.feedbackType")} <span className="text-red-600">*</span></span>
             <div className="grid grid-cols-1 gap-2">
               {filteredOptions.map((opt) => {
                 const color = FEEDBACK_TYPE_COLORS[opt.value]
@@ -1500,12 +394,12 @@ function FeedbackDialog({
                 return (
                   <button key={opt.value} onClick={() => setFeedbackType(opt.value)}
                     className="flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors"
-                    style={{ borderColor: isSelected ? `${color}60` : "rgba(255,255,255,0.08)", backgroundColor: isSelected ? `${color}12` : "rgba(255,255,255,0.02)" }}
+                    style={{ borderColor: isSelected ? `${color}60` : "var(--border)", backgroundColor: isSelected ? `${color}12` : "var(--muted)" }}
                   >
-                    <div className="flex size-4 items-center justify-center rounded-full border" style={{ borderColor: isSelected ? color : "rgba(255,255,255,0.15)", backgroundColor: isSelected ? color : "transparent" }}>
-                      {isSelected && <div className="size-1.5 rounded-full bg-[#131316]" />}
+                    <div className="flex size-4 items-center justify-center rounded-full border" style={{ borderColor: isSelected ? color : "var(--border)", backgroundColor: isSelected ? color : "transparent" }}>
+                      {isSelected && <div className="size-1.5 rounded-full bg-card" />}
                     </div>
-                    <span style={{ color: isSelected ? color : "rgba(255,255,255,0.72)" }}>{opt.label}</span>
+                    <span style={{ color: isSelected ? color : "var(--muted-foreground)" }}>{t(`investigate.${opt.labelKey}`)}</span>
                   </button>
                 )
               })}
@@ -1513,16 +407,16 @@ function FeedbackDialog({
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs text-zinc-500 font-medium">补充说明</span>
-            <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="可选：补充说明您的具体意见..."
-              className="min-h-[80px] bg-[#131316] border-white/6 text-white placeholder:text-zinc-400 focus:border-cyan-500/40 focus:ring-cyan-500/20 resize-none text-xs" />
+            <span className="text-xs text-muted-foreground font-medium">{t("investigate.additionalComments")}</span>
+            <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t("investigate.commentsPlaceholder")}
+              className="min-h-[80px] bg-card border-border text-foreground placeholder:text-muted-foreground/50 focus:border-primary/40 focus:ring-primary/20 resize-none text-xs" />
           </div>
 
           <Button onClick={handleSubmit} disabled={!feedbackType}
-            className="w-full h-9 font-semibold gap-2 bg-cyan-600 hover:bg-cyan-700 text-white shadow-sm hover:shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full h-9 font-semibold gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isPositive ? <ThumbsUp className="size-3.5" /> : <ThumbsDown className="size-3.5" />}
-            提交反馈
+            {t("investigate.submitFeedback")}
           </Button>
         </div>
       </DialogContent>
@@ -1530,54 +424,15 @@ function FeedbackDialog({
   )
 }
 
-function InvestigationListItem({
-  record,
-  selected,
-  onSelect,
-}: {
-  record: InvestigationRecord
-  selected: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "w-full rounded-2xl border p-4 text-left transition-all",
-        selected
-          ? "border-cyan-500/25 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(34,211,238,0.14)]"
-          : "border-white/6 bg-[#131316] hover:border-white/10 hover:bg-[#17171b]"
-      )}
-    >
-      <div className="flex items-center gap-2">
-        <StatusBadge status={record.status} />
-        <span className="text-[10px] font-mono text-zinc-500">{record.id}</span>
-        <span className="ml-auto text-[10px] text-zinc-500">{record.updatedAt.slice(11, 16)}</span>
-      </div>
-      <div className="mt-3">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-6 text-zinc-100">{record.title}</h3>
-        <p className="mt-1 line-clamp-2 text-xs leading-5 text-zinc-400">{record.description}</p>
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        <AssetTag name={record.asset} type="asset" />
-        <span className="truncate text-[11px] text-zinc-500">{record.sourceEvent.sourceSystemName}</span>
-      </div>
-      <div className="mt-3 flex items-center justify-between border-t border-white/6 pt-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-zinc-500">置信度</span>
-          <span className={cn("text-xs font-semibold tabular-nums", record.confidence >= 80 ? "text-red-300" : record.confidence >= 60 ? "text-amber-300" : "text-cyan-300")}>
-            {record.confidence}%
-          </span>
-        </div>
-        <span className="text-[11px] text-zinc-500">{record.aiReasoningSteps.length} 步</span>
-      </div>
-    </button>
-  )
-}
+import { usePageTitle } from "@/hooks/use-page-title"
+import { useMockDataStore } from "@/store/mock-data-store"
 
 export default function InvestigatePage() {
-  const isDemo = useAuthStore(s => s.user?.isDemo)
+  usePageTitle("investigate")
+  const { t } = useLocaleStore()
+  const router = useRouter()
+  const storeAlerts = useMockDataStore((s) => s.alerts)
+  const storeAnalyses = useMockDataStore((s) => s.analyses)
   const [selectedRecord, setSelectedRecord] = useState<InvestigationRecord | null>(null)
   const [selectedStepIndex, setSelectedStepIndex] = useState(0)
   const [activeTab, setActiveTab] = useState("all")
@@ -1607,325 +462,274 @@ export default function InvestigatePage() {
 
   const positiveCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_up").length
   const negativeCount = mockRecords.filter(r => r.feedback?.rating === "thumbs_down").length
-  const totalCount = mockRecords.length
-  const investigatingCount = mockRecords.filter((record) => record.status === "investigating").length
-  const reviewCount = mockRecords.filter((record) => record.status === "pending_review").length
-  const disposingCount = mockRecords.filter((record) => record.status === "disposing").length
-  const closedCount = mockRecords.filter((record) => record.status === "closed").length
-  const avgConfidence = Math.round(mockRecords.reduce((sum, record) => sum + record.confidence, 0) / mockRecords.length)
+  const totalCount = storeAlerts.length
+  const investigatingCount = storeAlerts.filter(a => a.status === "investigating").length
+  const reviewCount = storeAlerts.filter(a => a.status === "escalated").length
+  const disposingCount = storeAnalyses.length
+  const closedCount = storeAlerts.filter(a => a.status === "resolved" || a.status === "false_positive").length
+  const avgConfidence = storeAnalyses.length > 0
+    ? Math.round(storeAnalyses.reduce((sum, a) => sum + a.riskScore, 0) / storeAnalyses.length)
+    : 0
   const visibleSelectedRecord = selectedRecord ? filteredRecords.find((record) => record.id === selectedRecord.id) ?? null : null
   const previewRecord = filteredRecords[0] ?? null
   const activeRecord = visibleSelectedRecord ?? previewRecord ?? null
   const safeSelectedStepIndex = activeRecord ? Math.min(selectedStepIndex, activeRecord.aiReasoningSteps.length - 1) : 0
 
-  if (!isDemo) {
-    return (
-      <div className="min-h-screen">
-        <PageHeader
-          title="智能研判中心"
-          subtitle="AI驱动的安全事件调查与证据链分析平台"
-          icon={Brain}
-        />
-        <div className="mx-auto max-w-[1560px] pb-8 pt-4 space-y-5">
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-20">
-              <Database className="size-12 text-zinc-300 mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-500 mb-2">暂无调查记录</h3>
-              <p className="text-sm text-zinc-400 text-center max-w-md">
-                你还没有接入任何安全数据源。
-                <br />
-                接入数据源后，AI将自动进行安全事件研判。
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen">
       <PageHeader
-        title="智能研判中心"
-        subtitle="AI驱动的安全事件调查与证据链分析平台"
+        title={t("investigate.pageTitle")}
+        subtitle={t("investigate.pageSubtitle")}
         icon={Brain}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="border-white/6 bg-[#131316] text-zinc-200 hover:bg-[#09090b]">
+            <Button variant="outline" className="border-border bg-card text-foreground hover:bg-muted/50" onClick={() => { if (!selectedRecord && filteredRecords.length > 0) setSelectedRecord(filteredRecords[0]) }}>
               <ArrowUpRight className="mr-1 h-4 w-4" />
-              导出简报
+              {t("investigate.viewDetails")}
             </Button>
-            <Button className="bg-cyan-600 text-white hover:bg-cyan-700">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => router.push("/response")}>
               <Plus className="mr-1 h-4 w-4" />
-              新建研判
+              {t("investigate.stepDisposalDecision")}
             </Button>
           </div>
         }
       />
 
-      <div className="mx-auto max-w-[1560px] pb-8 pt-4 space-y-5">
-        <div className="grid gap-4 xl:grid-cols-[1.6fr_0.95fr]">
-          <div className="rounded-[28px] border border-white/6 bg-[linear-gradient(135deg,#131316_0%,#101a26_52%,#131316_100%)] p-6 shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
-            <div className="flex flex-col gap-5">
-              <div className="space-y-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  AI研判工作台
-                </div>
-                <div>
-                  <h1 className="text-3xl font-semibold tracking-tight text-white">让证据链自己说服你</h1>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                    把原始事件、人员画像、基线偏差、跨系统关联和处置建议压进同一个研判工作流里，先看清，再行动。
-                  </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-4 xl:max-w-4xl">
-                  <StatPill label="全部案件" value={totalCount} hint={`${investigatingCount} 研判中 / ${reviewCount} 待复核 / ${disposingCount} 处置中 / ${closedCount} 已闭环`} />
-                  <StatPill label="研判中" value={investigatingCount} tone="cyan" />
-                  <StatPill label="待复核" value={reviewCount} tone="amber" />
-                  <StatPill label="平均置信度" value={`${avgConfidence}%`} tone="emerald" hint={`已闭环 ${closedCount} 条`} />
-                </div>
+      <div className="mx-auto max-w-[1200px] pb-8 pt-4 space-y-5">
+        {/* 统计概览 - 全宽 */}
+        <div className="rounded-[28px] border border-border bg-card p-6 shadow-lg">
+          <div className="flex flex-col gap-5">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                {t("investigate.aiReasoning")}
               </div>
-            </div>
-          </div>
-
-          <div className={cn(pageCardClass, "p-5")}>
-            <div className="mb-4 flex items-center gap-2">
-              <Activity className="h-4 w-4 text-cyan-300" />
-              <span className="text-sm font-semibold text-white">筛选与状态</span>
-            </div>
-            <div className="space-y-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="搜索事件标题、编号、资产、描述..."
-                  aria-label="搜索事件"
-                  name="search"
-                  autoComplete="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`h-11 pl-9 text-sm ${inputClass}`}
-                />
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-foreground">{t("investigate.pageTitle")}</h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                  {t("investigate.pageSubtitle")}
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
-                  <div className="text-[11px] text-zinc-500">正向反馈</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-emerald-300">
-                    <ThumbsUp className="h-4 w-4 shrink-0" />
-                    <span className="text-lg font-semibold tabular-nums">{positiveCount}</span>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
-                  <div className="text-[11px] text-zinc-500">负向反馈</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-red-300">
-                    <ThumbsDown className="h-4 w-4 shrink-0" />
-                    <span className="text-lg font-semibold tabular-nums">{negativeCount}</span>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-white/6 bg-[#131316] px-4 py-3">
-                  <div className="text-[11px] text-zinc-500">处置中</div>
-                  <div className="mt-1 flex items-center justify-between gap-2 text-amber-300">
-                    <Wrench className="h-4 w-4 shrink-0" />
-                    <span className="text-lg font-semibold tabular-nums">{disposingCount}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                {TABS.map((tab) => {
-                  const active = activeTab === tab.value
-                  const TabIcon = tab.icon
-                  return (
-                    <button
-                      key={tab.value}
-                      type="button"
-                      onClick={() => setActiveTab(tab.value)}
-                      className={cn(
-                        "flex min-h-16 flex-col items-start justify-between rounded-2xl border px-3 py-3 text-left transition-colors",
-                        active ? "border-cyan-500/25 bg-cyan-500/10 shadow-[0_0_0_1px_rgba(34,211,238,0.15)]" : "border-white/6 bg-[#131316] hover:border-white/10 hover:bg-[#17171b]"
-                      )}
-                    >
-                      <div className="flex w-full items-center justify-between">
-                        {TabIcon && <TabIcon className={cn("h-4 w-4 shrink-0", active ? "text-cyan-300" : "text-zinc-500")} />}
-                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-mono", active ? "bg-[#09090b] text-cyan-300" : "bg-white/5 text-zinc-500")}>
-                          {tabCounts[tab.value] || 0}
-                        </span>
-                      </div>
-                      <span className={cn("text-xs font-medium", active ? "text-cyan-300" : "text-zinc-400")}>{tab.label}</span>
-                    </button>
-                  )
-                })}
+              <div className="grid gap-3 sm:grid-cols-4">
+                <StatPill label={t("investigate.totalInvestigations")} value={totalCount} hint={`${investigatingCount} ${t("investigate.statusInvestigating")} / ${reviewCount} ${t("investigate.statusPendingReview")} / ${disposingCount} ${t("investigate.statusDisposing")} / ${closedCount} ${t("investigate.statusClosed")}`} />
+                <StatPill label={t("investigate.statusInvestigating")} value={investigatingCount} tone="cyan" />
+                <StatPill label={t("investigate.statusPendingReview")} value={reviewCount} tone="amber" />
+                <StatPill label={t("investigate.confidence")} value={`${avgConfidence}%`} tone="emerald" hint={`${t("investigate.statusClosed")} ${closedCount}`} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <h3 className="text-sm font-semibold text-white">案件池</h3>
-              <span className="rounded-full bg-white/5 px-2.5 py-1 text-[11px] text-zinc-400">{filteredRecords.length} 条</span>
+        {/* 搜索 + 筛选 + Tab */}
+        <div className="rounded-[20px] border border-border bg-card p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder={t("investigate.searchPlaceholder")}
+                aria-label={t("investigate.searchPlaceholder")}
+                name="search"
+                autoComplete="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={`h-11 pl-9 text-sm ${inputClass}`}
+              />
             </div>
-            <div className="space-y-3">
-              {filteredRecords.length > 0 ? filteredRecords.map((record) => (
-                <InvestigationListItem
-                  key={record.id}
-                  record={record}
-                  selected={activeRecord?.id === record.id}
-                  onSelect={() => {
-                    setSelectedRecord(record)
-                    setSelectedStepIndex(0)
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-emerald-300 text-sm">
+                <ThumbsUp className="h-4 w-4 shrink-0" />
+                <span className="font-semibold tabular-nums">{positiveCount}</span>
+              </div>
+              <div className="flex items-center gap-2 text-red-300 text-sm">
+                <ThumbsDown className="h-4 w-4 shrink-0" />
+                <span className="font-semibold tabular-nums">{negativeCount}</span>
+              </div>
+              <div className="flex items-center gap-2 text-amber-300 text-sm">
+                <Wrench className="h-4 w-4 shrink-0" />
+                <span className="font-semibold tabular-nums">{disposingCount}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {TABS.map((tab) => {
+              const active = activeTab === tab.value
+              const TabIcon = tab.icon
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  onClick={() => setActiveTab(tab.value)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    active ? "border-primary/25 bg-primary/10 text-primary ring-1 ring-primary/15" : "border-border bg-card text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {TabIcon && <TabIcon className="h-3.5 w-3.5" />}
+                  {t(`investigate.${tab.labelKey}`)}
+                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-mono", active ? "bg-background text-primary" : "bg-muted/50 text-muted-foreground")}>
+                    {tabCounts[tab.value] || 0}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 调查列表 - 传统列表式，点击展开详情 */}
+        <div className="space-y-3">
+          {filteredRecords.length > 0 ? filteredRecords.map((record) => {
+            const isExpanded = activeRecord?.id === record.id
+            return (
+              <div key={record.id} className="rounded-lg border border-border bg-card shadow-sm overflow-hidden transition-colors">
+                {/* 列表行 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isExpanded) {
+                      setSelectedRecord(null)
+                      setSelectedStepIndex(0)
+                    } else {
+                      setSelectedRecord(record)
+                      setSelectedStepIndex(0)
+                    }
                   }}
-                />
-              )) : (
-                <div className={cn(pageCardClass, "flex min-h-[320px] flex-col items-center justify-center py-20 text-zinc-400")}>
-                  <Inbox className="mb-3 h-12 w-12 opacity-40" />
-                  <p className="text-sm">暂无匹配的事件记录</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {activeRecord ? (
-            <div className="space-y-3">
-              <Card className="overflow-hidden border-white/6 bg-[#131316] shadow-[0_18px_40px_rgba(0,0,0,0.22)]">
-              <div className="border-b border-white/6 bg-[linear-gradient(180deg,#17171b_0%,#131316_100%)] p-6">
-                <div className="space-y-4">
+                  className="w-full px-5 py-4 text-left hover:bg-muted/30 transition-colors"
+                >
                   <div className="flex items-center gap-3">
-                    <StatusBadge status={activeRecord.status} />
-                    <span className="text-sm font-mono text-zinc-500">{activeRecord.id}</span>
-                    <TriggerBadge type={activeRecord.triggerType} />
-                    {selectedRecord && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedRecord(null)
-                          setSelectedStepIndex(0)
-                        }}
-                        className="ml-2 inline-flex items-center gap-1 rounded-full border border-white/6 bg-white/5 px-2 py-1 text-[10px] text-zinc-400 hover:text-white"
-                      >
-                        <ArrowLeft className="h-3 w-3" />
-                        返回自动预览
-                      </button>
-                    )}
+                    <StatusBadge status={record.status} />
+                    <span className="text-[10px] font-mono text-muted-foreground">{record.id}</span>
+                    <TriggerBadge type={record.triggerType} />
+                    <span className="ml-auto text-[11px] text-muted-foreground">{record.updatedAt.slice(0, 16)}</span>
+                    <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
                   </div>
+                  <div className="mt-2 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground">{record.title}</h3>
+                      <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{record.description}</p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <AssetTag name={record.asset} type="asset" />
+                      <span className={cn("text-xs font-semibold tabular-nums", record.confidence >= 80 ? "text-red-300" : record.confidence >= 60 ? "text-amber-300" : "text-primary")}>
+                        {record.confidence}%
+                      </span>
+                    </div>
+                  </div>
+                </button>
 
-                  <div className="flex items-start justify-between gap-6">
-                    <div className="min-w-0 shrink">
-                      <h2 className="text-2xl font-semibold tracking-tight text-white">{activeRecord.title}</h2>
-                      <div className="mt-1.5 flex flex-wrap gap-2">
-                        <AssetTag name={activeRecord.asset} type="asset" vendor={extractVendor(activeRecord.sourceEvent.sourceSystemName)} />
-                        {activeRecord.involvedAccounts?.slice(0, 2).map((account) => (
-                          <AssetTag key={account} name={getAccountDisplay(account, activeRecord.aiReasoningSteps)} type="account" />
-                        ))}
+                {/* 展开详情 */}
+                {isExpanded && activeRecord && (
+                  <div className="border-t border-border">
+                    <div className="p-5 space-y-4">
+                      {/* 详情头部 */}
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2">
+                          {activeRecord.involvedAccounts?.slice(0, 3).map((account) => (
+                            <AssetTag key={account} name={getAccountDisplay(account, activeRecord.aiReasoningSteps)} type="account" />
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <StatPill label={t("investigate.confidence")} value={`${activeRecord.confidence}%`} tone={activeRecord.confidence >= 80 ? "red" : "amber"} />
+                          <StatPill label={t("investigate.evidence")} value={activeRecord.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)} tone="cyan" />
+                          <StatPill label={t("investigate.deviation")} value={activeRecord.aiReasoningSteps.filter((step) => step.baselineDeviation || step.correlations?.some((c) => c.strength !== "confirmed")).length} tone="amber" />
+                          <StatPill label={t("investigate.step")} value={activeRecord.aiReasoningSteps.length} />
+                        </div>
+                      </div>
+
+                      {activeRecord.aiConclusion && (
+                        <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.06] p-4">
+                          <div className="mb-2 flex items-center gap-2">
+                            <Brain className="h-4 w-4 text-violet-300" />
+                            <span className="text-xs font-semibold text-violet-300">{t("investigate.aiReasoning")}</span>
+                          </div>
+                          <p className="text-sm leading-6 text-foreground">{activeRecord.aiConclusion}</p>
+                        </div>
+                      )}
+
+                      <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.04] p-4">
+                        <div className="mb-2 flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                          <span className="text-xs font-semibold text-emerald-600">{t("investigate.stepDisposalDecision")}</span>
+                        </div>
+                        <p className="text-sm leading-6 text-foreground">
+                          {activeRecord.status === "pending_review"
+                            ? t("investigate.statusPendingReview")
+                            : activeRecord.status === "disposing"
+                              ? activeRecord.currentAction ?? t("investigate.statusDisposing")
+                              : activeRecord.status === "closed"
+                                ? activeRecord.closeReason ?? t("investigate.statusClosed")
+                                : t("investigate.statusInvestigating")
+                          }
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-1.5">
+                          {[...activeRecord.involvedAccounts ?? [], ...activeRecord.involvedAssets ?? [], ...activeRecord.entities].slice(0, 4).map((entity) => (
+                            <span key={entity} className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-mono text-muted-foreground">
+                              {entity}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {activeRecord.status === "closed" && activeRecord.conclusion && (
+                        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-5">
+                          <div className="mb-2 flex items-center gap-2">
+                            <FileCheck className="h-4 w-4 text-emerald-300" />
+                            <span className="text-sm font-semibold text-emerald-300">{t("investigate.conclusion")}</span>
+                          </div>
+                          <p className="text-sm leading-6 text-foreground">{activeRecord.conclusion}</p>
+                        </div>
+                      )}
+
+                      {activeRecord.disposalSuggestion && activeRecord.status === "pending_review" && (
+                        <div className="rounded-lg border border-cyan-500/20 bg-primary/10 p-5">
+                          <div className="mb-2 flex items-center gap-2">
+                            <Zap className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-semibold text-primary">{t("investigate.stepDisposalDecision")}</span>
+                          </div>
+                          <p className="text-sm leading-6 text-foreground">{activeRecord.disposalSuggestion}</p>
+                        </div>
+                      )}
+
+                      {/* 证据链 */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <GitBranch className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-semibold text-foreground">{t("investigate.evidenceChain")}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">{activeRecord.aiReasoningSteps.length} {t("investigate.step")}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {activeRecord.aiReasoningSteps.map((step, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => setSelectedStepIndex(idx)}
+                              className={cn(
+                                "rounded-lg border px-3 py-2 text-left transition-colors",
+                                selectedStepIndex === idx
+                                  ? "border-primary/25 bg-primary/10 text-primary"
+                                  : "border-border bg-card text-muted-foreground hover:border-border hover:bg-muted"
+                              )}
+                            >
+                              <div className="text-[10px] font-mono">{t("investigate.step")} {idx + 1}</div>
+                              <div className="mt-1 text-xs font-medium">{step.step}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <RichReasoningStepCard
+                          step={activeRecord.aiReasoningSteps[safeSelectedStepIndex]}
+                          index={safeSelectedStepIndex}
+                        />
                       </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-3">
-                      <StatPill label="AI置信度" value={`${activeRecord.confidence}%`} tone={activeRecord.confidence >= 80 ? "red" : "amber"} />
-                      <StatPill label="支撑证据" value={activeRecord.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)} tone="cyan" />
-                      <StatPill label="不确定点" value={activeRecord.aiReasoningSteps.filter((step) => step.baselineDeviation || step.correlations?.some((c) => c.strength !== "confirmed")).length} tone="amber" />
-                      <StatPill label="推理步骤" value={activeRecord.aiReasoningSteps.length} />
-                    </div>
                   </div>
-
-                  <p className="max-w-4xl text-sm leading-6 text-zinc-400">{activeRecord.description}</p>
-
-                  {activeRecord.aiConclusion && (
-                    <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Brain className="h-4 w-4 text-violet-300" />
-                        <span className="text-xs font-semibold text-violet-300">AI研判摘要</span>
-                      </div>
-                      <p className="text-sm leading-6 text-zinc-100">{activeRecord.aiConclusion}</p>
-                    </div>
-                  )}
-
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4">
-                    <div className="mb-2 flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                      <span className="text-xs font-semibold text-emerald-400">建议决策</span>
-                    </div>
-                    <p className="text-sm leading-6 text-zinc-200">
-                      {activeRecord.status === "pending_review"
-                        ? "人工复核AI结论后批准或修正处置方案"
-                        : activeRecord.status === "disposing"
-                          ? activeRecord.currentAction ?? "跟踪处置执行并观察攻击面是否收敛"
-                          : activeRecord.status === "closed"
-                            ? activeRecord.closeReason ?? "复盘闭环结果并回流学习"
-                            : "继续收集证据链，确认主假设是否成立"
-                      }
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {[...activeRecord.involvedAccounts ?? [], ...activeRecord.involvedAssets ?? [], ...activeRecord.entities].slice(0, 4).map((entity) => (
-                        <span key={entity} className="rounded-md border border-white/6 bg-[#09090b] px-2 py-1 text-[11px] font-mono text-zinc-400">
-                          {entity}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
-
-              <div className="p-5">
-                <div className="space-y-4">
-                  {activeRecord.status === "closed" && activeRecord.conclusion && (
-                    <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-                      <div className="mb-2 flex items-center gap-2">
-                        <FileCheck className="h-4 w-4 text-emerald-300" />
-                        <span className="text-sm font-semibold text-emerald-300">闭环结论</span>
-                      </div>
-                      <p className="text-sm leading-6 text-zinc-200">{activeRecord.conclusion}</p>
-                    </div>
-                  )}
-
-                  {activeRecord.disposalSuggestion && activeRecord.status === "pending_review" && (
-                    <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-5">
-                      <div className="mb-2 flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-cyan-300" />
-                        <span className="text-sm font-semibold text-cyan-300">AI 处置建议</span>
-                      </div>
-                      <p className="text-sm leading-6 text-zinc-200">{activeRecord.disposalSuggestion}</p>
-                    </div>
-                  )}
-
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <GitBranch className="h-4 w-4 text-cyan-300" />
-                      <span className="text-sm font-semibold text-white">完整证据链</span>
-                    </div>
-                    <span className="text-xs text-zinc-500">{activeRecord.aiReasoningSteps.length} 个推理步骤，当前聚焦第 {safeSelectedStepIndex + 1} 步</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {activeRecord.aiReasoningSteps.map((step, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedStepIndex(idx)}
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-left transition-colors",
-                          selectedStepIndex === idx
-                            ? "border-cyan-500/25 bg-cyan-500/10 text-cyan-300"
-                            : "border-white/6 bg-[#131316] text-zinc-400 hover:border-white/10 hover:bg-[#17171b]"
-                        )}
-                      >
-                        <div className="text-[10px] font-mono">步骤 {idx + 1}</div>
-                        <div className="mt-1 text-xs font-medium">{step.step}</div>
-                      </button>
-                    ))}
-                  </div>
-                  <RichReasoningStepCard
-                      step={activeRecord.aiReasoningSteps[safeSelectedStepIndex]}
-                      index={safeSelectedStepIndex}
-                    />
-                </div>
-              </div>
-            </Card>
-          </div>
-        ) : (
-            <div className={cn(pageCardClass, "flex min-h-[720px] flex-col items-center justify-center p-10 text-center text-zinc-400")}>
-              <Brain className="mb-3 h-12 w-12 opacity-40" />
-              <p className="text-sm">暂无可展示的研判详情</p>
+            )
+          }) : (
+            <div className={cn(pageCardClass, "flex min-h-[320px] flex-col items-center justify-center py-20 text-muted-foreground")}>
+              <Inbox className="mb-3 h-12 w-12 opacity-40" />
+              <p className="text-sm">{t("investigate.noInvestigations")}</p>
             </div>
           )}
         </div>

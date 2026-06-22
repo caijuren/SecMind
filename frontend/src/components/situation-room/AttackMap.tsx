@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import worldData from "@/data/world.json"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface AttackPoint {
   id: string
@@ -38,17 +39,17 @@ interface GeoJsonFeature {
 }
 
 const SEVERITY_COLORS = {
-  critical: "#ef4444",
-  high: "#f97316",
+  critical: "#ff2d55",
+  high: "#ff9500",
   medium: "#fbbf24",
-  low: "#22d3ee",
+  low: "#00d4ff",
 }
 
 const SEVERITY_GLOW = {
-  critical: "rgba(239,68,68,0.6)",
-  high: "rgba(249,115,22,0.5)",
+  critical: "rgba(255,45,85,0.6)",
+  high: "rgba(255,149,0,0.5)",
   medium: "rgba(251,191,36,0.4)",
-  low: "rgba(34,211,238,0.4)",
+  low: "rgba(0,212,255,0.4)",
 }
 
 function lngToX(lng: number, width: number): number {
@@ -86,6 +87,7 @@ export function AttackMap({ attacks }: AttackMapProps) {
   const { width, height } = useCanvasSize(containerRef)
   const animRef = useRef(0)
   const [newAttackIds, setNewAttackIds] = useState<Set<string>>(new Set())
+  const { t } = useLocaleStore()
 
   const mapFeatures = useMemo(() => {
     const features = (worldData as unknown as { features?: GeoJsonFeature[] }).features ?? []
@@ -142,16 +144,16 @@ export function AttackMap({ attacks }: AttackMapProps) {
     ctx.translate(offsetX, offsetY)
 
     const bgGrad = ctx.createRadialGradient(mapW / 2, mapH / 2, 0, mapW / 2, mapH / 2, mapW * 0.6)
-    bgGrad.addColorStop(0, "rgba(34,211,238,0.04)")
-    bgGrad.addColorStop(1, "rgba(34,211,238,0)")
+    bgGrad.addColorStop(0, "rgba(37,99,235,0.04)")
+    bgGrad.addColorStop(1, "rgba(37,99,235,0)")
     ctx.fillStyle = bgGrad
     ctx.fillRect(0, 0, mapW, mapH)
 
     const time = animRef.current * 0.02
 
-    ctx.strokeStyle = "rgba(34,211,238,0.12)"
+    ctx.strokeStyle = "rgba(37,99,235,0.15)"
     ctx.lineWidth = 0.5
-    ctx.fillStyle = "rgba(34,211,238,0.05)"
+    ctx.fillStyle = "rgba(37,99,235,0.06)"
 
     mapFeatures.forEach((feature) => {
       if (!feature.geometry) return
@@ -186,7 +188,7 @@ export function AttackMap({ attacks }: AttackMapProps) {
       }
     })
 
-    ctx.strokeStyle = "rgba(255,255,255,0.03)"
+    ctx.strokeStyle = "rgba(0,0,0,0.05)"
     ctx.lineWidth = 0.3
     for (let i = 0; i < 5; i++) {
       const y = mapH * (0.15 + i * 0.18)
@@ -283,57 +285,14 @@ export function AttackMap({ attacks }: AttackMapProps) {
         ctx.globalAlpha = 1
       }
 
-      ctx.fillStyle = "rgba(255,255,255,0.5)"
+      ctx.fillStyle = "rgba(0,0,0,0.5)"
       ctx.font = `${isSource ? 9 : 8}px monospace`
       ctx.textAlign = "center"
       ctx.fillText(point.name, x, y - radius - 4)
     })
 
     ctx.restore()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.font = "10px monospace"
-    ctx.fillText("攻击源", 16, height - 10)
-    ctx.fillStyle = "#ef4444"
-    ctx.beginPath()
-    ctx.arc(8, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.fillText("攻击目标", 72, height - 10)
-    ctx.fillStyle = "#3b82f6"
-    ctx.beginPath()
-    ctx.arc(64, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.fillText("严重", 128, height - 10)
-    ctx.fillStyle = "#ef4444"
-    ctx.beginPath()
-    ctx.arc(120, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.fillText("高危", 172, height - 10)
-    ctx.fillStyle = "#f97316"
-    ctx.beginPath()
-    ctx.arc(164, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.fillText("中危", 216, height - 10)
-    ctx.fillStyle = "#fbbf24"
-    ctx.beginPath()
-    ctx.arc(208, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-
-    ctx.fillStyle = "rgba(255,255,255,0.3)"
-    ctx.fillText("低危", 260, height - 10)
-    ctx.fillStyle = "#22d3ee"
-    ctx.beginPath()
-    ctx.arc(252, height - 14, 3, 0, Math.PI * 2)
-    ctx.fill()
-  }, [width, height, attacks, lines, mapFeatures, newAttackIds])
+  }, [width, height, attacks, lines, mapFeatures, newAttackIds, t])
 
   useEffect(() => {
     let running = true
@@ -354,6 +313,33 @@ export function AttackMap({ attacks }: AttackMapProps) {
         className="w-full h-full"
         style={{ width: "100%", height: "100%" }}
       />
+      {/* HTML 图例 — 自适应浅色/暗色模式 */}
+      <div className="absolute bottom-2 left-3 flex items-center gap-3 text-[10px] pointer-events-none">
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#ff2d55]" />
+          攻击源
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#00d4ff]" />
+          目标
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#ff2d55]" />
+          严重
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#ff9500]" />
+          高危
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#fbbf24]" />
+          中危
+        </span>
+        <span className="flex items-center gap-1 text-muted-foreground/70">
+          <span className="size-2 rounded-full bg-[#00d4ff]" />
+          低危
+        </span>
+      </div>
     </div>
   )
 }

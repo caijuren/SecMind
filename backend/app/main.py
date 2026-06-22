@@ -9,7 +9,7 @@ import os
 from app.routers import auth, alerts, dashboard, devices, users, itsm, ai, email, vpn, brute_force, demo
 from app.routers import system_settings, integrations
 from app.routers import ai_analysis, response, hunting, playbooks, contacts, rbac, collaboration
-from app.routers import ai_chat, ws, integration_adapters, tenants, billing, documents, i18n, system_monitor, ai_models, strategies, playbook_editor, situation, compliance, ioc, execution, dag, reports, funnel, model_router, strategy_evolution, search, audit
+from app.routers import ai_chat, ws, integration_adapters, tenants, billing, documents, i18n, system_monitor, ai_models, strategies, playbook_editor, situation, compliance, ioc, execution, dag, reports, funnel, model_router, strategy_evolution, search, audit, investigation_reports, providers, alert_pipeline, mcp, skills
 from app.middleware.performance import PerformanceMiddleware, get_perf_stats
 from app.middleware.cache_middleware import CacheControlMiddleware
 from app.middleware.rbac import RBACMiddleware
@@ -115,6 +115,11 @@ app.include_router(model_router.router, prefix=api_prefix)
 app.include_router(strategy_evolution.router, prefix=api_prefix)
 app.include_router(search.router, prefix=api_prefix)
 app.include_router(audit.router, prefix=api_prefix)
+app.include_router(providers.router, prefix=api_prefix)
+app.include_router(investigation_reports.router, prefix=api_prefix)
+app.include_router(alert_pipeline.router, prefix=api_prefix)
+app.include_router(mcp.router, prefix=api_prefix)
+app.include_router(skills.router, prefix=api_prefix)
 
 
 @app.get("/")

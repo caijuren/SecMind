@@ -22,8 +22,8 @@ export function useToast() {
   const ctx = useContext(ToastContext)
   if (!ctx) {
     return {
-      toast: (message: string, variant?: ToastVariant) => {
-        console.log(`[Toast] ${variant ?? "info"}: ${message}`)
+      toast: (_message: string, _variant?: ToastVariant) => {
+        // No-op when used outside of ToastProvider
       },
     }
   }

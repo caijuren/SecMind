@@ -9,6 +9,7 @@ import { AlertTrendChart } from "@/components/situation-room/alert-trend-chart"
 import { AttackTypeChart } from "@/components/situation-room/attack-type-chart"
 import { MitreMatrix } from "@/components/situation-room/mitre-matrix"
 import { useWebSocket } from "@/hooks/useWebSocket"
+import { usePageTitle } from "@/hooks/use-page-title"
 import { Maximize2, Minimize2, RefreshCw } from "lucide-react"
 
 interface AttackPoint {
@@ -154,7 +155,7 @@ function Panel({
   children,
   className = "",
   headerRight,
-  accentColor = "#22d3ee",
+  accentColor = "#2563eb",
 }: {
   title: string
   children: React.ReactNode
@@ -164,26 +165,20 @@ function Panel({
 }) {
   return (
     <div
-      className={`flex flex-col rounded-xl overflow-hidden transition-shadow duration-500 ${className}`}
-      style={{
-        backgroundColor: "rgba(12,12,16,0.92)",
-        border: "1px solid rgba(255,255,255,0.05)",
-        backdropFilter: "blur(12px)",
-      }}
+      className={`flex flex-col rounded-lg overflow-hidden transition-shadow duration-500 bg-card border border-border ${className}`}
     >
       <div
-        className="flex items-center justify-between px-4 py-2.5 shrink-0"
+        className="flex items-center justify-between px-4 py-2.5 shrink-0 border-b border-border"
         style={{
-          borderBottom: "1px solid rgba(255,255,255,0.04)",
-          background: `linear-gradient(90deg, ${accentColor}06 0%, transparent 100%)`,
+          background: `linear-gradient(90deg, ${accentColor}08 0%, transparent 100%)`,
         }}
       >
         <div className="flex items-center gap-2.5">
           <div
             className="w-1 h-3.5 rounded-full"
-            style={{ backgroundColor: accentColor, boxShadow: `0 0 6px ${accentColor}60` }}
+            style={{ backgroundColor: accentColor, boxShadow: `0 0 6px ${accentColor}40` }}
           />
-          <span className="text-[11px] font-medium tracking-wide" style={{ color: "rgba(255,255,255,0.65)" }}>
+          <span className="text-[11px] font-medium tracking-wide text-foreground">
             {title}
           </span>
         </div>
@@ -195,6 +190,7 @@ function Panel({
 }
 
 export default function SituationRoomPage() {
+  usePageTitle("situation-room")
   const [currentTime, setCurrentTime] = useState(new Date())
   const [securityScore, setSecurityScore] = useState(62)
   const [previousScore, setPreviousScore] = useState(58)
@@ -309,27 +305,21 @@ export default function SituationRoomPage() {
   return (
     <div className="flex flex-col h-full w-full select-none">
       {!isPresentationMode && (
-        <header
-          className="flex items-center justify-between px-6 py-2.5 shrink-0"
-          style={{
-            background: "linear-gradient(180deg, rgba(12,12,16,0.95) 0%, rgba(12,12,16,0.5) 100%)",
-            borderBottom: "1px solid rgba(255,255,255,0.04)",
-          }}
-        >
+        <header className="flex items-center justify-between px-6 py-2.5 shrink-0 border-b border-border bg-card/80">
           <div className="flex items-center gap-5">
             <div className="flex items-center gap-2.5">
               <div className="relative flex items-center justify-center">
                 <div
                   className="w-2.5 h-2.5 rounded-full"
                   style={{
-                    backgroundColor: "#22d3ee",
-                    boxShadow: "0 0 10px #22d3ee99, 0 0 20px #22d3ee44",
+                    backgroundColor: "#2563eb",
+                    boxShadow: "0 0 10px rgba(37,99,235,0.5), 0 0 20px rgba(37,99,235,0.2)",
                   }}
                 />
                 <div
                   className="absolute inset-0 rounded-full animate-ping opacity-40"
                   style={{
-                    backgroundColor: "#22d3ee",
+                    backgroundColor: "#2563eb",
                     animationDuration: "3s",
                   }}
                 />
@@ -337,7 +327,7 @@ export default function SituationRoomPage() {
               <h1
                 className="text-lg font-bold tracking-wider"
                 style={{
-                  background: "linear-gradient(90deg, #22d3ee 0%, #67e8f9 30%, #a78bfa 100%)",
+                  background: "linear-gradient(90deg, #2563eb 0%, #3b82f6 30%, #8b5cf6 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -349,23 +339,19 @@ export default function SituationRoomPage() {
               <span
                 className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                 style={{
-                  backgroundColor: isConnected ? "rgba(34,211,238,0.12)" : "rgba(239,68,68,0.12)",
-                  color: isConnected ? "#22d3ee" : "#ef4444",
-                  border: `1px solid ${isConnected ? "rgba(34,211,238,0.25)" : "rgba(239,68,68,0.25)"}`,
+                  backgroundColor: isConnected ? "rgba(37,99,235,0.10)" : "rgba(239,68,68,0.10)",
+                  color: isConnected ? "#2563eb" : "#ef4444",
+                  border: `1px solid ${isConnected ? "rgba(37,99,235,0.20)" : "rgba(239,68,68,0.20)"}`,
                 }}
               >
                 {isConnected ? "● 已连接" : "○ 未连接"}
               </span>
-              <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.25)" }}>
+              <span className="text-[10px] font-medium text-muted-foreground">
                 自动刷新 · 5s
               </span>
               <button
                 onClick={refreshData}
-                className="flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-md transition-all duration-200 hover:bg-white/[0.06]"
-                style={{
-                  color: "rgba(255,255,255,0.4)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
+                className="flex items-center gap-1 text-[10px] px-2.5 py-1 rounded-md transition-colors duration-200 hover:bg-muted/50 text-muted-foreground border border-border"
               >
                 <RefreshCw size={10} className="transition-transform duration-300 group-hover:rotate-180" />
                 立即刷新
@@ -375,22 +361,17 @@ export default function SituationRoomPage() {
 
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-sm font-mono tabular-nums font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
+              <div className="text-sm font-mono tabular-nums font-medium text-foreground">
                 {formatTime(currentTime)}
               </div>
-              <div className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <div className="text-[10px] font-medium text-muted-foreground">
                 {formatDate(currentTime)}
               </div>
             </div>
 
             <button
               onClick={togglePresentationMode}
-              className="flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-cyan-500/[0.1]"
-              style={{
-                color: "rgba(34,211,238,0.7)",
-                backgroundColor: "rgba(34,211,238,0.06)",
-                border: "1px solid rgba(34,211,238,0.12)",
-              }}
+              className="flex items-center gap-1.5 text-[10px] px-3 py-1.5 rounded-lg transition-colors duration-200 hover:bg-primary/10 text-primary border border-primary/15 bg-primary/5"
               title="演示模式"
             >
               <Maximize2 size={12} />
@@ -407,11 +388,11 @@ export default function SituationRoomPage() {
             accentColor="#ef4444"
             headerRight={
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1 text-[9px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <span className="flex items-center gap-1 text-[9px] font-medium text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500/80" />
                   攻击源 {attackPoints.filter((p) => p.type === "source").length}
                 </span>
-                <span className="flex items-center gap-1 text-[9px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <span className="flex items-center gap-1 text-[9px] font-medium text-muted-foreground">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400/80" />
                   目标 {attackPoints.filter((p) => p.type === "target").length}
                 </span>
@@ -433,8 +414,7 @@ export default function SituationRoomPage() {
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400" />
                 </span>
                 <span
-                  className="text-[9px] px-1.5 py-0.5 rounded font-medium"
-                  style={{ backgroundColor: "rgba(34,211,238,0.1)", color: "#22d3ee" }}
+                  className="text-[9px] px-1.5 py-0.5 rounded font-medium text-primary bg-primary/10"
                 >
                   实时
                 </span>
@@ -481,27 +461,21 @@ export default function SituationRoomPage() {
       </div>
 
       {!isPresentationMode && (
-        <footer
-          className="flex items-center justify-between px-6 py-1.5 shrink-0"
-          style={{
-            borderTop: "1px solid rgba(255,255,255,0.04)",
-            background: "rgba(12,12,16,0.95)",
-          }}
-        >
+        <footer className="flex items-center justify-between px-6 py-1.5 shrink-0 border-t border-border bg-card/80">
           <div className="flex items-center gap-5">
-            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.22)" }}>
+            <span className="text-[10px] font-medium text-muted-foreground">
               SecMind AI SOC Platform v2.2
             </span>
-            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.18)" }}>
+            <span className="text-[10px] font-medium text-muted-foreground/60">
               上次刷新: {formatTime(new Date(lastRefresh))}
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-[10px] flex items-center gap-1.5" style={{ color: "rgba(34,211,238,0.45)" }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400/60" />
+            <span className="text-[10px] flex items-center gap-1.5 text-primary/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/60" />
               系统运行正常
             </span>
-            <span className="text-[10px] font-mono tabular-nums font-medium" style={{ color: "rgba(255,255,255,0.2)" }}>
+            <span className="text-[10px] font-mono tabular-nums font-medium text-muted-foreground/50">
               CPU 34% | MEM 62% | DISK 51%
             </span>
           </div>
@@ -511,13 +485,7 @@ export default function SituationRoomPage() {
       {isPresentationMode && (
         <button
           onClick={togglePresentationMode}
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 text-[10px] px-4 py-2.5 rounded-full opacity-20 hover:opacity-100 transition-all duration-300"
-          style={{
-            color: "rgba(34,211,238,0.6)",
-            backgroundColor: "rgba(12,12,16,0.95)",
-            border: "1px solid rgba(34,211,238,0.15)",
-            backdropFilter: "blur(12px)",
-          }}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-1.5 text-[10px] px-4 py-2.5 rounded-full opacity-20 hover:opacity-100 transition-colors duration-200 text-primary bg-card border border-primary/15 "
           title="退出演示模式"
         >
           <Minimize2 size={12} />

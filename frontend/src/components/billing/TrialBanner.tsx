@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, AlertTriangle, ArrowRight, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLocaleStore } from '@/store/locale-store'
 
 function getTrialInfo(): { daysLeft: number; trialEnd: string } {
   if (typeof window === 'undefined') return { daysLeft: 14, trialEnd: '' }
@@ -25,67 +26,67 @@ function getTrialInfo(): { daysLeft: number; trialEnd: string } {
   }
 }
 
-function getMessage(daysLeft: number): {
+function getMessage(daysLeft: number, t: (key: string) => string): {
   title: string
   subtitle: string
   variant: 'info' | 'warning' | 'urgent'
 } {
   if (daysLeft <= 0) {
     return {
-      title: '试用已到期',
-      subtitle: '您的免费试用已结束，请升级以继续使用 SecMind',
+      title: t("billing.trialExpired"),
+      subtitle: t("billing.trialExpiredSubtitle"),
       variant: 'urgent',
     }
   }
   if (daysLeft <= 1) {
     return {
-      title: `试用仅剩 ${daysLeft} 天`,
-      subtitle: '您的试用即将到期，请尽快升级以保留所有数据',
+      title: t("billing.trialAlmostUp") + " " + daysLeft + " " + t("billing.trialDaysLeft"),
+      subtitle: t("billing.trialAlmostUpSubtitle"),
       variant: 'urgent',
     }
   }
   if (daysLeft <= 3) {
     return {
-      title: `试用剩余 ${daysLeft} 天`,
-      subtitle: '试用期即将结束，升级专业版解锁全部功能',
+      title: t("billing.trialRemaining") + " " + daysLeft + " " + t("billing.trialDaysLeft"),
+      subtitle: t("billing.trialEndingSubtitle"),
       variant: 'warning',
     }
   }
   if (daysLeft <= 7) {
     return {
-      title: `试用剩余 ${daysLeft} 天`,
-      subtitle: '考虑升级专业版以获得更多功能和支持',
+      title: t("billing.trialRemaining") + " " + daysLeft + " " + t("billing.trialDaysLeft"),
+      subtitle: t("billing.trialConsiderUpgradeSubtitle"),
       variant: 'info',
     }
   }
   return {
-    title: `${daysLeft} 天试用剩余`,
-    subtitle: '专业版功能全量开放中',
+    title: daysLeft + " " + t("billing.trialDaysLeft"),
+    subtitle: t("billing.trialProFeaturesSubtitle"),
     variant: 'info',
   }
 }
 
 const variantStyles = {
   info: {
-    bg: 'bg-cyan-500/10',
+    bg: 'bg-primary/10',
     border: 'border-cyan-500/30',
-    text: 'text-cyan-300',
-    icon: 'text-cyan-400',
-    button: 'bg-cyan-600 text-white hover:bg-cyan-700',
+    text: 'text-primary',
+    icon: 'text-cyan-600',
+    button: 'bg-cyan-600 text-foreground hover:bg-cyan-700',
   },
   warning: {
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/30',
     text: 'text-amber-300',
-    icon: 'text-amber-400',
-    button: 'bg-amber-600 text-white hover:bg-amber-700',
+    icon: 'text-amber-600',
+    button: 'bg-amber-600 text-foreground hover:bg-amber-700',
   },
   urgent: {
     bg: 'bg-red-500/10',
     border: 'border-red-500/30',
     text: 'text-red-300',
-    icon: 'text-red-400',
-    button: 'bg-red-600 text-white hover:bg-red-700',
+    icon: 'text-red-600',
+    button: 'bg-red-600 text-foreground hover:bg-red-700',
   },
 }
 
@@ -95,6 +96,7 @@ interface TrialBannerProps {
 }
 
 export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
+  const { t } = useLocaleStore()
   const [dismissed, setDismissed] = useState(false)
   const [daysLeft, setDaysLeft] = useState(14)
 
@@ -122,7 +124,7 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
 
   if (dismissed) return null
 
-  const message = getMessage(daysLeft)
+  const message = getMessage(daysLeft, t)
   const style = variantStyles[message.variant]
 
   const handleDismiss = () => {
@@ -150,7 +152,7 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
           <span className={cn('text-sm font-semibold shrink-0', style.text)}>
             {message.title}
           </span>
-          <span className="hidden sm:inline text-xs text-zinc-500 truncate">
+          <span className="hidden sm:inline text-xs text-muted-foreground truncate">
             {message.subtitle}
           </span>
         </div>
@@ -164,14 +166,14 @@ export function TrialBanner({ className, onDismiss }: TrialBannerProps) {
             style.button
           )}
         >
-          立即升级
+          {t("billing.upgradeNow")}
           <ArrowRight className="size-3 ml-1" />
         </Link>
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors"
-          aria-label="关闭"
+          className="text-muted-foreground hover:text-muted-foreground transition-colors"
+          aria-label={t("billing.dismiss")}
         >
           <X className="size-4" />
         </button>

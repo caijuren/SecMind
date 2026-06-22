@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import ConfidenceGauge from "@/components/ai/ConfidenceGauge"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface AIThinkingStep {
   id: string
@@ -114,21 +115,21 @@ const indicatorConfig = {
     icon: ThumbsUp,
     color: "#22c55e",
     bg: "rgba(34,197,94,0.12)",
-    label: "支持",
+    labelKey: "reasoning.indicatorSupporting",
     border: "border-emerald-500/30",
   },
   opposing: {
     icon: ThumbsDown,
     color: "#ef4444",
     bg: "rgba(239,68,68,0.12)",
-    label: "反对",
+    labelKey: "reasoning.indicatorOpposing",
     border: "border-red-500/30",
   },
   neutral: {
     icon: Minus,
     color: "#fbbf24",
     bg: "rgba(251,191,36,0.12)",
-    label: "中性",
+    labelKey: "reasoning.indicatorNeutral",
     border: "border-yellow-500/30",
   },
 } as const
@@ -144,6 +145,7 @@ function EvidenceCard({
 }) {
   const config = indicatorConfig[evidence.indicator]
   const IndicatorIcon = config.icon
+  const { t } = useLocaleStore()
 
   const riskColors: Record<string, string> = {
     critical: "#ef4444",
@@ -181,7 +183,7 @@ function EvidenceCard({
               className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
               style={{ backgroundColor: config.bg, color: config.color }}
             >
-              {config.label}
+              {t(config.labelKey)}
             </span>
             {evidence.riskLevel && (
               <span
@@ -197,7 +199,7 @@ function EvidenceCard({
           </p>
           {evidence.source && (
             <span className="mt-1 inline-block text-[10px] text-muted-foreground/60">
-              来源: {evidence.source}
+              {t("reasoning.source")}: {evidence.source}
             </span>
           )}
         </div>
@@ -238,6 +240,7 @@ function MitreBadge({ technique }: { technique: string }) {
 }
 
 function ConclusionCard({ conclusion }: { conclusion: AIConclusion }) {
+  const { t } = useLocaleStore()
   return (
     <div className="rounded-xl border-2 border-red-500/20 bg-card p-5 space-y-4">
       <div className="flex items-start gap-4">
@@ -247,12 +250,12 @@ function ConclusionCard({ conclusion }: { conclusion: AIConclusion }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-base font-semibold text-card-foreground">
-              AI 最终结论
+              {t("reasoning.conclusionTitle")}
             </h3>
             <div className="flex items-center gap-1 rounded-full bg-red-500/10 border border-red-500/20 px-2 py-0.5">
               <Sparkles className="size-3 text-red-400" />
               <span className="text-[10px] font-bold text-red-400">
-                置信度 {conclusion.confidence}%
+                {t("reasoning.confidence")} {conclusion.confidence}%
               </span>
             </div>
           </div>
@@ -264,7 +267,7 @@ function ConclusionCard({ conclusion }: { conclusion: AIConclusion }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg bg-muted/50 border border-border p-3">
-          <div className="text-[10px] text-muted-foreground mb-1">风险评分</div>
+          <div className="text-[10px] text-muted-foreground mb-1">{t("reasoning.riskScore")}</div>
           <div className="flex items-end gap-1">
             <span className="text-2xl font-black text-red-500">
               {conclusion.riskScore}
@@ -273,7 +276,7 @@ function ConclusionCard({ conclusion }: { conclusion: AIConclusion }) {
           </div>
         </div>
         <div className="rounded-lg bg-muted/50 border border-border p-3">
-          <div className="text-[10px] text-muted-foreground mb-1">攻击阶段</div>
+          <div className="text-[10px] text-muted-foreground mb-1">{t("reasoning.attackPhase")}</div>
           <div className="text-xs font-semibold text-card-foreground leading-tight">
             {conclusion.attackPhase}
           </div>
@@ -281,7 +284,7 @@ function ConclusionCard({ conclusion }: { conclusion: AIConclusion }) {
       </div>
 
       <div>
-        <div className="text-[10px] text-muted-foreground mb-2">AI 建议措施</div>
+        <div className="text-[10px] text-muted-foreground mb-2">{t("reasoning.recommendations")}</div>
         <div className="space-y-1">
           {conclusion.recommendations.map((rec, i) => (
             <div key={i} className="flex items-center gap-2 text-xs">
@@ -303,6 +306,7 @@ export default function ReasoningChain({
 }: ReasoningChainProps) {
   const [expandedEvidence, setExpandedEvidence] = useState<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
+  const { t } = useLocaleStore()
 
   const toggleEvidence = useCallback((id: string) => {
     setExpandedEvidence((prev) => {
@@ -329,7 +333,7 @@ export default function ReasoningChain({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground space-y-4">
         <Brain className="size-12 opacity-30" />
-        <p className="text-sm">等待 AI 推理开始...</p>
+        <p className="text-sm">{t("reasoning.waitingForReasoning")}</p>
       </div>
     )
   }
@@ -410,19 +414,19 @@ export default function ReasoningChain({
                   {step.status === "complete" && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
                       <CheckCircle2 className="size-2.5" />
-                      完成
+                      {t("reasoning.statusComplete")}
                     </span>
                   )}
                   {step.status === "working" && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
                       <Loader2 className="size-2.5 animate-spin" />
-                      分析中
+                      {t("reasoning.statusWorking")}
                     </span>
                   )}
                   {step.status === "error" && (
                     <span className="inline-flex items-center gap-0.5 rounded-full bg-red-500/10 px-1.5 py-0.5 text-[10px] font-medium text-red-400">
                       <XCircle className="size-2.5" />
-                      错误
+                      {t("reasoning.statusError")}
                     </span>
                   )}
 
@@ -498,10 +502,10 @@ export default function ReasoningChain({
           <div className="flex items-center gap-2 rounded-lg bg-red-500/5 border border-red-500/20 px-3 py-2">
             <Shield className="size-4 text-red-400" />
             <span className="text-[10px] font-bold text-red-400">
-              证据链收集完成
+              {t("reasoning.evidenceCollected")}
             </span>
             <span className="ml-auto text-[10px] text-red-400/60">
-              {evidence.length} 条关键证据
+              {evidence.length} {t("reasoning.keyEvidenceCount")}
             </span>
           </div>
 
@@ -534,7 +538,7 @@ export default function ReasoningChain({
             />
           ))}
           <span className="text-xs text-muted-foreground italic ml-2">
-            AI 正在深度分析中...
+            {t("reasoning.deepAnalyzing")}
           </span>
         </div>
       )}

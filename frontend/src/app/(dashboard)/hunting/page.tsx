@@ -23,6 +23,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { api, formatDateTime, batchLookupIOC, type IOCLookupResult } from "@/lib/api"
+import { usePageTitle } from "@/hooks/use-page-title"
 
 const DEMO_IOC_RESULTS: IOCLookupResult[] = [
   { ioc_value: '103.45.67.89', ioc_type: 'ip', risk_score: 92, risk_level: 'critical', tags: ['C2节点', 'APT28', 'Tor出口'], sources: [{ source_name: 'VirusTotal', result: { malicious: true, score: 92, details: 'C2: APT28 infrastructure' } }, { source_name: 'AlienVault', result: { malicious: true, score: 88, details: 'C2: Cobalt Strike' } }], first_seen: '2025-11-01', last_seen: '2026-05-18', from_cache: true },
@@ -92,20 +93,20 @@ interface HuntingHypothesis {
 }
 
 const ATTCK_TACTICS = [
-  "侦察",
-  "资源开发",
-  "初始访问",
-  "执行",
-  "持久化",
-  "权限提升",
-  "防御规避",
-  "凭证访问",
-  "发现",
-  "横向移动",
-  "收集",
-  "C2",
-  "数据外泄",
-  "影响",
+  "reconnaissance",
+  "resourceDevelopment",
+  "initialAccess",
+  "execution",
+  "persistence",
+  "privilegeEscalation",
+  "defenseEvasion",
+  "credentialAccess",
+  "discovery",
+  "lateralMovement",
+  "collection",
+  "commandAndControl",
+  "exfiltration",
+  "impact",
 ]
 
 const STATUS_CONFIG: Record<HypothesisStatus, { color: string; bg: string; border: string; icon: typeof Clock }> = {
@@ -145,20 +146,20 @@ function mapApiHypothesis(raw: ApiHuntingHypothesis): HuntingHypothesis {
   }
 }
 
-type IocTypeDisplay = "IP" | "域名" | "Hash" | "URL"
+type IocTypeDisplay = "IP" | "Domain" | "Hash" | "URL"
 
 function mapIocType(apiType: string): IocTypeDisplay {
-  const t = apiType.toLowerCase()
-  if (t === "ip") return "IP"
-  if (t === "domain") return "域名"
-  if (t === "hash" || t === "file") return "Hash"
-  if (t === "url" || t === "uri") return "URL"
-  return "域名"
+  const lower = apiType.toLowerCase()
+  if (lower === "ip") return "IP"
+  if (lower === "domain") return "Domain"
+  if (lower === "hash" || lower === "file") return "Hash"
+  if (lower === "url" || lower === "uri") return "URL"
+  return "Domain"
 }
 
 const IOC_TYPE_CONFIG: Record<IocTypeDisplay, { color: string; bg: string; border: string; icon: typeof Globe }> = {
-  IP: { color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", icon: Globe },
-  域名: { color: "text-indigo-600", bg: "bg-indigo-500/10", border: "border-indigo-500/20", icon: Link2 },
+  IP: { color: "text-primary", bg: "bg-primary/10", border: "border-cyan-500/20", icon: Globe },
+  Domain: { color: "text-indigo-600", bg: "bg-indigo-500/10", border: "border-indigo-500/20", icon: Link2 },
   Hash: { color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: Hash },
   URL: { color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", icon: Zap },
 }
@@ -166,18 +167,54 @@ const IOC_TYPE_CONFIG: Record<IocTypeDisplay, { color: string; bg: string; borde
 function ConfidenceBar({ value }: { value: number }) {
   const color = value >= 80 ? "bg-red-500" : value >= 50 ? "bg-amber-400" : "bg-cyan-500"
   return (
-    <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
+    <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
       <div className={cn("h-full rounded-full transition-colors duration-700", color)} style={{ width: `${value}%` }} />
     </div>
   )
 }
 
 function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
+  const { t } = useLocaleStore()
+  const statusLabelMap: Record<string, string> = {
+    "验证中": t("hunting.statusVerifying"),
+    "已确认": t("hunting.statusConfirmed"),
+    "已排除": t("hunting.statusExcluded"),
+  }
+  const tacticLabelMap: Record<string, string> = {
+    reconnaissance: t("hunting.tacticReconnaissance"),
+    resourceDevelopment: t("hunting.tacticResourceDevelopment"),
+    initialAccess: t("hunting.tacticInitialAccess"),
+    execution: t("hunting.tacticExecution"),
+    persistence: t("hunting.tacticPersistence"),
+    privilegeEscalation: t("hunting.tacticPrivilegeEscalation"),
+    defenseEvasion: t("hunting.tacticDefenseEvasion"),
+    credentialAccess: t("hunting.tacticCredentialAccess"),
+    discovery: t("hunting.tacticDiscovery"),
+    lateralMovement: t("hunting.tacticLateralMovement"),
+    collection: t("hunting.tacticCollection"),
+    commandAndControl: t("hunting.tacticCommandAndControl"),
+    exfiltration: t("hunting.tacticExfiltration"),
+    impact: t("hunting.tacticImpact"),
+    "侦察": t("hunting.tacticReconnaissance"),
+    "资源开发": t("hunting.tacticResourceDevelopment"),
+    "初始访问": t("hunting.tacticInitialAccess"),
+    "执行": t("hunting.tacticExecution"),
+    "持久化": t("hunting.tacticPersistence"),
+    "权限提升": t("hunting.tacticPrivilegeEscalation"),
+    "防御规避": t("hunting.tacticDefenseEvasion"),
+    "凭证访问": t("hunting.tacticCredentialAccess"),
+    "发现": t("hunting.tacticDiscovery"),
+    "横向移动": t("hunting.tacticLateralMovement"),
+    "收集": t("hunting.tacticCollection"),
+    "C2": t("hunting.tacticCommandAndControl"),
+    "数据外泄": t("hunting.tacticExfiltration"),
+    "影响": t("hunting.tacticImpact"),
+  }
   const statusCfg = STATUS_CONFIG[hypothesis.status]
   const StatusIcon = statusCfg.icon
   return (
     <Card className={cn(
-      "border-white/[0.06] bg-[#131316] shadow-sm transition-colors hover:bg-white/[0.04] hover:shadow-md",
+      "border-border bg-card shadow-sm transition-colors hover:bg-muted/50 hover:shadow-md",
       hypothesis.status === "已确认" && "border-red-500/20 bg-red-500/10",
       hypothesis.status === "验证中" && "border-amber-500/20 bg-amber-500/10",
       hypothesis.status === "已排除" && "border-emerald-500/20 bg-emerald-500/10"
@@ -186,13 +223,13 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-mono text-xs text-zinc-600">{hypothesis.id}</span>
-              <span className="text-sm font-medium text-zinc-200 truncate">{hypothesis.name}</span>
+              <span className="font-mono text-xs text-muted-foreground/60">{hypothesis.id}</span>
+              <span className="text-sm font-medium text-foreground truncate">{hypothesis.name}</span>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="text-[10px] text-cyan-700 bg-cyan-500/10 border-cyan-500/20 py-0 px-1.5">
+              <Badge variant="outline" className="text-[10px] text-primary bg-primary/10 border-cyan-500/20 py-0 px-1.5">
                 <Target className="size-3 mr-0.5" />
-                {hypothesis.tactic}
+                {tacticLabelMap[hypothesis.tactic] || hypothesis.tactic}
               </Badge>
               <Badge variant="outline" className="text-[10px] text-indigo-600 bg-indigo-500/10 border-indigo-500/20 py-0 px-1.5">
                 <span className="font-mono mr-0.5">{hypothesis.techniqueId}</span>
@@ -202,23 +239,23 @@ function HypothesisCard({ hypothesis }: { hypothesis: HuntingHypothesis }) {
           </div>
           <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5 shrink-0", statusCfg.color, statusCfg.bg, statusCfg.border)}>
             <StatusIcon className="size-3 mr-0.5" />
-            {hypothesis.status}
+            {statusLabelMap[hypothesis.status] || hypothesis.status}
           </Badge>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-zinc-600">
+        <div className="flex items-center justify-between text-xs text-muted-foreground/60">
           <div className="flex items-center gap-1.5">
             <Clock className="size-3" />
             <span>{hypothesis.createdAt}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <FileWarning className="size-3" />
-            <span>关联IOC: {hypothesis.iocCount}</span>
+            <span>{t("hunting.relatedIoc")}: {hypothesis.iocCount}</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500 shrink-0">置信度</span>
+          <span className="text-xs text-muted-foreground shrink-0">{t("hunting.confidenceLabel")}</span>
           <div className="flex-1">
             <ConfidenceBar value={hypothesis.confidence} />
           </div>
@@ -276,6 +313,16 @@ function IOCBatchQuery() {
     return "bg-cyan-500"
   }
 
+  const iocTypeLabel = (type: IocTypeDisplay): string => {
+    const map: Record<IocTypeDisplay, string> = {
+      IP: t("hunting.iocTypeIp"),
+      Domain: t("hunting.iocTypeDomain"),
+      Hash: t("hunting.iocTypeHash"),
+      URL: t("hunting.iocTypeUrl"),
+    }
+    return map[type]
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
@@ -283,27 +330,27 @@ function IOCBatchQuery() {
           <Brain className="h-4 w-4 text-amber-600" />
         </div>
         <div>
-          <h2 className="text-sm font-medium text-zinc-200">{t("hunting.iocBatchQuery")}</h2>
-          <p className="text-xs text-zinc-600">{t("hunting.iocBatchQueryDesc")}</p>
+          <h2 className="text-sm font-medium text-foreground">{t("hunting.iocBatchQuery")}</h2>
+          <p className="text-xs text-muted-foreground/60">{t("hunting.iocBatchQueryDesc")}</p>
         </div>
       </div>
 
-      <Card className="border-white/[0.06] bg-[#131316] shadow-sm shadow-black/[0.08]">
+      <Card className="border-border bg-card shadow-sm shadow-black/[0.08]">
         <CardContent className="p-4 space-y-3">
           <Textarea
             placeholder={t("hunting.inputIocPlaceholder")}
             value={iocInput}
             onChange={(e) => setIocInput(e.target.value)}
-            className="min-h-[120px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+            className="min-h-[120px] border-border bg-card text-muted-foreground placeholder:text-muted-foreground/50 text-xs font-mono focus-visible:border-primary focus-visible:ring-primary/20"
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-muted-foreground">
               {iocInput.trim() ? `${t("hunting.iocCount")} ${iocInput.trim().split("\n").filter(Boolean).length} IOC` : t("hunting.waitingInput")}
             </span>
             <Button
               onClick={handleQuery}
               disabled={!iocInput.trim() || isQuerying}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs gap-1.5"
+              className="bg-cyan-600 hover:bg-cyan-700 text-foreground text-xs gap-1.5"
             >
               {isQuerying ? (
                 <>
@@ -322,20 +369,20 @@ function IOCBatchQuery() {
       </Card>
 
       {isQuerying && (
-        <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
-          <div className="size-6 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/70">
+          <div className="size-6 mb-2 animate-spin rounded-full border-2 border-border border-t-cyan-500" />
           <p className="text-xs">{t("hunting.queryingIntel")}</p>
         </div>
       )}
 
       {error && !isQuerying && (
-        <div className="flex flex-col items-center justify-center py-8 text-red-400">
+        <div className="flex flex-col items-center justify-center py-8 text-red-600">
           <AlertTriangle className="size-6 mb-2" />
           <p className="text-xs text-center">{error}</p>
           <Button
             variant="outline"
             size="sm"
-            className="mt-2 border-red-500/20 bg-[#131316] text-red-500 hover:text-red-700 text-xs h-7"
+            className="mt-2 border-red-500/20 bg-card text-red-600 hover:text-red-700 text-xs h-7"
             onClick={handleQuery}
           >
             {t("common.retry")}
@@ -347,7 +394,7 @@ function IOCBatchQuery() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-600">{t("hunting.queryResults")} ({results.length})</span>
+              <span className="text-xs text-muted-foreground/60">{t("hunting.queryResults")} ({results.length})</span>
               {cacheInfo && (
                 <div className="flex items-center gap-1.5">
                   <Badge variant="outline" className="text-[10px] text-emerald-600 bg-emerald-500/10 border-emerald-500/20 py-0 px-1.5">
@@ -365,7 +412,7 @@ function IOCBatchQuery() {
             <Button
               variant="outline"
               size="sm"
-              className="border-white/[0.06] bg-[#131316] text-zinc-500 hover:text-cyan-700 hover:border-cyan-500/20 text-xs h-7"
+              className="border-border bg-card text-muted-foreground hover:text-primary hover:border-primary/20 text-xs h-7"
               onClick={() => { setResults([]); setCacheInfo(null) }}
             >
               {t("hunting.clearResults")}
@@ -380,7 +427,7 @@ function IOCBatchQuery() {
 
               return (
                 <Card key={`${result.ioc_value}-${idx}`} className={cn(
-                  "border-white/[0.06] bg-[#131316] hover:bg-white/[0.04] transition-colors shadow-sm shadow-black/[0.08]",
+                  "border-border bg-card hover:bg-muted/50 transition-colors shadow-sm shadow-black/[0.08]",
                   result.risk_level === "critical" && "border-red-500/20 bg-red-500/10",
                   result.risk_level === "high" && "border-orange-500/20 bg-orange-500/10"
                 )}>
@@ -388,16 +435,16 @@ function IOCBatchQuery() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
                         <TypeIcon className={cn("size-3.5 shrink-0", typeCfg.color)} />
-                        <span className="text-xs font-mono text-zinc-300 truncate">{result.ioc_value}</span>
+                        <span className="text-xs font-mono text-muted-foreground truncate">{result.ioc_value}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge variant="outline" className={cn("text-[10px] py-0 px-1.5", typeCfg.color, typeCfg.bg, typeCfg.border)}>
-                          {typeDisplay}
+                          {iocTypeLabel(typeDisplay)}
                         </Badge>
                         {result.from_cache && (
-                          <Badge variant="outline" className="text-[10px] text-zinc-600 bg-white/[0.03] border-white/[0.06] py-0 px-1.5">
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground/60 bg-muted/50 border-border py-0 px-1.5">
                             <Database className="size-2.5 mr-0.5" />
-                            缓存
+                            {t("hunting.cache")}
                           </Badge>
                         )}
                         <RiskBadge level={result.risk_level} size="sm" />
@@ -410,7 +457,7 @@ function IOCBatchQuery() {
                     {result.tags.length > 0 && (
                       <div className="flex items-center gap-1 flex-wrap">
                         {result.tags.map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-[10px] text-zinc-500 bg-white/[0.03] border-white/[0.06] py-0 px-1.5">
+                          <Badge key={tag} variant="outline" className="text-[10px] text-muted-foreground bg-muted/50 border-border py-0 px-1.5">
                             {tag}
                           </Badge>
                         ))}
@@ -420,49 +467,49 @@ function IOCBatchQuery() {
                     {result.sources.length > 0 && (
                       <div className="space-y-1">
                         <div className="flex items-center gap-1.5">
-                          <Info className="size-3 text-zinc-600 shrink-0" />
-                          <span className="text-[10px] text-zinc-600">{t("hunting.intelSources")} ({result.sources.length})</span>
+                          <Info className="size-3 text-muted-foreground/60 shrink-0" />
+                          <span className="text-[10px] text-muted-foreground/60">{t("hunting.intelSources")} ({result.sources.length})</span>
                         </div>
                         <div className="space-y-0.5">
                           {result.sources.slice(0, 3).map((source) => (
                             <div key={source.source_name} className="flex items-center justify-between text-[10px]">
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {source.result.malicious ? (
-                                  <Bug className="size-2.5 text-red-500 shrink-0" />
+                                  <Bug className="size-2.5 text-red-600 shrink-0" />
                                 ) : (
                                   <ShieldCheck className="size-2.5 text-emerald-500 shrink-0" />
                                 )}
-                                <span className="text-zinc-500 truncate">{source.source_name}</span>
+                                <span className="text-muted-foreground truncate">{source.source_name}</span>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <span className={cn("font-mono", source.result.malicious ? "text-red-500" : "text-emerald-500")}>
+                                <span className={cn("font-mono", source.result.malicious ? "text-red-600" : "text-emerald-500")}>
                                   {source.result.score}
                                 </span>
-                                <span className="text-zinc-700 truncate max-w-[80px] hidden sm:inline">
+                                <span className="text-muted-foreground/70 truncate max-w-[80px] hidden sm:inline">
                                   {source.result.details}
                                 </span>
                               </div>
                             </div>
                           ))}
                           {result.sources.length > 3 && (
-                            <p className="text-[10px] text-zinc-700">{t("hunting.moreSources")} {result.sources.length - 3} {t("hunting.intelSources")}...</p>
+                            <p className="text-[10px] text-muted-foreground/70">{t("hunting.moreSources")} {result.sources.length - 3} {t("hunting.intelSources")}...</p>
                           )}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-[10px] text-zinc-600">
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground/60">
                       <div className="flex items-center gap-1">
                         <span>{t("hunting.maliciousSources")}: {maliciousSources.length}/{result.sources.length}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        {result.first_seen && <span>首次: {formatDateTime(result.first_seen)}</span>}
-                        {result.last_seen && <span>末次: {formatDateTime(result.last_seen)}</span>}
+                        {result.first_seen && <span>{t("hunting.firstSeen")}: {formatDateTime(result.first_seen)}</span>}
+                        {result.last_seen && <span>{t("hunting.lastSeen")}: {formatDateTime(result.last_seen)}</span>}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1 rounded-full bg-white/[0.05] overflow-hidden">
+                      <div className="flex-1 h-1 rounded-full bg-muted/50 overflow-hidden">
                         <div
                           className={cn("h-full rounded-full transition-colors", riskBarColor(result.risk_score))}
                           style={{ width: `${result.risk_score}%` }}
@@ -478,7 +525,7 @@ function IOCBatchQuery() {
       )}
 
       {!isQuerying && !error && results.length === 0 && iocInput.trim() && (
-        <div className="flex flex-col items-center justify-center py-8 text-zinc-700">
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground/70">
           <Search className="size-6 mb-2" />
           <p className="text-xs">{t("hunting.inputIocThenQuery")}</p>
         </div>
@@ -489,6 +536,23 @@ function IOCBatchQuery() {
 
 export default function HuntingPage() {
   const { t } = useLocaleStore()
+  usePageTitle("hunting")
+  const tacticLabelMap: Record<string, string> = {
+    reconnaissance: t("hunting.tacticReconnaissance"),
+    resourceDevelopment: t("hunting.tacticResourceDevelopment"),
+    initialAccess: t("hunting.tacticInitialAccess"),
+    execution: t("hunting.tacticExecution"),
+    persistence: t("hunting.tacticPersistence"),
+    privilegeEscalation: t("hunting.tacticPrivilegeEscalation"),
+    defenseEvasion: t("hunting.tacticDefenseEvasion"),
+    credentialAccess: t("hunting.tacticCredentialAccess"),
+    discovery: t("hunting.tacticDiscovery"),
+    lateralMovement: t("hunting.tacticLateralMovement"),
+    collection: t("hunting.tacticCollection"),
+    commandAndControl: t("hunting.tacticCommandAndControl"),
+    exfiltration: t("hunting.tacticExfiltration"),
+    impact: t("hunting.tacticImpact"),
+  }
   const [activeFilter, setActiveFilter] = useState<HypothesisStatus | "全部">("全部")
   const [searchQuery, setSearchQuery] = useState("")
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -535,7 +599,7 @@ export default function HuntingPage() {
   })
 
   const filterCards: { label: string; count: number; color: string; bg: string; border: string; status: HypothesisStatus | "全部" }[] = [
-    { label: t("hunting.allHypotheses"), count: hypotheses.length, color: "text-cyan-700", bg: "bg-cyan-500/10", border: "border-cyan-500/20", status: "全部" },
+    { label: t("hunting.allHypotheses"), count: hypotheses.length, color: "text-primary", bg: "bg-primary/10", border: "border-cyan-500/20", status: "全部" },
     { label: t("hunting.verifying"), count: hypotheses.filter((h) => h.status === "验证中").length, color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", status: "验证中" },
     { label: t("hunting.confirmed"), count: hypotheses.filter((h) => h.status === "已确认").length, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", status: "已确认" },
     { label: t("hunting.excluded"), count: hypotheses.filter((h) => h.status === "已排除").length, color: "text-emerald-600", bg: "bg-emerald-500/10", border: "border-emerald-500/20", status: "已排除" },
@@ -556,7 +620,7 @@ export default function HuntingPage() {
       setDialogOpen(false)
       await fetchHypotheses()
     } catch {
-      setError("创建假设失败")
+      setError(t("hunting.createHypothesisFailed"))
     } finally {
       setSubmitting(false)
     }
@@ -584,13 +648,13 @@ export default function HuntingPage() {
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-zinc-600")}>{card.label}</span>
-                {card.status === "验证中" && <Clock className="size-4 text-amber-400" />}
-                {card.status === "已确认" && <AlertTriangle className="size-4 text-red-400" />}
-                {card.status === "已排除" && <CheckCircle2 className="size-4 text-emerald-400" />}
+                <span className={cn("text-xs", activeFilter === card.status ? card.color : "text-muted-foreground/60")}>{card.label}</span>
+                {card.status === "验证中" && <Clock className="size-4 text-amber-600" />}
+                {card.status === "已确认" && <AlertTriangle className="size-4 text-red-600" />}
+                {card.status === "已排除" && <CheckCircle2 className="size-4 text-emerald-600" />}
                 {card.status === "全部" && <Crosshair className="size-4 text-cyan-500" />}
               </div>
-              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-zinc-400")}>{card.count}</p>
+              <p className={cn("mt-1 text-2xl font-bold font-mono", activeFilter === card.status ? card.color : "text-muted-foreground")}>{card.count}</p>
             </CardContent>
           </Card>
         ))}
@@ -598,7 +662,7 @@ export default function HuntingPage() {
 
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-700" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70" />
           <Input
               placeholder={t("hunting.searchHypotheses")}
               value={searchQuery}
@@ -612,7 +676,7 @@ export default function HuntingPage() {
         </div>
         <Button
           onClick={() => setDialogOpen(true)}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white gap-1.5"
+          className="bg-cyan-600 hover:bg-cyan-700 text-foreground gap-1.5"
         >
           <Plus className="size-4" />
           {t("hunting.newHypothesis")}
@@ -622,17 +686,17 @@ export default function HuntingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-600">{t("hunting.huntingHypothesisList")} ({filteredHypotheses.length})</span>
+            <span className="text-xs text-muted-foreground/60">{t("hunting.huntingHypothesisList")} ({filteredHypotheses.length})</span>
           </div>
           <div className="space-y-3 scrollbar-thin scrollbar-thumb-white/[0.10] scrollbar-track-transparent">
             {loading && (
-              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
-                <div className="size-8 mb-2 animate-spin rounded-full border-2 border-white/[0.06] border-t-cyan-500" />
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/70">
+                <div className="size-8 mb-2 animate-spin rounded-full border-2 border-border border-t-cyan-500" />
                 <p className="text-sm">{t("common.loading")}</p>
               </div>
             )}
             {error && !loading && (
-              <div className="flex flex-col items-center justify-center py-12 text-red-400">
+              <div className="flex flex-col items-center justify-center py-12 text-red-600">
                 <AlertTriangle className="size-8 mb-2" />
                 <p className="text-sm">{error}</p>
               </div>
@@ -641,7 +705,7 @@ export default function HuntingPage() {
               <HypothesisCard key={hypothesis.id} hypothesis={hypothesis} />
             ))}
             {!loading && !error && filteredHypotheses.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground/70">
                 <Search className="size-8 mb-2" />
                 <p className="text-sm">{t("hunting.noMatchingHypotheses")}</p>
               </div>
@@ -655,14 +719,14 @@ export default function HuntingPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md bg-[#131316] border-white/[0.06] text-zinc-100">
+        <DialogContent className="sm:max-w-md bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">{t("hunting.newHuntingHypothesis")}</DialogTitle>
-            <DialogDescription className="text-zinc-600">{t("hunting.newHypothesisDesc")}</DialogDescription>
+            <DialogTitle className="text-foreground">{t("hunting.newHuntingHypothesis")}</DialogTitle>
+            <DialogDescription className="text-muted-foreground/60">{t("hunting.newHypothesisDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-name" className="text-xs text-zinc-600">{t("hunting.hypothesisName")}</label>
+              <label htmlFor="hypothesis-name" className="text-xs text-muted-foreground/60">{t("hunting.hypothesisName")}</label>
               <Input
                 id="hypothesis-name"
                 placeholder={t("hunting.hypothesisNamePlaceholder")}
@@ -674,40 +738,40 @@ export default function HuntingPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-tactic" className="text-xs text-slate-400">{t("hunting.attckTactic")}</label>
+              <label htmlFor="hypothesis-tactic" className="text-xs text-muted-foreground">{t("hunting.attckTactic")}</label>
               <Select value={newHypothesis.tactic} onValueChange={(v) => v && setNewHypothesis((prev) => ({ ...prev, tactic: v }))}>
                 <SelectTrigger id="hypothesis-tactic" className={`w-full text-xs ${inputClass}`}>
                   <SelectValue placeholder={t("hunting.selectTactic")} />
                 </SelectTrigger>
-                <SelectContent className="bg-[#131316] border-white/[0.06]">
+                <SelectContent className="bg-card border-border">
                   {ATTCK_TACTICS.map((tactic) => (
-                    <SelectItem key={tactic} value={tactic} className="text-zinc-400 text-xs focus:bg-cyan-500/10 focus:text-cyan-700">
-                      {tactic}
+                    <SelectItem key={tactic} value={tactic} className="text-muted-foreground text-xs focus:bg-primary/10 focus:text-primary">
+                      {tacticLabelMap[tactic] || tactic}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-description" className="text-xs text-zinc-600">{t("hunting.description")}</label>
+              <label htmlFor="hypothesis-description" className="text-xs text-muted-foreground/60">{t("hunting.description")}</label>
               <Textarea
                 id="hypothesis-description"
                 placeholder={t("hunting.descriptionPlaceholder")}
                 value={newHypothesis.description}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, description: e.target.value }))}
-                className="min-h-[80px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[80px] border-border bg-card text-muted-foreground placeholder:text-muted-foreground/50 text-xs focus-visible:border-primary focus-visible:ring-primary/20"
                 name="description"
                 autoComplete="off"
               />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="hypothesis-ioc" className="text-xs text-zinc-600">{t("hunting.relatedIOC")}</label>
+              <label htmlFor="hypothesis-ioc" className="text-xs text-muted-foreground/60">{t("hunting.relatedIOC")}</label>
               <Textarea
                 id="hypothesis-ioc"
-                placeholder={"每行输入一个IOC指标\n如: 185.220.101.34\nevil-domain.xyz"}
+                placeholder={t("hunting.iocPlaceholder")}
                 value={newHypothesis.relatedIOC}
                 onChange={(e) => setNewHypothesis((prev) => ({ ...prev, relatedIOC: e.target.value }))}
-                className="min-h-[60px] border-white/[0.06] bg-[#131316] text-zinc-300 placeholder:text-zinc-700 text-xs font-mono focus-visible:border-cyan-400 focus-visible:ring-cyan-200"
+                className="min-h-[60px] border-border bg-card text-muted-foreground placeholder:text-muted-foreground/50 text-xs font-mono focus-visible:border-primary focus-visible:ring-primary/20"
                 name="relatedIOC"
                 autoComplete="off"
               />
@@ -716,13 +780,13 @@ export default function HuntingPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              className="border-white/[0.06] bg-[#131316] text-zinc-600 hover:text-zinc-100 hover:bg-white/[0.04] text-xs"
+              className="border-border bg-card text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 text-xs"
               onClick={() => setDialogOpen(false)}
             >
               {t("common.cancel")}
             </Button>
             <Button
-              className="bg-cyan-600 hover:bg-cyan-700 text-white text-xs"
+              className="bg-cyan-600 hover:bg-cyan-700 text-foreground text-xs"
               disabled={submitting || !newHypothesis.name || !newHypothesis.tactic}
               onClick={handleCreateHypothesis}
             >

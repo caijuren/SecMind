@@ -44,9 +44,9 @@ const PLANS = [
     description: "体验核心功能，快速上手",
     features: ["5个用户", "100条告警/天", "基础AI分析", "社区支持"],
     icon: Sparkles,
-    iconBg: "bg-[#09090b]",
-    iconColor: "text-zinc-400",
-    borderColor: "border-white/6",
+    iconBg: "bg-background",
+    iconColor: "text-muted-foreground",
+    borderColor: "border-border",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
   },
@@ -59,8 +59,8 @@ const PLANS = [
     features: ["20个用户", "无限告警", "高级AI分析", "处置自动化", "7x12技术支持"],
     icon: Zap,
     iconBg: "bg-cyan-50",
-    iconColor: "text-cyan-700",
-    borderColor: "border-white/6",
+    iconColor: "text-primary",
+    borderColor: "border-border",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
     recommended: true,
@@ -75,7 +75,7 @@ const PLANS = [
     icon: Lock,
     iconBg: "bg-amber-50",
     iconColor: "text-amber-700",
-    borderColor: "border-white/6",
+    borderColor: "border-border",
     selectedBorder: "border-cyan-400",
     selectedBg: "bg-cyan-50/50",
   },
@@ -181,10 +181,10 @@ export default function OnboardingPage() {
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
                   isActive
-                    ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200/60"
+                    ? "bg-cyan-50 text-primary ring-1 ring-cyan-200/60"
                     : isCompleted
                       ? "bg-emerald-50 text-emerald-700"
-                      : "bg-[#09090b] text-zinc-500"
+                      : "bg-background text-muted-foreground"
                 )}
               >
                 {isCompleted ? (
@@ -213,10 +213,10 @@ export default function OnboardingPage() {
         <div className="space-y-4">
           <div className="text-center py-4">
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
-              <Sparkles className="size-7 text-cyan-700" />
+              <Sparkles className="size-7 text-primary" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.welcomeToSecmind")}</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+            <h2 className={cn(TYPOGRAPHY.h1, "text-foreground")}>{t("onboarding.welcomeToSecmind")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-muted-foreground mt-2")}>
               {t("onboarding.welcomeDesc")}
             </p>
           </div>
@@ -232,13 +232,13 @@ export default function OnboardingPage() {
                     "cursor-pointer transition-all hover:-translate-y-0.5 relative",
                     isSelected
                       ? `${plan.selectedBorder} ${plan.selectedBg} ring-1 shadow-md`
-                      : `${plan.borderColor} bg-[#131316] shadow-sm hover:shadow-md`
+                      : `${plan.borderColor} bg-card shadow-sm hover:shadow-md`
                   )}
                   onClick={() => setSelectedPlan(plan.id)}
                 >
                   {plan.recommended && (
                     <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
-                      <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-white border-0 px-2 py-0 text-[10px] font-semibold shadow-sm">
+                      <Badge className="bg-gradient-to-r from-cyan-500 to-teal-500 text-foreground border-0 px-2 py-0 text-[10px] font-semibold shadow-sm">
                         {t("onboarding.recommended")}
                       </Badge>
                     </div>
@@ -249,32 +249,32 @@ export default function OnboardingPage() {
                         <PlanIcon className={`size-4.5 ${plan.iconColor}`} />
                       </div>
                       <div>
-                        <h3 className={cn(TYPOGRAPHY.h3, "text-white")}>{plan.name}</h3>
-                        <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>{plan.description}</p>
+                        <h3 className={cn(TYPOGRAPHY.h3, "text-foreground")}>{plan.name}</h3>
+                        <p className={cn(TYPOGRAPHY.micro, "text-muted-foreground")}>{plan.description}</p>
                       </div>
                     </div>
 
                     <div className="flex items-baseline gap-1 mb-4">
-                      <span className={cn(TYPOGRAPHY.h1, "font-bold", isSelected ? "text-cyan-700" : "text-white")}>
+                      <span className={cn(TYPOGRAPHY.h1, "font-bold", isSelected ? "text-primary" : "text-foreground")}>
                         {plan.price}
                       </span>
                       {plan.period && (
-                        <span className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>{plan.period}</span>
+                        <span className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>{plan.period}</span>
                       )}
                     </div>
 
                     <ul className="space-y-2">
                       {plan.features.map((f) => (
                         <li key={f} className="flex items-center gap-2">
-                          <CheckCircle2 className={cn("size-3.5 shrink-0", isSelected ? "text-cyan-500" : "text-zinc-500")} />
-                          <span className={cn(TYPOGRAPHY.caption, "text-zinc-400")}>{f}</span>
+                          <CheckCircle2 className={cn("size-3.5 shrink-0", isSelected ? "text-cyan-500" : "text-muted-foreground")} />
+                          <span className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>{f}</span>
                         </li>
                       ))}
                     </ul>
 
                     {isSelected && (
                       <div className="mt-4 pt-3 border-t border-cyan-200/60">
-                        <div className="flex items-center justify-center gap-1.5 text-cyan-700">
+                        <div className="flex items-center justify-center gap-1.5 text-primary">
                           <CheckCircle2 className="size-3.5" />
                           <span className={cn(TYPOGRAPHY.caption, "font-medium")}>{t("onboarding.selected")}</span>
                         </div>
@@ -292,10 +292,10 @@ export default function OnboardingPage() {
         <div className="space-y-4">
           <div className="text-center py-4">
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
-              <Radio className="size-7 text-cyan-700" />
+              <Radio className="size-7 text-primary" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.configureSecuritySourcesTitle")}</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+            <h2 className={cn(TYPOGRAPHY.h1, "text-foreground")}>{t("onboarding.configureSecuritySourcesTitle")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-muted-foreground mt-2")}>
               {t("onboarding.configureSecuritySourcesDesc")}
             </p>
           </div>
@@ -311,20 +311,20 @@ export default function OnboardingPage() {
                     "cursor-pointer transition-all",
                     isSelected
                       ? "border-cyan-400 bg-cyan-50/50 ring-1 ring-cyan-200/60 shadow-sm"
-                      : "border-white/6 bg-[#131316] hover:shadow-sm"
+                      : "border-border bg-card hover:shadow-sm"
                   )}
                   onClick={() => toggleSource(source.id)}
                 >
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className={cn(
                       "flex size-10 items-center justify-center rounded-lg",
-                      isSelected ? "bg-cyan-100" : "bg-[#09090b]"
+                      isSelected ? "bg-cyan-100" : "bg-background"
                     )}>
-                      <SourceIcon className={cn("size-5", isSelected ? "text-cyan-700" : "text-zinc-500")} />
+                      <SourceIcon className={cn("size-5", isSelected ? "text-primary" : "text-muted-foreground")} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className={cn(TYPOGRAPHY.h3, "text-white")}>{source.name}</h4>
-                      <p className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>{source.description}</p>
+                      <h4 className={cn(TYPOGRAPHY.h3, "text-foreground")}>{source.name}</h4>
+                      <p className={cn(TYPOGRAPHY.micro, "text-muted-foreground")}>{source.description}</p>
                     </div>
                     {isSelected && (
                       <CheckCircle2 className="size-5 text-cyan-500 shrink-0" />
@@ -336,7 +336,7 @@ export default function OnboardingPage() {
           </div>
 
           {selectedSources.length > 0 && (
-            <p className={cn(TYPOGRAPHY.caption, "text-zinc-500 text-center")}>
+            <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground text-center")}>
               已选择 {selectedSources.length} 个安全源，可在后续随时调整
             </p>
           )}
@@ -347,10 +347,10 @@ export default function OnboardingPage() {
         <div className="space-y-4">
           <div className="text-center py-4">
             <div className={`flex size-14 items-center justify-center ${RADIUS.xl} bg-cyan-50 ring-1 ring-cyan-200/50 mx-auto mb-4`}>
-              <Users className="size-7 text-cyan-700" />
+              <Users className="size-7 text-primary" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.inviteTeamTitle")}</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2")}>
+            <h2 className={cn(TYPOGRAPHY.h1, "text-foreground")}>{t("onboarding.inviteTeamTitle")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-muted-foreground mt-2")}>
               {t("onboarding.inviteTeamDesc")}
             </p>
           </div>
@@ -360,7 +360,7 @@ export default function OnboardingPage() {
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                       value={inviteInput}
                       onChange={(e) => setInviteInput(e.target.value)}
@@ -378,7 +378,7 @@ export default function OnboardingPage() {
                     variant="outline"
                     onClick={addInviteEmail}
                     disabled={!inviteInput.trim() || !inviteInput.includes("@")}
-                    className="gap-1 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+                    className="gap-1 border-cyan-200 text-primary hover:bg-cyan-50"
                   >
                     <Plus className="size-3.5" />
                     {t("onboarding.add")}
@@ -387,7 +387,7 @@ export default function OnboardingPage() {
 
                 {inviteEmails.length > 0 && (
                   <div className="space-y-2">
-                    <Label className={cn(TYPOGRAPHY.caption, "text-zinc-500")}>
+                    <Label className={cn(TYPOGRAPHY.caption, "text-muted-foreground")}>
                       {t("common.added")} {inviteEmails.length} {t("onboarding.membersAdded")}
                     </Label>
                     <div className="flex flex-wrap gap-2">
@@ -395,10 +395,10 @@ export default function OnboardingPage() {
                         <Badge
                           key={email}
                           variant="outline"
-                          className="border-cyan-200 bg-cyan-50 text-cyan-700 gap-1 py-1 px-2.5"
+                          className="border-cyan-200 bg-cyan-50 text-primary gap-1 py-1 px-2.5"
                         >
                           {email}
-                          <button onClick={() => removeInviteEmail(email)} className="hover:text-red-500 transition-colors">
+                          <button onClick={() => removeInviteEmail(email)} className="hover:text-red-600 transition-colors">
                             <X className="size-3" />
                           </button>
                         </Badge>
@@ -408,7 +408,7 @@ export default function OnboardingPage() {
                 )}
 
                 {inviteEmails.length === 0 && (
-                  <p className={cn(TYPOGRAPHY.caption, "text-zinc-500 text-center py-4")}>
+                  <p className={cn(TYPOGRAPHY.caption, "text-muted-foreground text-center py-4")}>
                     {t("onboarding.canSkipLater")}
                   </p>
                 )}
@@ -424,8 +424,8 @@ export default function OnboardingPage() {
             <div className="flex size-16 items-center justify-center rounded-2xl bg-emerald-50 ring-1 ring-emerald-200/50 mx-auto mb-4">
               <CheckCircle2 className="size-8 text-emerald-600" />
             </div>
-            <h2 className={cn(TYPOGRAPHY.h1, "text-white")}>{t("onboarding.setupComplete")}</h2>
-            <p className={cn(TYPOGRAPHY.body, "text-zinc-500 mt-2 max-w-md mx-auto")}>
+            <h2 className={cn(TYPOGRAPHY.h1, "text-foreground")}>{t("onboarding.setupComplete")}</h2>
+            <p className={cn(TYPOGRAPHY.body, "text-muted-foreground mt-2 max-w-md mx-auto")}>
               {t("onboarding.setupCompleteDesc")}
             </p>
           </div>
@@ -434,15 +434,15 @@ export default function OnboardingPage() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.planLabel")}</span>
-                  <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-cyan-700">
+                  <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("onboarding.planLabel")}</span>
+                  <Badge variant="outline" className="border-cyan-200 bg-cyan-50 text-primary">
                     {PLANS.find((p) => p.id === selectedPlan)?.name ?? selectedPlan}
                   </Badge>
                 </div>
                 <div className="h-px bg-slate-200" />
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.securitySourcesLabel")}</span>
-                  <span className={cn(TYPOGRAPHY.body, "text-white font-medium")}>
+                  <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("onboarding.securitySourcesLabel")}</span>
+                  <span className={cn(TYPOGRAPHY.body, "text-foreground font-medium")}>
                     {selectedSources.length > 0
                       ? `${selectedSources.length} ${t("common.items")}${t("onboarding.selected")}`
                       : t("onboarding.notConfigured")}
@@ -450,8 +450,8 @@ export default function OnboardingPage() {
                 </div>
                 <div className="h-px bg-slate-200" />
                 <div className="flex items-center justify-between py-2">
-                  <span className={cn(TYPOGRAPHY.body, "text-zinc-400")}>{t("onboarding.teamMembersLabel")}</span>
-                  <span className={cn(TYPOGRAPHY.body, "text-white font-medium")}>
+                  <span className={cn(TYPOGRAPHY.body, "text-muted-foreground")}>{t("onboarding.teamMembersLabel")}</span>
+                  <span className={cn(TYPOGRAPHY.body, "text-foreground font-medium")}>
                     {inviteEmails.length > 0
                       ? `${inviteEmails.length} ${t("onboarding.invited")}`
                       : t("onboarding.notInvited")}
@@ -463,12 +463,12 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-4 border-t border-white/6/80">
+      <div className="flex items-center justify-between pt-4 border-t border-border/80">
         {!isFirst ? (
           <Button
             variant="ghost"
             onClick={handlePrev}
-            className="text-zinc-500 hover:text-zinc-200 gap-1"
+            className="text-muted-foreground hover:text-foreground gap-1"
           >
             <ChevronLeft className="size-4" />
             {t("onboarding.previousStep")}
@@ -478,13 +478,13 @@ export default function OnboardingPage() {
         )}
 
         <div className="flex items-center gap-3">
-          <span className={cn(TYPOGRAPHY.micro, "text-zinc-500")}>
+          <span className={cn(TYPOGRAPHY.micro, "text-muted-foreground")}>
             {currentStep + 1} / {STEPS.length}
           </span>
           <Button
             onClick={handleNext}
             disabled={submitting}
-            className="bg-cyan-600 text-white hover:bg-cyan-700 gap-1"
+            className="bg-cyan-600 text-foreground hover:bg-cyan-700 gap-1"
           >
             {submitting ? (
               <>

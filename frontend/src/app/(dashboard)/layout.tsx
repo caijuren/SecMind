@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Topbar } from "@/components/layout/topbar"
-import { DynamicOnboardingGuide } from "@/components/dynamic-imports"
-import { TrialBanner } from "@/components/billing/TrialBanner"
 import { useAuthStore } from "@/store/auth-store"
+import { useMockDataStore } from "@/store/mock-data-store"
 import { setApiToken } from "@/lib/api"
 import { startDemoSession } from "@/lib/demo-session"
 
@@ -20,8 +19,6 @@ export default function DashboardLayout({
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const permissions = useAuthStore((s) => s.permissions)
   const setPermissions = useAuthStore((s) => s.setPermissions)
-  const clearNewUserFlag = useAuthStore((s) => s.clearNewUserFlag)
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const token = useAuthStore((s) => s.token)
 
   useEffect(() => {
@@ -36,28 +33,17 @@ export default function DashboardLayout({
   }, [isAuthenticated, permissions, setPermissions, user])
 
   useEffect(() => {
-    const onboarded = localStorage.getItem('secmind-onboarded')
-    if (!onboarded && user?.isNewUser) {
-      if (typeof queueMicrotask === 'function') {
-        queueMicrotask(() => setShowOnboarding(true))
-      } else {
-        Promise.resolve().then(() => setShowOnboarding(true))
-      }
-    }
-  }, [user?.isNewUser])
-
-  useEffect(() => {
     setApiToken(token)
   }, [token])
 
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false)
-    clearNewUserFlag()
-    localStorage.setItem('secmind-onboarded', '1')
-  }
+  // Initialize mock data store once
+  const initializeMockData = useMockDataStore((s) => s.initialize)
+  useEffect(() => {
+    initializeMockData()
+  }, [initializeMockData])
 
   return (
-    <div className="flex h-screen bg-[#09090b] text-foreground">
+    <div className="flex h-screen bg-background text-foreground">
       <div className="hidden md:block">
         <Sidebar
           collapsed={collapsed}
@@ -82,12 +68,8 @@ export default function DashboardLayout({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMenuClick={() => setMobileSidebarOpen(true)} />
-        {!user?.isDemo && <TrialBanner />}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 cyber-grid-bg">{children}</main>
       </div>
-      {showOnboarding && (
-        <DynamicOnboardingGuide onComplete={handleOnboardingComplete} />
-      )}
     </div>
   )
 }

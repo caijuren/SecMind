@@ -18,10 +18,15 @@ SecMind 是 AI 自主安全运营平台，前端基于 Next.js 16 App Router + T
 ## 关键约定
 
 ### 设计系统
-- **深色主题优先**：页面背景 `#09090b`，卡片 `#131316`，边框 `border-white/6`
-- **文本层级**：一级 `text-white`，二级 `text-zinc-200`，正文 `text-zinc-300/400`，辅助 `text-zinc-500`
-- **品牌色**：主交互 `blue-500`，AI 模块 `violet-500`
-- **禁止使用**：`bg-white` 纯白背景、`text-slate-*` 深色文本、浅色输入框样式
+- **赛博指挥美学 (Cyber-Command)**：暗色优先，深空蓝黑 + 青蓝主色 + 矩阵绿
+- **浅色模式**：页面背景 `#f4f6fb`（冷灰蓝），卡片 `#ffffff`，边框 `border-border`（`#dfe4ef`）
+- **暗色模式**：页面背景 `#0a0e1a`（深空蓝黑），卡片 `#0d1225`，主色 `#00d4ff`（青蓝）
+- **字体**：正文 IBM Plex Sans，标题 Space Grotesk，代码 Space Mono / JetBrains Mono
+- **品牌色**：主交互 `#0066ff`（浅色）/ `#00d4ff`（暗色），AI 模块 `#a78bfa`
+- **语义色**：critical `#ff2d55`，high `#ff9500`，medium `#fbbf24`，low `#00ff88`，info `#00d4ff`
+- **语义化颜色**：使用 CSS 变量（`bg-background`、`bg-card`、`text-foreground`、`text-muted-foreground`、`border-border` 等），不硬编码颜色值
+- **赛博特效类**：`.cyber-card`（边框光效卡片）、`.cyber-grid-bg`（网格底纹）、`.cyber-input-glow`（发光输入框）、`.cyber-btn-primary`（渐变主按钮）
+- **赛博动效类**：`.animate-scanline`（扫描线）、`.animate-radar-pulse`（雷达脉冲）、`.animate-critical-breathe`（呼吸红光）、`.animate-cyber-breathe`（青蓝呼吸）、`.animate-matrix-blink`（矩阵绿闪烁）、`.animate-number-roll`（数字翻滚）
 - 设计规范文档：`docs/admin-ui-guidelines-v2.md`
 
 ### 组件使用
@@ -54,7 +59,7 @@ SecMind 是 AI 自主安全运营平台，前端基于 Next.js 16 App Router + T
 npm run dev               # 开发服务器
 npm run build             # 生产构建
 npm run lint              # ESLint 检查
-npm run ui:check          # UI 深色主题规范检查
+npm run ui:check          # UI 浅色主题规范检查
 npm run ui:check:fix      # UI 规范检查（含修复建议）
 ```
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface RiskBadgeProps {
   level: "critical" | "high" | "medium" | "low" | "info"
@@ -11,36 +12,39 @@ interface RiskBadgeProps {
 
 const riskConfig = {
   critical: {
-    label: "严重",
-    color: "#fca5a5",
-    bg: "rgba(239,68,68,0.15)",
-    border: "rgba(239,68,68,0.3)",
+    color: "#ff2d55",
+    bg: "rgba(255,45,85,0.12)",
+    border: "rgba(255,45,85,0.30)",
   },
   high: {
-    label: "高危",
-    color: "#fdba74",
-    bg: "rgba(249,115,22,0.15)",
-    border: "rgba(249,115,22,0.3)",
+    color: "#ff9500",
+    bg: "rgba(255,149,0,0.12)",
+    border: "rgba(255,149,0,0.30)",
   },
   medium: {
-    label: "中危",
-    color: "#fde047",
-    bg: "rgba(234,179,8,0.15)",
-    border: "rgba(234,179,8,0.3)",
+    color: "#fbbf24",
+    bg: "rgba(251,191,36,0.12)",
+    border: "rgba(251,191,36,0.30)",
   },
   low: {
-    label: "低危",
-    color: "#86efac",
-    bg: "rgba(34,197,94,0.15)",
-    border: "rgba(34,197,94,0.3)",
+    color: "#00d4ff",
+    bg: "rgba(0,212,255,0.10)",
+    border: "rgba(0,212,255,0.25)",
   },
   info: {
-    label: "信息",
-    color: "#93c5fd",
-    bg: "rgba(59,130,246,0.15)",
-    border: "rgba(59,130,246,0.3)",
+    color: "#00d4ff",
+    bg: "rgba(0,212,255,0.10)",
+    border: "rgba(0,212,255,0.25)",
   },
 } as const
+
+const riskLabelKeys: Record<RiskBadgeProps["level"], string> = {
+  critical: "common.riskCritical",
+  high: "common.riskHigh",
+  medium: "common.riskMedium",
+  low: "common.riskLow",
+  info: "common.riskInfo",
+}
 
 const sizeClasses = {
   sm: "text-[10px] px-1.5 py-0.5",
@@ -55,6 +59,8 @@ export default function RiskBadge({
   pulse = false,
 }: RiskBadgeProps) {
   const config = riskConfig[level]
+  const { t } = useLocaleStore()
+  const label = t(riskLabelKeys[level])
 
   const glowStyle =
     showGlow && (level === "critical" || level === "high")
@@ -64,7 +70,7 @@ export default function RiskBadge({
   return (
     <span
       role="status"
-      aria-label={`风险等级: ${config.label}`}
+      aria-label={`${t("common.riskLevel")}: ${label}`}
       className={cn(
         "inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap select-none",
         sizeClasses[size],
@@ -77,7 +83,7 @@ export default function RiskBadge({
         ...glowStyle,
       }}
     >
-      {config.label}
+      {label}
     </span>
   )
 }

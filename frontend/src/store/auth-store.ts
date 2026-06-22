@@ -33,6 +33,7 @@ interface AuthActions {
   setRememberMe: (rememberMe: boolean) => void
   setRefreshToken: (refreshToken: string | null) => void
   setPermissions: (permissions: string[]) => void
+  setToken: (token: string | null) => void
   hasPermission: (resource: string, action?: string) => boolean
 }
 
@@ -97,6 +98,12 @@ export const useAuthStore = create<AuthStore>()(
         set((state) => {
           state.permissions = permissions
         }),
+      setToken: (token) => {
+        set((state) => {
+          state.token = token
+        })
+        setApiToken(token)
+      },
       hasPermission: (resourceOrKey: string, action?: string) => {
         const { permissions, user } = get()
         if (user?.role === 'admin' || user?.isDemo) return true

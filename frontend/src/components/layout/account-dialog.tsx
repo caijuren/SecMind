@@ -76,7 +76,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
             unoptimized
           />
         ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400 text-2xl font-medium ring-1 ring-cyan-500/30">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-cyan-600 text-2xl font-medium ring-1 ring-cyan-500/30">
             {initials}
           </div>
         )}
@@ -86,7 +86,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
           aria-label="更换头像"
           className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         >
-          <Camera className="size-5 text-white" />
+          <Camera className="size-5 text-foreground" />
         </button>
         <input
           ref={fileInputRef}
@@ -102,7 +102,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
           <Button
             size="sm"
             onClick={handleSave}
-            className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+            className="gap-1.5 bg-cyan-600 text-foreground hover:bg-cyan-700"
           >
             <Save className="size-3.5" />
             {t("topbar.save")}
@@ -111,7 +111,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
             size="sm"
             variant="outline"
             onClick={handleCancel}
-            className="border-white/[0.06] text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-300"
+            className="border-border text-muted-foreground hover:bg-muted/30 hover:text-muted-foreground"
           >
             {t("topbar.cancelAvatar")}
           </Button>
@@ -121,7 +121,7 @@ function AvatarTab({ t }: { t: (key: string) => string }) {
           size="sm"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          className="gap-1.5 border-white/[0.06] text-zinc-400 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/30"
+          className="gap-1.5 border-border text-muted-foreground hover:bg-primary/10 hover:text-cyan-600 hover:border-primary/30"
         >
           <Upload className="size-3.5" />
           {t("topbar.uploadAvatar")}
@@ -144,7 +144,7 @@ function NicknameTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <label htmlFor="nickname-input" className="text-xs text-slate-400">{t("topbar.nicknameLabel")}</label>
+        <label htmlFor="nickname-input" className="text-xs text-muted-foreground">{t("topbar.nicknameLabel")}</label>
         <Input
           id="nickname-input"
           name="nickname"
@@ -152,14 +152,14 @@ function NicknameTab({ t }: { t: (key: string) => string }) {
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
           placeholder={t("topbar.nicknamePlaceholder")}
-          className="h-9 border-white/[0.06] bg-white/[0.03] text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+          className="h-9 border-border bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       <div className="flex justify-end">
         <Button
           size="sm"
           onClick={handleSave}
-          className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+          className="gap-1.5 bg-cyan-600 text-foreground hover:bg-cyan-700"
         >
           <Save className="size-3.5" />
           {t("topbar.save")}
@@ -188,7 +188,7 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <label htmlFor="current-password" className="text-xs text-slate-400">{t("topbar.currentPassword")}</label>
+        <label htmlFor="current-password" className="text-xs text-muted-foreground">{t("topbar.currentPassword")}</label>
         <Input
           id="current-password"
           type="password"
@@ -196,12 +196,12 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           placeholder={t("topbar.currentPasswordPlaceholder")}
-          className="h-9 border-white/[0.06] bg-white/[0.03] text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+          className="h-9 border-border bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/60 focus-visible:ring-cyan-400/20"
         />
       </div>
-      <Separator className="bg-white/[0.04]" />
+      <Separator className="bg-muted/50" />
       <div className="space-y-2">
-        <label htmlFor="new-password" className="text-xs text-slate-400">{t("topbar.newPassword")}</label>
+        <label htmlFor="new-password" className="text-xs text-muted-foreground">{t("topbar.newPassword")}</label>
         <Input
           id="new-password"
           type="password"
@@ -209,11 +209,11 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder={t("topbar.newPasswordPlaceholder")}
-          className="h-9 border-white/[0.06] bg-white/[0.03] text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+          className="h-9 border-border bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       <div className="space-y-2">
-        <label htmlFor="confirm-password" className="text-xs text-slate-400">{t("topbar.confirmPassword")}</label>
+        <label htmlFor="confirm-password" className="text-xs text-muted-foreground">{t("topbar.confirmPassword")}</label>
         <Input
           id="confirm-password"
           type="password"
@@ -221,17 +221,17 @@ function PasswordTab({ t }: { t: (key: string) => string }) {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder={t("topbar.confirmPasswordPlaceholder")}
-          className="h-9 border-white/[0.06] bg-white/[0.03] text-sm text-zinc-200 placeholder:text-zinc-500 focus-visible:border-cyan-400/60 focus-visible:ring-cyan-400/20"
+          className="h-9 border-border bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus-visible:border-primary/60 focus-visible:ring-cyan-400/20"
         />
       </div>
       {error && (
-        <p className="text-xs text-red-400">{error}</p>
+        <p className="text-xs text-red-600">{error}</p>
       )}
       <div className="flex justify-end">
         <Button
           size="sm"
           onClick={handleSave}
-          className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+          className="gap-1.5 bg-cyan-600 text-foreground hover:bg-cyan-700"
         >
           <Save className="size-3.5" />
           {t("topbar.save")}
@@ -246,27 +246,27 @@ export function AccountDialog({ open, onOpenChange }: AccountDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-white/[0.06] bg-[#18181b] text-zinc-300 shadow-xl shadow-black/30">
+      <DialogContent className="sm:max-w-md border-border bg-card text-muted-foreground shadow-xl shadow-lg">
         <DialogHeader>
-          <DialogTitle className="text-zinc-100">
+          <DialogTitle className="text-foreground">
             {t("topbar.accountSettings")}
           </DialogTitle>
-          <DialogDescription className="text-zinc-500">
+          <DialogDescription className="text-muted-foreground">
             {t("topbar.profile")}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="avatar">
-          <TabsList className="border border-white/[0.06] bg-white/[0.03]">
-            <TabsTrigger value="avatar" className="data-active:bg-white/[0.06] data-active:text-cyan-400">
+          <TabsList className="border border-border bg-muted/30">
+            <TabsTrigger value="avatar" className="data-active:bg-muted/50 data-active:text-cyan-600">
               <Camera className="size-3.5 mr-1" />
               {t("topbar.changeAvatar")}
             </TabsTrigger>
-            <TabsTrigger value="nickname" className="data-active:bg-white/[0.06] data-active:text-cyan-400">
+            <TabsTrigger value="nickname" className="data-active:bg-muted/50 data-active:text-cyan-600">
               <User className="size-3.5 mr-1" />
               {t("topbar.changeNickname")}
             </TabsTrigger>
-            <TabsTrigger value="password" className="data-active:bg-white/[0.06] data-active:text-cyan-400">
+            <TabsTrigger value="password" className="data-active:bg-muted/50 data-active:text-cyan-600">
               <Lock className="size-3.5 mr-1" />
               {t("topbar.changePassword")}
             </TabsTrigger>

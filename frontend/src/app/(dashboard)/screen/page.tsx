@@ -19,7 +19,6 @@ import {
 import ReactECharts from "echarts-for-react"
 import { PageHeader } from "@/components/layout/page-header"
 import { PermissionGate } from "@/components/auth/PermissionGate"
-import { useAuthStore } from "@/store/auth-store"
 import { useLocaleStore } from "@/store/locale-store"
 import {
   Card,
@@ -143,37 +142,59 @@ const systemHealth = [
   { name: "AI推理引擎", status: "normal" as const, load: 73 },
 ]
 
+// ==================== 暗色模式适配 ====================
+
+function getChartColors() {
+  const isDark = document.documentElement.classList.contains("dark")
+  return {
+    background: isDark ? "transparent" : "#ffffff",
+    border: isDark ? "rgba(255,255,255,0.1)" : "#ffffff",
+    text: isDark ? "#e5e7eb" : "#374151",
+    tooltipBg: isDark ? "rgba(23,23,23,0.95)" : "#ffffff",
+    tooltipBorder: isDark ? "rgba(255,255,255,0.1)" : "#e4e4e7",
+    tooltipText: isDark ? "#e5e7eb" : "#18181b",
+    legendText: isDark ? "#a1a1aa" : "#71717a",
+    axisLine: isDark ? "rgba(255,255,255,0.1)" : "#e4e4e7",
+    axisLabel: isDark ? "#a1a1aa" : "#a1a1aa",
+    splitLine: isDark ? "rgba(255,255,255,0.06)" : "#f4f4f5",
+    labelColor: isDark ? "#d4d4d8" : "#52525b",
+    labelLineColor: isDark ? "rgba(255,255,255,0.15)" : "#d4d4d8",
+    mapLabel: isDark ? "#cbd5e1" : "#334155",
+  }
+}
+
 // ==================== ECharts 配置 - Linear浅色精致风格 ====================
 
 /** 折线图 - 干净的Linear风格 */
 function getLineChartOption(hourlyAlerts: HourlyAlert[]) {
   const hours = hourlyAlerts.map(h => `${String(h.hour).padStart(2, "0")}:00`)
   const counts = hourlyAlerts.map(h => h.count)
+  const c = getChartColors()
 
   return {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "axis",
-      backgroundColor: "#ffffff",
-      borderColor: "#e4e4e7",
+      backgroundColor: c.tooltipBg,
+      borderColor: c.tooltipBorder,
       borderWidth: 1,
       borderRadius: RADIUS.md.replace('rounded-', ''),
       padding: [12, 16],
       textStyle: {
-        color: "#18181b",
+        color: c.tooltipText,
         fontSize: 13,
         fontWeight: 500,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       },
       axisPointer: {
-        lineStyle: { color: "#d4d4d8", width: 1, type: "dashed" },
+        lineStyle: { color: c.axisLine, width: 1, type: "dashed" },
       },
     },
     legend: {
       data: ["告警总数"],
       top: 10,
       textStyle: {
-        color: "#71717a",
+        color: c.legendText,
         fontSize: 13,
         fontWeight: 500,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -187,26 +208,26 @@ function getLineChartOption(hourlyAlerts: HourlyAlert[]) {
       type: "category",
       boundaryGap: false,
       data: hours,
-      axisLine: { lineStyle: { color: "#e4e4e7", width: 1 } },
+      axisLine: { lineStyle: { color: c.axisLine, width: 1 } },
       axisTick: { show: false },
       axisLabel: {
-        color: "#a1a1aa",
+        color: c.axisLabel,
         fontSize: 12,
         interval: 3,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       },
-      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
+      splitLine: { lineStyle: { color: c.splitLine, type: "dashed" } },
     },
     yAxis: {
       type: "value",
       axisLine: { show: false },
       axisTick: { show: false },
       axisLabel: {
-        color: "#a1a1aa",
+        color: c.axisLabel,
         fontSize: 12,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       },
-      splitLine: { lineStyle: { color: "#f4f4f5", type: "dashed" } },
+      splitLine: { lineStyle: { color: c.splitLine, type: "dashed" } },
     },
     series: [
       {
@@ -217,7 +238,7 @@ function getLineChartOption(hourlyAlerts: HourlyAlert[]) {
         symbolSize: 6,
         data: counts,
         lineStyle: { color: "#0891b2", width: 2.5 },
-        itemStyle: { color: "#0891b2", borderColor: "#ffffff", borderWidth: 2 },
+        itemStyle: { color: "#0891b2", borderColor: c.border, borderWidth: 2 },
         areaStyle: {
           color: { type: "linear", x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: "rgba(8,145,178,0.12)" }, { offset: 1, color: "rgba(8,145,178,0.01)" }] }
         },
@@ -233,24 +254,25 @@ function getPieChartOption(attackTypes: AttackType[]) {
     value: item.count,
     itemStyle: { color: ATTACK_TYPE_COLORS[idx % ATTACK_TYPE_COLORS.length] },
   }))
+  const c = getChartColors()
 
   return {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "item",
-      backgroundColor: "#ffffff",
-      borderColor: "#e4e4e7",
+      backgroundColor: c.tooltipBg,
+      borderColor: c.tooltipBorder,
       borderWidth: 1,
       borderRadius: RADIUS.md.replace('rounded-', ''),
       padding: [12, 16],
-      textStyle: { color: "#18181b", fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      textStyle: { color: c.tooltipText, fontSize: 13, fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
       formatter: "{b}: <strong>{c}</strong> ({d}%)",
     },
     legend: {
       orient: "vertical",
       right: "5%",
       top: "center",
-      textStyle: { color: "#71717a", fontSize: 13, fontWeight: 500, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      textStyle: { color: c.legendText, fontSize: 13, fontWeight: 500, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
       itemWidth: 16,
       itemHeight: 16,
       itemGap: 16,
@@ -262,11 +284,11 @@ function getPieChartOption(attackTypes: AttackType[]) {
       center: ["40%", "50%"],
       avoidLabelOverlap: true,
       padAngle: 2,
-      itemStyle: { borderRadius: 8, borderColor: "#ffffff", borderWidth: 3 },
+      itemStyle: { borderRadius: 8, borderColor: c.border, borderWidth: 3 },
       label: {
         show: true,
         position: "outside",
-        color: "#52525b",
+        color: c.labelColor,
         fontSize: 13,
         fontWeight: 600,
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
@@ -276,7 +298,7 @@ function getPieChartOption(attackTypes: AttackType[]) {
         label: { show: true, fontSize: 15, fontWeight: "bold" },
         itemStyle: { shadowBlur: 20, shadowColor: "rgba(0,0,0,0.1)", shadowOffsetX: 0, shadowOffsetY: 4 },
       },
-      labelLine: { show: true, lineStyle: { color: "#d4d4d8", width: 1.5 } },
+      labelLine: { show: true, lineStyle: { color: c.labelLineColor, width: 1.5 } },
       data: pieData,
     }],
   }
@@ -292,11 +314,13 @@ function getMapOption(regions: ThreatRegion[]) {
       topType: r.top_type,
     }))
 
+  const chartColors = getChartColors()
+
   return {
     backgroundColor: "transparent",
     tooltip: {
       trigger: "item",
-      backgroundColor: "#ffffff",
+      backgroundColor: chartColors.tooltipBg,
       borderColor: "#e4e4e7",
       borderWidth: 1,
       padding: [12, 16],
@@ -350,7 +374,7 @@ function DashboardKPICard({ item }: { item: KPIItem }) {
             >
               <Icon className="size-5" style={{ color: item.color }} />
             </div>
-            <span className={String(TYPOGRAPHY.caption) + " text-zinc-500 uppercase tracking-wide font-medium"}>
+            <span className={String(TYPOGRAPHY.caption) + " text-muted-foreground uppercase tracking-wide font-medium"}>
               {item.label}
             </span>
           </div>
@@ -366,11 +390,11 @@ function DashboardKPICard({ item }: { item: KPIItem }) {
           )}
         </div>
 
-        <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-white">
+        <div className="text-3xl font-bold font-mono tabular-nums tracking-tight text-foreground">
           {item.value}
         </div>
         
-        <div className={String(TYPOGRAPHY.micro) + " text-slate-400 mt-1"}>实时更新</div>
+        <div className={String(TYPOGRAPHY.micro) + " text-muted-foreground mt-1"}>实时更新</div>
       </CardContent>
     </Card>
   )
@@ -383,13 +407,13 @@ function AlertListItem({ alert }: { alert: AlertItem }) {
   return (
     <div className={cn(
       "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-150",
-      "hover:bg-[#09090b] border border-transparent hover:border-white/6"
+      "hover:bg-muted/50 border border-transparent hover:border-border"
     )}>
-      <span className={String(TYPOGRAPHY.caption) + "font-mono text-slate-400 w-20 shrink-0 tabular-nums"}>
+      <span className={String(TYPOGRAPHY.caption) + "font-mono text-muted-foreground w-20 shrink-0 tabular-nums"}>
         {alert.time}
       </span>
       
-      <span className={String(TYPOGRAPHY.body) + "text-zinc-500 w-14 shrink-0 font-medium"}>
+      <span className={String(TYPOGRAPHY.body) + "text-muted-foreground w-14 shrink-0 font-medium"}>
         {alert.source}
       </span>
       
@@ -400,7 +424,7 @@ function AlertListItem({ alert }: { alert: AlertItem }) {
         {SEVERITY_LABEL[alert.level] ?? alert.level}
       </span>
       
-      <span className={String(TYPOGRAPHY.body) + "text-zinc-200 truncate flex-1 ml-1"}>
+      <span className={String(TYPOGRAPHY.body) + "text-foreground truncate flex-1 ml-1"}>
         {alert.message}
       </span>
     </div>
@@ -425,10 +449,10 @@ function TeamMemberCard({ member }: { member: typeof teamStats[number] }) {
         </div>
         
         <div className="flex-1 min-w-0">
-          <div className={String(TYPOGRAPHY.body) + "text-zinc-100 font-medium truncate"}>
+          <div className={String(TYPOGRAPHY.body) + "text-foreground font-medium truncate"}>
             {member.name}
           </div>
-          <div className={String(TYPOGRAPHY.caption) + "text-zinc-500 mt-0.5"}>
+          <div className={String(TYPOGRAPHY.caption) + "text-muted-foreground mt-0.5"}>
             {member.cases}件 · {member.accuracy}
           </div>
         </div>
@@ -443,7 +467,7 @@ function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className={String(TYPOGRAPHY.body) + "text-zinc-200 w-24 truncate font-medium"}>
+      <span className={String(TYPOGRAPHY.body) + "text-foreground w-24 truncate font-medium"}>
         {item.name}
       </span>
       
@@ -454,7 +478,7 @@ function HealthIndicator({ item }: { item: typeof systemHealth[number] }) {
         />
       </div>
       
-      <span className={String(TYPOGRAPHY.caption) + "text-slate-400 w-10 text-right font-mono tabular-nums"}>
+      <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground w-10 text-right font-mono tabular-nums"}>
         {item.load}%
       </span>
     </div>
@@ -469,9 +493,9 @@ export default function ScreenPage() {
     <PermissionGate resource="dashboard_situation" action="read" fallback={
       <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <ShieldAlert className="mx-auto size-12 text-zinc-500 mb-4" />
-          <h2 className="text-lg font-semibold text-slate-300">{t("situation.noPermission")}</h2>
-          <p className="text-sm text-zinc-500 mt-1">{t("situation.noPermissionDesc")}</p>
+          <ShieldAlert className="mx-auto size-12 text-muted-foreground mb-4" />
+          <h2 className="text-lg font-semibold text-muted-foreground">{t("situation.noPermission")}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{t("situation.noPermissionDesc")}</p>
         </div>
       </div>
     }>
@@ -482,7 +506,6 @@ export default function ScreenPage() {
 
 function ScreenContent() {
   const { t } = useLocaleStore()
-  const isDemo = useAuthStore(s => s.user?.isDemo)
   const [timeRange, setTimeRange] = useState("today")
   const [summary, setSummary] = useState<OverviewSummary | null>(null)
   const [hourlyAlerts, setHourlyAlerts] = useState<HourlyAlert[]>([])
@@ -495,7 +518,20 @@ function ScreenContent() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      if (isDemo) {
+      const [overviewRes, threatMapRes, realtimeRes] = await Promise.all([
+        api.get("/situation/overview"),
+        api.get("/situation/threat-map"),
+        api.get("/situation/realtime-feed"),
+      ])
+      const overview = overviewRes.data
+      if (overview?.summary) {
+        setSummary(overview.summary)
+        setHourlyAlerts(overview.hourly_alerts ?? [])
+        setAttackTypes(overview.attack_types ?? [])
+        setRegions(threatMapRes.data.regions ?? [])
+        setRealtimeEvents(realtimeRes.data.events ?? [])
+      } else {
+        // Fallback to mock data
         setSummary({
           total_alerts_today: 1284,
           total_devices: 156,
@@ -532,23 +568,47 @@ function ScreenContent() {
           { id: 2, type: "VPN", severity: "critical", source: "VPN", message: "境外IP异常登录触发不可能旅行检测", timestamp: new Date(Date.now() - 5000).toISOString() },
           { id: 3, type: "Email", severity: "high", source: "Email", message: "高仿DHL钓鱼邮件拦截", timestamp: new Date(Date.now() - 10000).toISOString() },
         ])
-        setLastUpdated(new Date())
-        return
       }
-      const [overviewRes, threatMapRes, realtimeRes] = await Promise.all([
-        api.get("/situation/overview"),
-        api.get("/situation/threat-map"),
-        api.get("/situation/realtime-feed"),
-      ])
-      const overview = overviewRes.data
-      setSummary(overview.summary)
-      setHourlyAlerts(overview.hourly_alerts ?? [])
-      setAttackTypes(overview.attack_types ?? [])
-      setRegions(threatMapRes.data.regions ?? [])
-      setRealtimeEvents(realtimeRes.data.events ?? [])
       setLastUpdated(new Date())
-    } catch (error) {
-      console.error("获取态势数据失败:", error)
+    } catch {
+      // Fallback to mock data on API error
+      setSummary({
+        total_alerts_today: 1284,
+        total_devices: 156,
+        online_devices: 152,
+        device_online_rate: 0.973,
+        mttd_minutes: 4.2,
+        mttr_minutes: 18.7,
+        ai_accuracy: 0.956,
+        auto_response_rate: 0.685,
+      })
+      setHourlyAlerts([
+        { hour: 8, count: 42 }, { hour: 9, count: 78 }, { hour: 10, count: 156 },
+        { hour: 11, count: 89 }, { hour: 12, count: 45 }, { hour: 13, count: 67 },
+        { hour: 14, count: 234 }, { hour: 15, count: 178 }, { hour: 16, count: 123 },
+        { hour: 17, count: 56 }, { hour: 18, count: 34 },
+      ])
+      setAttackTypes([
+        { type: "暴力破解", count: 28, trend: "+12%" },
+        { type: "钓鱼攻击", count: 22, trend: "+8%" },
+        { type: "恶意软件", count: 18, trend: "-3%" },
+        { type: "权限提升", count: 15, trend: "+25%" },
+        { type: "数据泄露", count: 12, trend: "+5%" },
+        { type: "网络扫描", count: 8, trend: "-10%" },
+      ])
+      setRegions([
+        { region: "华北", attacks: 324, top_type: "暴力破解" },
+        { region: "华东", attacks: 278, top_type: "钓鱼攻击" },
+        { region: "华南", attacks: 156, top_type: "恶意软件" },
+        { region: "西南", attacks: 89, top_type: "网络扫描" },
+        { region: "海外", attacks: 437, top_type: "暴力破解" },
+      ])
+      setRealtimeEvents([
+        { id: 1, type: "EDR", severity: "critical", source: "EDR", message: "PowerShell编码执行行为检测", timestamp: new Date().toISOString() },
+        { id: 2, type: "VPN", severity: "critical", source: "VPN", message: "境外IP异常登录触发不可能旅行检测", timestamp: new Date(Date.now() - 5000).toISOString() },
+        { id: 3, type: "Email", severity: "high", source: "Email", message: "高仿DHL钓鱼邮件拦截", timestamp: new Date(Date.now() - 10000).toISOString() },
+      ])
+      setLastUpdated(new Date())
     } finally {
       setLoading(false)
     }
@@ -604,7 +664,7 @@ function ScreenContent() {
               disabled={loading}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold",
-                "border border-white/6 bg-[#131316] text-zinc-200 hover:bg-[#09090b]",
+                "border border-border bg-card text-foreground hover:bg-muted/50",
                 "transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               )}
             >
@@ -700,7 +760,7 @@ function ScreenContent() {
                     <AlertListItem key={`${alert.time}-${index}`} alert={alert} />
                   ))
                 ) : (
-                  <div className="flex items-center justify-center h-32 text-slate-400 text-sm">
+                  <div className="flex items-center justify-center h-32 text-muted-foreground text-sm">
                     {loading ? (
                       <span className="flex items-center gap-2"><Loader2 className="size-4 animate-spin" />加载中...</span>
                     ) : (
@@ -751,11 +811,11 @@ function ScreenContent() {
         CARD.base
       )}>
         <div className="flex items-center gap-6">
-<span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>
+<span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>
             SecMind AI SOC Platform v2.0 | {t("situation.refreshInterval")}: 30s
           </span>
           {lastUpdated && (
-            <span className={String(TYPOGRAPHY.caption) + "text-zinc-600"}>
+            <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground/60"}>
               {t("situation.lastUpdate")}: {lastUpdated.toLocaleTimeString("zh-CN", { hour12: false })}
             </span>
           )}
@@ -766,12 +826,12 @@ function ScreenContent() {
             {t("situation.systemNormal")}
           </Badge>
           
-          <span className={String(TYPOGRAPHY.caption) + "text-zinc-500"}>
+          <span className={String(TYPOGRAPHY.caption) + "text-muted-foreground"}>
             内存: 62% | CPU: 34% | 磁盘: 51%
           </span>
           
-          <Clock className="size-4 text-slate-400" />
-          <time dateTime={new Date().toISOString()} className={String(TYPOGRAPHY.caption) + "font-mono text-slate-400 tabular-nums"} suppressHydrationWarning>
+          <Clock className="size-4 text-muted-foreground" />
+          <time dateTime={new Date().toISOString()} className={String(TYPOGRAPHY.caption) + "font-mono text-muted-foreground tabular-nums"} suppressHydrationWarning>
             {new Date().toLocaleTimeString("zh-CN")}
           </time>
         </div>

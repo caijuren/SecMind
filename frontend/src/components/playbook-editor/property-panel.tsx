@@ -56,14 +56,14 @@ export function PropertyPanel({
   }
 
   return (
-    <div className="w-72 shrink-0 flex flex-col rounded-xl border border-white/[0.06] bg-[#131316] overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-white/[0.04] bg-white/[0.03]">
-        <h4 className="text-xs font-semibold text-zinc-300">属性面板</h4>
+    <div className="w-72 shrink-0 flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-border/40 bg-muted/30">
+        <h4 className="text-xs font-semibold text-muted-foreground">属性面板</h4>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-        <MousePointer2 className="h-8 w-8 text-zinc-700 mb-3" />
-        <p className="text-xs text-zinc-500">选择节点或连线</p>
-        <p className="text-[10px] text-zinc-500 mt-1">点击画布中的元素查看属性</p>
+        <MousePointer2 className="h-8 w-8 text-muted-foreground/70 mb-3" />
+        <p className="text-xs text-muted-foreground">选择节点或连线</p>
+        <p className="text-[10px] text-muted-foreground mt-1">点击画布中的元素查看属性</p>
       </div>
     </div>
   )
@@ -88,8 +88,8 @@ function NodePropertyEditor({
   }
 
   return (
-    <div className="w-72 shrink-0 flex flex-col rounded-xl border border-white/[0.06] bg-[#131316] overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-white/[0.04] bg-white/[0.03]">
+    <div className="w-72 shrink-0 flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-border/40 bg-muted/30">
         <div className="flex items-center gap-2">
           <div
             className="flex items-center justify-center w-6 h-6 rounded shrink-0"
@@ -100,7 +100,7 @@ function NodePropertyEditor({
           >
             <Icon className="h-3 w-3" style={{ color: config.color }} />
           </div>
-          <h4 className="text-xs font-semibold text-zinc-300">
+          <h4 className="text-xs font-semibold text-muted-foreground">
             {config.label}属性
           </h4>
         </div>
@@ -108,18 +108,18 @@ function NodePropertyEditor({
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">节点名称</Label>
+            <Label className="text-[11px] text-muted-foreground mb-1">节点名称</Label>
             <Input
               value={node.label}
               onChange={(e) => onUpdate(node.id, { label: e.target.value })}
-              className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+              className="h-7 text-xs border-border bg-muted/30"
             />
           </div>
 
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">节点类型</Label>
+            <Label className="text-[11px] text-muted-foreground mb-1">节点类型</Label>
             <div
-              className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs border border-white/[0.04] bg-white/[0.03]"
+              className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs border border-border/40 bg-muted/30"
               style={{ color: config.color }}
             >
               <Icon className="h-3 w-3" />
@@ -127,7 +127,7 @@ function NodePropertyEditor({
             </div>
           </div>
 
-          <div className="h-px bg-white/[0.04]" />
+          <div className="h-px bg-muted/50" />
 
           {node.type === "trigger" && (
             <TriggerFields data={node.data} updateData={updateData} />
@@ -151,28 +151,28 @@ function NodePropertyEditor({
           <div className="h-px bg-slate-100" />
 
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">位置</Label>
+            <Label className="text-[11px] text-muted-foreground mb-1">位置</Label>
             <div className="flex gap-2">
               <div className="flex-1">
-                <span className="text-[10px] text-zinc-500">X</span>
+                <span className="text-[10px] text-muted-foreground">X</span>
                 <Input
                   type="number"
                   value={Math.round(node.x)}
                   onChange={(e) =>
                     onUpdate(node.id, { x: Number(e.target.value) })
                   }
-                  className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+                  className="h-7 text-xs border-border bg-muted/30"
                 />
               </div>
               <div className="flex-1">
-                <span className="text-[10px] text-zinc-500">Y</span>
+                <span className="text-[10px] text-muted-foreground">Y</span>
                 <Input
                   type="number"
                   value={Math.round(node.y)}
                   onChange={(e) =>
                     onUpdate(node.id, { y: Number(e.target.value) })
                   }
-                  className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+                  className="h-7 text-xs border-border bg-muted/30"
                 />
               </div>
             </div>
@@ -203,34 +203,34 @@ function EdgePropertyEditor({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className="w-72 shrink-0 flex flex-col rounded-xl border border-white/[0.06] bg-[#131316] overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-white/[0.04] bg-white/[0.03]">
-        <h4 className="text-xs font-semibold text-zinc-300">连线属性</h4>
+    <div className="w-72 shrink-0 flex flex-col rounded-lg border border-border bg-card overflow-hidden">
+      <div className="px-3 py-2.5 border-b border-border/40 bg-muted/30">
+        <h4 className="text-xs font-semibold text-muted-foreground">连线属性</h4>
       </div>
       <ScrollArea className="flex-1">
         <div className="p-3 space-y-3">
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">连线标签</Label>
+            <Label className="text-[11px] text-muted-foreground mb-1">连线标签</Label>
             <Input
               value={edge.label || ""}
               onChange={(e) => onUpdate(edge.id, { label: e.target.value })}
               placeholder="输入连线标签"
-              className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+              className="h-7 text-xs border-border bg-muted/30"
             />
           </div>
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">源节点</Label>
-            <div className="text-xs text-zinc-400 rounded-md px-2 py-1.5 border border-white/[0.04] bg-white/[0.03]">
+            <Label className="text-[11px] text-muted-foreground mb-1">源节点</Label>
+            <div className="text-xs text-muted-foreground rounded-md px-2 py-1.5 border border-border/40 bg-muted/30">
               {edge.source}
             </div>
           </div>
           <div>
-            <Label className="text-[11px] text-zinc-500 mb-1">目标节点</Label>
-            <div className="text-xs text-zinc-400 rounded-md px-2 py-1.5 border border-white/[0.04] bg-white/[0.03]">
+            <Label className="text-[11px] text-muted-foreground mb-1">目标节点</Label>
+            <div className="text-xs text-muted-foreground rounded-md px-2 py-1.5 border border-border/40 bg-muted/30">
               {edge.target}
             </div>
           </div>
-          <div className="h-px bg-white/[0.04]" />
+          <div className="h-px bg-muted/50" />
 
           <Button
             variant="destructive"
@@ -251,12 +251,12 @@ function TriggerFields({ data, updateData }: { data: NodeData; updateData: Updat
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">触发类型</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">触发类型</Label>
         <Select
           value={data.triggerType || "confidence"}
           onValueChange={(v) => updateData("triggerType", v ?? "confidence")}
         >
-          <SelectTrigger className="h-7 text-xs border-white/[0.06] bg-white/[0.03] w-full">
+          <SelectTrigger className="h-7 text-xs border-border bg-muted/30 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -269,12 +269,12 @@ function TriggerFields({ data, updateData }: { data: NodeData; updateData: Updat
         </Select>
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">触发条件</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">触发条件</Label>
         <Input
           value={data.condition || ""}
           onChange={(e) => updateData("condition", e.target.value)}
           placeholder="如：置信度 ≥ 85%"
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
     </>
@@ -285,12 +285,12 @@ function ActionFields({ data, updateData }: { data: NodeData; updateData: Update
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">动作类型</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">动作类型</Label>
         <Select
           value={data.actionType || "isolateHost"}
           onValueChange={(v) => updateData("actionType", v ?? "isolateHost")}
         >
-          <SelectTrigger className="h-7 text-xs border-white/[0.06] bg-white/[0.03] w-full">
+          <SelectTrigger className="h-7 text-xs border-border bg-muted/30 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -304,12 +304,12 @@ function ActionFields({ data, updateData }: { data: NodeData; updateData: Update
         </Select>
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">目标</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">目标</Label>
         <Input
           value={data.target || ""}
           onChange={(e) => updateData("target", e.target.value)}
           placeholder="如：user-001 或 192.168.1.1"
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
     </>
@@ -320,28 +320,28 @@ function ConditionFields({ data, updateData }: { data: NodeData; updateData: Upd
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">条件表达式</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">条件表达式</Label>
         <Input
           value={data.expression || ""}
           onChange={(e) => updateData("expression", e.target.value)}
           placeholder="如：confidence >= 80"
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">True 分支标签</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">True 分支标签</Label>
         <Input
           value={data.trueLabel || "是"}
           onChange={(e) => updateData("trueLabel", e.target.value)}
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">False 分支标签</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">False 分支标签</Label>
         <Input
           value={data.falseLabel || "否"}
           onChange={(e) => updateData("falseLabel", e.target.value)}
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
     </>
@@ -352,22 +352,22 @@ function DelayFields({ data, updateData }: { data: NodeData; updateData: UpdateD
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">延时时长</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">延时时长</Label>
         <Input
           type="number"
           value={data.duration || 0}
           onChange={(e) => updateData("duration", Number(e.target.value))}
           min={0}
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">时间单位</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">时间单位</Label>
         <Select
           value={data.unit || "minutes"}
           onValueChange={(v) => updateData("unit", v ?? "minutes")}
         >
-          <SelectTrigger className="h-7 text-xs border-white/[0.06] bg-white/[0.03] w-full">
+          <SelectTrigger className="h-7 text-xs border-border bg-muted/30 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -385,12 +385,12 @@ function NotifyFields({ data, updateData }: { data: NodeData; updateData: Update
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">通知渠道</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">通知渠道</Label>
         <Select
           value={data.channel || "email"}
           onValueChange={(v) => updateData("channel", v ?? "email")}
         >
-          <SelectTrigger className="h-7 text-xs border-white/[0.06] bg-white/[0.03] w-full">
+          <SelectTrigger className="h-7 text-xs border-border bg-muted/30 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -402,12 +402,12 @@ function NotifyFields({ data, updateData }: { data: NodeData; updateData: Update
         </Select>
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">接收人</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">接收人</Label>
         <Input
           value={data.recipients || ""}
           onChange={(e) => updateData("recipients", e.target.value)}
           placeholder="如：security-team@company.com"
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
     </>
@@ -418,31 +418,31 @@ function ApprovalFields({ data, updateData }: { data: NodeData; updateData: Upda
   return (
     <>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">审批人</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">审批人</Label>
         <Input
           value={data.approver || ""}
           onChange={(e) => updateData("approver", e.target.value)}
           placeholder="如：安全主管"
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">超时时间</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">超时时间</Label>
         <Input
           type="number"
           value={data.timeout || 30}
           onChange={(e) => updateData("timeout", Number(e.target.value))}
           min={0}
-          className="h-7 text-xs border-white/[0.06] bg-white/[0.03]"
+          className="h-7 text-xs border-border bg-muted/30"
         />
       </div>
       <div>
-        <Label className="text-[11px] text-zinc-500 mb-1">超时单位</Label>
+        <Label className="text-[11px] text-muted-foreground mb-1">超时单位</Label>
         <Select
           value={data.timeoutUnit || "minutes"}
           onValueChange={(v) => updateData("timeoutUnit", v ?? "minutes")}
         >
-          <SelectTrigger className="h-7 text-xs border-white/[0.06] bg-white/[0.03] w-full">
+          <SelectTrigger className="h-7 text-xs border-border bg-muted/30 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -49,96 +49,107 @@
 }
 
 /* ============================================
-   SecMind v3.0 Design System — Dark-First
-   "在黑暗中看见威胁"
+   SecMind v4.0 Design System — Cyber-Command
+   赛博指挥美学：深空蓝黑 + 青蓝主色 + 矩阵绿
+   暗色优先：深蓝黑 / 青蓝 / 琥珀 / 矩阵绿
+   浅色辅助：冷灰蓝 / 电光蓝 / 柔和对比
    ============================================ */
 
+/* ---- 浅色模式 (Light Mode) — 冷灰蓝调 ---- */
 :root {
-  --radius: 0.75rem;
-  --font-sans: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "SFMono-Regular", "SF Mono", "JetBrains Mono", "Fira Code", "Menlo", "Monaco", "Consolas", monospace;
+  --radius: 0.875rem;
+  --font-sans: var(--font-ibm-plex-sans), "Space Grotesk", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: var(--font-space-mono), "JetBrains Mono", "SF Mono", "Fira Code", "Menlo", "Monaco", "Consolas", monospace;
+  --font-heading: var(--font-space-grotesk), "IBM Plex Sans", "PingFang SC", sans-serif;
 
-  /* ---- Deep Dark Base ---- */
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #131316;
-  --card-foreground: #fafafa;
-  --popover: #18181b;
-  --popover-foreground: #fafafa;
+  /* ---- 浅色模式基础色：冷灰蓝 ---- */
+  --background: #f4f6fb;
+  --foreground: #0f1729;
+  --card: #ffffff;
+  --card-foreground: #0f1729;
+  --popover: #ffffff;
+  --popover-foreground: #0f1729;
 
-  /* ---- Primary: Electric Blue → Violet ---- */
-  --primary: #3b82f6;
+  /* ---- Primary: 电光蓝 ---- */
+  --primary: #0066ff;
   --primary-foreground: #ffffff;
 
-  /* ---- Secondary & Muted ---- */
-  --secondary: #1f1f24;
-  --secondary-foreground: #d4d4d8;
-  --muted: #1a1a1f;
-  --muted-foreground: #71717a;
+  /* ---- Secondary & Muted：冷灰 ---- */
+  --secondary: #e8ecf4;
+  --secondary-foreground: #1e293b;
+  --muted: #e8ecf4;
+  --muted-foreground: #475569;
 
-  /* ---- Accent ---- */
-  --accent: #1e1b4b;
-  --accent-foreground: #a78bfa;
+  /* ---- Accent：淡青蓝 ---- */
+  --accent: #e0f0fe;
+  --accent-foreground: #0052cc;
 
-  /* ---- Destructive ---- */
-  --destructive: #ef4444;
+  /* ---- Destructive: 警报红 ---- */
+  --destructive: #ff2d55;
 
   /* ---- Borders & Inputs ---- */
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: #3b82f6;
+  --border: #cdd5e0;
+  --input: #cdd5e0;
+  --ring: #0066ff;
 
-  /* ---- Charts ---- */
-  --chart-1: #3b82f6;
-  --chart-2: #8b5cf6;
-  --chart-3: #06b6d4;
-  --chart-4: #f59e0b;
-  --chart-5: #ec4899;
+  /* ---- Charts：赛博色板 ---- */
+  --chart-1: #0066ff;
+  --chart-2: #00d4ff;
+  --chart-3: #00ff88;
+  --chart-4: #ff9500;
+  --chart-5: #ff2d55;
 
-  /* ---- Sidebar ---- */
-  --sidebar: #0c0c10;
-  --sidebar-foreground: #a1a1aa;
-  --sidebar-primary: #3b82f6;
+  /* ---- Sidebar：冷白 ---- */
+  --sidebar: #f4f6fb;
+  --sidebar-foreground: #334155;
+  --sidebar-primary: #0066ff;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1a1a22;
-  --sidebar-accent-foreground: #e4e4e7;
-  --sidebar-border: rgba(255, 255, 255, 0.04);
-  --sidebar-ring: #3b82f6;
+  --sidebar-accent: #e8ecf4;
+  --sidebar-accent-foreground: #0f1729;
+  --sidebar-border: #d0d8e6;
+  --sidebar-ring: #0066ff;
 }
 
-/* ---- Light Mode (Secondary) ---- */
-.light {
-  --background: #fafafa;
-  --foreground: #09090b;
-  --card: #ffffff;
-  --card-foreground: #09090b;
-  --popover: #ffffff;
-  --popover-foreground: #09090b;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #ede9fe;
-  --accent-foreground: #6d28d9;
-  --destructive: #ef4444;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
-  --chart-2: #8b5cf6;
-  --chart-3: #06b6d4;
-  --chart-4: #f59e0b;
-  --chart-5: #ec4899;
-  --sidebar: #fafafa;
-  --sidebar-foreground: #52525b;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #18181b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #3b82f6;
+/* ---- 暗色模式 (Dark Mode) — 深空指挥中心 ---- */
+.dark {
+  --background: #0a0e1a;
+  --foreground: #e8edf5;
+  --card: #0d1225;
+  --card-foreground: #e8edf5;
+  --popover: #111833;
+  --popover-foreground: #e8edf5;
+
+  --primary: #00d4ff;
+  --primary-foreground: #0a0e1a;
+
+  --secondary: #162040;
+  --secondary-foreground: #94a3b8;
+  --muted: #111833;
+  --muted-foreground: #5a6a85;
+
+  --accent: #0a2540;
+  --accent-foreground: #00d4ff;
+
+  --destructive: #ff2d55;
+
+  --border: rgba(0, 212, 255, 0.08);
+  --input: rgba(0, 212, 255, 0.08);
+  --ring: #00d4ff;
+
+  --chart-1: #00d4ff;
+  --chart-2: #a78bfa;
+  --chart-3: #00ff88;
+  --chart-4: #ff9500;
+  --chart-5: #ff2d55;
+
+  --sidebar: #080c18;
+  --sidebar-foreground: #7a8ba8;
+  --sidebar-primary: #00d4ff;
+  --sidebar-primary-foreground: #0a0e1a;
+  --sidebar-accent: #0f1a35;
+  --sidebar-accent-foreground: #e8edf5;
+  --sidebar-border: rgba(0, 212, 255, 0.06);
+  --sidebar-ring: #00d4ff;
 }
 
 /* ---- Base ---- */
@@ -154,104 +165,173 @@
   }
 }
 
+/* Hide the local Next.js dev tools badge during customer-facing demos. */
+nextjs-portal,
+body > nextjs-portal {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 /* ============================================
-   Glass & Card Utilities
+   Card & Surface Utilities
+   企业工作台表面：清晰边界、轻阴影、低噪声
    ============================================ */
 
 .glass-card {
-  background: rgba(19, 19, 22, 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.light .glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+.dark .glass-card {
+  background: color-mix(in srgb, var(--card) 50%, transparent);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid color-mix(in srgb, var(--primary) 8%, var(--border));
+  box-shadow:
+    0 4px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(0, 212, 255, 0.03);
 }
 
 .glass-card-elevated {
-  background: rgba(24, 24, 27, 0.8);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.4);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
-.light .glass-card-elevated {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+.dark .glass-card-elevated {
+  background: color-mix(in srgb, var(--card) 70%, transparent);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, var(--border));
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(0, 212, 255, 0.03),
+    inset 0 1px 0 rgba(0, 212, 255, 0.05);
 }
 
 .card-surface {
-  background: #131316;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-xl);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-surface:hover {
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: color-mix(in srgb, var(--primary) 25%, var(--border));
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.dark .card-surface:hover {
+  border-color: color-mix(in srgb, var(--primary) 20%, var(--border));
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05);
-  transform: translateY(-2px);
+    0 0 20px rgba(0, 212, 255, 0.04);
+  transform: translateY(-0.5px);
 }
 
-.light .card-surface {
-  background: #ffffff;
-  border: 1px solid #e4e4e7;
+.cyber-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.light .card-surface:hover {
-  border-color: #d4d4d8;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  transform: translateY(-1px);
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 40%, color-mix(in srgb, var(--primary) 15%, transparent) 50%, transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.cyber-card:hover::before {
+  opacity: 0;
+}
+
+.dark .cyber-card:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.06);
 }
 
 /* ============================================
-   Glow Effects
+   Soft Emphasis Effects
    ============================================ */
 
 .glow-blue {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.dark .glow-blue {
   box-shadow:
-    0 0 20px rgba(59, 130, 246, 0.15),
-    0 0 60px rgba(59, 130, 246, 0.05);
+    0 0 20px color-mix(in srgb, var(--primary) 20%, transparent),
+    0 0 60px color-mix(in srgb, var(--primary) 8%, transparent),
+    0 0 100px color-mix(in srgb, var(--primary) 3%, transparent);
 }
 
 .glow-violet {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.dark .glow-violet {
   box-shadow:
-    0 0 20px rgba(139, 92, 246, 0.15),
-    0 0 60px rgba(139, 92, 246, 0.05);
+    0 0 20px color-mix(in srgb, var(--chart-2) 20%, transparent),
+    0 0 60px color-mix(in srgb, var(--chart-2) 8%, transparent);
 }
 
 .glow-red {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--destructive) 12%, transparent);
+}
+
+.dark .glow-red {
   box-shadow:
-    0 0 20px rgba(239, 68, 68, 0.15),
-    0 0 60px rgba(239, 68, 68, 0.05);
+    0 0 20px color-mix(in srgb, var(--destructive) 25%, transparent),
+    0 0 60px color-mix(in srgb, var(--destructive) 10%, transparent),
+    0 0 100px color-mix(in srgb, var(--destructive) 4%, transparent);
 }
 
 .glow-orange {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--chart-4) 12%, transparent);
+}
+
+.dark .glow-orange {
   box-shadow:
-    0 0 20px rgba(249, 115, 22, 0.15),
-    0 0 60px rgba(249, 115, 22, 0.05);
+    0 0 20px color-mix(in srgb, var(--chart-4) 20%, transparent),
+    0 0 60px color-mix(in srgb, var(--chart-4) 8%, transparent);
 }
 
 .glow-green {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.dark .glow-green {
   box-shadow:
-    0 0 20px rgba(34, 197, 94, 0.15),
-    0 0 60px rgba(34, 197, 94, 0.05);
+    0 0 20px rgba(0, 255, 136, 0.20),
+    0 0 60px rgba(0, 255, 136, 0.08),
+    0 0 100px rgba(0, 255, 136, 0.03);
 }
 
 .glow-text {
+  text-shadow: none;
+}
+
+.dark .glow-text {
   text-shadow:
-    0 0 20px rgba(59, 130, 246, 0.5),
-    0 0 40px rgba(139, 92, 246, 0.25);
+    0 0 20px color-mix(in srgb, var(--primary) 60%, transparent),
+    0 0 40px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 /* ============================================
@@ -294,7 +374,8 @@
 }
 
 /* ============================================
-   Animations
+   Animations — Cyber-Command 动效语言
+   扫描线 / 雷达脉冲 / 数字翻滚 / 呼吸红光
    ============================================ */
 
 @keyframes float {
@@ -303,8 +384,8 @@
 }
 
 @keyframes slideInLeft {
-  0% { opacity: 0; transform: translateX(-20px); }
-  100% { opacity: 1; transform: translateX(0); }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
 }
 
 @keyframes fadeInUp {
@@ -330,13 +411,13 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 5px var(--glow-color, rgba(59,130,246,0.3)); }
-  50% { box-shadow: 0 0 20px var(--glow-color, rgba(59,130,246,0.6)), 0 0 40px var(--glow-color, rgba(59,130,246,0.2)); }
+  0%, 100% { box-shadow: 0 0 5px var(--glow-color, rgba(0,212,255,0.3)); }
+  50% { box-shadow: 0 0 20px var(--glow-color, rgba(0,212,255,0.6)), 0 0 40px var(--glow-color, rgba(0,212,255,0.2)); }
 }
 
 @keyframes border-glow {
-  0%, 100% { border-color: rgba(59, 130, 246, 0.2); }
-  50% { border-color: rgba(59, 130, 246, 0.5); }
+  0%, 100% { border-color: rgba(0, 212, 255, 0.15); }
+  50% { border-color: rgba(0, 212, 255, 0.4); }
 }
 
 @keyframes breathe {
@@ -360,16 +441,69 @@
   100% { background-position: 0% 50%; }
 }
 
+/* ---- 赛博指挥专属动效 ---- */
+
+/* 扫描线 — 页面加载时从上到下扫过 */
+@keyframes scanline {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* 雷达脉冲 — 新告警从中心扩散 */
+@keyframes radar-pulse {
+  0% { transform: scale(0.5); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* 数字翻滚 — 数据更新时的计数器效果 */
+@keyframes number-roll {
+  0% { transform: translateY(100%); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* 呼吸红光 — critical 级别告警脉冲 */
+@keyframes critical-breathe {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 45, 85, 0.2);
+    border-color: rgba(255, 45, 85, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 45, 85, 0.3), 0 0 40px rgba(255, 45, 85, 0.1);
+    border-color: rgba(255, 45, 85, 0.5);
+  }
+}
+
+/* 青蓝边框呼吸 — 正常状态脉冲 */
+@keyframes cyber-breathe {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.15), 0 0 30px rgba(0, 212, 255, 0.05);
+    border-color: rgba(0, 212, 255, 0.2);
+  }
+}
+
+/* 矩阵绿闪烁 — 安全状态确认 */
+@keyframes matrix-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .animate-slideInLeft {
-  animation: slideInLeft 0.5s ease-out forwards;
+  animation: slideInLeft 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 .animate-fadeInUp {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-shimmer {
@@ -378,7 +512,7 @@
 }
 
 .animate-bounce-in {
-  animation: bounceIn 0.6s ease-out forwards;
+  animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .animate-glow-pulse {
@@ -394,17 +528,94 @@
 }
 
 .animate-count-up {
-  animation: count-up 0.5s ease-out forwards;
+  animation: count-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-slide-up-fade {
-  animation: slideUpFade 0.4s ease-out forwards;
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---- 赛博指挥专属动画类 ---- */
+
+.animate-scanline {
+  animation: scanline 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 1s ease-out forwards;
+}
+
+.animate-number-roll {
+  animation: number-roll 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-critical-breathe {
+  animation: critical-breathe 2s ease-in-out infinite;
+}
+
+.animate-cyber-breathe {
+  animation: cyber-breathe 3s ease-in-out infinite;
+}
+
+.animate-matrix-blink {
+  animation: matrix-blink 1.5s ease-in-out infinite;
+}
+
+/* Page transition animation */
+.page-transition {
+  animation: pageFadeIn 0.3s ease-out;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger item animations */
+.stagger-item {
+  animation: staggerFadeIn 0.4s ease-out both;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0ms; }
+.stagger-item:nth-child(2) { animation-delay: 50ms; }
+.stagger-item:nth-child(3) { animation-delay: 100ms; }
+.stagger-item:nth-child(4) { animation-delay: 150ms; }
+.stagger-item:nth-child(5) { animation-delay: 200ms; }
+.stagger-item:nth-child(6) { animation-delay: 250ms; }
+.stagger-item:nth-child(7) { animation-delay: 300ms; }
+.stagger-item:nth-child(8) { animation-delay: 350ms; }
+.stagger-item:nth-child(9) { animation-delay: 400ms; }
+.stagger-item:nth-child(10) { animation-delay: 450ms; }
+
+@keyframes staggerFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button press feedback */
+.btn-press {
+  transition: transform 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.97);
 }
 
 /* Stagger children animations */
 .stagger-children > * {
   opacity: 0;
-  animation: slideUpFade 0.4s ease-out forwards;
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
@@ -417,12 +628,12 @@
 .stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
 
 /* ============================================
-   Scrollbar Styling
+   Scrollbar Styling — Cyber-Command
    ============================================ */
 
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+  scrollbar-color: color-mix(in srgb, var(--muted-foreground) 20%, transparent) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -434,26 +645,127 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--muted-foreground) 20%, transparent);
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+}
+
+.dark .scrollbar-thin {
+  scrollbar-color: color-mix(in srgb, var(--primary) 12%, transparent) transparent;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 /* ============================================
-   Selection
+   Selection — Cyber-Command
    ============================================ */
 
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: #ffffff;
+  background: color-mix(in srgb, var(--primary) 15%, transparent);
+  color: var(--foreground);
 }
 
-.light ::selection {
-  background: rgba(37, 99, 235, 0.2);
-  color: #09090b;
+.dark ::selection {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+  color: var(--foreground);
+}
+
+/* ============================================
+   Cyber Grid Background — 暗色模式网格底纹
+   ============================================ */
+
+.cyber-grid-bg {
+  position: relative;
+}
+
+.cyber-grid-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.dark .cyber-grid-bg::before {
+  opacity: 1;
+}
+
+/* Noise Grain 纹理 — 暗色模式增加质感 */
+.cyber-grid-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+.dark .cyber-grid-bg::after {
+  opacity: 1;
+}
+
+/* ============================================
+   Cyber Input Glow — 输入框发光聚焦
+   ============================================ */
+
+.cyber-input-glow {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.cyber-input-glow:focus {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 20%, transparent), 0 0 16px color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+/* ============================================
+   Cyber Button — 渐变主按钮
+   ============================================ */
+
+.cyber-btn-primary {
+  background: linear-gradient(135deg, #0066ff, #00d4ff);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.cyber-btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.2), 0 0 40px rgba(0, 102, 255, 0.1);
+  transform: translateY(-0.5px);
+}
+
+.cyber-btn-primary:active {
+  transform: scale(0.98);
+}
+
+.cyber-btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cyber-btn-primary:hover::after {
+  opacity: 1;
 }
 
 /* ============================================

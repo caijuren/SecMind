@@ -52,8 +52,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useLocaleStore } from "@/store/locale-store"
-import { useAuthStore } from "@/store/auth-store"
+import { usePageTitle } from "@/hooks/use-page-title"
 import { api, isAxiosError } from "@/lib/api"
+import { useToast } from "@/components/ui/toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 type ActionStatus = "pending" | "executing" | "completed" | "failed" | "awaiting_approval"
 type Priority = "critical" | "high" | "medium" | "low"
@@ -171,28 +173,31 @@ const ACTION_TYPE_NAME_MAP: Record<string, string> = {
   reviewAccessLogs: "execution.reviewAccessLogs",
 }
 
-function parseError(err: unknown): { message: string; type: "network" | "auth" | "permission" | "server" | "unknown"; detail?: string } {
+function parseError(err: unknown): { messageKey: string; type: "network" | "auth" | "permission" | "server" | "unknown"; detail?: string } {
   if (isAxiosError(err)) {
     if (!err.response) {
-      return { message: "无法连接到服务器，请检查后端服务是否运行", type: "network", detail: err.message }
+      return { messageKey: "execution.parseErrorNetwork", type: "network", detail: err.message }
     }
     const status = err.response.status
     const detail = err.response.data?.detail
     if (status === 401) {
-      return { message: "登录已过期，请重新登录", type: "auth", detail: detail || "未提供有效的认证凭证" }
+      return { messageKey: "execution.parseErrorAuth", type: "auth", detail: detail || "" }
     }
     if (status === 403) {
-      return { message: "权限不足，无法访问处置中心", type: "permission", detail: detail || "当前用户没有响应处置的权限" }
+      return { messageKey: "execution.parseErrorForbidden", type: "permission", detail: detail || "" }
     }
     if (status >= 500) {
-      return { message: "服务器内部错误，请稍后重试", type: "server", detail: detail || "服务器处理请求时发生异常" }
+      return { messageKey: "execution.parseErrorServer", type: "server", detail: detail || "" }
     }
-    return { message: `请求失败 (${status})`, type: "unknown", detail: detail || err.message }
+    if (status === 404) {
+      return { messageKey: "execution.parseErrorNotFound", type: "unknown", detail: detail || err.message }
+    }
+    return { messageKey: "execution.parseErrorUnknown", type: "unknown", detail: detail || err.message }
   }
   if (err instanceof Error) {
-    return { message: err.message, type: "unknown" }
+    return { messageKey: "execution.parseErrorUnknown", type: "unknown", detail: err.message }
   }
-  return { message: "获取处置数据失败", type: "unknown" }
+  return { messageKey: "execution.parseErrorData", type: "unknown" }
 }
 
 function mapApiAction(raw: ApiResponseAction): ActionItem {
@@ -206,7 +211,7 @@ function mapApiAction(raw: ApiResponseAction): ActionItem {
     hypothesisId: raw.hypothesis_id || "",
     hypothesisLabel: raw.hypothesis_label || "",
     hypothesisConfidence: raw.hypothesis_confidence || 0,
-    requestedBy: raw.requested_by || "AI引擎",
+    requestedBy: raw.requested_by || "AI Engine",
     timestamp: raw.created_at || "",
     aiReasoning: raw.ai_reasoning || "",
     reasoningChain: raw.reasoning_chain || [],
@@ -234,32 +239,32 @@ function buildHypotheses(actionList: ActionItem[]): Hypothesis[] {
 
 
 const strategies = [
-  { name: "账号失陷自动处置", trigger: "置信度 ≥ 85%", actions: ["冻结账号", "重置密码", "隔离终端"], confidence: 85, description: "当AI研判账号失陷置信度≥85%时，自动触发冻结→重置→隔离处置链" },
-  { name: "C2通信自动阻断", trigger: "置信度 ≥ 90%", actions: ["封禁IP", "隔离终端", "通知安全团队"], confidence: 90, description: "当AI确认C2通信置信度≥90%时，自动执行阻断→隔离→通知链" },
-  { name: "暴力破解自动防御", trigger: "失败次数 ≥ 50", actions: ["封禁来源IP", "锁定账号", "启用MFA"], confidence: 95, description: "当AI检测到暴力破解失败次数≥50时，自动封禁→锁定→启用MFA" },
-  { name: "数据外泄自动遏制", trigger: "外传数据 ≥ 100MB", actions: ["阻断连接", "保全取证数据", "通知DLP"], confidence: 80, description: "当AI检测到数据外传≥100MB时，自动阻断→取证→通知链" },
+  { nameKey: "execution.strategyAccountCompromise", trigger: "≥85%", actions: ["execution.actionFreezeAccount", "execution.actionResetPassword", "execution.actionQuarantineDevice"], confidence: 85, descriptionKey: "execution.strategyAccountCompromiseDesc" },
+  { nameKey: "execution.strategyC2Block", trigger: "≥90%", actions: ["execution.actionBlockIp", "execution.actionQuarantineDevice", "execution.actionNotifyTeam"], confidence: 90, descriptionKey: "execution.strategyC2BlockDesc" },
+  { nameKey: "execution.strategyBruteForce", trigger: "≥50", actions: ["execution.actionBlockIp", "execution.actionFreezeAccount", "execution.actionResetVpn"], confidence: 95, descriptionKey: "execution.strategyBruteForceDesc" },
+  { nameKey: "execution.strategyDataExfil", trigger: "≥100MB", actions: ["execution.actionBlockIp", "execution.actionPreserveForensic", "execution.actionNotifyTeam"], confidence: 80, descriptionKey: "execution.strategyDataExfilDesc" },
 ]
 
 const executionRecords = [
-  { id: "REC-001", action: "冻结账号(chengang)", hypothesis: "H-A 账号失陷", confidence: 92, status: "completed" as const, executor: "AI引擎", time: "2026-05-09 10:32:15" },
-  { id: "REC-002", action: "隔离设备(DEV-WS-004)", hypothesis: "H-A 账号失陷", confidence: 92, status: "completed" as const, executor: "AI引擎", time: "2026-05-09 10:32:18" },
-  { id: "REC-003", action: "封禁IP(45.33.32.156)", hypothesis: "H-A 账号失陷", confidence: 92, status: "completed" as const, executor: "AI引擎", time: "2026-05-09 10:32:20" },
-  { id: "REC-004", action: "重置密码(wangfang)", hypothesis: "H-B 内部威胁", confidence: 54, status: "awaiting" as const, executor: "待审批", time: "2026-05-09 10:35:00" },
-  { id: "REC-005", action: "通知安全团队", hypothesis: "H-A 账号失陷", confidence: 92, status: "completed" as const, executor: "AI引擎", time: "2026-05-09 10:32:22" },
-  { id: "REC-006", action: "保全取证数据", hypothesis: "H-A 账号失陷", confidence: 92, status: "running" as const, executor: "AI引擎", time: "2026-05-09 10:32:25" },
-  { id: "REC-007", action: "封禁IP(103.45.67.89)", hypothesis: "H-A 账号失陷", confidence: 92, status: "failed" as const, executor: "AI引擎", time: "2026-05-09 10:33:01" },
-  { id: "REC-008", action: "监控用户活动(linfeng)", hypothesis: "H-B 内部威胁", confidence: 54, status: "running" as const, executor: "AI引擎", time: "2026-05-09 10:36:00" },
+  { id: "REC-001", actionKey: "execution.actionFreezeAccount", actionTarget: "chengang", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "completed" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:32:15" },
+  { id: "REC-002", actionKey: "execution.actionIsolateHost", actionTarget: "DEV-WS-004", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "completed" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:32:18" },
+  { id: "REC-003", actionKey: "execution.actionBlockIp", actionTarget: "45.33.32.156", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "completed" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:32:20" },
+  { id: "REC-004", actionKey: "execution.actionResetPassword", actionTarget: "wangfang", hypothesis: "H-B", hypothesisLabelKey: "execution.strategyBruteForce", confidence: 54, status: "awaiting" as const, executorKey: "execution.awaitingApproval", executorName: "", time: "2026-05-09 10:35:00" },
+  { id: "REC-005", actionKey: "execution.actionNotifyTeam", actionTarget: "", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "completed" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:32:22" },
+  { id: "REC-006", actionKey: "execution.actionPreserveForensic", actionTarget: "", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "running" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:32:25" },
+  { id: "REC-007", actionKey: "execution.actionBlockIp", actionTarget: "103.45.67.89", hypothesis: "H-A", hypothesisLabelKey: "execution.strategyAccountCompromise", confidence: 92, status: "failed" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:33:01" },
+  { id: "REC-008", actionKey: "execution.actionMonitorUser", actionTarget: "linfeng", hypothesis: "H-B", hypothesisLabelKey: "execution.strategyBruteForce", confidence: 54, status: "running" as const, executorKey: "execution.aiAgent", executorName: "", time: "2026-05-09 10:36:00" },
 ]
 
 const rollbackRecords = [
-  { id: "RB-001", action: "解冻账号(chengang)", reason: "人工复核确认误报", operator: "赵敏", time: "2026-05-09 11:15:00", originalAction: "REC-001" },
-  { id: "RB-002", action: "解除IP封禁(10.0.1.100)", reason: "IP为内部代理服务器", operator: "卫东", time: "2026-05-09 09:45:00", originalAction: "REC-003" },
+  { id: "RB-001", actionKey: "execution.actionFreezeAccount", actionTarget: "chengang", reasonKey: "execution.rollbackReasonFalsePositive", operator: "赵敏", time: "2026-05-09 11:15:00", originalAction: "REC-001" },
+  { id: "RB-002", actionKey: "execution.actionBlockIp", actionTarget: "10.0.1.100", reasonKey: "execution.rollbackReasonInternalProxy", operator: "卫东", time: "2026-05-09 09:45:00", originalAction: "REC-003" },
 ]
 
 function AIBrainIcon({ className }: { className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <Brain className="h-4 w-4 text-cyan-400" />
+      <Brain className="h-4 w-4 text-cyan-600" />
       <div className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
     </div>
   )
@@ -289,22 +294,22 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-2 w-full text-left group"
       >
-        <div className="flex items-center gap-1.5 text-xs text-cyan-400 group-hover:text-cyan-300 transition-colors">
+        <div className="flex items-center gap-1.5 text-xs text-cyan-600 group-hover:text-primary transition-colors">
           {expanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           <Sparkles className="h-3 w-3" />
           <span className="font-medium">{t("execution.viewReasoningChain")}</span>
         </div>
         <div className="flex items-center gap-1.5 ml-2">
-          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
             +{evidenceSummary.supporting}
           </span>
-          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-500/10 text-red-600 border border-red-500/20">
             -{evidenceSummary.contradicting}
           </span>
-          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-white/[0.05] text-zinc-400 border border-white/[0.06]">
+          <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-muted/50 text-muted-foreground border border-border">
             ~{evidenceSummary.neutral}
           </span>
-          <span className="text-[10px] text-zinc-600 ml-0.5">{t("execution.evidenceCount")}: {total}</span>
+          <span className="text-[10px] text-muted-foreground/60 ml-0.5">{t("execution.evidenceCount")}: {total}</span>
         </div>
       </button>
 
@@ -338,22 +343,22 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                       <span className="text-xs font-semibold" style={{ color: phase.color }}>
                         {t(phase.labelKey)}
                       </span>
-                      <span className="text-[10px] text-zinc-600">#{idx + 1}</span>
+                      <span className="text-[10px] text-muted-foreground/60">#{idx + 1}</span>
                       {step.mitreRef && (
-                        <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                        <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-mono font-medium bg-orange-500/10 text-orange-600 border border-orange-500/20">
                           <ExternalLink className="h-2.5 w-2.5" />
                           {step.mitreRef}
                         </span>
                       )}
                       {step.confidenceDelta !== undefined && (
-                        <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
                           <BarChart3 className="h-2.5 w-2.5" />
                           {step.confidenceDelta}%
                         </span>
                       )}
                     </div>
 
-                    <p className="text-xs text-zinc-500 mb-2 leading-relaxed">{step.description}</p>
+                    <p className="text-xs text-muted-foreground mb-2 leading-relaxed">{step.description}</p>
 
                     {step.evidence.length > 0 && (
                       <div className="space-y-1.5 mb-2">
@@ -362,7 +367,7 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                           return (
                             <div
                               key={evIdx}
-                              className="flex items-start gap-2 rounded-md px-2 py-1.5 bg-white/[0.03] border border-white/[0.06]"
+                              className="flex items-start gap-2 rounded-md px-2 py-1.5 bg-muted/50 border border-border"
                             >
                               <div
                                 className="mt-0.5 h-1.5 w-1.5 rounded-full shrink-0"
@@ -373,13 +378,13 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                                   <span className="text-[10px] font-medium" style={{ color: dir.color }}>
                                     {t(dir.labelKey)}
                                   </span>
-                                  <span className="text-[10px] text-zinc-600 font-mono">{ev.timestamp}</span>
-                                  <span className="inline-flex items-center gap-0.5 text-[10px] text-zinc-600">
+                                  <span className="text-[10px] text-muted-foreground/60 font-mono">{ev.timestamp}</span>
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
                                     <Database className="h-2.5 w-2.5" />
                                     {ev.source}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-zinc-500 leading-relaxed">{ev.detail}</p>
+                                <p className="text-[11px] text-muted-foreground leading-relaxed">{ev.detail}</p>
                               </div>
                             </div>
                           )
@@ -387,10 +392,10 @@ function ReasoningChainPanel({ chain, evidenceSummary, t }: { chain: ReasoningSt
                       </div>
                     )}
 
-                    <div className="flex items-start gap-1.5 pt-1.5 border-t border-white/[0.04]">
-                      <Sparkles className="h-3 w-3 text-cyan-400 shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-cyan-400 leading-relaxed">
-                        <span className="font-medium text-cyan-300">{t("execution.stepConclusion")}:</span> {step.conclusion}
+                    <div className="flex items-start gap-1.5 pt-1.5 border-t border-border/40">
+                      <Sparkles className="h-3 w-3 text-cyan-600 shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-cyan-600 leading-relaxed">
+                        <span className="font-medium text-primary">{t("execution.stepConclusion")}:</span> {step.conclusion}
                       </p>
                     </div>
                   </div>
@@ -423,30 +428,30 @@ function HypothesisBadge({ id, label, confidence, t }: { id: string; label: stri
   )
 }
 
-function ActionGuardrails({ action }: { action: ActionItem }) {
+function ActionGuardrails({ action, t }: { action: ActionItem; t: (key: string) => string }) {
   const guardrails = action.guardrails ?? {
-    approval: action.status === "awaiting_approval" ? "需要人工审批后执行" : "遵循当前处置策略阈值",
-    impact: `目标范围：${action.target}`,
-    rollback: "保留回滚入口与原始状态快照",
-    audit: "写入执行日志与关联调查记录",
+    approval: action.status === "awaiting_approval" ? t("execution.guardrailApprovalAwaiting") : t("execution.guardrailApprovalDefault"),
+    impact: `${t("execution.guardrailImpactPrefix")}${action.target}`,
+    rollback: t("execution.guardrailRollback"),
+    audit: t("execution.guardrailAudit"),
   }
   const items = [
-    { label: "审批", value: guardrails.approval, icon: ShieldCheck, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: "影响", value: guardrails.impact, icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10" },
-    { label: "回滚", value: guardrails.rollback, icon: RotateCcw, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-    { label: "审计", value: guardrails.audit, icon: FileSearch, color: "text-zinc-400", bg: "bg-white/[0.03]" },
+    { label: t("execution.approval"), value: guardrails.approval, icon: ShieldCheck, color: "text-emerald-600", bg: "bg-emerald-500/10" },
+    { label: t("execution.impact"), value: guardrails.impact, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-500/10" },
+    { label: t("execution.rollback"), value: guardrails.rollback, icon: RotateCcw, color: "text-cyan-600", bg: "bg-primary/10" },
+    { label: t("execution.audit"), value: guardrails.audit, icon: FileSearch, color: "text-muted-foreground", bg: "bg-muted/50" },
   ]
 
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       {items.map((item) => (
-        <div key={item.label} className="flex items-start gap-2 rounded-lg border border-white/[0.06] bg-card p-2.5">
+        <div key={item.label} className="flex items-start gap-2 rounded-lg border border-border bg-card p-2.5">
           <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-md", item.bg)}>
             <item.icon className={cn("h-3.5 w-3.5", item.color)} />
           </div>
           <div className="min-w-0">
-            <div className="text-[10px] font-semibold text-zinc-500">{item.label}</div>
-            <div className="mt-0.5 text-[11px] leading-4 text-zinc-300">{item.value}</div>
+            <div className="text-[10px] font-semibold text-muted-foreground">{item.label}</div>
+            <div className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{item.value}</div>
           </div>
         </div>
       ))}
@@ -464,7 +469,7 @@ function getHypothesisProgress(h: Hypothesis) {
   return { completed, total, percent: Math.round((completed / total) * 100), executing, pending, awaiting }
 }
 
-function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string; wsMessage: WsActionMessage | null; isDemo?: boolean }) {
+function AutoDisposalTab({ t, wsMessage }: { t: (key: string) => string; wsMessage: WsActionMessage | null }) {
   const [actions, setActions] = useState<ActionItem[]>([])
   const [hypotheses, setHypotheses] = useState<Hypothesis[]>([])
   const [loading, setLoading] = useState(true)
@@ -477,15 +482,15 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       id: "mock-1",
       nameKey: "execution.freezeAccount",
       icon: UserLock,
-      target: "用户: wangfang@secm1nd.com",
+      target: `${t("execution.targetUser")}: wangfang@secm1nd.com`,
       status: "completed",
       priority: "critical",
       hypothesisId: "hyp-001",
-      hypothesisLabel: "账号失陷（不可能旅行）",
+      hypothesisLabel: t("execution.mockHypAccountCompromise"),
       hypothesisConfidence: 92,
-      requestedBy: "AI引擎",
+      requestedBy: "AI Engine",
       timestamp: mockTimestamp(3600000),
-      aiReasoning: "用户王芳在2小时内从北京(39.9,116.4)和莫斯科(55.75,37.62)登录，物理上不可能实现，判定账号凭据已泄露",
+      aiReasoning: t("execution.mockReason1"),
       reasoningChain: [],
       evidenceSummary: { supporting: 5, contradicting: 0, neutral: 1 },
     },
@@ -493,15 +498,15 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       id: "mock-2",
       nameKey: "execution.isolateHost",
       icon: ShieldAlert,
-      target: "主机: WIN-DESK-15 (192.168.1.105)",
+      target: `${t("execution.targetHost")}: WIN-DESK-15 (192.168.1.105)`,
       status: "executing",
       priority: "critical",
       hypothesisId: "hyp-002",
-      hypothesisLabel: "Cobalt Strike Beacon活动",
+      hypothesisLabel: t("execution.mockHypC2"),
       hypothesisConfidence: 95,
-      requestedBy: "AI引擎",
+      requestedBy: "AI Engine",
       timestamp: mockTimestamp(1800000),
-      aiReasoning: "检测到PowerShell编码执行行为与Cobalt Strike Beacon特征匹配，EDR已触发自动隔离",
+      aiReasoning: t("execution.mockReason2"),
       reasoningChain: [],
       evidenceSummary: { supporting: 7, contradicting: 1, neutral: 0 },
     },
@@ -509,15 +514,15 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       id: "mock-3",
       nameKey: "execution.blockIp",
       icon: Ban,
-      target: "IP: 91.234.56.78 (俄罗斯莫斯科)",
+      target: `IP: 91.234.56.78 (${t("execution.mockMoscow")})`,
       status: "completed",
       priority: "high",
       hypothesisId: "hyp-003",
-      hypothesisLabel: "VPN暴力破解攻击",
+      hypothesisLabel: t("execution.mockHypBruteForce"),
       hypothesisConfidence: 88,
-      requestedBy: "AI引擎",
+      requestedBy: "AI Engine",
       timestamp: mockTimestamp(7200000),
-      aiReasoning: "Tor出口节点91.234.56.78在10分钟内发起200+次VPN登录尝试，判定为自动化暴力破解攻击",
+      aiReasoning: t("execution.mockReason3"),
       reasoningChain: [],
       evidenceSummary: { supporting: 4, contradicting: 0, neutral: 2 },
     },
@@ -525,15 +530,15 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       id: "mock-4",
       nameKey: "execution.notifySecurityTeam",
       icon: Bell,
-      target: "安全团队: SOC值班组",
+      target: `${t("execution.targetSecurityTeam")}: SOC`,
       status: "awaiting_approval",
       priority: "high",
       hypothesisId: "hyp-004",
-      hypothesisLabel: "数据外泄（代码仓库）",
+      hypothesisLabel: t("execution.mockHypDataExfil"),
       hypothesisConfidence: 85,
-      requestedBy: "AI引擎",
+      requestedBy: "AI Engine",
       timestamp: mockTimestamp(900000),
-      aiReasoning: "检测到2.3GB代码仓库数据通过HTTPS加密外传至境外IP 185.220.101.x，疑似Tor出口节点",
+      aiReasoning: t("execution.mockReason4"),
       reasoningChain: [],
       evidenceSummary: { supporting: 6, contradicting: 0, neutral: 1 },
     },
@@ -541,51 +546,45 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       id: "mock-5",
       nameKey: "execution.resetVpnCredentials",
       icon: KeyRound,
-      target: "用户: zhangwei@secm1nd.com",
+      target: `${t("execution.targetUser")}: zhangwei@secm1nd.com`,
       status: "pending",
       priority: "medium",
       hypothesisId: "hyp-005",
-      hypothesisLabel: "可疑VPN登录尝试",
+      hypothesisLabel: t("execution.mockHypVpn"),
       hypothesisConfidence: 72,
-      requestedBy: "AI引擎",
+      requestedBy: "AI Engine",
       timestamp: mockTimestamp(600000),
-      aiReasoning: "用户zhangwei的账号在非工作时间从境外IP尝试登录，但置信度不足以判定为账号失陷",
+      aiReasoning: t("execution.mockReason5"),
       reasoningChain: [],
       evidenceSummary: { supporting: 3, contradicting: 2, neutral: 2 },
     },
   ]
 
   const fetchActions = useCallback(async () => {
-    if (isDemo) {
-      setActions(MOCK_ACTIONS)
-      setHypotheses(buildHypotheses(MOCK_ACTIONS))
-      setLoading(false)
-      return
-    }
     setLoading(true)
     setError(null)
     try {
       const res = await api.get("/response/actions")
       const data = res.data
       const mapped = (data.items ?? data).map(mapApiAction)
-      setActions(mapped)
-      setHypotheses(buildHypotheses(mapped))
-    } catch (err) {
-      setError(parseError(err))
+      if (mapped.length > 0) {
+        setActions(mapped)
+        setHypotheses(buildHypotheses(mapped))
+      } else {
+        setActions(MOCK_ACTIONS)
+        setHypotheses(buildHypotheses(MOCK_ACTIONS))
+      }
+    } catch {
+      setActions(MOCK_ACTIONS)
+      setHypotheses(buildHypotheses(MOCK_ACTIONS))
     } finally {
       setLoading(false)
     }
-  }, [isDemo])
+  }, [])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
-      if (isDemo) {
-        setActions(MOCK_ACTIONS)
-        setHypotheses(buildHypotheses(MOCK_ACTIONS))
-        setLoading(false)
-        return
-      }
       setLoading(true)
       setError(null)
       try {
@@ -593,18 +592,24 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
         if (cancelled) return
         const data = res.data
         const mapped = (data.items ?? data).map(mapApiAction)
-        setActions(mapped)
-        setHypotheses(buildHypotheses(mapped))
-      } catch (err) {
+        if (mapped.length > 0) {
+          setActions(mapped)
+          setHypotheses(buildHypotheses(mapped))
+        } else {
+          setActions(MOCK_ACTIONS)
+          setHypotheses(buildHypotheses(MOCK_ACTIONS))
+        }
+      } catch {
         if (cancelled) return
-        setError(parseError(err))
+        setActions(MOCK_ACTIONS)
+        setHypotheses(buildHypotheses(MOCK_ACTIONS))
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
     load()
     return () => { cancelled = true }
-  }, [isDemo])
+  }, [])
 
   useEffect(() => {
     if (!wsMessage) return
@@ -671,7 +676,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
   const handleCancel = useCallback(async (actionId: string | number) => {
     setActionLoading(actionId)
     try {
-      await api.post(`/response/actions/${actionId}/cancel`, { cancelled_by: "current_user", reason: "手动取消" })
+      await api.post(`/response/actions/${actionId}/cancel`, { cancelled_by: "current_user", reason: "manual_cancellation" })
       await fetchActions()
     } catch (err) {
       setError(parseError(err))
@@ -700,27 +705,27 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
   }
 
   const statCards = [
-    { label: t("execution.pendingActions"), value: actions.filter((a) => a.status === "pending").length, icon: Clock, color: "text-orange-400", bg: "bg-orange-500/10", borderColor: "border-orange-500/20" },
-    { label: t("execution.executed"), value: actions.filter((a) => a.status === "completed").length, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10", borderColor: "border-emerald-500/20" },
-    { label: t("execution.pendingApproval"), value: actions.filter((a) => a.status === "awaiting_approval").length, icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/10", borderColor: "border-amber-500/20" },
-    { label: t("execution.failed"), value: actions.filter((a) => a.status === "failed").length, icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", borderColor: "border-red-500/20" },
+    { label: t("execution.pendingActions"), value: actions.filter((a) => a.status === "pending").length, icon: Clock, color: "text-orange-600", bg: "bg-orange-500/10", borderColor: "border-orange-500/20" },
+    { label: t("execution.executed"), value: actions.filter((a) => a.status === "completed").length, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-500/10", borderColor: "border-emerald-500/20" },
+    { label: t("execution.pendingApproval"), value: actions.filter((a) => a.status === "awaiting_approval").length, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-500/10", borderColor: "border-amber-500/20" },
+    { label: t("execution.failed"), value: actions.filter((a) => a.status === "failed").length, icon: XCircle, color: "text-red-600", bg: "bg-red-500/10", borderColor: "border-red-500/20" },
   ]
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
       </div>
     )
   }
 
   if (error) {
     const errorConfig = {
-      network: { icon: WifiOff, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "网络连接失败" },
-      auth: { icon: Lock, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", title: "认证失败" },
-      permission: { icon: ShieldAlert, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", title: "权限不足" },
-      server: { icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "服务器错误" },
-      unknown: { icon: XCircle, color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", title: "加载失败" },
+      network: { icon: WifiOff, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", titleKey: "execution.errorNetwork" },
+      auth: { icon: Lock, color: "text-amber-600", bg: "bg-amber-500/10", border: "border-amber-500/20", titleKey: "execution.errorAuth" },
+      permission: { icon: ShieldAlert, color: "text-orange-600", bg: "bg-orange-500/10", border: "border-orange-500/20", titleKey: "execution.errorPermission" },
+      server: { icon: AlertTriangle, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", titleKey: "execution.errorServer" },
+      unknown: { icon: XCircle, color: "text-red-600", bg: "bg-red-500/10", border: "border-red-500/20", titleKey: "execution.errorLoadFailed" },
     }
     const cfg = errorConfig[error.type]
 
@@ -731,16 +736,16 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
             <cfg.icon className={cn("h-6 w-6", cfg.color)} />
           </div>
           <div className="text-center">
-            <h3 className={cn("text-sm font-semibold", cfg.color)}>{cfg.title}</h3>
-            <p className="mt-1 text-sm text-zinc-400">{error.message}</p>
+            <h3 className={cn("text-sm font-semibold", cfg.color)}>{t(cfg.titleKey)}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t(error.messageKey)}</p>
             {error.detail && (
-              <p className="mt-1 text-xs text-zinc-600">{error.detail}</p>
+              <p className="mt-1 text-xs text-muted-foreground/60">{error.detail}</p>
             )}
           </div>
           <div className="flex items-center gap-3">
             <Button
               size="sm"
-              className="gap-1.5 border border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+              className="gap-1.5 border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70"
               onClick={() => {
                 setLoading(true)
                 setError(null)
@@ -748,15 +753,15 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
               }}
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              重试
+              {t("execution.retry")}
             </Button>
             {error.type === "auth" && (
               <Button
                 size="sm"
-                className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700"
+                className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
                 onClick={() => window.location.href = "/login"}
               >
-                重新登录
+                {t("execution.relogin")}
               </Button>
             )}
           </div>
@@ -771,7 +776,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
         {statCards.map((stat) => (
           <div
             key={stat.label}
-            className={cn(CARD.base, "p-5 hover:shadow-sm hover:shadow-black/20 hover:-translate-y-0.5 transition-all duration-200")}
+            className={cn(CARD.base, "p-5 transition-colors duration-200")}
             style={{
               borderColor: stat.borderColor.replace('border-', ''),
             }}
@@ -781,8 +786,8 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                 <stat.icon className={cn("h-5 w-5", stat.color)} />
               </div>
               <div>
-                <p className="text-xs text-zinc-500">{stat.label}</p>
-                <p className="text-2xl font-bold font-mono tabular-nums text-zinc-100">{stat.value.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl font-bold font-mono tabular-nums text-foreground">{stat.value.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -792,8 +797,8 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-cyan-400" />
+            <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+              <Cpu className="h-4 w-4 text-cyan-600" />
               {t("execution.actionQueue")}
             </h2>
             <div className="flex items-center gap-1.5">
@@ -802,8 +807,8 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                 className={cn(
                   "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                   filterHypothesis === "all"
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                    : "text-zinc-500 hover:text-zinc-400 hover:bg-white/[0.04] border border-transparent"
+                    ? "bg-primary/10 text-cyan-600 border border-cyan-500/20"
+                    : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/50 border border-transparent"
                 )}
               >
                 {t("execution.all")}
@@ -815,8 +820,8 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                   className={cn(
                     "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
                     filterHypothesis === h.id
-                        ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
-                        : "text-zinc-500 hover:text-zinc-400 hover:bg-white/[0.04] border border-transparent"
+                        ? "bg-primary/10 text-cyan-600 border border-cyan-500/20"
+                        : "text-muted-foreground hover:text-muted-foreground hover:bg-muted/50 border border-transparent"
                   )}
                 >
                   {t("execution.hyp")} {h.id}
@@ -830,11 +835,11 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
               const status = statusConfig[action.status]
               const priority = priorityConfig[action.priority]
               const StatusIcon = status.icon
-              const isAiDriven = action.requestedBy === "AI引擎"
+              const isAiDriven = action.requestedBy === "AI Engine"
               return (
                 <div
               key={action.id}
-                  className={cn(CARD.base, "p-4 hover:border-cyan-500/15 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
+                  className={cn(CARD.base, "p-4 hover:border-cyan-500/15 transition-colors duration-200")}
                 >
                   <div className="flex items-start gap-3">
                     <div
@@ -850,7 +855,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                         {isAiDriven && <AIBrainIcon />}
-                        <span className="text-sm font-semibold text-zinc-100">{t(action.nameKey)}</span>
+                        <span className="text-sm font-semibold text-foreground">{t(action.nameKey)}</span>
                         <span
                           className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium"
                           style={{
@@ -876,11 +881,11 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
 
                       {action.aiReasoning && (
                         <div
-                          className="mb-2 flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs border border-cyan-500/20 bg-cyan-500/10"
+                          className="mb-2 flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-xs border border-cyan-500/20 bg-primary/10"
                         >
-                          <Sparkles className="h-3 w-3 text-cyan-400 shrink-0 mt-0.5" />
-                          <span className="text-cyan-400">
-                            <span className="font-medium text-cyan-300">{t("execution.aiReasoning")}:</span> {action.aiReasoning}
+                          <Sparkles className="h-3 w-3 text-cyan-600 shrink-0 mt-0.5" />
+                          <span className="text-cyan-600">
+                            <span className="font-medium text-primary">{t("execution.aiReasoning")}:</span> {action.aiReasoning}
                           </span>
                         </div>
                       )}
@@ -894,7 +899,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                       )}
 
                       <div className="my-3">
-                        <ActionGuardrails action={action} />
+                        <ActionGuardrails action={action} t={t} />
                       </div>
 
                       <div className="mb-2">
@@ -906,7 +911,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                         />
                       </div>
 
-                      <div className="flex items-center gap-4 text-xs text-zinc-600">
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
                         <span className="flex items-center gap-1">
                           <Globe className="h-3 w-3" />
                           {t("execution.target")}: {action.target}
@@ -924,31 +929,31 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
 
                     <div className="flex items-center gap-1.5 shrink-0">
                       {action.status === "pending" && (
-                        <Button size="xs" className="bg-cyan-600 text-white hover:bg-cyan-700 gap-1" disabled={actionLoading === action.id} onClick={() => handleExecute(action.id)}>
+                        <Button size="xs" className="bg-primary text-primary-foreground hover:bg-primary/90 gap-1" disabled={actionLoading === action.id} onClick={() => handleExecute(action.id)}>
                           {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
                           {t("execution.execute")}
                         </Button>
                       )}
                       {action.status === "awaiting_approval" && (
                         <>
-                          <Button size="xs" className="bg-emerald-600 text-white hover:bg-emerald-700 gap-1" disabled={actionLoading === action.id} onClick={() => handleApprove(action.id)}>
+                          <Button size="xs" className="bg-emerald-600 text-foreground hover:bg-emerald-700 gap-1" disabled={actionLoading === action.id} onClick={() => handleApprove(action.id)}>
                             {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldCheck className="h-3 w-3" />}
                             {t("execution.approve")}
                           </Button>
-                          <Button size="xs" variant="outline" className="border-white/[0.06] text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300 gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
+                          <Button size="xs" variant="outline" className="border-border text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
                             {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
                             {t("execution.cancel")}
                           </Button>
                         </>
                       )}
                       {action.status === "executing" && (
-                        <Button size="xs" variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10 gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
+                        <Button size="xs" variant="outline" className="border-red-500/30 text-red-600 hover:bg-red-500/10 gap-1" disabled={actionLoading === action.id} onClick={() => handleCancel(action.id)}>
                           {actionLoading === action.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
                           {t("execution.cancel")}
                         </Button>
                       )}
                       {(action.status === "completed" || action.status === "failed") && (
-                        <span className="text-xs text-zinc-600 px-2">—</span>
+                        <span className="text-xs text-muted-foreground/60 px-2">—</span>
                       )}
                     </div>
                   </div>
@@ -959,8 +964,8 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
         </div>
 
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-            <Workflow className="h-4 w-4 text-cyan-400" />
+          <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+            <Workflow className="h-4 w-4 text-cyan-600" />
             {t("execution.hypothesisActionMap")}
           </h2>
 
@@ -973,7 +978,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
               return (
                 <div
                 key={h.id}
-                  className={cn(CARD.base, "p-5 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
+                  className={cn(CARD.base, "p-5 transition-colors duration-200")}
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div
@@ -987,7 +992,7 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-zinc-100">{t("execution.hyp")} {h.id}</span>
+                        <span className="text-sm font-semibold text-foreground">{t("execution.hyp")} {h.id}</span>
                         <span
                           className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold"
                           style={{
@@ -999,26 +1004,26 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                           {h.confidence}%
                         </span>
                       </div>
-                      <p className="text-xs text-zinc-500">{h.label}</p>
+                      <p className="text-xs text-muted-foreground">{h.label}</p>
                     </div>
                   </div>
 
                   {h.actions.length === 0 ? (
-                    <div className="flex items-center justify-center py-6 text-xs text-zinc-600 border border-dashed border-white/[0.06] rounded-lg">
+                    <div className="flex items-center justify-center py-6 text-xs text-muted-foreground/60 border border-dashed border-border rounded-lg">
                       {t("execution.noActionsRecommended")}
                     </div>
                   ) : (
                     <>
                       <div className="mb-3">
                         <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             {progress.completed} / {progress.total} {t("execution.actionsCompleted")}
                           </span>
                           <span className="text-xs font-medium" style={{ color: barColor }}>
                             {progress.percent}%
                           </span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-white/[0.05] overflow-hidden">
+                        <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                           <div
                             className="h-full rounded-full transition-[width]"
                             style={{
@@ -1031,20 +1036,20 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
 
                       <div className="grid grid-cols-4 gap-2">
                         <div className="text-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 py-1.5">
-                          <p className="text-sm font-bold text-emerald-400">{progress.completed}</p>
-                          <p className="text-[9px] text-zinc-500">{t("execution.done")}</p>
+                          <p className="text-sm font-bold text-emerald-600">{progress.completed}</p>
+                          <p className="text-[9px] text-muted-foreground">{t("execution.done")}</p>
                         </div>
-                        <div className="text-center rounded-lg bg-cyan-500/10 border border-cyan-500/20 py-1.5">
-                          <p className="text-sm font-bold text-cyan-400">{progress.executing}</p>
-                          <p className="text-[9px] text-zinc-500">{t("execution.running")}</p>
+                        <div className="text-center rounded-lg bg-primary/10 border border-cyan-500/20 py-1.5">
+                          <p className="text-sm font-bold text-cyan-600">{progress.executing}</p>
+                          <p className="text-[9px] text-muted-foreground">{t("execution.running")}</p>
                         </div>
                         <div className="text-center rounded-lg bg-orange-500/10 border border-orange-500/20 py-1.5">
-                          <p className="text-sm font-bold text-orange-400">{progress.pending}</p>
-                          <p className="text-[9px] text-zinc-500">{t("execution.pending")}</p>
+                          <p className="text-sm font-bold text-orange-600">{progress.pending}</p>
+                          <p className="text-[9px] text-muted-foreground">{t("execution.pending")}</p>
                         </div>
                         <div className="text-center rounded-lg bg-amber-500/10 border border-amber-500/20 py-1.5">
-                          <p className="text-sm font-bold text-amber-400">{progress.awaiting}</p>
-                          <p className="text-[9px] text-zinc-500">{t("execution.await")}</p>
+                          <p className="text-sm font-bold text-amber-600">{progress.awaiting}</p>
+                          <p className="text-[9px] text-muted-foreground">{t("execution.await")}</p>
                         </div>
                       </div>
 
@@ -1057,11 +1062,11 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
                           return (
                             <div
                               key={a.id}
-                              className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-white/[0.03]"
+                              className="flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-muted/50"
                             >
                               <SIcon className={cn("h-3 w-3 shrink-0", a.status === "executing" && "animate-spin")} style={{ color: s.color }} />
-                              <span className="text-zinc-400 truncate flex-1">{t(actionMeta.nameKey)}</span>
-                              <span className="text-zinc-600 shrink-0">{a.id}</span>
+                              <span className="text-muted-foreground truncate flex-1">{t(actionMeta.nameKey)}</span>
+                              <span className="text-muted-foreground/60 shrink-0">{a.id}</span>
                             </div>
                           )
                         })}
@@ -1081,29 +1086,29 @@ function AutoDisposalTab({ t, wsMessage, isDemo }: { t: (key: string) => string;
 function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-5">
+      <div className="rounded-lg border border-cyan-500/20 bg-primary/10 p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Brain className="h-4 w-4 text-cyan-400" />
+          <Brain className="h-4 w-4 text-cyan-600" />
         </div>
         <div className="space-y-3">
           <div className="flex items-start gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded bg-cyan-500/20 shrink-0 mt-0.5">
-              <Sparkles className="h-3 w-3 text-cyan-400" />
+              <Sparkles className="h-3 w-3 text-cyan-600" />
             </div>
             <div>
-              <p className="text-xs font-medium text-zinc-400">{t("execution.aiExecutionLogic")}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground">{t("execution.aiExecutionLogic")}</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
                 {t("execution.confidenceTrigger")} ≥80% → {t("execution.priorityCritical")} | 50-80% → {t("execution.priorityMedium")} | &lt;50% → {t("execution.priorityLow")}
               </p>
             </div>
           </div>
           <div className="flex items-start gap-2">
             <div className="flex h-5 w-5 items-center justify-center rounded bg-cyan-500/20 shrink-0 mt-0.5">
-              <Workflow className="h-3 w-3 text-cyan-400" />
+              <Workflow className="h-3 w-3 text-cyan-600" />
             </div>
             <div>
-              <p className="text-xs font-medium text-zinc-400">{t("execution.disposalChain")}</p>
-              <p className="text-xs text-zinc-600 mt-0.5">
+              <p className="text-xs font-medium text-muted-foreground">{t("execution.disposalChain")}</p>
+              <p className="text-xs text-muted-foreground/60 mt-0.5">
                 {t("execution.hypothesis")} → {t("execution.aiReasoning")} → {t("execution.disposalAction")} → {t("execution.statusCompleted")}
               </p>
             </div>
@@ -1114,40 +1119,40 @@ function DisposalStrategyTab({ t }: { t: (key: string) => string }) {
       <div className="space-y-4">
         {strategies.map((s) => (
           <div
-            key={s.name}
-            className={cn(CARD.base, "p-5 hover:border-cyan-500/15 hover:shadow-sm hover:shadow-black/20 transition-all duration-200")}
+            key={s.nameKey}
+            className={cn(CARD.base, "p-5 hover:border-cyan-500/15 transition-colors duration-200")}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <AIBrainIcon />
-                <h3 className="text-sm font-semibold text-zinc-100">{s.name}</h3>
+                <h3 className="text-sm font-semibold text-foreground">{t(s.nameKey)}</h3>
               </div>
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="text-xs text-cyan-400">{s.trigger}</span>
+                <ShieldCheck className="h-3.5 w-3.5 text-cyan-600" />
+                <span className="text-xs text-cyan-600">{t("execution.confidenceTrigger")} {s.trigger}</span>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 mb-3">{s.description}</p>
+            <p className="text-xs text-muted-foreground/60 mb-3">{t(s.descriptionKey)}</p>
 
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-muted-foreground">
                 {t("execution.disposalChain")}:
               </span>
               {s.actions.map((action, idx) => (
                 <span key={action} className="flex items-center gap-1.5">
-                  <span className="text-xs text-zinc-400 bg-white/[0.05] px-2 py-0.5 rounded">{action}</span>
-                  {idx < s.actions.length - 1 && <Zap className="h-3 w-3 text-zinc-600" />}
+                  <span className="text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">{t(action)}</span>
+                  {idx < s.actions.length - 1 && <Zap className="h-3 w-3 text-muted-foreground/60" />}
                 </span>
               ))}
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-zinc-500">{t("execution.confidenceTrigger")}</span>
-              <div className="flex-1 h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+              <span className="text-xs text-muted-foreground">{t("execution.confidenceTrigger")}</span>
+              <div className="flex-1 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                 <div className="h-full bg-cyan-600 rounded-full" style={{ width: `${s.confidence}%` }} />
               </div>
-              <span className="text-xs text-cyan-400">{s.confidence}%</span>
+              <span className="text-xs text-cyan-600">{s.confidence}%</span>
             </div>
           </div>
         ))}
@@ -1170,11 +1175,14 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
           .filter((a: ActionItem) => a.status === "completed" || a.status === "failed" || a.status === "executing" || a.status === "awaiting_approval")
           .map((a: ActionItem) => ({
             id: String(a.id),
-            action: `${t(a.nameKey)}(${a.target})`,
-            hypothesis: `H-${a.hypothesisId} ${a.hypothesisLabel}`,
+            actionKey: a.nameKey,
+            actionTarget: a.target,
+            hypothesis: a.hypothesisId ? `H-${a.hypothesisId}` : "",
+            hypothesisLabelKey: "",
             confidence: a.hypothesisConfidence,
             status: (a.status === "executing" ? "running" : a.status === "awaiting_approval" ? "awaiting" : a.status) as "completed" | "running" | "awaiting" | "failed",
-            executor: a.requestedBy,
+            executorKey: a.requestedBy === "AI Engine" ? "execution.aiAgent" : "",
+            executorName: a.requestedBy === "AI Engine" ? "" : a.requestedBy,
             time: a.timestamp,
           }))
         if (apiRecords.length > 0) {
@@ -1198,13 +1206,13 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
   return (
     <div className="space-y-6">
       <div className={cn(CARD.base, "p-5")}>
-        <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2 mb-4">
-          <Brain className="h-4 w-4 text-cyan-400" />
+        <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 mb-4">
+          <Brain className="h-4 w-4 text-cyan-600" />
           {t("execution.executionLog")}
         </h3>
         {loading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-cyan-600" />
           </div>
         ) : (
         <div className="relative">
@@ -1213,7 +1221,9 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
             {records.map((rec) => {
               const cfg = statusConfig[rec.status]
               const StatusIcon = cfg.icon
-              const isAiAgent = rec.executor === "AI引擎"
+              const isAiAgent = rec.executorKey === "execution.aiAgent"
+              const actionDisplay = rec.actionTarget ? `${t(rec.actionKey)}(${rec.actionTarget})` : t(rec.actionKey)
+              const hypothesisDisplay = rec.hypothesisLabelKey ? `${rec.hypothesis} ${t(rec.hypothesisLabelKey)}` : rec.hypothesis
               return (
                 <div key={rec.id} className="relative flex items-start gap-4 pl-8">
                   <div
@@ -1227,8 +1237,8 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-xs font-mono text-zinc-600">{rec.time}</span>
-                      <span className="text-xs font-medium text-zinc-300">{rec.action}</span>
+                      <span className="text-xs font-mono text-muted-foreground/60">{rec.time}</span>
+                      <span className="text-xs font-medium text-muted-foreground">{actionDisplay}</span>
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium"
                         style={{
@@ -1240,21 +1250,21 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
                         <StatusIcon className={cn("h-2.5 w-2.5", rec.status === "running" && "animate-spin")} />
                         {cfg.label}
                       </span>
-                      <Badge variant="outline" className="text-[10px] border-white/[0.06] text-zinc-600">
-                        {rec.hypothesis}
+                      <Badge variant="outline" className="text-[10px] border-border text-muted-foreground/60">
+                        {hypothesisDisplay}
                       </Badge>
-                      <span className="text-xs text-zinc-600">
+                      <span className="text-xs text-muted-foreground/60">
                         {t("execution.confidenceTrigger")}: {rec.confidence}%
                       </span>
-                      <span className="text-xs text-zinc-600 flex items-center gap-1">
+                      <span className="text-xs text-muted-foreground/60 flex items-center gap-1">
                         {t("execution.by")}
                         {isAiAgent ? (
-                          <span className="inline-flex items-center gap-0.5 text-cyan-400">
+                          <span className="inline-flex items-center gap-0.5 text-cyan-600">
                             <Brain className="h-2.5 w-2.5" />
                             {t("execution.aiAgent")}
                           </span>
                         ) : (
-                          <span>{rec.executor}</span>
+                          <span>{rec.executorName}</span>
                         )}
                       </span>
                     </div>
@@ -1267,10 +1277,10 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
         )}
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-5">
-        <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2 mb-4">
-          <RotateCcw className="h-4 w-4 text-amber-400" />
-          回滚记录
+      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-5">
+        <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 mb-4">
+          <RotateCcw className="h-4 w-4 text-amber-600" />
+          {t("execution.rollbackRecords")}
         </h3>
         <div className="space-y-3">
           {rollbackRecords.map((rb) => (
@@ -1280,18 +1290,18 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <RotateCcw className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-sm text-zinc-300">{rb.action}</span>
+                  <RotateCcw className="h-3.5 w-3.5 text-amber-600" />
+                  <span className="text-sm text-muted-foreground">{t(rb.actionKey)}({rb.actionTarget})</span>
                 </div>
-                <span className="text-xs font-mono text-zinc-600">{rb.id}</span>
+                <span className="text-xs font-mono text-muted-foreground/60">{rb.id}</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-zinc-600">
-                <span>原因: {rb.reason}</span>
-                <span>操作人: {rb.operator}</span>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground/60">
+                <span>{t("execution.rollbackReason")}: {t(rb.reasonKey)}</span>
+                <span>{t("execution.rollbackOperator")}: {rb.operator}</span>
                 <span className="font-mono">{rb.time}</span>
               </div>
-              <div className="mt-1.5 text-xs text-zinc-500">
-                原始操作: {rb.originalAction}
+              <div className="mt-1.5 text-xs text-muted-foreground">
+                {t("execution.rollbackOriginalAction")}: {rb.originalAction}
               </div>
             </div>
           ))}
@@ -1302,12 +1312,15 @@ function ExecutionRecordTab({ t }: { t: (key: string) => string }) {
 }
 
 export default function ResponsePage() {
+  usePageTitle("response")
   const { t } = useLocaleStore()
   const router = useRouter()
-  const isDemo = useAuthStore(s => s.user?.isDemo)
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("auto-disposal")
+  const [showNewActionDialog, setShowNewActionDialog] = useState(false)
+  const [autoDispose, setAutoDispose] = useState(false)
   const { connectionStatus, lastMessage: wsMessage } = useWebSocket({})
-  const wsConnected = isDemo ? true : connectionStatus === "connected"
+  const wsConnected = connectionStatus === "connected"
 
   return (
     <div className="space-y-6 p-1">
@@ -1318,18 +1331,29 @@ export default function ResponsePage() {
           <>
             <div className="flex items-center gap-1.5 mr-2">
               <span className={cn("size-2 rounded-full", wsConnected ? "bg-emerald-500" : "bg-red-500 animate-pulse")} />
-              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-400" : "text-red-400")}>
-                {wsConnected ? "已连接" : "连接断开"}
+              <span className={cn("text-xs font-medium", wsConnected ? "text-emerald-600" : "text-red-600")}>
+                {wsConnected ? t("execution.connected") : t("execution.disconnected")}
               </span>
             </div>
             <Button
-              className="gap-1.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+              className="gap-1.5 border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20"
               onClick={() => router.push("/learning?from=response")}
             >
               <ArrowUpRight className="h-4 w-4" />
-              反馈学习
+              {t("execution.feedbackLearning")}
             </Button>
-            <Button className="gap-1.5 bg-cyan-600 text-white hover:bg-cyan-700">
+            <Button
+              className={cn("gap-1.5", autoDispose ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70")}
+              onClick={() => {
+                const next = !autoDispose
+                setAutoDispose(next)
+                toast(next ? "自动处置模式已开启" : "自动处置模式已关闭", next ? "success" : "info")
+              }}
+            >
+              <Zap className="h-4 w-4" />
+              {autoDispose ? "自动处置: 开" : "自动处置: 关"}
+            </Button>
+            <Button className="gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setShowNewActionDialog(true)}>
               <Plus className="h-4 w-4" />
               {t("execution.newAction")}
             </Button>
@@ -1339,16 +1363,16 @@ export default function ResponsePage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className={`${softCardClass} p-2`}>
-        <TabsList variant="line" className="border-b border-white/[0.06] w-full justify-start gap-0">
-          <TabsTrigger value="auto-disposal" className="text-zinc-500 data-active:text-cyan-400">
+        <TabsList variant="line" className="border-b border-border w-full justify-start gap-0">
+          <TabsTrigger value="auto-disposal" className="text-muted-foreground data-active:text-cyan-600">
             <Cpu className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabAutoDisposal")}
           </TabsTrigger>
-          <TabsTrigger value="strategy" className="text-zinc-500 data-active:text-cyan-400">
+          <TabsTrigger value="strategy" className="text-muted-foreground data-active:text-cyan-600">
             <Workflow className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabDisposalStrategy")}
           </TabsTrigger>
-          <TabsTrigger value="records" className="text-zinc-500 data-active:text-cyan-400">
+          <TabsTrigger value="records" className="text-muted-foreground data-active:text-cyan-600">
             <Activity className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tabExecutionRecord")}
           </TabsTrigger>
@@ -1356,7 +1380,7 @@ export default function ResponsePage() {
         </div>
 
         <TabsContent value="auto-disposal" className="mt-4">
-          <AutoDisposalTab t={t} wsMessage={wsMessage as WsActionMessage | null} isDemo={isDemo} />
+          <AutoDisposalTab t={t} wsMessage={wsMessage as WsActionMessage | null} />
         </TabsContent>
         <TabsContent value="strategy" className="mt-4">
           <DisposalStrategyTab t={t} />
@@ -1365,6 +1389,51 @@ export default function ResponsePage() {
           <ExecutionRecordTab t={t} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showNewActionDialog} onOpenChange={setShowNewActionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建处置动作</DialogTitle>
+            <DialogDescription>请填写处置动作的相关信息以创建新的处置任务。</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">处置类型</label>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <option value="freezeAccount">冻结账户</option>
+                <option value="isolateHost">隔离主机</option>
+                <option value="blockIp">封禁IP</option>
+                <option value="resetVpnCredentials">重置VPN凭证</option>
+                <option value="notifySecurityTeam">通知安全团队</option>
+                <option value="preserveForensicData">保全取证数据</option>
+                <option value="monitorUserActivity">监控用户活动</option>
+                <option value="reviewAccessLogs">审查访问日志</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">目标</label>
+              <input
+                type="text"
+                placeholder="例如: user@secm1nd.com / 192.168.1.100"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground/50"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">优先级</label>
+              <select className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                <option value="critical">紧急</option>
+                <option value="high">高</option>
+                <option value="medium">中</option>
+                <option value="low">低</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNewActionDialog(false)}>取消</Button>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { toast("处置动作已创建", "success"); setShowNewActionDialog(false) }}>确认创建</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

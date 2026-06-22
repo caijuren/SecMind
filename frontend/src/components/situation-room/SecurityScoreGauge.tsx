@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface SecurityScoreGaugeProps {
   score: number
@@ -10,36 +11,35 @@ interface SecurityScoreGaugeProps {
 }
 
 function getScoreColor(score: number): string {
-  if (score >= 80) return "#22d3ee"
+  if (score >= 80) return "#00ff88"
   if (score >= 60) return "#fbbf24"
-  if (score >= 40) return "#f97316"
-  return "#ef4444"
+  if (score >= 40) return "#ff9500"
+  return "#ff2d55"
 }
 
-function getScoreLabel(score: number): string {
-  if (score >= 80) return "安全"
-  if (score >= 60) return "一般"
-  if (score >= 40) return "风险"
-  return "危险"
+function getScoreLabel(score: number, t: (key: string) => string): string {
+  if (score >= 80) return t("situation.scoreSafe")
+  if (score >= 60) return t("situation.scoreFair")
+  if (score >= 40) return t("situation.scoreRisk")
+  return t("situation.scoreDanger")
 }
 
 export function SecurityScoreGauge({ score, previousScore, size = 200 }: SecurityScoreGaugeProps) {
   const [animatedScore, setAnimatedScore] = useState(0)
   const animRef = useRef(0)
+  const { t } = useLocaleStore()
 
   const color = getScoreColor(score)
-  const label = getScoreLabel(score)
+  const label = getScoreLabel(score, t)
   const trend = score > previousScore ? "up" : score < previousScore ? "down" : "stable"
   const diff = score - previousScore
 
-  const center = size / 2
-  const radius = size * 0.38
-  const strokeWidth = size * 0.06
-  const needleLength = radius * 0.7
-
-  const startAngle = -210
-  const endAngle = 30
-  const totalAngle = endAngle - startAngle
+  // 环形参数
+  const strokeWidth = 8
+  const radius = size / 2 - strokeWidth - 4
+  const circumference = 2 * Math.PI * radius
+  const progress = animatedScore / 100
+  const dashOffset = circumference * (1 - progress)
 
   useEffect(() => {
     const startTime = performance.now()
@@ -47,10 +47,10 @@ export function SecurityScoreGauge({ score, previousScore, size = 200 }: Securit
 
     function animate(currentTime: number) {
       const elapsed = currentTime - startTime
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
+      const p = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
       setAnimatedScore(Math.round(eased * score))
-      if (progress < 1) {
+      if (p < 1) {
         animRef.current = requestAnimationFrame(animate)
       }
     }
@@ -61,199 +61,97 @@ export function SecurityScoreGauge({ score, previousScore, size = 200 }: Securit
     }
   }, [score])
 
-  const needleAngle = startAngle + (animatedScore / 100) * totalAngle
-  const needleRad = (needleAngle * Math.PI) / 180
-  const needleX = center + needleLength * Math.cos(needleRad)
-  const needleY = center + needleLength * Math.sin(needleRad)
+  const trendIcon = trend === "up"
+    ? <TrendingUp size={14} style={{ color: "#00ff88" }} />
+    : trend === "down"
+    ? <TrendingDown size={14} style={{ color: "#ff2d55" }} />
+    : <Minus size={14} style={{ color: "var(--muted-foreground)" }} />
 
-  const arcs: { start: number; end: number; color: string }[] = [
-    { start: 0, end: 25, color: "#ef4444" },
-    { start: 25, end: 50, color: "#f97316" },
-    { start: 50, end: 75, color: "#fbbf24" },
-    { start: 75, end: 100, color: "#22d3ee" },
-  ]
-
-  function angleForPercent(pct: number): number {
-    return startAngle + (pct / 100) * totalAngle
-  }
+  const trendColor = trend === "up" ? "#00ff88" : trend === "down" ? "#ff2d55" : "var(--muted-foreground)"
 
   return (
     <div className="relative flex flex-col items-center justify-center">
       <svg
         width={size}
-        height={size * 0.85}
-        viewBox={`0 0 ${size} ${size * 0.85}`}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
         className="overflow-visible"
       >
         <defs>
-          {arcs.map((arc, i) => {
-            return (
-              <linearGradient key={i} id={`gaugeGrad-${i}`} x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={arc.color} stopOpacity="0.6" />
-                <stop offset="50%" stopColor={arc.color} stopOpacity="1" />
-                <stop offset="100%" stopColor={arc.color} stopOpacity="0.6" />
-              </linearGradient>
-            )
-          })}
-          <filter id="gaugeGlow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
+          <filter id="ringGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <filter id="needleShadow">
-            <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.5" />
-          </filter>
+          <radialGradient id="ringGradient" cx="0%" cy="0%">
+            <stop offset="0%" stopColor={color} stopOpacity="1" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.6" />
+          </radialGradient>
         </defs>
 
-        <path
-          d={(() => {
-            const sr = (startAngle * Math.PI) / 180
-            const er = (endAngle * Math.PI) / 180
-            const x1 = center + radius * Math.cos(sr)
-            const y1 = center + radius * Math.sin(sr)
-            const x2 = center + radius * Math.cos(er)
-            const y2 = center + radius * Math.sin(er)
-            const large = totalAngle > 180 ? 1 : 0
-            return `M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`
-          })()}
+        {/* 背景轨道 */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.04)"
+          stroke="var(--border)"
           strokeWidth={strokeWidth}
           strokeLinecap="round"
+          opacity={0.5}
         />
 
-        {arcs.map((arc, i) => {
-          const s = angleForPercent(arc.start)
-          const e = angleForPercent(arc.end)
-          const sr = (s * Math.PI) / 180
-          const er = (e * Math.PI) / 180
-          const x1 = center + radius * Math.cos(sr)
-          const y1 = center + radius * Math.sin(sr)
-          const x2 = center + radius * Math.cos(er)
-          const y2 = center + radius * Math.sin(er)
-          const large = (e - s) > 180 ? 1 : 0
-
-          return (
-            <path
-              key={i}
-              d={`M ${x1} ${y1} A ${radius} ${radius} 0 ${large} 1 ${x2} ${y2}`}
-              fill="none"
-              stroke={`url(#gaugeGrad-${i})`}
-              strokeWidth={strokeWidth}
-              strokeLinecap="butt"
-              style={{ filter: `url(#gaugeGlow)` }}
-            />
-          )
-        })}
-
-        {[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((pct) => {
-          const angle = angleForPercent(pct)
-          const rad = (angle * Math.PI) / 180
-          const innerR = radius - strokeWidth / 2 - 2
-          const outerR = radius + strokeWidth / 2 + 2
-          const x1 = center + innerR * Math.cos(rad)
-          const y1 = center + innerR * Math.sin(rad)
-          const x2 = center + outerR * Math.cos(rad)
-          const y2 = center + outerR * Math.sin(rad)
-          const isMajor = pct % 20 === 0
-
-          return (
-            <g key={pct}>
-              <line
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="rgba(255,255,255,0.2)"
-                strokeWidth={isMajor ? 1.5 : 0.5}
-              />
-              {isMajor && (
-                <text
-                  x={center + (innerR - 12) * Math.cos(rad)}
-                  y={center + (innerR - 12) * Math.sin(rad) + 4}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.35)"
-                  fontSize="9"
-                  fontFamily="monospace"
-                >
-                  {pct}
-                </text>
-              )}
-            </g>
-          )
-        })}
-
-        <g style={{ filter: "url(#needleShadow)" }}>
-          <line
-            x1={center - 6 * Math.cos(needleRad)}
-            y1={center - 6 * Math.sin(needleRad)}
-            x2={needleX}
-            y2={needleY}
-            stroke="#ffffff"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r={size * 0.04}
-            fill="#ffffff"
-            stroke={color}
-            strokeWidth="2"
-          />
-          <circle
-            cx={center}
-            cy={center}
-            r={size * 0.02}
-            fill={color}
-          />
-        </g>
+        {/* 进度环 */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="url(#ringGradient)"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          style={{
+            transition: "stroke-dashoffset 0.5s ease-out",
+            filter: "url(#ringGlow)",
+          }}
+        />
       </svg>
 
+      {/* 中央内容 */}
       <div
         className="absolute flex flex-col items-center"
-        style={{ top: "52%", left: "50%", transform: "translate(-50%, -50%)" }}
+        style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
       >
         <span
-          className="font-mono font-bold tabular-nums leading-none"
-          style={{ fontSize: size * 0.18, color }}
+          className="font-bold tabular-nums leading-none font-[family-name:var(--font-space-grotesk)]"
+          style={{ fontSize: size * 0.22, color }}
         >
           {animatedScore}
         </span>
         <span
-          className="font-medium tracking-wider uppercase"
+          className="font-medium mt-1"
           style={{
             fontSize: size * 0.07,
-            color: "rgba(255,255,255,0.5)",
-            marginTop: 2,
+            color: "var(--muted-foreground)",
+            letterSpacing: "0.05em",
           }}
         >
           {label}
         </span>
         <div
-          className="flex items-center gap-1 mt-1"
-          style={{ fontSize: size * 0.05 }}
+          className="flex items-center gap-1 mt-1.5"
         >
-          {trend === "up" ? (
-            <>
-              <TrendingUp size={size * 0.06} style={{ color: "#22d3ee" }} />
-              <span style={{ color: "#22d3ee" }}>+{Math.abs(diff)}</span>
-            </>
-          ) : trend === "down" ? (
-            <>
-              <TrendingDown size={size * 0.06} style={{ color: "#ef4444" }} />
-              <span style={{ color: "#ef4444" }}>-{Math.abs(diff)}</span>
-            </>
-          ) : (
-            <>
-              <Minus size={size * 0.06} style={{ color: "rgba(255,255,255,0.4)" }} />
-              <span style={{ color: "rgba(255,255,255,0.4)" }}>0</span>
-            </>
-          )}
-          <span style={{ color: "rgba(255,255,255,0.3)", marginLeft: 2 }}>
-            较上期
+          {trendIcon}
+          <span style={{ fontSize: size * 0.055, color: trendColor, fontWeight: 600 }}>
+            {diff > 0 ? "+" : ""}{diff}
+          </span>
+          <span style={{ fontSize: size * 0.05, color: "var(--muted-foreground)", marginLeft: 1 }}>
+            {t("situation.vsLastPeriod")}
           </span>
         </div>
       </div>

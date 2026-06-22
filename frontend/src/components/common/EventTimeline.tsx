@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Clock, AlertTriangle, Shield, Brain, FileText, Globe } from "lucide-react"
+import { useLocaleStore } from "@/store/locale-store"
 
 interface TimelineEvent {
   id: string
@@ -31,20 +32,20 @@ const typeIconMap: Record<TimelineEvent["type"], React.ElementType> = {
 }
 
 const typeColorMap: Record<TimelineEvent["type"], string> = {
-  alert: "#ff4d4f",
+  alert: "#ff2d55",
   ai_analysis: "#00d4ff",
-  action: "#faad14",
-  log: "#1677ff",
-  vpn: "#a855f7",
+  action: "#ff9500",
+  log: "#0066ff",
+  vpn: "#a78bfa",
   email: "#ec4899",
 }
 
 const riskColorMap: Record<NonNullable<TimelineEvent["riskLevel"]>, string> = {
-  critical: "#ff4d4f",
-  high: "#ff4d4f",
-  medium: "#faad14",
-  low: "#1677ff",
-  info: "#64748b",
+  critical: "#ff2d55",
+  high: "#ff9500",
+  medium: "#fbbf24",
+  low: "#00d4ff",
+  info: "#5a6a85",
 }
 
 const riskGlowSet = new Set(["critical", "high"])
@@ -66,6 +67,7 @@ export default function EventTimeline({
   highlightedId,
 }: EventTimelineProps) {
   const [activeId, setActiveId] = useState<string | null>(null)
+  const { t } = useLocaleStore()
 
   return (
     <div className="w-full">
@@ -90,7 +92,7 @@ export default function EventTimeline({
           <div className="space-y-0">
             {events.length === 0 ? (
               <div className="flex items-center justify-center py-12 text-sm text-slate-400">
-                暂无事件记录
+                {t("empty.noEvents")}
               </div>
             ) : events.map((event) => {
               const dotColor = getDotColor(event)

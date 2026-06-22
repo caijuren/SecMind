@@ -3,37 +3,31 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import {
   Brain,
-  Send,
   Square,
   Copy,
   ThumbsUp,
   ThumbsDown,
   ChevronDown,
-  ChevronRight,
   Zap,
   ShieldAlert,
   Globe,
   FileSearch,
-  Link2,
-  CheckCircle2,
   Sparkles,
-  Hash,
   ArrowRight,
   Lightbulb,
-  Database,
   UserCheck,
   History,
   Network,
+  Compass,
+  ArrowUp,
   Plus,
-  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
-import { softCardClass } from "@/lib/admin-ui"
+import { useLocaleStore } from "@/store/locale-store"
 
 type Role = "user" | "assistant"
-type MessageType = "text" | "evidence_list" | "tool_call" | "confidence_update" | "suggestion" | "error"
+type MessageType = "text" | "evidence_list" | "tool_call" | "confidence_update" | "suggestion" | "next_steps" | "error"
 
 interface EvidenceItem {
   id: string
@@ -50,6 +44,13 @@ interface ToolCall {
   duration: string
 }
 
+interface NextStepItem {
+  action: string
+  description: string
+  skill_id: string
+  parameters: Record<string, string>
+}
+
 interface ChatMessage {
   id: string
   role: Role
@@ -61,90 +62,81 @@ interface ChatMessage {
   confidenceBefore?: number
   confidenceAfter?: number
   suggestions?: string[]
+  nextSteps?: NextStepItem[]
+  context?: Record<string, string>
   isLoading?: boolean
 }
-
-const QUICK_QUESTIONS = [
-  { icon: ShieldAlert, label: "分析最新告警", query: "帮我分析一下最新的高危告警，给出攻击研判结论" },
-  { icon: UserCheck, label: "账号行为分析", query: "zhangsan@secmind.com 这个账号最近有什么异常行为？" },
-  { icon: Globe, label: "IP 威胁查询", query: "103.45.67.89 这个IP有什么威胁情报？" },
-  { icon: FileSearch, label: "文件访问追溯", query: "查询 WIN-02 设备过去7天的敏感文件访问记录" },
-  { icon: Network, label: "横向移动检测", query: "检测内网是否存在横向移动行为" },
-  { icon: History, label: "今日安全态势", query: "总结今天的安全态势，有哪些需要关注的事件？" },
-]
-
-const MOCK_SESSIONS = [
-  { id: "sess-1", title: "VPN异常登录调查", time: "10分钟前", msgCount: 12 },
-  { id: "sess-2", title: "APT29钓鱼分析", time: "2小时前", msgCount: 8 },
-  { id: "sess-3", title: "数据外泄排查", time: "昨天 16:30", msgCount: 15 },
-]
 
 function generateId() {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 }
 
-const initialMessages: ChatMessage[] = [
-  {
-    id: "msg-welcome",
-    role: "assistant",
-    content: "你好，我是 SecMind **AI调查助手**。我可以帮你：\n\n• **分析告警** — 自动研判攻击意图和置信度\n• **溯源调查** — 关联证据链，还原攻击路径\n• **威胁查询** — IOC/IP/域名威胁情报关联\n• **处置建议** — 基于置信度推荐处置动作\n\n你可以直接输入问题，或点击下方的快捷提问开始。",
-    type: "text",
-    timestamp: new Date().toISOString(),
-  },
-]
+function getInitialMessages(t: (key: string) => string): ChatMessage[] {
+  return [
+    {
+      id: "msg-welcome",
+      role: "assistant",
+      content: t("aiChat.welcomeMessage"),
+      type: "text",
+      timestamp: new Date().toISOString(),
+    },
+  ]
+}
 
 function TypingIndicator() {
   return (
-    <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/15 to-teal-500/10 border border-cyan-500/20">
-        <Brain className="h-4 w-4 text-cyan-600 animate-pulse" />
+    <div className="flex items-start gap-2.5">
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/[0.06] border border-primary/10">
+        <Brain className="h-3.5 w-3.5 text-primary/70" />
       </div>
-      <div className={cn(softCardClass, "px-4 py-3 max-w-[85%]")}>
-        <div className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:0ms]" />
-          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:150ms]" />
-          <span className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:300ms]" />
+      <div className="rounded-lg border border-border/70 bg-card px-3 py-2">
+        <div className="flex items-center gap-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-bounce [animation-delay:0ms]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-bounce [animation-delay:150ms]" />
+          <span className="h-1.5 w-1.5 rounded-full bg-primary/50 animate-bounce [animation-delay:300ms]" />
         </div>
       </div>
-    </div>
+</div>
   )
 }
 
 function EvidenceBadge({ direction }: { direction: EvidenceItem["direction"] }) {
+  const { t } = useLocaleStore()
   const config = {
-    supports: { color: "#22c55e", bg: "bg-emerald-500/10", border: "border-emerald-500/20", label: "支持" },
-    contradicts: { color: "#ef4444", bg: "bg-red-500/10", border: "border-red-500/20", label: "反对" },
-    neutral: { color: "#71717a", bg: "bg-[#09090b]", border: "border-white/6", label: "中性" },
+    supports: { color: "#22c55e", bg: "bg-emerald-500/8", border: "border-emerald-500/25", labelKey: "aiChat.evidenceSupports" as const },
+    contradicts: { color: "#ef4444", bg: "bg-red-500/8", border: "border-red-500/25", labelKey: "aiChat.evidenceContradicts" as const },
+    neutral: { color: "var(--muted-foreground)", bg: "bg-muted/30", border: "border-border/60", labelKey: "aiChat.evidenceNeutral" as const },
   }
   const c = config[direction]
   return (
-    <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium border", c.bg, c.border)} style={{ color: c.color }}>
-      {c.label}
+    <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium border", c.bg, c.border)} style={{ color: c.color }}>
+      {t(c.labelKey)}
     </span>
   )
 }
 
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
+  const { t } = useLocaleStore()
   const [expanded, setExpanded] = useState(false)
   return (
-    <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] overflow-hidden my-2">
-      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-amber-500/10 transition-colors">
-        <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-        <span className="text-xs font-medium text-amber-300">{toolCall.name}</span>
-        <span className="text-[10px] text-amber-500 ml-auto">{toolCall.duration}</span>
-        <ChevronDown className={cn("h-3 w-3 text-amber-600 transition-transform", expanded && "rotate-180")} />
+    <div className="rounded-md border border-amber-500/15 bg-amber-500/[0.02] overflow-hidden my-1.5">
+      <button onClick={() => setExpanded(!expanded)} className="w-full flex items-center gap-2 px-2.5 py-1.5 text-left hover:bg-amber-500/[0.06] transition-colors">
+        <div className="flex size-5 items-center justify-center rounded-md bg-amber-500/8 border border-amber-500/15">
+          <Zap className="h-2.5 w-2.5 text-amber-500/80" />
+        </div>
+        <span className="text-[10px] font-medium text-amber-500/80">{toolCall.name}</span>
+        <span className="text-[9px] text-amber-500/40 ml-auto font-mono">{toolCall.duration}</span>
+        <ChevronDown className={cn("h-2.5 w-2.5 text-amber-500/40 transition-transform", expanded && "rotate-180")} />
       </button>
       {expanded && (
-        <div className="px-3 pb-3 space-y-2 border-t border-amber-500/20 pt-2">
+        <div className="px-2.5 pb-2.5 border-t border-amber-500/15 pt-2 space-y-1.5">
           <div>
-            <p className="text-[10px] font-semibold text-amber-400 mb-1">输入参数</p>
-            <pre className="text-[11px] text-amber-200 bg-[#09090b] rounded p-2 overflow-x-auto font-mono">
-              {JSON.stringify(toolCall.input, null, 2)}
-            </pre>
+            <p className="text-[9px] font-medium text-amber-500/60 mb-0.5">{t("aiChat.toolInputParams")}</p>
+            <pre className="text-[10px] text-foreground/70 bg-background/50 rounded-md p-1.5 overflow-x-auto font-mono border border-border/50">{JSON.stringify(toolCall.input, null, 2)}</pre>
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-amber-400 mb-1">返回结果</p>
-            <p className="text-[11px] text-zinc-300 bg-[#131316] rounded p-2 border border-white/6">{toolCall.output}</p>
+            <p className="text-[9px] font-medium text-amber-500/60 mb-0.5">{t("aiChat.toolOutputResult")}</p>
+            <p className="text-[10px] text-muted-foreground/60 bg-background/50 rounded-md p-1.5 border border-border/50">{toolCall.output}</p>
           </div>
         </div>
       )}
@@ -153,57 +145,63 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
 }
 
 function ConfidenceBar({ before, after }: { before: number; after: number }) {
+  const { t } = useLocaleStore()
   const delta = after - before
   const direction = delta > 0 ? "up" : delta < 0 ? "down" : "same"
   return (
-    <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/[0.06] p-3 my-2">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-          置信度更新
+    <div className="rounded-md border border-primary/10 bg-gradient-to-b from-primary/[0.02] to-transparent p-2 my-1.5">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[10px] font-medium text-primary/70 flex items-center gap-1">
+          <Sparkles className="h-3 w-3 text-primary/60" />
+          {t("aiChat.confidenceUpdate")}
         </span>
         <span className={cn(
-          "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold",
-          direction === "down" ? "bg-emerald-500/15 text-emerald-400" : direction === "up" ? "bg-red-500/15 text-red-400" : "bg-white/5 text-zinc-400"
+          "inline-flex items-center rounded-md px-1 py-0.5 text-[9px] font-semibold border",
+          direction === "down"
+            ? "text-emerald-500 bg-emerald-500/6 border-emerald-500/15"
+            : direction === "up"
+              ? "text-red-500 bg-red-500/6 border-red-500/15"
+              : "text-muted-foreground bg-muted/20 border-border/70"
         )}>
           {direction === "down" ? "↓" : direction === "up" ? "↑" : "→"} {Math.abs(delta).toFixed(0)}%
         </span>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-cyan-500">调整前</span>
-            <span className="text-[10px] font-bold text-cyan-300">{before}%</span>
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-[9px] text-muted-foreground/70">{t("aiChat.confidenceBefore")}</span>
+            <span className="text-[9px] font-semibold text-foreground/80">{before}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-cyan-950 overflow-hidden">
-            <div className="h-full rounded-full bg-cyan-500/60 transition-all duration-500" style={{ width: `${before}%` }} />
+          <div className="h-1 w-full rounded-full bg-muted/30 overflow-hidden">
+            <div className="h-full rounded-full bg-muted-foreground/50 transition-all duration-500" style={{ width: `${before}%` }} />
           </div>
         </div>
-        <ArrowRight className="h-3.5 w-3.5 text-cyan-700 shrink-0" />
+        <ArrowRight className="h-3 w-3 text-muted-foreground/50 shrink-0" />
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] text-cyan-500">调整后</span>
-            <span className="text-[10px] font-bold text-cyan-300">{after}%</span>
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-[9px] text-muted-foreground/70">{t("aiChat.confidenceAfter")}</span>
+            <span className="text-[9px] font-semibold text-foreground/80">{after}%</span>
           </div>
-          <div className="h-1.5 w-full rounded-full bg-cyan-950 overflow-hidden">
-            <div className={cn("h-full rounded-full transition-all duration-500", direction === "down" ? "bg-emerald-500/60" : "bg-red-500/60")} style={{ width: `${after}%` }} />
+          <div className="h-1 w-full rounded-full bg-muted/30 overflow-hidden">
+            <div className={cn("h-full rounded-full transition-all duration-500", direction === "down" ? "bg-emerald-500/50" : "bg-red-500/50")} style={{ width: `${after}%` }} />
           </div>
         </div>
       </div>
+
     </div>
   )
 }
 
 function SuggestionChips({ suggestions, onSelect }: { suggestions: string[]; onSelect: (q: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-2 mt-2">
+    <div className="flex flex-wrap gap-1.5 mt-1.5">
       {suggestions.map((s) => (
         <button
           key={s}
           onClick={() => onSelect(s)}
-          className="inline-flex items-center gap-1 rounded-full border border-cyan-500/20 bg-cyan-500/[0.06] px-3 py-1 text-xs text-cyan-300 hover:bg-cyan-500/15 hover:border-cyan-500/30 transition-colors"
+          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-[10px] font-medium text-muted-foreground hover:bg-muted/40 hover:text-foreground transition-colors"
         >
-          <Lightbulb className="h-3 w-3 text-cyan-400" />
+          <Lightbulb className="h-2.5 w-2.5 text-primary/40" />
           {s}
         </button>
       ))}
@@ -211,19 +209,133 @@ function SuggestionChips({ suggestions, onSelect }: { suggestions: string[]; onS
   )
 }
 
-function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatMessage; onSuggestionSelect: (q: string) => void; onCopy: (text: string) => void }) {
+function NextStepCards({ steps, onExecute }: { steps: NextStepItem[]; onExecute: (step: NextStepItem) => void }) {
+  const { t } = useLocaleStore()
+  return (
+    <div className="mt-3 space-y-2 pt-3 border-t border-border/70">
+      <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.08em] flex items-center gap-1.5">
+        <Compass className="h-3 w-3 text-primary/60" /> {t("aiChat.suggestedNextSteps")}
+      </p>
+      {steps.map((step, i) => (
+        <button
+          key={`${step.action}-${i}`}
+          onClick={() => onExecute(step)}
+          className="w-full text-left rounded-lg border border-border bg-card px-3 py-2.5 hover:bg-muted/30 hover:border-primary/20 transition-colors group"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="flex size-6 items-center justify-center rounded-md bg-primary/8 border border-primary/15 group-hover:bg-primary/15 transition-colors">
+              <ArrowRight className="h-3 w-3 text-primary/70" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{step.action}</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-0.5">{step.description}</p>
+            </div>
+            <span className="text-[9px] font-mono text-muted-foreground/60 shrink-0">{step.skill_id}</span>
+          </div>
+        </button>
+      ))}
+    </div>
+  )
+}
+
+const AI_CONTEXT_ITEMS = [
+  { label: "当前范围", value: "全域 SOC" },
+  { label: "模型", value: "SecMind Reasoner" },
+  { label: "证据优先级", value: "高置信 > 近 24h" },
+]
+
+const AI_SOURCE_ITEMS = [
+  { name: "VPN 网关", status: "已连接", tone: "text-emerald-600" },
+  { name: "EDR 传感器", status: "实时同步", tone: "text-emerald-600" },
+  { name: "威胁情报库", status: "3 源聚合", tone: "text-primary" },
+  { name: "HR 系统", status: "可交叉验证", tone: "text-amber-600" },
+]
+
+function AIContextPanel() {
+  return (
+    <aside className="hidden w-72 shrink-0 border-l border-border bg-card/70 xl:flex xl:flex-col">
+      <div className="border-b border-border p-4">
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-lg border border-border bg-background">
+            <Compass className="size-4 text-primary" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground">分析上下文</div>
+            <div className="text-[10px] text-muted-foreground">随对话自动更新</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <section className="rounded-lg border border-border bg-background/60 p-3">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">当前设置</div>
+          <div className="space-y-2">
+            {AI_CONTEXT_ITEMS.map((item) => (
+              <div key={item.label} className="flex items-center justify-between gap-3">
+                <span className="text-[11px] text-muted-foreground">{item.label}</span>
+                <span className="truncate text-right text-[11px] font-medium text-foreground">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-background/60 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">引用数据源</span>
+            <span className="text-[10px] text-muted-foreground">{AI_SOURCE_ITEMS.length}</span>
+          </div>
+          <div className="space-y-2">
+            {AI_SOURCE_ITEMS.map((source) => (
+              <div key={source.name} className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-card px-2.5 py-2">
+                <span className="text-[11px] font-medium text-foreground">{source.name}</span>
+                <span className={cn("text-[10px] font-medium", source.tone)}>{source.status}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-background/60 p-3">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">可执行能力</div>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { icon: FileSearch, label: "查证据" },
+              { icon: Globe, label: "查 IOC" },
+              { icon: ShieldAlert, label: "看告警" },
+              { icon: Network, label: "追路径" },
+            ].map((item) => (
+              <button key={item.label} className="flex items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2 text-left transition-colors hover:bg-muted/30">
+                <item.icon className="size-3.5 text-primary" />
+                <span className="text-[11px] font-medium text-muted-foreground">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+    </aside>
+  )
+}
+
+function MessageBubble({ message, onSuggestionSelect, onCopy, onSuggestNextSteps, onExecuteNextStep, isSuggestingNextSteps }: {
+  message: ChatMessage
+  onSuggestionSelect: (q: string) => void
+  onCopy: (text: string) => void
+  onSuggestNextSteps: (msgId: string) => void
+  onExecuteNextStep: (step: NextStepItem) => void
+  isSuggestingNextSteps: boolean
+}) {
+  const { t } = useLocaleStore()
   const isUser = message.role === "user"
 
   if (message.isLoading) return <TypingIndicator />
 
   if (isUser) {
     return (
-      <div className="flex justify-end animate-in fade-in slide-in-from-right-2 duration-300">
-        <div className="max-w-[80%]">
-          <div className="bg-gradient-to-br from-cyan-500 to-teal-500 text-white rounded-2xl rounded-tr-md px-4 py-2.5 shadow-sm shadow-cyan-400/10">
+      <div className="flex justify-end">
+        <div className="max-w-[76%]">
+          <div className="bg-primary text-primary-foreground rounded-lg rounded-tr-sm px-4 py-2.5 shadow-sm">
             <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           </div>
-          <p className="text-[10px] text-zinc-500 text-right mt-1">
+          <p className="text-[10px] text-muted-foreground/70 text-right mt-1.5 pr-1">
             {new Date(message.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
@@ -232,33 +344,43 @@ function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatM
   }
 
   return (
-    <div className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/15 to-teal-500/10 border border-cyan-500/20">
-        <Brain className="h-4 w-4 text-cyan-400" />
+    <div className="flex items-start gap-2.5">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-card border border-border shadow-sm">
+        <Brain className="h-4 w-4 text-primary" />
       </div>
-      <div className="max-w-[85%] space-y-2">
-        <div className={cn(softCardClass, "px-4 py-3")}>
+      <div className="max-w-[88%] space-y-2">
+        <div className="rounded-lg border border-border bg-card shadow-sm px-4 py-3">
           {message.content && (
-            <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-wrap">{message.content}</p>
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">{message.content}</p>
           )}
 
           {message.evidence && message.evidence.length > 0 && (
-            <div className="mt-3 space-y-1.5">
-              <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wide flex items-center gap-1">
-                <FileSearch className="h-3 w-3" /> 证据列表 ({message.evidence.length})
+            <div className="mt-2.5 pt-2.5 border-t border-border/60">
+              <p className="text-[10px] font-medium text-muted-foreground/80 flex items-center gap-1 mb-1.5">
+                <FileSearch className="h-2.5 w-2.5" /> {t("aiChat.evidenceList")} ({message.evidence.length})
               </p>
-              {message.evidence.map((ev) => (
-                <div key={ev.id} className="flex items-start gap-2 rounded-md bg-[#09090b] border border-white/6 px-3 py-2">
-                  <EvidenceBadge direction={ev.direction} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-mono text-cyan-400">{ev.source}</span>
-                      <span className="text-[10px] text-zinc-500">{ev.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-zinc-400">{ev.detail}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="rounded-lg border border-border overflow-hidden bg-background/30">
+                <table className="w-full text-[10px]">
+                  <thead>
+                    <tr className="bg-muted/40 border-b border-border">
+                      <th className="text-left font-semibold text-muted-foreground px-3 py-2 w-20">来源</th>
+                      <th className="text-left font-semibold text-muted-foreground px-3 py-2 w-32">时间</th>
+                      <th className="text-left font-semibold text-muted-foreground px-3 py-2">详情</th>
+                      <th className="text-left font-semibold text-muted-foreground px-3 py-2 w-16">方向</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {message.evidence.map((ev) => (
+                      <tr key={ev.id} className="border-b border-border/70 last:border-0 hover:bg-muted/20 transition-colors">
+                        <td className="px-3 py-2 font-mono text-muted-foreground font-medium">{ev.source}</td>
+                        <td className="px-3 py-2 text-muted-foreground/80 font-mono">{ev.timestamp}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{ev.detail}</td>
+                        <td className="px-3 py-2"><EvidenceBadge direction={ev.direction} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
@@ -267,27 +389,43 @@ function MessageBubble({ message, onSuggestionSelect, onCopy }: { message: ChatM
           {message.confidenceBefore !== undefined && message.confidenceAfter !== undefined && (
             <ConfidenceBar before={message.confidenceBefore} after={message.confidenceAfter} />
           )}
+
+          {message.nextSteps && message.nextSteps.length > 0 && (
+            <NextStepCards steps={message.nextSteps} onExecute={onExecuteNextStep} />
+          )}
         </div>
 
         {message.suggestions && message.suggestions.length > 0 && (
           <SuggestionChips suggestions={message.suggestions} onSelect={onSuggestionSelect} />
         )}
 
-        <div className="flex items-center gap-2 pl-1">
-          <p className="text-[10px] text-zinc-500">
+        <div className="flex items-center gap-1.5 pl-0.5">
+          <p className="text-[9px] text-muted-foreground/60">
             {new Date(message.timestamp).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}
           </p>
-          <button onClick={() => onCopy(message.content)} className="text-zinc-500 hover:text-zinc-300 transition-colors p-0.5" title="复制">
-            <Copy className="h-3 w-3" />
+          <button onClick={() => onCopy(message.content)} className="text-muted-foreground/50 hover:text-foreground/60 transition-colors" title={t("aiChat.copy")}>
+            <Copy className="h-2.5 w-2.5" />
           </button>
-          <button className="text-zinc-500 hover:text-emerald-400 transition-colors p-0.5" title="有帮助">
-            <ThumbsUp className="h-3 w-3" />
+          <button className="text-muted-foreground/50 hover:text-emerald-500/70 transition-colors" title={t("aiChat.helpful")}>
+            <ThumbsUp className="h-2.5 w-2.5" />
           </button>
-          <button className="text-zinc-500 hover:text-red-400 transition-colors p-0.5" title="无帮助">
-            <ThumbsDown className="h-3 w-3" />
+          <button className="text-muted-foreground/50 hover:text-red-500/70 transition-colors" title={t("aiChat.notHelpful")}>
+            <ThumbsDown className="h-2.5 w-2.5" />
           </button>
+          {!message.nextSteps && (
+            <button
+              onClick={() => onSuggestNextSteps(message.id)}
+              disabled={isSuggestingNextSteps}
+              className="text-muted-foreground/50 hover:text-primary/60 transition-colors disabled:opacity-10 flex items-center gap-0.5"
+              title={t("aiChat.suggestNextStep")}
+            >
+              <Compass className="h-2.5 w-2.5" />
+              <span className="text-[9px]">{t("aiChat.suggestNextStep")}</span>
+            </button>
+          )}
         </div>
       </div>
+      <AIContextPanel />
     </div>
   )
 }
@@ -493,12 +631,26 @@ function getAIResponse(userQuery: string): ChatMessage[] {
   ]
 }
 
+import { usePageTitle } from "@/hooks/use-page-title"
+
 export default function AIChatPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
+  usePageTitle("ai-chat")
+  const { t } = useLocaleStore()
+
+  const QUICK_QUESTIONS = [
+    { icon: ShieldAlert, label: t("aiChat.quickQAlertLabel"), query: t("aiChat.quickQAlertQuery") },
+    { icon: UserCheck, label: t("aiChat.quickQAccountLabel"), query: t("aiChat.quickQAccountQuery") },
+    { icon: Globe, label: t("aiChat.quickQIpLabel"), query: t("aiChat.quickQIpQuery") },
+    { icon: FileSearch, label: t("aiChat.quickQFileLabel"), query: t("aiChat.quickQFileQuery") },
+    { icon: Network, label: t("aiChat.quickQLateralLabel"), query: t("aiChat.quickQLateralQuery") },
+    { icon: History, label: t("aiChat.quickQPostureLabel"), query: t("aiChat.quickQPostureQuery") },
+  ]
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => getInitialMessages(t))
   const [input, setInput] = useState("")
   const [isSending, setIsSending] = useState(false)
-  const [sessions] = useState(MOCK_SESSIONS)
-  const [showSidebar, setShowSidebar] = useState(true)
+  const [isSuggestingNextSteps, setIsSuggestingNextSteps] = useState(false)
+  const [chatContext, setChatContext] = useState<Record<string, string>>({})
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -587,115 +739,240 @@ export default function AIChatPage() {
     navigator.clipboard.writeText(text)
   }
 
+  const handleSuggestNextSteps = async (msgId: string) => {
+    setIsSuggestingNextSteps(true)
+
+    // Collect context from conversation
+    const conversationText = messages
+      .filter((m) => !m.isLoading)
+      .map((m) => m.content)
+      .join(" ")
+      .toLowerCase()
+
+    const context = { ...chatContext }
+
+    // Auto-detect context from conversation
+    const ipMatch = conversationText.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/)
+    if (ipMatch) context.ioc = ipMatch[0]
+
+    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 600))
+
+    // Generate context-aware next step suggestions
+    const steps: NextStepItem[] = []
+
+    if (conversationText.includes("告警") || conversationText.includes("异常") || conversationText.includes("alert")) {
+      steps.push(
+        { action: "深入分析告警", description: "查看告警详情、关联事件和攻击链路", skill_id: "query_alerts", parameters: { action: "analyze" } },
+        { action: "查询关联IOC", description: "提取告警中的IOC指标并查询威胁情报", skill_id: "search_threat_intel", parameters: { action: "lookup" } },
+        { action: "查看受影响设备", description: "列出告警涉及的设备及其安全状态", skill_id: "query_devices", parameters: { action: "check" } },
+      )
+    }
+
+    if (conversationText.includes("横向") || conversationText.includes("移动") || conversationText.includes("lateral")) {
+      steps.push(
+        { action: "绘制攻击路径", description: "基于当前证据还原横向移动路径", skill_id: "query_alerts", parameters: { action: "attack_path" } },
+        { action: "隔离受影响终端", description: "对确认失陷的终端执行网络隔离", skill_id: "execute_response", parameters: { action: "isolate" } },
+      )
+    }
+
+    if (conversationText.includes("ip") || conversationText.includes("c2") || conversationText.includes("威胁情报") || ipMatch) {
+      steps.push(
+        { action: "封禁恶意IP", description: "将确认恶意的IP加入防火墙黑名单", skill_id: "execute_response", parameters: { action: "block_ip" } },
+        { action: "搜索内部关联", description: "查找内网中与该IOC通信的其他设备", skill_id: "query_devices", parameters: { action: "correlate" } },
+      )
+    }
+
+    if (conversationText.includes("文件") || conversationText.includes("数据") || conversationText.includes("外泄")) {
+      steps.push(
+        { action: "追溯文件访问链", description: "追踪敏感文件的完整访问和传播路径", skill_id: "query_alerts", parameters: { action: "file_trace" } },
+        { action: "检查DLP策略", description: "审查当前DLP策略是否覆盖此类场景", skill_id: "query_alerts", parameters: { action: "dlp_check" } },
+      )
+    }
+
+    // Default fallback suggestions
+    if (steps.length === 0) {
+      steps.push(
+        { action: "分析最新告警", description: "查看最近的高危告警并给出研判结论", skill_id: "query_alerts", parameters: { action: "analyze_latest" } },
+        { action: "查询IOC信誉", description: "对当前关注的IOC指标进行威胁情报查询", skill_id: "search_threat_intel", parameters: { action: "lookup" } },
+        { action: "生成调查报告", description: "基于当前对话内容生成调查分析报告", skill_id: "generate_report", parameters: { report_type: "investigation" } },
+      )
+    }
+
+    // Add the next steps to the specific message
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === msgId ? { ...m, nextSteps: steps } : m
+      )
+    )
+    setIsSuggestingNextSteps(false)
+  }
+
+  const handleExecuteNextStep = (step: NextStepItem) => {
+    // Build a natural language query from the step
+    const query = step.action + "：" + step.description
+    setInput(query)
+    setTimeout(() => handleSend(), 100)
+  }
+
   const startNewChat = () => {
-    setMessages(initialMessages)
+    setMessages(getInitialMessages(t))
     setInput("")
+    setChatContext({})
     isUserScrolledUpRef.current = false
   }
 
+  const conversationItems = [
+    { title: "今日安全态势摘要", meta: "8 分钟前", active: true },
+    { title: "VPN 异常登录复核", meta: "32 分钟前", active: false },
+    { title: "APT28 C2 IP 情报查询", meta: "昨天", active: false },
+    { title: "财务共享目录访问追溯", meta: "昨天", active: false },
+  ]
+
   return (
-    <div className="flex h-[calc(100vh-5rem)] -m-6">
-      {showSidebar && (
-        <div className="w-64 border-r border-white/6 bg-[#131316] flex flex-col shrink-0">
-          <div className="p-3 border-b border-white/6">
-            <Button onClick={startNewChat} variant="outline" size="sm" className="w-full gap-1.5 border-white/10 text-zinc-300 hover:bg-cyan-500/10 hover:text-cyan-400 hover:border-cyan-500/30 transition-all">
-              <Plus className="h-3.5 w-3.5" />
-              新建对话
-            </Button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider px-2 py-2">历史对话</p>
-            {sessions.map((sess) => (
-              <button key={sess.id} className="w-full text-left rounded-lg px-3 py-2.5 text-sm text-zinc-400 hover:bg-white/5 hover:text-white transition-colors group">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="truncate font-medium">{sess.title}</span>
-                  <Trash2 className="h-3 w-3 text-zinc-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                </div>
-                <p className="text-[10px] text-zinc-500 mt-0.5">{sess.time} · {sess.msgCount}条消息</p>
+    <div className="flex h-[calc(100vh-5rem)] -m-6 bg-background">
+      <aside className="hidden w-64 shrink-0 border-r border-border bg-card/70 lg:flex lg:flex-col">
+        <div className="border-b border-border p-3">
+          <button
+            onClick={startNewChat}
+            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-primary text-xs font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+          >
+            <Plus className="size-3.5" />
+            {t("aiChat.newChat")}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-3">
+          <div className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">会话</div>
+          <div className="space-y-1">
+            {conversationItems.map((item) => (
+              <button
+                key={item.title}
+                className={cn(
+                  "w-full rounded-lg border px-3 py-2 text-left transition-colors",
+                  item.active
+                    ? "border-primary/20 bg-primary/10 text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:bg-muted/30 hover:text-foreground"
+                )}
+              >
+                <div className="line-clamp-1 text-xs font-medium">{item.title}</div>
+                <div className="mt-1 text-[10px] text-muted-foreground">{item.meta}</div>
               </button>
             ))}
           </div>
-          <div className="p-3 border-t border-white/6">
-            <div className={cn(softCardClass, "p-3")}>
-              <p className="text-[10px] font-semibold text-zinc-500 mb-2 flex items-center gap-1">
-                <Database className="h-3 w-3" /> 数据范围
-              </p>
-              <div className="space-y-1.5">
-                {[
-                  { label: "告警数据", range: "近 30 天" },
-                  { label: "威胁情报", range: "实时" },
-                  { label: "资产数据", range: "全量" },
-                  { label: "审计日志", range: "近 90 天" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between text-[11px]">
-                    <span className="text-zinc-500">{item.label}</span>
-                    <span className="font-mono text-cyan-400 text-[10px]">{item.range}</span>
-                  </div>
-                ))}
+        </div>
+
+        <div className="border-t border-border p-3">
+          <div className="rounded-lg border border-border bg-background/60 p-3">
+            <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+              <Sparkles className="size-3.5 text-primary" />
+              AI 工作模式
+            </div>
+            <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">优先引用证据、保留不确定性、给出可执行下一步。</p>
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* ========== 精修头部 ========== */}
+        <div className="shrink-0 border-b border-border bg-card/80">
+          <div className="flex items-center justify-between px-5 py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg border border-primary/15 bg-primary/10">
+                <Brain className="size-4 text-primary" />
               </div>
+              <div>
+                <h1 className="text-sm font-semibold text-foreground tracking-tight">{t("aiChat.pageTitle")}</h1>
+                <p className="text-[10px] text-muted-foreground">安全分析 · 证据推理 · 响应建议</p>
+              </div>
+              <span className="mx-2 h-5 w-px bg-border" />
+              <div className="flex items-center gap-1">
+                <span className="relative flex size-1.5">
+                  <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75" />
+                  <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+                </span>
+                <span className="text-[11px] text-emerald-600 font-medium">{t("aiChat.engineOnline")}</span>
+              </div>
+            </div>
+            <div className="hidden items-center gap-2 md:flex">
+              <span className="rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium text-muted-foreground">RAG 已启用</span>
+              <span className="rounded-md border border-border bg-background px-2 py-1 text-[10px] font-medium text-muted-foreground">4 个数据源</span>
             </div>
           </div>
         </div>
-      )}
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="px-4 py-3 border-b border-white/6 bg-[#131316] flex items-center gap-3 shrink-0">
-          <PageHeader
-            icon={Brain}
-            title="AI对话助手"
-            subtitle={
-              <span className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 px-2 py-0 text-[10px] font-medium border border-emerald-500/20">
-                  <CheckCircle2 className="h-2.5 w-2.5" />
-                  引擎在线
-                </span>
-                <span className="text-zinc-600">|</span>
-                <span className="text-zinc-300">支持自然语言提问、IOC查询、攻击链分析</span>
-              </span>
-            }
-            actions={
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className="text-zinc-500 hover:text-zinc-300"
-                >
-                  <ChevronRight className={cn("h-4 w-4 transition-transform", !showSidebar && "rotate-180")} />
-                </Button>
-            }
-          />
-        </div>
-
-        <div ref={containerRef} className="flex-1 overflow-y-auto overscroll-contain">
-          <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        <div ref={containerRef} className="flex-1 overflow-y-auto overscroll-contain bg-muted/10">
+          <div className="max-w-4xl mx-auto px-5 py-8 space-y-6">
             {messages.map((msg) => (
               <MessageBubble
                 key={msg.id}
                 message={msg}
                 onSuggestionSelect={handleSuggestionSelect}
                 onCopy={handleCopy}
+                onSuggestNextSteps={handleSuggestNextSteps}
+                onExecuteNextStep={handleExecuteNextStep}
+                isSuggestingNextSteps={isSuggestingNextSteps}
               />
             ))}
 
             {!isSending && messages.length <= 1 && (
-              <div className="space-y-4 pt-4">
-                <p className="text-xs font-semibold text-zinc-500 flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5" /> 快捷提问
-                </p>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                  {QUICK_QUESTIONS.map((qq) => (
-                    <button
-                      key={qq.label}
-                      onClick={() => handleQuickQuestion(qq.query)}
-                      className={cn(
-                        softCardClass,
-                        "p-3 text-left hover:border-cyan-500/30 hover:bg-cyan-500/[0.08] hover:-translate-y-0.5 transition-all group"
-                      )}
-                    >
-                      <qq.icon className="h-4 w-4 text-cyan-400 group-hover:text-cyan-300 mb-1.5" />
-                      <p className="text-xs font-medium text-zinc-200">{qq.label}</p>
-                    </button>
-                  ))}
+              <div className="pt-4 space-y-5">
+                <div className="flex flex-col items-center gap-2.5">
+                  <div className="flex size-12 items-center justify-center rounded-lg bg-card border border-border shadow-sm">
+                    <Brain className="size-6 text-primary" />
+                  </div>
+                  <p className="max-w-xl text-center text-sm font-medium leading-relaxed text-muted-foreground">{t("aiChat.welcomeMessage")}</p>
+                </div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    {QUICK_QUESTIONS.slice(0, 3).map((qq, i) => {
+                      const colorConfig = [
+                        { border: 'border-l-red-500/60', iconBg: 'bg-red-500/8', iconText: 'text-red-500/80', hoverBorder: 'hover:border-l-red-500/80' },
+                        { border: 'border-l-amber-500/60', iconBg: 'bg-amber-500/8', iconText: 'text-amber-500/80', hoverBorder: 'hover:border-l-amber-500/80' },
+                        { border: 'border-l-blue-500/60', iconBg: 'bg-blue-500/8', iconText: 'text-blue-500/80', hoverBorder: 'hover:border-l-blue-500/80' },
+                      ][i]
+                      const descriptions = [t("aiChat.quickQAlertQuery").slice(0, 20) + '…', t("aiChat.quickQAccountQuery").slice(0, 20) + '…', t("aiChat.quickQIpQuery").slice(0, 20) + '…']
+                      return (
+                        <button
+                          key={qq.label}
+                          onClick={() => handleQuickQuestion(qq.query)}
+                          className={cn("group flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/30 hover:border-primary/20 border-l-2", colorConfig.border, colorConfig.hoverBorder)}
+                        >
+                          <div className={cn("flex size-7 items-center justify-center rounded-md border border-current/10 shrink-0", colorConfig.iconBg)}>
+                            <qq.icon className={cn("h-3.5 w-3.5", colorConfig.iconText)} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-foreground/90 group-hover:text-primary transition-colors">{qq.label}</p>
+                            <p className="text-[9px] text-muted-foreground/70 mt-0.5 truncate">{descriptions[i]}</p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {QUICK_QUESTIONS.slice(3, 6).map((qq, i) => {
+                      const colorConfig = [
+                        { border: 'border-l-violet-500/40', iconBg: 'bg-violet-500/6', iconText: 'text-violet-500/60' },
+                        { border: 'border-l-orange-500/40', iconBg: 'bg-orange-500/6', iconText: 'text-orange-500/60' },
+                        { border: 'border-l-teal-500/40', iconBg: 'bg-teal-500/6', iconText: 'text-teal-500/60' },
+                      ][i]
+                      const descriptions = [t("aiChat.quickQFileQuery").slice(0, 20) + '…', t("aiChat.quickQLateralQuery").slice(0, 20) + '…', t("aiChat.quickQPostureQuery").slice(0, 20) + '…']
+                      return (
+                        <button
+                          key={qq.label}
+                          onClick={() => handleQuickQuestion(qq.query)}
+                          className={cn("group flex items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-muted/30 hover:border-border border-l-2", colorConfig.border)}
+                        >
+                          <div className={cn("flex size-6 items-center justify-center rounded-md shrink-0", colorConfig.iconBg)}>
+                            <qq.icon className={cn("h-3 w-3", colorConfig.iconText)} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium text-muted-foreground/70 group-hover:text-foreground/80 transition-colors">{qq.label}</p>
+                            <p className="text-[9px] text-muted-foreground/60 mt-0.5 truncate">{descriptions[i]}</p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -704,51 +981,44 @@ export default function AIChatPage() {
           </div>
         </div>
 
-        <div className="border-t border-white/6 bg-[#131316] p-4 shrink-0">
-          <div className="max-w-4xl mx-auto">
-            <div className={cn(softCardClass, "flex items-end gap-3 p-2")}>
+        {/* ========== 精修输入区 ========== */}
+        <div className="border-t border-border bg-card shrink-0">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <div className="flex items-end gap-2 rounded-lg border border-border bg-background px-3 py-2 shadow-sm transition-colors focus-within:border-primary/30">
+              <Brain className="h-3.5 w-3.5 text-primary/40 shrink-0 mt-0.5" />
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="描述你的问题或调查需求… (Enter 发送，Shift+Enter 换行)"
+                placeholder={t("aiChat.inputPlaceholder")}
                 name="chat-message"
                 autoComplete="off"
                 rows={1}
-                className="flex-1 resize-none rounded-lg border-0 bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-0 max-h-32 min-h-[40px] py-2 px-2"
-                style={{ fieldSizing: "content" }}
+                className="flex-1 resize-none border-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 max-h-32 min-h-[32px] py-0.5 leading-relaxed"
+                style={{ fieldSizing: "content" as any }}
               />
               {isSending ? (
-                <Button size="icon-sm" variant="ghost" className="text-zinc-500 shrink-0">
-                  <Square className="h-4 w-4 fill-current" />
+                <Button size="icon-sm" variant="ghost" className="text-muted-foreground shrink-0 size-7 rounded-full">
+                  <Square className="h-3 w-3 fill-current" />
                 </Button>
               ) : (
                 <Button
                   size="icon-sm"
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="bg-cyan-500 text-white hover:bg-cyan-400 hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0 shrink-0 transition-all"
+                  className={cn(
+                    "shrink-0 size-8 rounded-lg transition-colors",
+                    input.trim()
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                      : "bg-muted/40 text-muted-foreground/60 cursor-not-allowed"
+                  )}
                 >
-                  <Send className="h-4 w-4" />
+                  <ArrowUp className="h-3.5 w-3.5" />
                 </Button>
               )}
             </div>
-            <div className="flex items-center justify-between mt-2 px-1">
-              <p className="text-[10px] text-zinc-500">
-                AI 回答基于当前安全数据，重要决策请人工复核
-              </p>
-              <div className="flex items-center gap-3">
-                <button className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors flex items-center gap-0.5">
-                  <Hash className="h-3 w-3" />
-                  关联案件
-                </button>
-                <button className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors flex items-center gap-0.5">
-                  <Link2 className="h-3 w-3" />
-                  附带附件
-                </button>
-              </div>
-            </div>
+            <p className="text-[9px] text-muted-foreground/80 mt-1.5 px-0.5">{t("aiChat.aiDisclaimer")}</p>
           </div>
         </div>
       </div>

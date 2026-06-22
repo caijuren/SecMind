@@ -26,16 +26,29 @@ const nextConfig: NextConfig = {
       "echarts",
       "zrender",
       "@xyflow/react",
+      "@radix-ui/react-icons",
+      "@radix-ui/react-slot",
+      "date-fns",
+      "lodash",
+      "class-variance-authority",
     ],
   },
-  headers: async () => [
-    {
-      source: "/_next/static/(.*)",
-      headers: [
-        { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
-      ],
-    },
-  ],
+  headers: async () => {
+    const isDev = process.env.NODE_ENV === "development";
+    return [
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: isDev
+              ? "public, max-age=0, must-revalidate"
+              : "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

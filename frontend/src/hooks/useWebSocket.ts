@@ -39,10 +39,6 @@ function getWebSocketBaseUrl(): string {
 export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
   const {
     url,
-    onMessage,
-    onConnect,
-    onDisconnect,
-    messageTypes,
     reconnectInterval = 3000,
     maxReconnectAttempts = 5,
     heartbeatInterval = 30000,
@@ -50,12 +46,25 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   } = options
 
   const token = useAuthStore((s) => s.token)
+
+  // Use refs for callbacks to avoid re-renders and infinite loops
+  const onMessageRef = useRef(options.onMessage)
+  const onConnectRef = useRef(options.onConnect)
+  const onDisconnectRef = useRef(options.onDisconnect)
+  const messageTypesRef = useRef(options.messageTypes)
+
+  useEffect(() => { onMessageRef.current = options.onMessage }, [options.onMessage])
+  useEffect(() => { onConnectRef.current = options.onConnect }, [options.onConnect])
+  useEffect(() => { onDisconnectRef.current = options.onDisconnect }, [options.onDisconnect])
+  useEffect(() => { messageTypesRef.current = options.messageTypes }, [options.messageTypes])
+
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectCountRef = useRef(0)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const heartbeatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const manualCloseRef = useRef(false)
-  const connectRef = useRef<() => void>(() => {})
+  const mountedRef = useRef(true)
+  const connectFnRef = useRef<() => void>(() => {})
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected")
   const [lastMessage, setLastMessage] = useState<unknown>(null)
@@ -89,7 +98,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       wsRef.current.close()
       wsRef.current = null
     }
-    setConnectionStatus("disconnected")
+    if (mountedRef.current) {
+      setConnectionStatus("disconnected")
+    }
   }, [clearTimers])
 
   const connect = useCallback(() => {
@@ -97,6 +108,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     if (!enabled) return
     if (!token) return
     if (wsRef.current?.readyState === WebSocket.OPEN) return
+    if (!mountedRef.current) return
 
     manualCloseRef.current = false
 
@@ -113,66 +125,72 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       wsRef.current = ws
 
       ws.onopen = () => {
+        if (!mountedRef.current) return
         ws.send(JSON.stringify({ type: "auth", token }))
         setConnectionStatus("connected")
         reconnectCountRef.current = 0
         startHeartbeat()
-        onConnect?.()
+        onConnectRef.current?.()
       }
 
       ws.onmessage = (event) => {
+        if (!mountedRef.current) return
         try {
           const data = JSON.parse(event.data)
           if (data.type === "pong") return
           setLastMessage(data)
 
-          if (messageTypes && data.type && messageTypes[data.type]) {
-            messageTypes[data.type](data.data || data)
+          const types = messageTypesRef.current
+          if (types && data.type && types[data.type]) {
+            types[data.type](data.data || data)
           } else {
-            onMessage?.(data)
+            onMessageRef.current?.(data)
           }
         } catch {
           setLastMessage(event.data)
-          onMessage?.(event.data)
+          onMessageRef.current?.(event.data)
         }
       }
 
       ws.onclose = () => {
+        if (!mountedRef.current) return
         setConnectionStatus("disconnected")
         if (heartbeatTimerRef.current) {
           clearInterval(heartbeatTimerRef.current)
           heartbeatTimerRef.current = null
         }
-        onDisconnect?.()
+        onDisconnectRef.current?.()
 
         if (!manualCloseRef.current && reconnectCountRef.current < maxReconnectAttempts) {
           reconnectCountRef.current += 1
           const delay = reconnectInterval * Math.pow(1.5, reconnectCountRef.current - 1)
           setConnectionStatus("reconnecting")
           reconnectTimerRef.current = setTimeout(() => {
-            connectRef.current()
+            if (mountedRef.current) {
+              connectFnRef.current()
+            }
           }, Math.min(delay, 30000))
         }
       }
 
       ws.onerror = () => {
+        if (!mountedRef.current) return
         setConnectionStatus("disconnected")
       }
     } catch {
+      if (!mountedRef.current) return
       setConnectionStatus("disconnected")
       if (!manualCloseRef.current && reconnectCountRef.current < maxReconnectAttempts) {
         reconnectCountRef.current += 1
         setConnectionStatus("reconnecting")
         reconnectTimerRef.current = setTimeout(() => {
-          connectRef.current()
+          if (mountedRef.current) {
+            connectFnRef.current()
+          }
         }, reconnectInterval)
       }
     }
-  }, [url, token, enabled, reconnectInterval, maxReconnectAttempts, onConnect, onMessage, onDisconnect, messageTypes, startHeartbeat])
-
-  useEffect(() => {
-    connectRef.current = connect
-  }, [connect])
+  }, [url, token, enabled, reconnectInterval, maxReconnectAttempts, startHeartbeat])
 
   const send = useCallback((data: unknown) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -182,12 +200,19 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
   }, [])
 
   useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    connectFnRef.current = connect
+  }, [connect])
+
+  useEffect(() => {
     if (enabled && token) {
-      if (typeof queueMicrotask === "function") {
-        queueMicrotask(() => connect())
-      } else {
-        Promise.resolve().then(() => connect())
-      }
+      connect()
     }
     return () => {
       disconnect()

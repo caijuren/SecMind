@@ -337,7 +337,7 @@ export function Canvas({
     : null
 
   return (
-    <div className="flex-1 relative overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.03]">
+    <div className="flex-1 relative overflow-hidden rounded-lg border border-border bg-muted/30">
       <svg
         ref={svgRef}
         width="100%"
@@ -623,32 +623,32 @@ export function Canvas({
         </g>
       </svg>
 
-      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-[#131316] rounded-lg border border-white/[0.06] px-1 py-1 shadow-sm">
+      <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-card rounded-lg border border-border px-1 py-1 shadow-sm">
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleZoomOut}
-          className="text-zinc-500 hover:text-zinc-300"
+          className="text-muted-foreground hover:text-muted-foreground"
         >
           <ZoomOut className="h-3.5 w-3.5" />
         </Button>
-        <span className="text-[10px] text-zinc-500 font-mono w-10 text-center">
+        <span className="text-[10px] text-muted-foreground font-mono w-10 text-center">
           {Math.round(zoom * 100)}%
         </span>
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleZoomIn}
-          className="text-zinc-500 hover:text-zinc-300"
+          className="text-muted-foreground hover:text-muted-foreground"
         >
           <ZoomIn className="h-3.5 w-3.5" />
         </Button>
-        <div className="w-px h-4 bg-white/[0.06] mx-0.5" />
+        <div className="w-px h-4 bg-muted/50 mx-0.5" />
         <Button
           variant="ghost"
           size="icon-xs"
           onClick={handleFitView}
-          className="text-zinc-500 hover:text-zinc-300"
+          className="text-muted-foreground hover:text-muted-foreground"
           title="适应画布"
         >
           <Maximize className="h-3.5 w-3.5" />
@@ -656,7 +656,7 @@ export function Canvas({
       </div>
 
       {connectingFrom && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-cyan-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-md">
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs px-3 py-1.5 rounded-lg shadow-md">
           点击目标节点的输入端口完成连线，按 Esc 取消
         </div>
       )}
