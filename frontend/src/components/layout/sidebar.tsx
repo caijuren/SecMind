@@ -79,7 +79,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       label: t("nav.groupResources"),
       items: [
         { label: t("nav.assets"), href: "/assets", icon: Server, accent: "#06b6d4", permission: "assets:read" },
-        { label: t("nav.reports"), href: "/reports", icon: FileBarChart, accent: "#8b5cf6", permission: "reports:read" },
+        // { label: t("nav.reports"), href: "/reports", icon: FileBarChart, accent: "#8b5cf6", permission: "reports:read" },
       ],
     },
     {
