@@ -212,7 +212,7 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
         [params.signalId]: {
           signalId: params.signalId,
           investigationId: invId,
-          status: 'investigating',
+          status: 'investigating' as InvestigationStatus,
           quickActions: [],
         },
       },
