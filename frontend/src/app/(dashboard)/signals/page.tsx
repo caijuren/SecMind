@@ -129,6 +129,9 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
   const router = useRouter()
   const bridgeStore = useWorkbenchBridgeStore()
   const signalStatusMap = useWorkbenchBridgeStore((s) => s.signalStatusMap)
+  const storeSignals = useUnifiedDataStore((s) => s.signals)
+  const addSignal = useUnifiedDataStore((s) => s.addSignal)
+  const initializeSignals = useUnifiedDataStore((s) => s.initialize)
   const [searchQuery, setSearchQuery] = useState("")
   const [actionSignal, setActionSignal] = useState<LiveSignal | null>(null)
   const [dialogType, setDialogType] = useState<"respond" | "ignore" | null>(null)
@@ -205,14 +208,17 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
     }
   }, [])
 
-  const [signals, setSignals] = useState<LiveSignal[]>([])
-
-  // 在客户端生成初始数据，避免 SSR/CSR hydration mismatch
   useEffect(() => {
-    if (signals.length === 0) {
-      setSignals(Array.from({ length: 20 }, () => generateSignal()))
+    initializeSignals()
+  }, [initializeSignals])
+
+  useEffect(() => {
+    if (storeSignals.length === 0) {
+      addSignal(generateSignal())
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [addSignal, generateSignal, storeSignals.length])
+
+  const signals = storeSignals
 
   useEffect(() => {
     if (wsAlerts.length > 0) {
@@ -235,7 +241,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
         riskLevel: (["critical", "high", "medium", "low", "info"].includes(latest.riskLevel) ? latest.riskLevel : "medium") as RiskLevel,
       }
       const applySignal = () => {
-        setSignals((prev) => [wsSignal, ...prev])
+        addSignal(wsSignal)
       }
       if (typeof queueMicrotask === "function") {
         queueMicrotask(applySignal)
@@ -243,7 +249,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
         Promise.resolve().then(applySignal)
       }
     }
-  }, [wsAlerts])
+  }, [addSignal, wsAlerts])
 
   useEffect(() => {
     if (!lastMessage || lastMessage.type !== "new_signal") return
@@ -266,22 +272,22 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
       riskLevel: (["critical", "high", "medium", "low", "info"].includes(signalData.riskLevel) ? signalData.riskLevel : "medium") as RiskLevel,
     }
     const applySignal = () => {
-      setSignals((prev) => [wsSignal, ...prev])
+      addSignal(wsSignal)
     }
     if (typeof queueMicrotask === "function") {
       queueMicrotask(applySignal)
     } else {
       Promise.resolve().then(applySignal)
     }
-  }, [lastMessage])
+  }, [addSignal, lastMessage])
 
   useEffect(() => {
     const interval = setInterval(() => {
       const newSignal = generateSignal()
-      setSignals((prev) => [newSignal, ...prev])
+      addSignal(newSignal)
     }, 5000)
     return () => clearInterval(interval)
-  }, [generateSignal])
+  }, [addSignal, generateSignal])
 
   const totalCount = signals.length
   const aiDenoised = signals.filter((s) => s.aiPreprocess === "去噪").length
@@ -303,9 +309,10 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
   const paginatedSignals = filteredSignals.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const navigateToInvestigation = (signal: LiveSignal) => {
-    // 保存当前信号列表到 sessionStorage，供详情页上一条/下一条导航使用
+    // 保存当前告警列表到 sessionStorage，供详情页上一条/下一条导航使用
     try {
       sessionStorage.setItem("secmind_signal_list", JSON.stringify(signals))
+      sessionStorage.setItem(`secmind_signal_detail:${signal.id}`, JSON.stringify(signal))
     } catch { /* ignore quota errors */ }
     router.push(`/signals/${encodeURIComponent(signal.id)}`)
   }
@@ -416,14 +423,23 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
             const ppConfig = PREPROCESS_CONFIG[signal.aiPreprocess]
             const PPIcon = ppConfig.icon
             return (
-              <div
-                key={signal.id}
-                className={cn(
-                  "group relative grid grid-cols-[110px_120px_80px_1fr_130px_85px_150px] gap-x-4 items-center px-5 py-3 border-b border-border/60 transition-colors duration-200",
-                  signal.riskLevel === "critical" ? "bg-red-500/[0.03] hover:bg-red-500/[0.07]" : "hover:bg-muted/40",
-                  idx === 0 && "animate-in slide-in-from-top-2 duration-500",
-                )}
-              >
+	              <div
+	                key={signal.id}
+	                role="link"
+	                tabIndex={0}
+	                onClick={() => navigateToInvestigation(signal)}
+	                onKeyDown={(e) => {
+	                  if (e.key === "Enter" || e.key === " ") {
+	                    e.preventDefault()
+	                    navigateToInvestigation(signal)
+	                  }
+	                }}
+	                className={cn(
+	                  "group relative grid grid-cols-[110px_120px_80px_1fr_130px_85px_150px] gap-x-4 items-center px-5 py-3 border-b border-border/60 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+	                  signal.riskLevel === "critical" ? "bg-red-500/[0.03] hover:bg-red-500/[0.07]" : "hover:bg-muted/40",
+	                  idx === 0 && "animate-in slide-in-from-top-2 duration-500",
+	                )}
+	              >
                 {signal.riskLevel === "critical" && (
                   <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-red-500/60" />
                 )}
@@ -440,7 +456,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                       signalStatusMap[signal.id].status === "disposing" && "text-purple-600 bg-purple-500/10 border-purple-500/20",
                       signalStatusMap[signal.id].status === "closed" && "text-emerald-600 bg-emerald-500/10 border-emerald-500/20",
                     )}>
-                      {signalStatusMap[signal.id].status === "investigating" && <><Brain className="size-2" />研判中</>}
+                      {signalStatusMap[signal.id].status === "investigating" && <><Brain className="size-2" />调查中</>}
                       {signalStatusMap[signal.id].status === "pending_review" && <><ClipboardList className="size-2" />待复核</>}
                       {signalStatusMap[signal.id].status === "disposing" && <><Wrench className="size-2" />处置中</>}
                       {signalStatusMap[signal.id].status === "closed" && <><CheckCircle2 className="size-2" />已闭环</>}
@@ -473,18 +489,20 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                       e.stopPropagation()
                       navigateToInvestigation(signal)
                     }}
+                    aria-label={signalStatusMap[signal.id] ? "查看调查详情" : t("signals.investigateDesc")}
                     className={cn(
                       "inline-flex size-7 items-center justify-center rounded-md transition-colors",
                       signalStatusMap[signal.id]
                         ? "text-primary bg-primary/10 hover:bg-primary/20"
                         : "text-muted-foreground/50 hover:text-primary hover:bg-primary/10"
                     )}
-                    title={signalStatusMap[signal.id] ? "查看研判详情" : t("signals.investigate")}
+                    title={signalStatusMap[signal.id] ? "查看调查详情" : t("signals.investigate")}
                   >
                     <Crosshair className="size-3.5" />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openDialog(signal, "respond") }}
+                    aria-label={t("signals.respondDesc")}
                     className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-amber-600 hover:bg-amber-500/10 transition-colors"
                     title={t("signals.respond")}
                   >
@@ -492,6 +510,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); openDialog(signal, "ignore") }}
+                    aria-label={t("signals.ignoreDesc")}
                     className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-red-600 hover:bg-red-500/10 transition-colors"
                     title={t("signals.ignore")}
                   >
@@ -500,7 +519,7 @@ function LiveSignalsTab({ t }: { t: (key: string) => string }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger
                       className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
-                      render={<button type="button" onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
+                      render={<button type="button" aria-label={t("signals.more")} onClick={(e: React.MouseEvent) => e.stopPropagation()} />}
                     >
                       <MoreHorizontal className="size-3.5" />
                     </DropdownMenuTrigger>
@@ -849,7 +868,7 @@ export default function SignalsPage() {
       <PageHeader
         icon={Radio}
         title={t("signals.title")}
-        subtitle={t("signals.subtitle")}
+        subtitle="告警是来自安全设备和规则的原始风险提示，经 AI 调查后可升级为安全事件。"
         actions={
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
@@ -858,16 +877,18 @@ export default function SignalsPage() {
                 {wsConnected ? t("signals.connected") : t("signals.disconnected")}
               </span>
             </div>
-            <Link href="/datasource">
-              <Button variant="outline" className="border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/30 gap-2">
-                <Database className="size-4" />{t("signals.datasourceManagement")}
-              </Button>
-            </Link>
+	            <Button
+	              render={<Link href="/datasource" />}
+              variant="outline"
+              className="border-primary/20 bg-primary/10 text-primary hover:bg-primary/20 hover:border-primary/30 gap-2"
+            >
+              <Database className="size-4" />{t("signals.datasourceManagement")}
+            </Button>
           </div>
         }
-      />
+	      />
 
-      <LiveSignalsTab t={t} />
+	      <LiveSignalsTab t={t} />
     </div>
   )
 }

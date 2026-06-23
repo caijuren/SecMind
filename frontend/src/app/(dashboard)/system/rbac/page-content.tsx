@@ -96,11 +96,11 @@ const rbacColorMap: Record<string, string> = {
 const MOCK_PERMISSIONS: PermissionItem[] = [
   { id: 1, resource: "alert", action: "read", description: "查看告警列表和详情" },
   { id: 2, resource: "alert", action: "write", description: "创建、编辑、删除告警规则" },
-  { id: 3, resource: "alert", action: "execute", description: "执行告警响应操作" },
+  { id: 3, resource: "alert", action: "execute", description: "执行告警处置动作" },
   { id: 4, resource: "response", action: "read", description: "查看响应记录" },
   { id: 5, resource: "response", action: "write", description: "编辑响应策略" },
   { id: 6, resource: "response", action: "execute", description: "执行响应动作" },
-  { id: 7, resource: "response", action: "approve", description: "审批响应操作" },
+  { id: 7, resource: "response", action: "approve", description: "审批处置动作" },
   { id: 8, resource: "hunting", action: "read", description: "查看威胁狩猎结果" },
   { id: 9, resource: "hunting", action: "execute", description: "执行威胁狩猎任务" },
   { id: 10, resource: "investigate", action: "read", description: "查看安全调查" },

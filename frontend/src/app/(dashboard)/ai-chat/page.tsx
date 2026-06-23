@@ -999,7 +999,12 @@ export default function AIChatPage() {
                 style={{ fieldSizing: "content" as any }}
               />
               {isSending ? (
-                <Button size="icon-sm" variant="ghost" className="text-muted-foreground shrink-0 size-7 rounded-full">
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="停止生成"
+                  className="text-muted-foreground shrink-0 size-7 rounded-full"
+                >
                   <Square className="h-3 w-3 fill-current" />
                 </Button>
               ) : (
@@ -1007,6 +1012,7 @@ export default function AIChatPage() {
                   size="icon-sm"
                   onClick={handleSend}
                   disabled={!input.trim()}
+                  aria-label="发送消息"
                   className={cn(
                     "shrink-0 size-8 rounded-lg transition-colors",
                     input.trim()

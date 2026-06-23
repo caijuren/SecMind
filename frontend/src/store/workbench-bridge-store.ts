@@ -6,8 +6,11 @@ import type {
   SourceEvent,
   AIReasoningStep,
 } from '@/data/investigations'
+import { mockRecords } from '@/data/investigations'
 
 // ==================== Types ====================
+
+const BRIDGE_STORAGE_KEY = 'secmind_workbench_bridge_v1'
 
 export interface SignalInvestigationStatus {
   signalId: string
@@ -32,6 +35,7 @@ interface WorkbenchBridgeState {
   investigationRecords: InvestigationRecord[]
 
   // Actions
+  initializeRecords: () => void
   createInvestigationFromSignal: (params: CreateInvestigationParams) => InvestigationRecord
   updateInvestigationStatus: (investigationId: string, status: InvestigationStatus) => void
   addQuickAction: (signalId: string, action: QuickAction) => void
@@ -50,6 +54,45 @@ export interface CreateInvestigationParams {
   triggerType: 'auto' | 'manual'
 }
 
+function getCurrentTimestamp(): string {
+  return new Date().toISOString().slice(0, 19).replace('T', ' ')
+}
+
+function mergeRecords(savedRecords: InvestigationRecord[]): InvestigationRecord[] {
+  const savedIds = new Set(savedRecords.map((record) => record.id))
+  return [...savedRecords, ...mockRecords.filter((record) => !savedIds.has(record.id))]
+}
+
+function loadPersistedBridgeState(): Pick<WorkbenchBridgeState, 'signalStatusMap' | 'investigationRecords'> {
+  if (typeof window === 'undefined') {
+    return { signalStatusMap: {}, investigationRecords: mockRecords }
+  }
+
+  try {
+    const raw = localStorage.getItem(BRIDGE_STORAGE_KEY)
+    if (!raw) return { signalStatusMap: {}, investigationRecords: mockRecords }
+    const parsed = JSON.parse(raw) as Partial<Pick<WorkbenchBridgeState, 'signalStatusMap' | 'investigationRecords'>>
+    return {
+      signalStatusMap: parsed.signalStatusMap || {},
+      investigationRecords: mergeRecords(parsed.investigationRecords || []),
+    }
+  } catch {
+    return { signalStatusMap: {}, investigationRecords: mockRecords }
+  }
+}
+
+function persistBridgeState(state: Pick<WorkbenchBridgeState, 'signalStatusMap' | 'investigationRecords'>) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(BRIDGE_STORAGE_KEY, JSON.stringify({
+      signalStatusMap: state.signalStatusMap,
+      investigationRecords: state.investigationRecords,
+    }))
+  } catch {
+    // Ignore quota or private-mode storage errors.
+  }
+}
+
 // ==================== Helper: Generate mock reasoning steps ====================
 
 function generateReasoningSteps(params: CreateInvestigationParams): AIReasoningStep[] {
@@ -64,7 +107,7 @@ function generateReasoningSteps(params: CreateInvestigationParams): AIReasoningS
   return [
     {
       time: ts,
-      step: '信号发现',
+      step: '告警发现',
       detail: `AI检测到${params.source}来源的${params.classification}事件`,
       type: 'discover' as const,
       confidenceContribution: Math.floor(confidence * 0.4),
@@ -85,13 +128,13 @@ function generateReasoningSteps(params: CreateInvestigationParams): AIReasoningS
       detail: `正在进行多维度关联分析，置信度评估中...`,
       type: 'correlate' as const,
       confidenceContribution: Math.floor(confidence * 0.3),
-      reasoning: 'AI正在关联威胁情报、历史基线、资产信息等多维度数据进行综合研判',
+      reasoning: 'AI正在关联威胁情报、历史基线、资产信息等多维度数据进行综合调查',
       evidence: [],
     },
     {
       time: ts,
-      step: '等待研判',
-      detail: 'AI推理链路构建中，请稍候查看完整研判结果',
+      step: '等待调查',
+      detail: 'AI推理链路构建中，请稍候查看完整调查结果',
       type: 'judge' as const,
       confidenceContribution: Math.floor(confidence * 0.3),
       reasoning: '等待更多关联数据和证据收集完成',
@@ -103,8 +146,16 @@ function generateReasoningSteps(params: CreateInvestigationParams): AIReasoningS
 // ==================== Store ====================
 
 export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) => ({
-  signalStatusMap: {},
-  investigationRecords: [],
+  ...loadPersistedBridgeState(),
+
+  initializeRecords: () => {
+    set((state) => {
+      const nextRecords = mergeRecords(state.investigationRecords)
+      const nextState = { ...state, investigationRecords: nextRecords }
+      persistBridgeState(nextState)
+      return nextState
+    })
+  },
 
   createInvestigationFromSignal: (params: CreateInvestigationParams) => {
     const now = new Date()
@@ -137,7 +188,7 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
     const record: InvestigationRecord = {
       id: invId,
       title: params.classification,
-      description: `来自${params.sourceSystemName}的${params.riskLevel === 'critical' ? '严重' : params.riskLevel === 'high' ? '高危' : params.riskLevel === 'medium' ? '中危' : '低危'}安全事件，AI正在研判中`,
+      description: `来自${params.sourceSystemName}的${params.riskLevel === 'critical' ? '严重' : params.riskLevel === 'high' ? '高危' : params.riskLevel === 'medium' ? '中危' : '低危'}安全事件，AI正在调查中`,
       asset,
       status: 'investigating',
       sourceEvent,
@@ -153,9 +204,10 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
       updatedAt: ts,
     }
 
-    set((state) => ({
-      investigationRecords: [record, ...state.investigationRecords],
-      signalStatusMap: {
+    set((state) => {
+      const nextState = {
+        investigationRecords: [record, ...state.investigationRecords.filter((item) => item.id !== record.id)],
+        signalStatusMap: {
         ...state.signalStatusMap,
         [params.signalId]: {
           signalId: params.signalId,
@@ -164,7 +216,10 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
           quickActions: [],
         },
       },
-    }))
+      }
+      persistBridgeState(nextState)
+      return nextState
+    })
 
     return record
   },
@@ -172,11 +227,11 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
   updateInvestigationStatus: (investigationId: string, status: InvestigationStatus) => {
     set((state) => {
       const updatedRecords = state.investigationRecords.map(r =>
-        r.id === investigationId ? { ...r, status, updatedAt: new Date().toISOString().slice(0, 19).replace('T', ' ') } : r
+        r.id === investigationId ? { ...r, status, updatedAt: getCurrentTimestamp() } : r
       )
 
       // Find signal ID for this investigation
-      const signalEntry = Object.entries(state.signalStatusMap).find(([_, v]) => v.investigationId === investigationId)
+      const signalEntry = Object.entries(state.signalStatusMap).find(([, v]) => v.investigationId === investigationId)
       const signalId = signalEntry?.[0]
 
       const updatedMap = signalId ? {
@@ -184,7 +239,9 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
         [signalId]: { ...state.signalStatusMap[signalId], status },
       } : state.signalStatusMap
 
-      return { investigationRecords: updatedRecords, signalStatusMap: updatedMap }
+      const nextState = { investigationRecords: updatedRecords, signalStatusMap: updatedMap }
+      persistBridgeState(nextState)
+      return nextState
     })
   },
 
@@ -193,7 +250,8 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
       const existing = state.signalStatusMap[signalId]
       if (!existing) return state
 
-      return {
+      const nextState = {
+        investigationRecords: state.investigationRecords,
         signalStatusMap: {
           ...state.signalStatusMap,
           [signalId]: {
@@ -202,6 +260,8 @@ export const useWorkbenchBridgeStore = create<WorkbenchBridgeState>((set, get) =
           },
         },
       }
+      persistBridgeState(nextState)
+      return nextState
     })
   },
 

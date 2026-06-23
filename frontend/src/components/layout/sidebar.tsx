@@ -12,6 +12,7 @@ import {
   ChevronsRight,
   LayoutDashboard,
   Brain,
+  FolderKanban,
   Server,
   FileBarChart,
 } from "lucide-react"
@@ -65,6 +66,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       items: [
         { label: t("nav.signals"), href: "/signals", icon: Radio, accent: "#ef4444", permission: "alerts:read" },
         { label: t("nav.workbench"), href: "/workbench", icon: Brain, accent: "#06b6d4", permission: "alerts:read" },
+        { label: t("nav.cases"), href: "/cases", icon: FolderKanban, accent: "#22c55e", permission: "alerts:read" },
       ],
     },
     {
@@ -79,7 +81,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       label: t("nav.groupResources"),
       items: [
         { label: t("nav.assets"), href: "/assets", icon: Server, accent: "#06b6d4", permission: "assets:read" },
-        // { label: t("nav.reports"), href: "/reports", icon: FileBarChart, accent: "#8b5cf6", permission: "reports:read" },
+        { label: t("nav.reports"), href: "/reports", icon: FileBarChart, accent: "#8b5cf6", permission: "reports:read" },
       ],
     },
     {
@@ -165,7 +167,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         }}
       />
 
-      <div className="relative flex h-16 items-center gap-2.5 px-4">
+      <Link
+        href="/dashboard"
+        aria-label="返回运营概览"
+        className="relative flex h-16 items-center gap-2.5 px-4 transition-colors hover:bg-sidebar-accent/60"
+      >
         <div className="relative flex size-9 shrink-0 items-center justify-center">
           <svg
             viewBox="0 0 32 32"
@@ -207,7 +213,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </span>
           </div>
         )}
-      </div>
+      </Link>
 
       <div className="relative mx-3 h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
 

@@ -156,7 +156,7 @@ export default function SettingsPage() {
     {
       label: t("settings.operationsGroup"),
       items: [
-        { id: "reports", label: t("nav.reports") || "报告", icon: FileText },
+        // { id: "reports", label: t("nav.reports") || "报告", icon: FileText },
         { id: "billing", label: t("settings.billingSubscription"), icon: CreditCard },
       ],
     },

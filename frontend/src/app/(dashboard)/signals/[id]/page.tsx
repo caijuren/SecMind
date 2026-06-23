@@ -37,6 +37,7 @@ import {
   Globe,
   Filter,
   Layers,
+  Gauge,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -45,7 +46,7 @@ import { CARD } from "@/lib/design-system"
 import { usePageTitle } from "@/hooks/use-page-title"
 import { RISK_CONFIG, type RiskLevel } from "@/lib/risk-config"
 import { useWorkbenchBridgeStore } from "@/store/workbench-bridge-store"
-import type { LiveSignal, SignalSource, AIPreprocess } from "@/store/unified-data-store"
+import { useUnifiedDataStore, type LiveSignal, type SignalSource, type AIPreprocess } from "@/store/unified-data-store"
 import {
   type InvestigationRecord,
   type InvestigationStatus,
@@ -67,6 +68,7 @@ import {
 // ==================== Constants ====================
 
 const SIGNAL_LIST_STORAGE_KEY = "secmind_signal_list"
+const SIGNAL_DETAIL_STORAGE_PREFIX = "secmind_signal_detail:"
 
 const SOURCE_CONFIG: Record<SignalSource, { icon: typeof Activity; color: string; bg: string }> = {
   EDR: { icon: Monitor, color: "text-muted-foreground", bg: "bg-muted/50 border-border" },
@@ -85,7 +87,7 @@ const PREPROCESS_CONFIG: Record<AIPreprocess, { color: string; icon: typeof Brai
 }
 
 const STATUS_LABELS: Record<InvestigationStatus, string> = {
-  investigating: "研判中",
+  investigating: "调查中",
   pending_review: "待复核",
   disposing: "处置中",
   closed: "已闭环",
@@ -98,7 +100,7 @@ const CORRELATION_LABELS: Record<string, string> = { weak: "弱", moderate: "中
 const WORK_STATUS_LABELS: Record<string, string> = { on_duty: "在岗", off_duty: "离岗", vacation: "休假", sick_leave: "病假", business_trip: "出差", remote: "远程" }
 
 const CLOSURE_STEPS = [
-  { key: "investigating", label: "研判", icon: Brain, color: "#06b6d4" },
+  { key: "investigating", label: "调查", icon: Brain, color: "#06b6d4" },
   { key: "pending_review", label: "复核", icon: ClipboardList, color: "#fbbf24" },
   { key: "disposing", label: "处置", icon: Wrench, color: "#a855f7" },
   { key: "verifying", label: "验证", icon: ShieldCheck, color: "#22c55e" },
@@ -132,6 +134,30 @@ function getSignalListFromStorage(): LiveSignal[] {
   }
 }
 
+function getSignalDetailFromStorage(signalId: string): LiveSignal | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw = sessionStorage.getItem(`${SIGNAL_DETAIL_STORAGE_PREFIX}${signalId}`)
+    if (!raw) return null
+    return JSON.parse(raw) as LiveSignal
+  } catch {
+    return null
+  }
+}
+
+function mergeSignalLists(primary: LiveSignal[], fallback: LiveSignal[]): LiveSignal[] {
+  const seen = new Set<string>()
+  const merged: LiveSignal[] = []
+
+  for (const signal of [...primary, ...fallback]) {
+    if (seen.has(signal.id)) continue
+    seen.add(signal.id)
+    merged.push(signal)
+  }
+
+  return merged
+}
+
 // ==================== Sub-Components ====================
 
 function StatusBadge({ status }: { status: InvestigationStatus }) {
@@ -142,6 +168,380 @@ function StatusBadge({ status }: { status: InvestigationStatus }) {
       {STATUS_LABELS[status]}
     </span>
   )
+}
+
+function HeaderMetaItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">{label}</div>
+      <div className="mt-1 truncate text-xs font-medium text-foreground">{value}</div>
+    </div>
+  )
+}
+
+function AlertIdentityPanel({
+  signal,
+  investigation,
+}: {
+  signal: LiveSignal
+  investigation: InvestigationRecord | null
+}) {
+  const riskConfig = RISK_CONFIG[signal.riskLevel]
+  return (
+    <section className={cn(CARD.base, "overflow-hidden")}>
+      <div className="absolute inset-x-0 top-0 h-px opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${riskConfig.hex}, transparent)` }} />
+      <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex min-w-0 gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: riskConfig.bgHex, border: `1px solid ${riskConfig.borderHex}` }}>
+            <Radio className="size-5" style={{ color: riskConfig.hex }} />
+          </div>
+          <div className="min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <RiskIndicator level={signal.riskLevel} />
+              <span className="inline-flex items-center rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                {signal.aiClassification}
+              </span>
+              <span className="font-mono text-[10px] text-muted-foreground">告警 ID: {signal.id}</span>
+              {investigation && <span className="font-mono text-[10px] text-muted-foreground">安全事件 ID: {investigation.id}</span>}
+            </div>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">
+              {signal.sourceSystemName} · {signal.aiClassification}
+            </h2>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span className="font-mono">{signal.receivedTime}</span>
+              <SourceBadge source={signal.source} />
+              {investigation && <StatusBadge status={investigation.status} />}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/25 p-3 lg:min-w-[360px]">
+          <HeaderMetaItem label="来源系统" value={signal.sourceSystemName} />
+          <HeaderMetaItem label="AI预处理" value={signal.aiPreprocess} />
+          <HeaderMetaItem label="AI分类" value={signal.aiClassification} />
+          <HeaderMetaItem label="阶段" value={investigation ? "安全事件调查中" : "告警核查"} />
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AISummaryPanel({
+  signal,
+  investigation,
+}: {
+  signal: LiveSignal
+  investigation: InvestigationRecord | null
+}) {
+  const confidence = investigation?.confidence ?? (signal.riskLevel === "critical" ? 88 : signal.riskLevel === "high" ? 76 : signal.riskLevel === "medium" ? 58 : 34)
+  return (
+    <section className="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 space-y-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-md bg-foreground px-2 py-1 text-xs font-semibold text-background dark:bg-primary dark:text-primary-foreground">
+              <Brain className="size-3.5" />
+              {investigation ? "AI 调查结论" : "AI 预处理结论"}
+            </span>
+            {!investigation && (
+              <span className="inline-flex items-center rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs font-medium text-amber-600">
+                未升级为安全事件
+              </span>
+            )}
+          </div>
+          <p className="text-sm font-medium leading-6 text-foreground">
+            {investigation?.aiConclusion ?? signal.aiPreprocessResult}
+          </p>
+          <p className="text-xs leading-5 text-muted-foreground">
+            {investigation ? "当前告警已进入安全事件调查流程，可继续查看证据、推理、影响和处置建议。" : "当前仍处于告警核查阶段。点击“发起 AI 调查”后，会生成安全事件并进入完整调查流程。"}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-4 rounded-lg border border-border bg-background/70 px-4 py-3">
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">AI置信度</div>
+            <div className={cn("text-xl font-bold tabular-nums", confidence >= 80 ? "text-red-600" : confidence >= 60 ? "text-amber-600" : "text-primary")}>{confidence}%</div>
+          </div>
+          <div className="h-9 w-px bg-border" />
+          <div>
+            <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">证据数</div>
+            <div className="text-xl font-bold tabular-nums text-primary">
+              {investigation ? investigation.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0) : "—"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+type DetailSectionKey = "overview" | "ai" | "findings" | "evidence" | "reasoning" | "impact" | "response"
+
+const DETAIL_SECTIONS: { key: DetailSectionKey; label: string; icon: typeof Activity }[] = [
+  { key: "overview", label: "告警概览", icon: Radio },
+  { key: "ai", label: "实时AI调查", icon: Brain },
+  { key: "findings", label: "关键发现", icon: Target },
+  { key: "evidence", label: "证据库", icon: FileSearch },
+  { key: "reasoning", label: "推理轨迹", icon: GitBranch },
+  { key: "impact", label: "影响评估", icon: Gauge },
+  { key: "response", label: "处置建议", icon: ShieldCheck },
+]
+
+function DetailSectionTabs({
+  active,
+  onChange,
+  investigation,
+}: {
+  active: DetailSectionKey
+  onChange: (key: DetailSectionKey) => void
+  investigation: InvestigationRecord | null
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-1">
+      <div className="flex gap-1 overflow-x-auto scrollbar-thin">
+        {DETAIL_SECTIONS.map((section) => {
+          const Icon = section.icon
+          const locked = !investigation && section.key !== "overview" && section.key !== "ai"
+          return (
+            <button
+              key={section.key}
+              type="button"
+              disabled={locked}
+              onClick={() => onChange(section.key)}
+              className={cn(
+                "inline-flex h-9 shrink-0 items-center gap-2 rounded-md px-3 text-xs font-medium transition-colors",
+                active === section.key
+                  ? "bg-card text-foreground shadow-sm ring-1 ring-border"
+                  : "text-muted-foreground hover:bg-card/60 hover:text-foreground",
+                locked && "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-muted-foreground"
+              )}
+            >
+              <Icon className="size-3.5" />
+              {section.label}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function EmptyInvestigationPanel({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-muted/20 p-6 text-center">
+      <div className="mx-auto flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Sparkles className="size-5" />
+      </div>
+      <h3 className="mt-3 text-sm font-semibold text-foreground">尚未发起 AI 调查</h3>
+      <p className="mx-auto mt-1 max-w-xl text-xs leading-5 text-muted-foreground">
+        当前页面只展示告警来源、原始输入和 AI 预处理结果。发起 AI 调查后，会生成安全事件，并解锁关键发现、证据库、推理轨迹、影响评估和处置建议。
+      </p>
+      <Button size="sm" className="mt-4 gap-1.5" onClick={onStart}>
+        <Sparkles className="size-3.5" />
+        发起 AI 调查
+      </Button>
+    </div>
+  )
+}
+
+function OverviewPanel({ signal, investigation }: { signal: LiveSignal; investigation: InvestigationRecord | null }) {
+  const ppConfig = PREPROCESS_CONFIG[signal.aiPreprocess]
+  const PPIcon = ppConfig.icon
+
+  return (
+    <div className={cn(CARD.base, "p-5")}>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">来源系统</span>
+          <p className="text-xs text-foreground mt-1 font-medium">{signal.sourceSystemName}</p>
+        </div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">AI分类</span>
+          <p className="text-xs text-foreground mt-1 font-medium">{signal.aiClassification}</p>
+        </div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">AI预处理</span>
+          <div className="mt-1">
+            <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded", ppConfig.color, "bg-muted/40")}>
+              <PPIcon className="size-3" />
+              {ppConfig.label}
+            </span>
+          </div>
+        </div>
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
+          <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">安全事件ID</span>
+          <p className="text-xs text-foreground mt-1 font-mono">{investigation?.id || "—"}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1.5">
+        <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">原始输入</span>
+        <p className="text-[11px] text-muted-foreground font-mono leading-relaxed break-all">{signal.rawInput}</p>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] p-3 space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className="size-3 text-amber-600" />
+            <span className="text-[10px] text-amber-600/80 uppercase tracking-wider font-medium">来源分析</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">{signal.sourceAnalysis}</p>
+        </div>
+
+        <div className="rounded-lg border border-cyan-500/20 bg-primary/[0.06] p-3 space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="size-3 text-cyan-600" />
+            <span className="text-[10px] text-cyan-600/80 uppercase tracking-wider font-medium">来源建议</span>
+          </div>
+          <p className="text-xs text-muted-foreground leading-relaxed">{signal.sourceSuggestion}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FindingsPanel({ record }: { record: InvestigationRecord }) {
+  const findings = record.aiReasoningSteps
+    .map((step) => step.detail)
+    .filter(Boolean)
+    .slice(0, 4)
+
+  return (
+    <div className={cn(CARD.base, "p-5")}>
+      <div className="mb-4 flex items-center gap-2">
+        <Target className="size-4 text-primary" />
+        <h3 className="text-sm font-semibold text-foreground">关键发现</h3>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {findings.map((finding, index) => (
+          <div key={index} className="rounded-lg border border-border bg-muted/25 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">{index + 1}</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">发现项</span>
+            </div>
+            <p className="text-xs leading-5 text-foreground">{finding}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function EvidenceRepositoryPanel({ record }: { record: InvestigationRecord }) {
+  const evidence = record.aiReasoningSteps.flatMap((step) => step.evidence || [])
+  return (
+    <div className={cn(CARD.base, "p-5")}>
+      <div className="mb-4 flex items-center gap-2">
+        <FileSearch className="size-4 text-amber-600" />
+        <h3 className="text-sm font-semibold text-foreground">证据库</h3>
+        <span className="text-[10px] text-muted-foreground">{evidence.length} 条证据</span>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {evidence.length > 0 ? evidence.map((item, index) => <EvidenceItemCard key={index} item={item} />) : (
+          <p className="text-xs text-muted-foreground">暂无可展示证据。</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ReasoningTracePanel({ record }: { record: InvestigationRecord }) {
+  return (
+    <div className="space-y-3">
+      {record.aiReasoningSteps.map((step, idx) => (
+        <ReasoningStepCard key={idx} step={step} index={idx} />
+      ))}
+    </div>
+  )
+}
+
+function ImpactPanel({ signal, record }: { signal: LiveSignal; record: InvestigationRecord }) {
+  const relatedPeople = record.aiReasoningSteps.map((step) => step.personProfile).filter(Boolean) as PersonProfile[]
+  const deviations = record.aiReasoningSteps.map((step) => step.baselineDeviation).filter(Boolean) as BaselineDeviation[]
+  const mappings = record.aiReasoningSteps.map((step) => step.mitreMapping).filter(Boolean) as MITREMapping[]
+
+  return (
+    <div className={cn(CARD.base, "p-5 space-y-4")}>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className="rounded-lg border border-border bg-muted/25 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">影响范围</div>
+          <div className="mt-2 text-lg font-semibold text-foreground">{signal.sourceSystemName}</div>
+          <p className="mt-1 text-xs text-muted-foreground">以来源系统和关联证据为初始影响面。</p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/25 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">风险等级</div>
+          <div className="mt-2"><RiskIndicator level={signal.riskLevel} /></div>
+          <p className="mt-2 text-xs text-muted-foreground">结合告警等级与 AI 置信度评估。</p>
+        </div>
+        <div className="rounded-lg border border-border bg-muted/25 p-3">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">MITRE 映射</div>
+          <div className="mt-2 text-lg font-semibold text-foreground">{mappings.length}</div>
+          <p className="mt-1 text-xs text-muted-foreground">已关联攻击战术与技术项。</p>
+        </div>
+      </div>
+
+      {relatedPeople.length > 0 && (
+        <div className="space-y-2">
+          {relatedPeople.map((profile, idx) => <PersonProfileCard key={idx} profile={profile} />)}
+        </div>
+      )}
+      {deviations.length > 0 && (
+        <div className="space-y-2">
+          {deviations.map((deviation, idx) => <BaselineDeviationCard key={idx} deviation={deviation} />)}
+        </div>
+      )}
+      {mappings.length > 0 && (
+        <div className="space-y-2">
+          {mappings.map((mapping, idx) => <MITREMappingCard key={idx} mapping={mapping} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DetailSectionContent({
+  active,
+  signal,
+  investigation,
+  onStart,
+}: {
+  active: DetailSectionKey
+  signal: LiveSignal
+  investigation: InvestigationRecord | null
+  onStart: () => void
+}) {
+  if (!investigation && active !== "overview" && active !== "ai") {
+    return <EmptyInvestigationPanel onStart={onStart} />
+  }
+
+  switch (active) {
+    case "overview":
+      return <OverviewPanel signal={signal} investigation={investigation} />
+    case "ai":
+      return investigation ? <ReasoningTracePanel record={investigation} /> : <EmptyInvestigationPanel onStart={onStart} />
+    case "findings":
+      return <FindingsPanel record={investigation!} />
+    case "evidence":
+      return <EvidenceRepositoryPanel record={investigation!} />
+    case "reasoning":
+      return <ReasoningTracePanel record={investigation!} />
+    case "impact":
+      return <ImpactPanel signal={signal} record={investigation!} />
+    case "response":
+      return (
+        <div className="space-y-4">
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <CircleDot className="h-4 w-4 text-primary" />
+              <span className="text-xs font-semibold text-foreground">处置工作流</span>
+              <span className="text-[10px] text-muted-foreground ml-1">调查 → 复核 → 处置 → 验证 → 闭环</span>
+            </div>
+            <ClosureWorkflow status={investigation!.status} />
+          </div>
+          <DisposalRecommendationsPanel record={investigation!} />
+          <DisposalTimeline record={investigation!} />
+        </div>
+      )
+  }
 }
 
 function SourceBadge({ source }: { source: SignalSource }) {
@@ -161,18 +561,6 @@ function RiskIndicator({ level }: { level: RiskLevel }) {
     <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium", config.bg, config.color, level === "critical" && config.glow)}>
       <span>{config.label}</span>
     </span>
-  )
-}
-
-function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 80 ? "#ef4444" : value >= 60 ? "#f97316" : "#06b6d4"
-  return (
-    <div className="flex items-center gap-2 min-w-[100px]">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted/50">
-        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${value}%`, backgroundColor: color }} />
-      </div>
-      <span className="font-mono text-xs font-bold tabular-nums min-w-[28px]" style={{ color }}>{value}%</span>
-    </div>
   )
 }
 
@@ -420,7 +808,7 @@ function DisposalRecommendationsPanel({ record }: { record: InvestigationRecord 
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4 text-orange-600" />
         <span className="text-sm font-semibold text-foreground">处置建议</span>
-        <span className="text-[10px] text-muted-foreground ml-1">AI基于研判结论自动生成</span>
+        <span className="text-[10px] text-muted-foreground ml-1">AI基于调查结论自动生成</span>
       </div>
 
       {record.disposalSuggestion && (
@@ -553,12 +941,12 @@ function NotFoundState({ onBack }: { onBack: () => void }) {
         <AlertTriangle className="size-7 text-muted-foreground" />
       </div>
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold text-foreground">信号未找到</h2>
-        <p className="text-sm text-muted-foreground">无法找到对应的信号数据，可能已被清除或链接无效</p>
+        <h2 className="text-lg font-semibold text-foreground">告警未找到</h2>
+        <p className="text-sm text-muted-foreground">无法找到对应的告警数据，可能已被清除或链接无效</p>
       </div>
       <Button variant="outline" onClick={onBack} className="gap-2">
         <ArrowLeft className="size-4" />
-        返回信号列表
+        返回告警列表
       </Button>
     </div>
   )
@@ -576,37 +964,48 @@ export default function SignalDetailPage() {
   const bridgeStore = useWorkbenchBridgeStore()
   const signalStatusMap = useWorkbenchBridgeStore((s) => s.signalStatusMap)
   const investigationRecords = useWorkbenchBridgeStore((s) => s.investigationRecords)
+  const storeSignals = useUnifiedDataStore((s) => s.signals)
+  const initializeSignals = useUnifiedDataStore((s) => s.initialize)
 
-  // Load signal list from sessionStorage
-  const [signalList, setSignalList] = useState<LiveSignal[]>([])
-  const [currentSignal, setCurrentSignal] = useState<LiveSignal | null>(null)
-  const [investigation, setInvestigation] = useState<InvestigationRecord | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [signalList] = useState<LiveSignal[]>(() => getSignalListFromStorage())
+  const [storedSignal] = useState<LiveSignal | null>(() => getSignalDetailFromStorage(signalId))
+  const [startedInvestigationId, setStartedInvestigationId] = useState<string | null>(null)
+  const [activeSection, setActiveSection] = useState<DetailSectionKey>("overview")
 
-  // Load signal list from sessionStorage on mount
   useEffect(() => {
-    const list = getSignalListFromStorage()
-    setSignalList(list)
-    const found = list.find((s) => s.id === signalId) || null
-    setCurrentSignal(found)
-    setIsLoading(false)
-  }, [signalId])
+    initializeSignals()
+  }, [initializeSignals])
 
-  // Find or create investigation
-  useEffect(() => {
+  const navigationSignals = useMemo(() => mergeSignalLists(signalList, storeSignals), [signalList, storeSignals])
+
+  const currentSignal = useMemo(
+    () => navigationSignals.find((s) => s.id === signalId) || storedSignal,
+    [navigationSignals, signalId, storedSignal]
+  )
+
+  const investigation = useMemo(() => {
+    if (!currentSignal) return null
+
+    const startedRecord = startedInvestigationId
+      ? investigationRecords.find((r) => r.id === startedInvestigationId)
+      : null
+    if (startedRecord) return startedRecord
+
+    const existingStatus = signalStatusMap[currentSignal.id]
+    if (!existingStatus?.investigationId) return null
+
+    return investigationRecords.find((r) => r.id === existingStatus.investigationId) || null
+  }, [currentSignal, investigationRecords, signalStatusMap, startedInvestigationId])
+
+  const handleStartInvestigation = useCallback(() => {
     if (!currentSignal) return
 
-    // Check if investigation already exists
-    const existingStatus = signalStatusMap[currentSignal.id]
-    if (existingStatus?.investigationId) {
-      const existingRecord = investigationRecords.find((r) => r.id === existingStatus.investigationId)
-      if (existingRecord) {
-        setInvestigation(existingRecord)
-        return
-      }
+    const existingRecord = bridgeStore.getInvestigationBySignalId(currentSignal.id)
+    if (existingRecord) {
+      setStartedInvestigationId(existingRecord.id)
+      return
     }
 
-    // Auto-create investigation
     const record = bridgeStore.createInvestigationFromSignal({
       signalId: currentSignal.id,
       source: currentSignal.source,
@@ -617,22 +1016,16 @@ export default function SignalDetailPage() {
       receivedTime: currentSignal.receivedTime,
       triggerType: currentSignal.riskLevel === "critical" || currentSignal.riskLevel === "high" ? "auto" : "manual",
     })
-    setInvestigation(record)
-  }, [currentSignal, signalStatusMap, investigationRecords, bridgeStore])
-
-  // Keep investigation in sync with store
-  useEffect(() => {
-    if (!investigation) return
-    const latest = investigationRecords.find((r) => r.id === investigation.id)
-    if (latest && latest !== investigation) {
-      setInvestigation(latest)
-    }
-  }, [investigationRecords, investigation])
+    try {
+      sessionStorage.setItem(`${SIGNAL_DETAIL_STORAGE_PREFIX}${currentSignal.id}`, JSON.stringify(currentSignal))
+    } catch { /* ignore quota errors */ }
+    setStartedInvestigationId(record.id)
+  }, [bridgeStore, currentSignal])
 
   // Navigation helpers
-  const currentIndex = useMemo(() => signalList.findIndex((s) => s.id === signalId), [signalList, signalId])
-  const prevSignal = currentIndex > 0 ? signalList[currentIndex - 1] : null
-  const nextSignal = currentIndex >= 0 && currentIndex < signalList.length - 1 ? signalList[currentIndex + 1] : null
+  const currentIndex = useMemo(() => navigationSignals.findIndex((s) => s.id === signalId), [navigationSignals, signalId])
+  const prevSignal = currentIndex > 0 ? navigationSignals[currentIndex - 1] : null
+  const nextSignal = currentIndex >= 0 && currentIndex < navigationSignals.length - 1 ? navigationSignals[currentIndex + 1] : null
 
   const handleNavigate = useCallback((signal: LiveSignal) => {
     router.push(`/signals/${signal.id}`)
@@ -642,23 +1035,14 @@ export default function SignalDetailPage() {
     router.push("/signals")
   }, [router])
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   // Not found state
   if (!currentSignal) {
     return (
       <div className="space-y-4">
         <PageHeader
           icon={Radio}
-          title="信号研判详情"
-          subtitle="信号未找到"
+          title="告警详情"
+          subtitle="告警未找到"
           actions={
             <Button variant="outline" size="sm" onClick={handleBack} className="gap-1.5">
               <ArrowLeft className="size-3.5" />
@@ -671,9 +1055,6 @@ export default function SignalDetailPage() {
     )
   }
 
-  const riskConfig = RISK_CONFIG[currentSignal.riskLevel]
-  const ppConfig = PREPROCESS_CONFIG[currentSignal.aiPreprocess]
-  const PPIcon = ppConfig.icon
   const signalStatus = signalStatusMap[currentSignal.id]
   const investigationStatus = signalStatus?.status || "new"
 
@@ -682,9 +1063,13 @@ export default function SignalDetailPage() {
       {/* ==================== Page Header ==================== */}
       <PageHeader
         icon={Crosshair}
-        title="信号研判详情"
+        title="告警详情"
         subtitle={
           <div className="flex items-center gap-2">
+            <span className="hidden text-xs text-muted-foreground xl:inline">
+              告警是安全设备和规则产生的原始风险提示，AI 调查后可升级为安全事件。
+            </span>
+            <span className="hidden h-3 w-px bg-border xl:inline-block" />
             <span className="font-mono text-[11px]">{currentSignal.id}</span>
             <span className="h-3 w-px bg-border" />
             <SourceBadge source={currentSignal.source} />
@@ -699,6 +1084,17 @@ export default function SignalDetailPage() {
         }
         actions={
           <div className="flex items-center gap-2">
+            {investigation ? (
+              <Button size="sm" onClick={() => router.push(`/workbench?highlight=${investigation.id}`)} className="gap-1.5">
+                <ArrowRight className="size-3.5" />
+                查看安全事件
+              </Button>
+            ) : (
+              <Button size="sm" onClick={handleStartInvestigation} className="gap-1.5">
+                <Sparkles className="size-3.5" />
+                发起 AI 调查
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleBack} className="gap-1.5">
               <ArrowLeft className="size-3.5" />
               返回列表
@@ -707,197 +1103,10 @@ export default function SignalDetailPage() {
         }
       />
 
-      {/* ==================== Signal Overview Card ==================== */}
-      <div className={cn(CARD.base, "overflow-hidden")}>
-        <div className="absolute inset-x-0 top-0 h-px opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${riskConfig.hex}, transparent)` }} />
-        <div className="border-b border-border px-5 py-3.5 flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded-lg" style={{ backgroundColor: riskConfig.bgHex, border: `1px solid ${riskConfig.borderHex}` }}>
-            <Radio className="size-4" style={{ color: riskConfig.hex }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">信号概览</h2>
-            <p className="text-[10px] text-muted-foreground font-mono">{currentSignal.receivedTime}</p>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <SourceBadge source={currentSignal.source} />
-            <RiskIndicator level={currentSignal.riskLevel} />
-            {investigation && <StatusBadge status={investigation.status} />}
-          </div>
-        </div>
-        <div className="p-5 space-y-4">
-          {/* Basic info grid */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">来源系统</span>
-              <p className="text-xs text-foreground mt-1 font-medium">{currentSignal.sourceSystemName}</p>
-            </div>
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">AI分类</span>
-              <p className="text-xs text-foreground mt-1 font-medium">{currentSignal.aiClassification}</p>
-            </div>
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">AI预处理</span>
-              <div className="mt-1">
-                <span className={cn("inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded", ppConfig.color, "bg-muted/40")}>
-                  <PPIcon className="size-3" />
-                  {ppConfig.label}
-                </span>
-              </div>
-            </div>
-            <div className="rounded-lg border border-border/50 bg-muted/30 p-3">
-              <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">研判ID</span>
-              <p className="text-xs text-foreground mt-1 font-mono">{investigation?.id || "—"}</p>
-            </div>
-          </div>
-
-          {/* Raw input */}
-          <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-1.5">
-            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-wider font-medium">原始输入</span>
-            <p className="text-[11px] text-muted-foreground font-mono leading-relaxed break-all">{currentSignal.rawInput}</p>
-          </div>
-
-          {/* Source analysis */}
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] p-3 space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <AlertTriangle className="size-3 text-amber-600" />
-              <span className="text-[10px] text-amber-600/80 uppercase tracking-wider font-medium">来源分析</span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{currentSignal.sourceAnalysis}</p>
-          </div>
-
-          {/* Source suggestion */}
-          <div className="rounded-lg border border-cyan-500/20 bg-primary/[0.06] p-3 space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Sparkles className="size-3 text-cyan-600" />
-              <span className="text-[10px] text-cyan-600/80 uppercase tracking-wider font-medium">来源建议</span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{currentSignal.sourceSuggestion}</p>
-          </div>
-
-          {/* AI preprocess result */}
-          <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.06] p-3 space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <Brain className="size-3 text-violet-600" />
-              <span className="text-[10px] text-violet-600/80 uppercase tracking-wider font-medium">AI预处理结果</span>
-            </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{currentSignal.aiPreprocessResult}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* ==================== AI Investigation Section ==================== */}
-      {investigation && (
-        <div className="space-y-4">
-          {/* AI Conclusion */}
-          {investigation.aiConclusion && (
-            <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <Brain className="h-4 w-4 text-violet-600" />
-                <span className="text-xs font-semibold text-violet-600">AI研判摘要</span>
-                <div className="ml-auto flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">AI置信度</div>
-                    <div className={cn("text-lg font-bold tabular-nums", investigation.confidence >= 80 ? "text-red-600" : investigation.confidence >= 60 ? "text-amber-600" : "text-primary")}>
-                      {investigation.confidence}%
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">证据数</div>
-                    <div className="text-lg font-bold tabular-nums text-primary">
-                      {investigation.aiReasoningSteps.reduce((sum, step) => sum + step.evidence.length, 0)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm leading-6 text-foreground">{investigation.aiConclusion}</p>
-            </div>
-          )}
-
-          {/* Reasoning Steps */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <GitBranch className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">AI推理链路</span>
-              <span className="text-[10px] text-muted-foreground ml-1">{investigation.aiReasoningSteps.length} 个推理步骤</span>
-              {!investigation.aiConclusion && (
-                <div className="ml-auto flex items-center gap-2">
-                  <ConfidenceBar value={investigation.confidence} />
-                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-primary/10 text-primary border border-cyan-500/20">
-                    <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                    研判进行中
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              {investigation.aiReasoningSteps.map((step, idx) => (
-                <ReasoningStepCard key={idx} step={step} index={idx} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================== Disposal Section ==================== */}
-      {investigation && (
-        <div className="space-y-4">
-          {/* Closure Workflow */}
-          <div className="rounded-xl border border-border bg-muted/30 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <CircleDot className="h-4 w-4 text-primary" />
-              <span className="text-xs font-semibold text-foreground">处置工作流</span>
-              <span className="text-[10px] text-muted-foreground ml-1">研判 → 复核 → 处置 → 验证 → 闭环</span>
-            </div>
-            <ClosureWorkflow status={investigation.status} />
-          </div>
-
-          {/* Review Info */}
-          {investigation.reviewer && (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.04] p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-amber-600" />
-                <span className="text-xs font-semibold text-amber-600">复核信息</span>
-              </div>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                <span>复核人: <span className="text-foreground font-medium">{investigation.reviewer}</span></span>
-                <span>时间: <span className="font-mono">{investigation.reviewedAt}</span></span>
-                <span>结果: <span className={cn("font-medium", investigation.reviewAction === "approve" ? "text-emerald-600" : investigation.reviewAction === "modify" ? "text-amber-600" : "text-red-600")}>
-                  {investigation.reviewAction === "approve" ? "批准" : investigation.reviewAction === "modify" ? "修正" : "驳回"}
-                </span></span>
-                {investigation.reviewComment && <span>意见: {investigation.reviewComment}</span>}
-              </div>
-            </div>
-          )}
-
-          {/* Disposal Recommendations */}
-          <DisposalRecommendationsPanel record={investigation} />
-
-          {/* Disposal Timeline */}
-          <DisposalTimeline record={investigation} />
-
-          {/* Closure Info */}
-          {investigation.closeReason ? (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-              <div className="mb-2 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <span className="text-sm font-semibold text-emerald-600">闭环结论</span>
-              </div>
-              <p className="text-sm leading-6 text-foreground">{investigation.closeReason}</p>
-              {investigation.closedAt && (
-                <p className="mt-2 text-xs text-muted-foreground">闭环时间: <span className="font-mono">{investigation.closedAt}</span></p>
-              )}
-            </div>
-          ) : investigation.status !== "closed" && (
-            <div className="rounded-xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-semibold text-muted-foreground">尚未闭环</span>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">该事件仍在处理流程中，闭环信息将在处置完成后自动生成。</p>
-            </div>
-          )}
-        </div>
-      )}
+      <AlertIdentityPanel signal={currentSignal} investigation={investigation} />
+      <AISummaryPanel signal={currentSignal} investigation={investigation} />
+      <DetailSectionTabs active={activeSection} onChange={setActiveSection} investigation={investigation} />
+      <DetailSectionContent active={activeSection} signal={currentSignal} investigation={investigation} onStart={handleStartInvestigation} />
 
       {/* ==================== Bottom Navigation Bar ==================== */}
       <div className="sticky bottom-0 z-10 -mx-1">
@@ -919,10 +1128,10 @@ export default function SignalDetailPage() {
 
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="font-mono tabular-nums">
-                {currentIndex >= 0 ? currentIndex + 1 : "—"} / {signalList.length}
+                {currentIndex >= 0 ? currentIndex + 1 : "—"} / {navigationSignals.length}
               </span>
               <span className="text-muted-foreground/40">·</span>
-              <span>信号列表</span>
+              <span>告警列表</span>
             </div>
 
             <Button

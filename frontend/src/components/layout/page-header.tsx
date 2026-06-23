@@ -17,12 +17,12 @@ export function PageHeader({ icon: Icon, title, subtitle, actions }: PageHeaderP
         <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/15">
           <Icon className="h-4.5 w-4.5" />
         </span>
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-base font-semibold text-foreground tracking-tight">{title}</h1>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+          <h1 className="shrink-0 text-base font-semibold text-foreground tracking-tight">{title}</h1>
           {subtitle && (
             <>
               <span className="h-4 w-px bg-border shrink-0" />
-              <span className="truncate text-sm text-muted-foreground">{subtitle}</span>
+              <span className="min-w-0 text-sm text-muted-foreground">{subtitle}</span>
             </>
           )}
         </div>

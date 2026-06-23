@@ -109,6 +109,8 @@ const TYPE_TO_ATTACK_TYPE: Record<AlertType, string> = {
 }
 
 const PREPROCESS_OPTIONS: AIPreprocess[] = ['去噪', '聚合', '上下文补全', '风险评分']
+const UNIFIED_SIGNALS_STORAGE_KEY = 'secmind_unified_signals_v1'
+const MAX_PERSISTED_SIGNALS = 120
 
 function mapRiskLevel(level: TypeRiskLevel): RiskLevel {
   if (level === 'info') return 'low'
@@ -123,6 +125,40 @@ function formatTimestamp(ts: string): string {
 function formatReceivedTime(ts: string): string {
   const d = new Date(ts)
   return d.toISOString().replace('T', ' ').replace(/\.\d+Z$/, '')
+}
+
+function mergeSignals(primary: LiveSignal[], fallback: LiveSignal[]): LiveSignal[] {
+  const seen = new Set<string>()
+  const merged: LiveSignal[] = []
+
+  for (const signal of [...primary, ...fallback]) {
+    if (seen.has(signal.id)) continue
+    seen.add(signal.id)
+    merged.push(signal)
+  }
+
+  return merged
+}
+
+function loadPersistedSignals(): LiveSignal[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(UNIFIED_SIGNALS_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as LiveSignal[]) : []
+  } catch {
+    return []
+  }
+}
+
+function persistSignals(signals: LiveSignal[]): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(UNIFIED_SIGNALS_STORAGE_KEY, JSON.stringify(signals.slice(0, MAX_PERSISTED_SIGNALS)))
+  } catch {
+    // Ignore storage quota and private browsing failures.
+  }
 }
 
 // ==================== 派生函数 ====================
@@ -263,6 +299,7 @@ interface UnifiedDataState {
 interface UnifiedDataActions {
   initialize: () => void
   refresh: () => void
+  addSignal: (signal: LiveSignal) => void
 }
 
 export type UnifiedDataStore = UnifiedDataState & UnifiedDataActions
@@ -270,12 +307,15 @@ export type UnifiedDataStore = UnifiedDataState & UnifiedDataActions
 // ==================== Auto-initialize from mock data ====================
 
 function createInitialData(): Pick<UnifiedDataState, 'signals' | 'anomalousActivities' | 'riskClusters' | 'alertGroups' | 'isLoaded'> {
+  const mockStore = useMockDataStore.getState()
+  if (!mockStore.isLoaded) mockStore.initialize()
   const alerts = useMockDataStore.getState().alerts
+  const persistedSignals = loadPersistedSignals()
   if (alerts.length === 0) {
-    return { signals: [], anomalousActivities: [], riskClusters: [], alertGroups: [], isLoaded: false }
+    return { signals: persistedSignals, anomalousActivities: [], riskClusters: [], alertGroups: [], isLoaded: persistedSignals.length > 0 }
   }
   return {
-    signals: deriveSignals(alerts),
+    signals: mergeSignals(persistedSignals, deriveSignals(alerts)),
     anomalousActivities: deriveAnomalousActivities(alerts),
     riskClusters: deriveRiskClusters(alerts),
     alertGroups: deriveAlertGroups(alerts),
@@ -288,11 +328,13 @@ export const useUnifiedDataStore = create<UnifiedDataStore>()((set, get) => ({
 
   initialize: () => {
     if (get().isLoaded) return
+    const mockStore = useMockDataStore.getState()
+    if (!mockStore.isLoaded) mockStore.initialize()
     const alerts = useMockDataStore.getState().alerts
     if (alerts.length === 0) return
 
     set({
-      signals: deriveSignals(alerts),
+      signals: mergeSignals(loadPersistedSignals(), deriveSignals(alerts)),
       anomalousActivities: deriveAnomalousActivities(alerts),
       riskClusters: deriveRiskClusters(alerts),
       alertGroups: deriveAlertGroups(alerts),
@@ -301,15 +343,28 @@ export const useUnifiedDataStore = create<UnifiedDataStore>()((set, get) => ({
   },
 
   refresh: () => {
+    const mockStore = useMockDataStore.getState()
+    if (!mockStore.isLoaded) mockStore.initialize()
     const alerts = useMockDataStore.getState().alerts
     if (alerts.length === 0) return
 
+    const signals = mergeSignals(loadPersistedSignals(), deriveSignals(alerts))
+    persistSignals(signals)
+
     set({
-      signals: deriveSignals(alerts),
+      signals,
       anomalousActivities: deriveAnomalousActivities(alerts),
       riskClusters: deriveRiskClusters(alerts),
       alertGroups: deriveAlertGroups(alerts),
       isLoaded: true,
+    })
+  },
+
+  addSignal: (signal: LiveSignal) => {
+    set((state) => {
+      const signals = [signal, ...state.signals.filter((item) => item.id !== signal.id)]
+      persistSignals(signals)
+      return { signals }
     })
   },
 }))

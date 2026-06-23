@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
 import {
@@ -118,7 +118,9 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [isLightMode, setIsLightMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('secmind-theme')
-      return saved !== 'dark'
+      if (saved === 'dark') return false
+      if (saved === 'light') return true
+      return !window.matchMedia?.('(prefers-color-scheme: dark)').matches
     }
     return true
   })
@@ -163,15 +165,6 @@ export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
     router.refresh()
     window.setTimeout(() => setIsRefreshing(false), 800)
   }
-
-  useEffect(() => {
-    const saved = localStorage.getItem('secmind-theme')
-    if (saved === 'dark') {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }, [])
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/80 bg-background/95 px-6">

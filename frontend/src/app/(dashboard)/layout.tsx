@@ -5,6 +5,8 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Topbar } from "@/components/layout/topbar"
 import { useAuthStore } from "@/store/auth-store"
 import { useMockDataStore } from "@/store/mock-data-store"
+import { useUnifiedDataStore } from "@/store/unified-data-store"
+import { useWorkbenchBridgeStore } from "@/store/workbench-bridge-store"
 import { setApiToken } from "@/lib/api"
 import { startDemoSession } from "@/lib/demo-session"
 
@@ -38,9 +40,13 @@ export default function DashboardLayout({
 
   // Initialize mock data store once
   const initializeMockData = useMockDataStore((s) => s.initialize)
+  const initializeUnifiedData = useUnifiedDataStore((s) => s.initialize)
+  const initializeWorkbenchRecords = useWorkbenchBridgeStore((s) => s.initializeRecords)
   useEffect(() => {
     initializeMockData()
-  }, [initializeMockData])
+    initializeUnifiedData()
+    initializeWorkbenchRecords()
+  }, [initializeMockData, initializeUnifiedData, initializeWorkbenchRecords])
 
   return (
     <div className="flex h-screen bg-background text-foreground">

@@ -23,6 +23,18 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
+const themeScript = `
+try {
+  var saved = localStorage.getItem('secmind-theme');
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === 'dark' || (!saved && prefersDark)) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+} catch (_) {}
+`;
+
 export const metadata: Metadata = {
   title: "SecMind - AI自主安全研判平台",
   description: "AI自主安全研判平台 — 信号感知、攻击推理、案件研判、自动处置",
@@ -44,6 +56,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className={`h-full antialiased ${spaceGrotesk.variable} ${ibmPlexSans.variable} ${spaceMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeInitializer />
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:top-2 focus:left-2">跳到主要内容</a>

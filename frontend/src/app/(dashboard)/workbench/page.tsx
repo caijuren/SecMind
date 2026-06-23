@@ -18,7 +18,6 @@ import {
   Wrench,
   ThumbsUp,
   ThumbsDown,
-  Plus,
   UserCircle,
   GitBranch,
   FileCheck,
@@ -65,7 +64,6 @@ import {
   type BaselineDeviation,
   type MITREMapping,
   type CorrelationDetail,
-  mockRecords,
   STATUS_CONFIG,
   STEP_TYPE_CONFIG,
   EVIDENCE_TYPE_CONFIG,
@@ -82,14 +80,14 @@ import { useWorkbenchBridgeStore } from "@/store/workbench-bridge-store"
 
 const FILTER_TABS: { value: InvestigationTab; label: string; icon: React.ElementType; accent: string }[] = [
   { value: "all", label: "全部", icon: Activity, accent: "#06b6d4" },
-  { value: "investigating", label: "研判中", icon: Brain, accent: "#06b6d4" },
+  { value: "investigating", label: "调查中", icon: Brain, accent: "#06b6d4" },
   { value: "pending_review", label: "待复核", icon: ClipboardList, accent: "#fbbf24" },
   { value: "disposing", label: "处置中", icon: Wrench, accent: "#a855f7" },
   { value: "closed", label: "已闭环", icon: CheckCircle2, accent: "#22c55e" },
 ]
 
 const DETAIL_TABS = [
-  { key: "ai", label: "AI研判", icon: Brain },
+  { key: "ai", label: "AI调查", icon: Brain },
   { key: "disposal", label: "处置执行", icon: Wrench },
   { key: "closure", label: "闭环信息", icon: CheckCircle2 },
 ] as const
@@ -97,7 +95,7 @@ const DETAIL_TABS = [
 type DetailTabKey = (typeof DETAIL_TABS)[number]["key"]
 
 const CLOSURE_STEPS = [
-  { key: "investigating", label: "研判", icon: Brain, color: "#06b6d4" },
+  { key: "investigating", label: "调查", icon: Brain, color: "#06b6d4" },
   { key: "pending_review", label: "复核", icon: ClipboardList, color: "#fbbf24" },
   { key: "disposing", label: "处置", icon: Wrench, color: "#a855f7" },
   { key: "verifying", label: "验证", icon: ShieldCheck, color: "#22c55e" },
@@ -119,7 +117,7 @@ const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
 }
 
 const STATUS_LABELS: Record<InvestigationStatus, string> = {
-  investigating: "研判中",
+  investigating: "调查中",
   pending_review: "待复核",
   disposing: "处置中",
   closed: "已闭环",
@@ -500,7 +498,7 @@ function DisposalRecommendationsPanel({ record }: { record: InvestigationRecord 
       <div className="flex items-center gap-2">
         <Zap className="h-4 w-4 text-orange-600" />
         <span className="text-sm font-semibold text-foreground">处置建议</span>
-        <span className="text-[10px] text-muted-foreground ml-1">AI基于研判结论自动生成</span>
+        <span className="text-[10px] text-muted-foreground ml-1">AI基于调查结论自动生成</span>
       </div>
 
       {record.disposalSuggestion && (
@@ -713,7 +711,7 @@ function AIInvestigationTab({ record }: { record: InvestigationRecord }) {
         <div className="rounded-lg border border-violet-500/20 bg-violet-500/[0.06] p-4">
           <div className="mb-2 flex items-center gap-2">
             <Brain className="h-4 w-4 text-violet-600" />
-            <span className="text-xs font-semibold text-violet-600">AI研判摘要</span>
+            <span className="text-xs font-semibold text-violet-600">AI调查摘要</span>
           </div>
           <p className="text-sm leading-6 text-foreground">{record.aiConclusion}</p>
         </div>
@@ -743,7 +741,7 @@ function DisposalTab({ record, quickActions }: { record: InvestigationRecord; qu
           <div className="mb-2 flex items-center gap-2">
             <Zap className="h-4 w-4 text-amber-600" />
             <span className="text-xs font-semibold text-amber-600">告警页面快速响应</span>
-            <span className="text-[10px] text-muted-foreground ml-1">从告警事件页面发起的即时处置</span>
+            <span className="text-[10px] text-muted-foreground ml-1">从告警中心发起的即时处置</span>
           </div>
           <div className="space-y-1.5">
             {quickActions.map((qa, idx) => (
@@ -780,7 +778,7 @@ function DisposalTab({ record, quickActions }: { record: InvestigationRecord; qu
         <div className="mb-3 flex items-center gap-2">
           <CircleDot className="h-4 w-4 text-primary" />
           <span className="text-xs font-semibold text-foreground">处置工作流</span>
-          <span className="text-[10px] text-muted-foreground ml-1">研判 → 复核 → 处置 → 验证 → 闭环</span>
+          <span className="text-[10px] text-muted-foreground ml-1">调查 → 复核 → 处置 → 验证 → 闭环</span>
         </div>
         <ClosureWorkflow status={record.status} />
       </div>
@@ -979,33 +977,30 @@ function WorkbenchPageContent() {
   const highlightId = searchParams.get("highlight")
 
   const bridgeRecords = useWorkbenchBridgeStore((s) => s.investigationRecords)
+  const initializeRecords = useWorkbenchBridgeStore((s) => s.initializeRecords)
   const signalStatusMap = useWorkbenchBridgeStore((s) => s.signalStatusMap)
 
   const [activeFilter, setActiveFilter] = useState<InvestigationTab>("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [selectedRecord, setSelectedRecord] = useState<InvestigationRecord | null>(null)
-  const [detailOpen, setDetailOpen] = useState(false)
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(() => highlightId)
+  const [detailOpen, setDetailOpen] = useState(() => Boolean(highlightId))
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false)
   const [feedbackRating, setFeedbackRating] = useState<"thumbs_up" | "thumbs_down">("thumbs_up")
 
-  // Merge mock records with bridge records (bridge records take precedence)
+  useEffect(() => {
+    initializeRecords()
+  }, [initializeRecords])
+
   const allRecords = useMemo(() => {
-    const bridgeIds = new Set(bridgeRecords.map(r => r.id))
-    return [...bridgeRecords, ...mockRecords.filter(r => !bridgeIds.has(r.id))]
+    return bridgeRecords
   }, [bridgeRecords])
 
-  // Auto-open detail dialog when navigated from signals page
-  useEffect(() => {
-    if (highlightId && allRecords.length > 0) {
-      const record = allRecords.find(r => r.id === highlightId)
-      if (record) {
-        setSelectedRecord(record)
-        setDetailOpen(true)
-      }
-    }
-  }, [highlightId, allRecords])
+  const selectedRecord = useMemo(
+    () => allRecords.find((record) => record.id === selectedRecordId) ?? null,
+    [allRecords, selectedRecordId],
+  )
 
   // Stats
   const stats = useMemo(() => {
@@ -1042,7 +1037,7 @@ function WorkbenchPageContent() {
   }, [filteredRecords, safePage, pageSize])
 
   const handleRowClick = (record: InvestigationRecord) => {
-    setSelectedRecord(record)
+    setSelectedRecordId(record.id)
     setDetailOpen(true)
   }
 
@@ -1063,7 +1058,7 @@ function WorkbenchPageContent() {
       <PageHeader
         icon={Brain}
         title="安全事件工作台"
-        subtitle="AI驱动的安全事件研判、处置与闭环管理"
+        subtitle="安全事件由一个或多个告警经 AI 调查形成，用于承载分析、复核、处置和闭环。"
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
@@ -1073,10 +1068,6 @@ function WorkbenchPageContent() {
               <Download className="size-3.5" />
               <span className="hidden sm:inline">导出简报</span>
             </Button>
-            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
-              <Plus className="size-3.5" />
-              新建事件
-            </Button>
           </div>
         }
       />
@@ -1084,7 +1075,7 @@ function WorkbenchPageContent() {
       {/* ==================== KPI 指标条 ==================== */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <KpiCard icon={Activity} label="全部事件" value={stats.total} accent="#06b6d4" delay={0} />
-        <KpiCard icon={Brain} label="研判中" value={stats.investigating} accent="#06b6d4" delay={60} />
+        <KpiCard icon={Brain} label="调查中" value={stats.investigating} accent="#06b6d4" delay={60} />
         <KpiCard icon={ClipboardList} label="待复核" value={stats.pendingReview} accent="#fbbf24" delay={120} />
         <KpiCard icon={Wrench} label="处置中" value={stats.disposing} accent="#a855f7" delay={180} />
         <KpiCard icon={CheckCircle2} label="已闭环" value={stats.closed} accent="#22c55e" delay={240} />
@@ -1212,7 +1203,12 @@ function WorkbenchPageContent() {
                         {/* 操作 */}
                         <td className="px-4 py-2.5 align-middle whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                            <Button size="icon-xs" variant="ghost" className="text-cyan-600/70 hover:text-cyan-600 hover:bg-cyan-400/10">
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              aria-label={`查看安全事件 ${record.id}`}
+                              className="text-cyan-600/70 hover:text-cyan-600 hover:bg-cyan-400/10"
+                            >
                               <Eye className="size-3" />
                             </Button>
                           </div>

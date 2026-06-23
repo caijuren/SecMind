@@ -97,7 +97,7 @@ function MiniKPICard({ icon: Icon, label, value, unit, color, trend, trendGood, 
 
 const AI_SUGGESTIONS = [
   { id: "s1", priority: "critical", text: "建议立即处理 ALT004 — Cobalt Strike Beacon 关联 3 个核心资产", icon: Zap },
-  { id: "s2", priority: "high", text: "VPN 异常登录 ALT003 关联用户存在横向移动痕迹，建议启动 AI 研判", icon: Sparkles },
+  { id: "s2", priority: "high", text: "VPN 异常登录 ALT003 关联用户存在横向移动痕迹，建议启动 AI 调查", icon: Sparkles },
   { id: "s3", priority: "medium", text: "过去 24h 钓鱼攻击上升 35%，建议加强邮件网关规则", icon: FileText },
 ]
 
@@ -109,8 +109,8 @@ const PRIORITY_CONFIG: Record<string, { color: string; label: string }> = {
 
 const QUICK_ACTIONS = [
   { label: "创建案件", icon: FileText, href: "/cases", desc: "关联告警组建调查" },
-  { label: "AI研判", icon: Sparkles, href: "/investigate", desc: "智能分析威胁事件" },
-  { label: "查看报告", icon: FileText, href: "/knowledge", desc: "安全态势周报" },
+  { label: "AI调查", icon: Sparkles, href: "/investigate", desc: "智能分析安全事件" },
+  { label: "查看报告", icon: FileText, href: "/reports", desc: "安全态势周报" },
 ]
 
 export const DashboardHero = memo(function DashboardHero({
@@ -185,7 +185,7 @@ export const DashboardHero = memo(function DashboardHero({
                   AI 安全建议
                 </span>
               </span>
-              <span className="text-[9px] font-mono text-muted-foreground/70">// 基于实时威胁情报</span>
+              <span className="text-[9px] font-mono text-muted-foreground/70">基于实时威胁情报</span>
             </div>
             {AI_SUGGESTIONS.map((suggestion, idx) => {
               const SIcon = suggestion.icon

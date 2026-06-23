@@ -286,12 +286,15 @@ export const DashboardAlertPanel = memo(function DashboardAlertPanel({
                 </button>
               )}
             </div>
-            <Link href="/signals">
-              <Button variant="ghost" size="sm" className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}>
-                {t("dashboard.allAlerts")}
-                <ArrowRight className="size-3.5" />
-              </Button>
-            </Link>
+            <Button
+              render={<Link href="/signals" />}
+              variant="ghost"
+              size="sm"
+              className={cn(TYPOGRAPHY.caption, "gap-1 text-primary")}
+            >
+              {t("dashboard.allAlerts")}
+              <ArrowRight className="size-3.5" />
+            </Button>
           </div>
           <SeverityRing data={severityData} total={totalAlerts} />
         </CardContent>

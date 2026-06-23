@@ -680,10 +680,20 @@ export function AssetsPage() {
                           <td className="px-4 py-2.5 align-middle whitespace-nowrap font-mono text-[11px] text-muted-foreground">{asset.lastScan}</td>
                           <td className="px-4 py-2.5 align-middle whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                              <Button size="icon-xs" variant="ghost" className="text-cyan-600/70 hover:text-cyan-600 hover:bg-cyan-400/10">
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                aria-label={`查看资产 ${asset.name}`}
+                                className="text-cyan-600/70 hover:text-cyan-600 hover:bg-cyan-400/10"
+                              >
                                 <Eye className="size-3" />
                               </Button>
-                              <Button size="icon-xs" variant="ghost" className="text-red-600/70 hover:text-red-600 hover:bg-red-400/10">
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                aria-label={`删除资产 ${asset.name}`}
+                                className="text-red-600/70 hover:text-red-600 hover:bg-red-400/10"
+                              >
                                 <Trash2 className="size-3" />
                               </Button>
                             </div>
